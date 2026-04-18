@@ -795,17 +795,17 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
-            <button onClick={activateTrial} style={{padding:"16px",borderRadius:12,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+            <button onClick={()=>window.open("https://buy.stripe.com/test_eVqeVdgm48pQ28ngO7b3q01","_blank")} style={{padding:"16px",borderRadius:12,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
               <div>🔥 Start 5-Day Test Drive</div>
               <div style={{fontSize:11,fontWeight:400,marginTop:3}}>Just $1 — full access, cancel anytime</div>
             </button>
-            <button onClick={activatePro} style={{padding:"16px",borderRadius:12,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
-              <div>⚡ Go Pro — $12.99/month</div>
+            <button onClick={()=>window.open("https://buy.stripe.com/test_4gM3cvc5O8pQ6oDbtNb3q00","_blank")} style={{padding:"16px",borderRadius:12,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+              <div>⚡ Go Pro — $19.99/month</div>
               <div style={{fontSize:11,fontWeight:400,marginTop:3}}>Unlimited everything · No ads · Cancel anytime</div>
             </button>
-            <button onClick={activatePro} style={{padding:"14px",borderRadius:12,background:C.raised,border:"1px solid "+C.gold+"55",color:C.gold,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
-              <div>💎 Founding Member — $79 one-time</div>
-              <div style={{fontSize:10,fontWeight:400,color:C.sub,marginTop:2}}>Everything forever · Limited spots · No monthly fee</div>
+            <button onClick={()=>window.open("https://buy.stripe.com/test_cNi7sL2ve49A6oDdBVb3q02","_blank")} style={{padding:"14px",borderRadius:12,background:C.raised,border:"1px solid "+C.gold+"55",color:C.gold,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
+              <div>💎 Founding Member — $97 one-time</div>
+              <div style={{fontSize:10,fontWeight:400,color:C.sub,marginTop:2}}>Everything forever · First 50 spots only · No monthly fee</div>
             </button>
           </div>
           <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,fontSize:10,color:C.sub,lineHeight:1.7,marginBottom:14}}>
@@ -879,7 +879,7 @@ Be specific with real institution names and programs, not generic advice.`;
           ):trialDaysLeft>0?(
             <div style={{padding:"6px 9px",borderRadius:8,background:C.gold+"20",border:"1px solid "+C.gold+"55",fontSize:9,fontWeight:700,color:C.gold,flexShrink:0}}>{trialDaysLeft}d left</div>
           ):(
-            <button onClick={()=>openUpgrade("header")} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Upgrade</button>
+            <button onClick={()=>window.open("https://buy.stripe.com/test_4gM3cvc5O8pQ6oDbtNb3q00","_blank")} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Upgrade</button>
           )}
         </div>
       </div>
