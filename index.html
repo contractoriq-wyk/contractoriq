@@ -7,10 +7,14 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0b0f1c;color:#f0f6ff}</style>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0b0f1c;color:#f0f6ff;font-family:monospace}
+    #loading{display:flex;align-items:center;justify-content:center;height:100vh;font-size:18px;color:#00ffcc}
+  </style>
 </head>
 <body>
-  <div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;color:#00ffcc;font-size:18px">Loading ContractorIQ...</div></div>
+  <div id="root"><div id="loading">Loading ContractorIQ...</div></div>
   <script type="text/babel">
 const { useState, useEffect, useRef } = React;
 
@@ -433,7 +437,7 @@ export default function ContractorIQv26(){
   const hwE2=(hw.deds||[]).find(d=>d.l==="2290 Escrow")?.a||0;
   const latFuel=(latest.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
 
-  const SYS=`Expert drayage business advisor for LILWEMMA SERVICES CO, CDL owner-operator, ContainerPort Group, BAL975, Baltimore MD. Real settlement data: ${allW.map(w=>`W${w.week}: Gross $${w.gross}, Net $${w.net}, Margin ${(w.net/w.gross*100).toFixed(1)}%, ${(w.moves||[]).length} moves`).join(" | ")}. YTD: Gross $${tGross.toFixed(0)}, Net $${tNet.toFixed(0)}, Margin ${margin}%, Avg RPM $${avgRPM}, Loaded ${ldPct}%. Be specific, practical, use real numbers. Under 300 words.`;
+  const SYS=`Expert drayage business advisor for LILWEMMA SERVICES CO, CDL owner-operator, ContainerPort Group, BAL975, Baltimore MD. Real settlement data: ${allW.map(function(w){return "W"+w.week+": Gross $"+w.gross+", Net $"+w.net+", Margin "+(w.net/w.gross*100).toFixed(1)+"%, "+(w.moves||[]).length+" moves";}).join(" | ")}. YTD: Gross $${tGross.toFixed(0)}, Net $${tNet.toFixed(0)}, Margin ${margin}%, Avg RPM $${avgRPM}, Loaded ${ldPct}%. Be specific, practical, use real numbers. Under 300 words.`;
 
   // ── PDF Scanner ───────────────────────────────────────────────────────────
   async function scanPDF(file, fileType){
@@ -745,7 +749,7 @@ Be specific with real institution names and programs, not generic advice.`;
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;background:#0b0f1c;color:#f0f6ff;padding:28px;font-size:13px}h1{font-family:Arial,sans-serif;font-size:20px;font-weight:800;color:#00ffcc}h2{font-size:13px;font-weight:700;color:#00ffcc;margin:22px 0 10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #2c3a52;padding-bottom:5px}.header{display:flex;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #2c3a52}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}.kpi{background:#1a2236;border:1px solid #2c3a52;border-radius:9px;padding:12px;text-align:center}.kpi .v{font-size:18px;font-weight:800;margin:5px 0 3px}.kpi .l{font-size:9px;color:#8fa3c0;text-transform:uppercase}.groups{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}.grp{background:#1a2236;border-radius:9px;padding:12px;text-align:center;border:1px solid #2c3a52}.grp .gv{font-size:16px;font-weight:800;margin:4px 0 2px}table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:left;padding:7px 9px;color:#8fa3c0;font-weight:700;font-size:10px;text-transform:uppercase;border-bottom:1px solid #2c3a52}td{padding:8px 9px;border-bottom:1px solid rgba(44,58,82,0.5);color:#f0f6ff}.footer{margin-top:24px;padding-top:12px;border-top:1px solid #2c3a52;font-size:10px;color:#8fa3c0;text-align:center}@media print{body{background:#fff;color:#000}.kpi,.grp{background:#f5f5f5;border-color:#ccc}}</style></head><body>
 <div class="header"><div><h1>🚛 DrayageIQ — Settlement Report</h1><div style="color:#8fa3c0;font-size:11px;margin-top:5px">LILWEMMA SERVICES CO · BAL975 · ContainerPort Group</div><div style="color:#8fa3c0;font-size:11px;margin-top:2px">${w.label} · ${w.from} – ${w.to}</div></div><div style="text-align:right;font-size:11px;color:#8fa3c0"><div>Generated ${new Date().toLocaleDateString()}</div></div></div>
 <div class="kpis"><div class="kpi"><div class="l">Gross</div><div class="v" style="color:#00ffcc">$${w.gross.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div><div class="kpi"><div class="l">Net Pay</div><div class="v" style="color:#4ade80">$${w.net.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div><div class="kpi"><div class="l">Margin</div><div class="v" style="color:#4ade80">${(w.net/w.gross*100).toFixed(1)}%</div></div><div class="kpi"><div class="l">Moves</div><div class="v" style="color:#a78bfa">${w.moves.length}</div></div></div>
-<h2>Cost Groups</h2><div class="groups">${groups.map(g=>`<div class="grp" style="border-color:${g.color}44"><div style="font-size:20px">${g.icon}</div><div class="gv" style="color:${g.color}">$${g.amt.toFixed(0)}</div><div style="font-size:9px;color:#8fa3c0">${g.label}</div><div style="font-size:10px;color:${g.color};margin-top:3px">${g.pct}% of gross</div></div>`).join("")}</div>
+<h2>Cost Groups</h2><div class="groups">${groups.map(function(g){return '<div class="grp" style="border-color:'+g.color+'44"><div style="font-size:20px">'+g.icon+'</div><div class="gv" style="color:'+g.color+'">$'+g.amt.toFixed(0)+'</div><div style="font-size:9px;color:#8fa3c0">'+g.label+'</div><div style="font-size:10px;color:'+g.color+';margin-top:3px">'+g.pct+'% of gross</div></div>';}).join("")}</div>
 <h2>Deduction Breakdown</h2><table><thead><tr><th>Item</th><th style="text-align:right">% Gross</th><th style="text-align:right">Amount</th></tr></thead><tbody>${dedRows}</tbody><tfoot><tr style="border-top:2px solid #2c3a52"><td style="font-weight:700">Total Deductions</td><td style="text-align:right;color:#f87171;font-weight:700">${(w.totalDeductions/w.gross*100).toFixed(1)}%</td><td style="text-align:right;font-weight:800;font-size:14px;color:#f87171">$${w.totalDeductions.toFixed(2)}</td></tr></tfoot></table>
 <h2>Move Performance</h2><table><thead><tr><th>Type</th><th>Route</th><th style="text-align:right">Mi</th><th style="text-align:right">Rate</th><th style="text-align:right">FSC</th><th style="text-align:right">Total</th><th style="text-align:right">RPM</th><th style="text-align:center">Grade</th></tr></thead><tbody>${moveRows}</tbody></table>
 <div class="footer">DrayageIQ · LILWEMMA SERVICES CO · ${w.label} · ${new Date().toLocaleString()}</div></body></html>`;
@@ -2601,8 +2605,9 @@ Be specific with real institution names and programs, not generic advice.`;
     </div>
   );
 }
-  const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(React.createElement(ContractorIQv26));
+
+const domRoot = ReactDOM.createRoot(document.getElementById('root'));
+domRoot.render(React.createElement(ContractorIQv26));
   </script>
 </body>
 </html>
