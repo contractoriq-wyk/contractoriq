@@ -289,7 +289,16 @@ export default function ContractorIQv26(){
   // ── DEMO / ONBOARDING ────────────────────────────────────────────────────────
   const [demoMode,setDemoMode]=useState(()=>{try{const d=localStorage.getItem("ciq_demo");const hasWeeks=localStorage.getItem("ciq_addedWeeks");const added=hasWeeks?JSON.parse(hasWeeks):[];return d==="true"||(added.length===0&&d!=="false");}catch{return true;}});
   const [showWelcome,setShowWelcome]=useState(()=>{
-    try{const hasData=localStorage.getItem("ciq_added_w");const hasDismissed=localStorage.getItem("ciq_welcome_done");return !hasData&&!hasDismissed;}catch{return true;}
+    try{
+      const hasDismissed=localStorage.getItem("ciq_welcome_done");
+      const hasAddedWeeks=localStorage.getItem("ciq_addedWeeks");
+      const addedParsed=hasAddedWeeks?JSON.parse(hasAddedWeeks):[];
+      // Don't show welcome if: dismissed, has W data, or has added weeks
+      if(hasDismissed==="true")return false;
+      if(W.length>0)return false;
+      if(addedParsed.length>0)return false;
+      return true;
+    }catch{return W.length===0;}
   });
   const [deviceFp]=useState(()=>getDeviceFingerprint());
 
@@ -504,7 +513,7 @@ Rules: week=number only, gross=total revenue before deductions, net=amount paid 
 
   async function runAITool(mode){
     setAiMode(mode);setAiOut("");setAiLoad(true);
-    const w=allW[sR]||allW[allW.length-1];
+    const w=allW[sR]||allW[allW.length-1]||safeW[safeW.length-1];
     const fuel=w.deds.filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
     let prompt="",sys="";
 
@@ -2228,7 +2237,7 @@ Be specific with real institution names and programs, not generic advice.`;
             {aiMode!=="chat"&&(
               <button onClick={()=>runAITool(aiMode)} disabled={aiLoad}
                 style={{width:"100%",padding:"14px",borderRadius:9,background:aiLoad?C.raised:aiMode==="bizplan"?`linear-gradient(135deg,${C.a3},${C.accent})`:aiMode==="funding"?`linear-gradient(135deg,${C.gold},${C.a2})`:C.accent,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:aiLoad?"not-allowed":"pointer",marginBottom:12}}>
-                {aiLoad?"⏳ Writing...":aiMode==="report"?`⚡ Generate ${((allW[sR]||allW[allW.length-1]).label)} Report`:aiMode==="bizplan"?"📄 Generate Business Plan for YOUR CO SERVICES":"🏦 Find Funding Options for My Business"}
+                {aiLoad?"⏳ Writing...":aiMode==="report"?`⚡ Generate ${((allW[sR]||allW[allW.length-1]||safeW[safeW.length-1]||{label:"Weekly"}).label)} Report`:aiMode==="bizplan"?"📄 Generate Business Plan for YOUR CO SERVICES":"🏦 Find Funding Options for My Business"}
               </button>
             )}
 
@@ -2372,7 +2381,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Driver","Unit","Wks","Gross","Net","Margin","Status"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 10px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>
                   <tr>
-                    <td style={{padding:"12px 10px",color:C.text,fontWeight:600,fontFamily:"'Space Grotesk',sans-serif"}}>WEMMA KIGEMBE</td>
+                    <td style={{padding:"12px 10px",color:C.text,fontWeight:600,fontFamily:"'Space Grotesk',sans-serif"}}>{(profile.name||"Your Name").toUpperCase()}</td>
                     <td style={{padding:"12px 10px"}}><Tag color={C.accent}>UNIT#</Tag></td>
                     <td style={{padding:"12px 10px",color:C.text}}>{allW.length}</td>
                     <td style={{padding:"12px 10px",fontFamily:"'Space Grotesk',sans-serif",color:C.accent,fontWeight:700}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
