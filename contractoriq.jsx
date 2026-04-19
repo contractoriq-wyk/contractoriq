@@ -269,6 +269,7 @@ export default function ContractorIQv26(){
   const [isPro,setIsPro]=useState(()=>{try{return localStorage.getItem("ciq_pro")==="true";}catch{return false;}});
   const [trialStart,setTrialStart]=useState(()=>{try{const t=localStorage.getItem("ciq_trial_start");return t?parseInt(t):null;}catch{return null;}});
   const [showUpgrade,setShowUpgrade]=useState(false);
+  const [ownerTaps,setOwnerTaps]=useState(0);
   const [upgradeSrc,setUpgradeSrc]=useState("");
   const [oUses,setOUses]=useState(()=>{try{return parseInt(localStorage.getItem("ciq_o_uses")||"0");}catch{return 0;}});
   const [aiUses,setAiUses]=useState(()=>{try{return parseInt(localStorage.getItem("ciq_ai_uses")||"0");}catch{return 0;}});
@@ -903,7 +904,7 @@ Be specific with real institution names and programs, not generic advice.`;
           ):trialDaysLeft>0?(
             <div style={{padding:"6px 9px",borderRadius:8,background:C.gold+"20",border:"1px solid "+C.gold+"55",fontSize:9,fontWeight:700,color:C.gold,flexShrink:0}}>{trialDaysLeft}d left</div>
           ):(
-            <button onClick={()=>openUpgrade("header")} onDoubleClick={()=>{setIsPro(true);try{localStorage.setItem("ciq_pro","true");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Upgrade</button>
+            <button onClick={()=>{const t=ownerTaps+1;setOwnerTaps(t);if(t>=5){setIsPro(true);setOwnerTaps(0);try{localStorage.setItem("ciq_pro","true");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}else{openUpgrade("header");}}} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{ownerTaps>0?`(${ownerTaps}/5)`:"Upgrade"}</button>
           )}
         </div>
       </div>
