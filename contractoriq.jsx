@@ -899,11 +899,11 @@ Be specific with real institution names and programs, not generic advice.`;
             👤
           </button>
           {isPro?(
-            <div style={{padding:"6px 10px",borderRadius:8,background:"linear-gradient(135deg,"+C.accent+"22,"+C.a3+"22)",border:"1px solid "+C.accent+"55",fontSize:9,fontWeight:800,color:C.accent,letterSpacing:"0.05em",flexShrink:0}}>PRO</div>
+            <div onClick={()=>{setIsPro(false);try{localStorage.removeItem("ciq_pro");localStorage.removeItem("ciq_trial_start");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}} style={{padding:"6px 10px",borderRadius:8,background:"linear-gradient(135deg,"+C.accent+"22,"+C.a3+"22)",border:"1px solid "+C.accent+"55",fontSize:9,fontWeight:800,color:C.accent,letterSpacing:"0.05em",flexShrink:0,cursor:"pointer"}}>PRO ✓</div>
           ):trialDaysLeft>0?(
             <div style={{padding:"6px 9px",borderRadius:8,background:C.gold+"20",border:"1px solid "+C.gold+"55",fontSize:9,fontWeight:700,color:C.gold,flexShrink:0}}>{trialDaysLeft}d left</div>
           ):(
-            <button onClick={()=>openUpgrade("header")} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Upgrade</button>
+            <button onClick={()=>openUpgrade("header")} onDoubleClick={()=>{setIsPro(true);try{localStorage.setItem("ciq_pro","true");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Upgrade</button>
           )}
         </div>
       </div>
