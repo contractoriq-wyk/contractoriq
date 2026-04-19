@@ -59,115 +59,29 @@ function copyText(t){if(navigator.clipboard?.writeText)navigator.clipboard.write
 function fbCopy(t){const e=document.createElement("textarea");e.value=t;e.style.cssText="position:fixed;opacity:0";document.body.appendChild(e);e.focus();e.select();document.execCommand("copy");document.body.removeChild(e);}
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
-const W=[
-  // ── STG / Seagirt Terminal Group ──────────────────────────────────────────
-  {vendor:"STG",week:"06",label:"Week 06",from:"02/03/2026",to:"02/07/2026",gross:2639.45,net:2693.65,totalDeductions:54.20,rebate:0,
-   moves:[
-     {t:"L",fr:"NEW STG DRAYAGE BALTIMORE",to:"EQI MD",                  mi:92,rt:50,  fc:0},
-     {t:"L",fr:"PORTS AMERICA SEAGIRT",    to:"MRS-CMC BALTIMORE",       mi:1, rt:25,  fc:7.38},
-     {t:"L",fr:"PORTS AMERICA SEAGIRT",    to:"EFW WAREHOUSING HLI MDC", mi:83,rt:176, fc:50.16},
-     {t:"L",fr:"PORTS AMERICA SEAGIRT",    to:"NEW STG DRAYAGE BALT",    mi:11,rt:86,  fc:24.51},
-     {t:"L",fr:"NEW STG DRAYAGE BALTIMORE",to:"EQI MD",                  mi:92,rt:164, fc:46.74},
-     {t:"L",fr:"PORTS AMERICA SEAGIRT",    to:"NEW STG DRAYAGE BALT",    mi:11,rt:86,  fc:24.51},
-     {t:"E",fr:"EQI MD",                   to:"PORTS AMERICA SEAGIRT",   mi:84,rt:135, fc:38.48},
-     {t:"E",fr:"EFW WAREHOUSING HLI MDC", to:"PORTS AMERICA SEAGIRT",   mi:83,rt:144, fc:41.04},
-     {t:"L",fr:"PORTS AMERICA SEAGIRT",    to:"NEW STG DRAYAGE BALT",    mi:11,rt:86,  fc:24.51},
-     {t:"E",fr:"EQI MD",                   to:"PORTS AMERICA SEAGIRT",   mi:84,rt:135, fc:38.48},
-     {t:"L",fr:"NEW STG DRAYAGE BALTIMORE",to:"EQI MD",                  mi:92,rt:164, fc:46.74},
-     {t:"L",fr:"PORTS AMERICA SEAGIRT",    to:"NEW STG DRAYAGE BALT",    mi:11,rt:86,  fc:24.51},
-     {t:"L",fr:"PORTS AMERICA SEAGIRT",    to:"NEW STG DRAYAGE BALT",    mi:11,rt:86,  fc:24.51},
-     {t:"E",fr:"NEW STG DRAYAGE BALTIMORE",to:"PORTS AMERICA SEAGIRT",   mi:22,rt:66,  fc:18.81},
-     {t:"L",fr:"PORTS AMERICA SEAGIRT",    to:"NEW STG DRAYAGE BALT",    mi:11,rt:86,  fc:24.51},
-     {t:"E",fr:"EQI MD",                   to:"PORTS AMERICA SEAGIRT",   mi:84,rt:135, fc:39.82},
-     {t:"L",fr:"NEW STG DRAYAGE BALTIMORE",to:"EQI MD",                  mi:92,rt:164, fc:46.74},
-   ],
-   deds:[
-     {l:"CLDA",                    a:16.00},
-     {l:"OCC/ACC Insurance",       a:25.31},
-     {l:"Physical Damage Ins.",    a:26.07},
-     {l:"Fuel Service Fee",        a:2.10},
-     {l:"Plate Program 2026/2027", a:300.00},
-     {l:"Fuel Purchases",          a:594.00},
-     {l:"Bobtail Insurance",       a:16.20},
-     {l:"Fuel Taxes",              a:82.13},
-     {l:"Plate Program Fees",      a:46.35},
-     {l:"Liability Limiter (LLP)", a:32.64},
-     {l:"Truck Escrow",            a:100.00},
-   ]},
-  // ── ContainerPort Group ───────────────────────────────────────────────────
-  {vendor:"CPG",week:"09",label:"Week 09",from:"02/23/2026",to:"03/01/2026",gross:1865.26,net:338.55,totalDeductions:1565.10,rebate:38.39,
-   moves:[{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:37.49},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:37.49},{t:"E",fr:"LANCASPA",to:"DUNDALMD",mi:73,rt:128,fc:35.15},{t:"L",fr:"DUNDALMD",to:"LANCASPA",mi:73,rt:192,fc:35.15},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:37.49},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:37.49},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:75,fc:0}],
-   deds:[{l:"Fuel Advance (TA)",a:607.32},{l:"Fuel Advance (Pilot)",a:645.28},{l:"Escrow Regular",a:100},{l:"License Plate",a:55},{l:"Parking/Security",a:40},{l:"Physical Damage Ins.",a:33.64},{l:"OCC/ACC Insurance",a:32.64},{l:"Bobtail Insurance",a:10.61},{l:"Roadside Assistance",a:10.61},{l:"ELD Fee",a:10},{l:"Event Recorder Fee",a:10},{l:"2290 Escrow",a:10}]},
-  {vendor:"CPG",week:"10",label:"Week 10",from:"03/02/2026",to:"03/08/2026",gross:5263.42,net:3014.69,totalDeductions:2311.96,rebate:63.17,
-   moves:[{t:"E",fr:"MIDD1PA",to:"ELIZABNJ",mi:163,rt:326,fc:153.66},{t:"L",fr:"DUNDALMD",to:"MIDD1PA",mi:90,rt:186,fc:0},{t:"L",fr:"ELIZABNJ",to:"DUNDALMD",mi:173,rt:354,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:37.49},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:37.49},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:38.18},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:37.49},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:38.18},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:38.18},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:75,fc:0}],
-   deds:[{l:"Fuel Advance (Pilot 179)",a:568.35},{l:"Fuel Advance (Carneys Pt)",a:745},{l:"Fuel Advance (Pilot 179)",a:686.11},{l:"Escrow Regular",a:100},{l:"License Plate",a:55},{l:"Parking/Security",a:40},{l:"Physical Damage Ins.",a:33.64},{l:"OCC/ACC Insurance",a:32.64},{l:"Bobtail Insurance",a:10.61},{l:"Roadside Assistance",a:10.61},{l:"ELD Fee",a:10},{l:"Event Recorder Fee",a:10},{l:"2290 Escrow",a:10}]},
-  {vendor:"CPG",week:"11",label:"Week 11",from:"03/09/2026",to:"03/15/2026",gross:5070.70,net:2816.36,totalDeductions:2309.91,rebate:55.44,
-   moves:[{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:94,rt:202,fc:53.47},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"MIDD1PA",to:"ELIZABNJ",mi:163,rt:326,fc:153.66},{t:"L",fr:"ELIZABNJ",to:"DUNDALMD",mi:173,rt:166.38,fc:0},{t:"L",fr:"DUNDALMD",to:"MIDD1PA",mi:93,rt:6,fc:0},{t:"L",fr:"ELIZABNJ",to:"DUNDALMD",mi:173,rt:354,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:94,rt:202,fc:53.47},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"CHAM1PA",to:"BALTIMMD",mi:106,rt:147,fc:61.20},{t:"L",fr:"BALTIMMD",to:"CHAM1PA",mi:106,rt:220,fc:61.20},{t:"E",fr:"GREENCPA",to:"DUNDALMD",mi:94,rt:135,fc:53.47},{t:"L",fr:"DUNDALMD",to:"DUNDALMD",mi:10,rt:100,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"ELIZABNJ",to:"DUNDALMD",mi:90,rt:186,fc:189.85}],
-   deds:[{l:"Fuel Advance (Pilot 179)",a:926.30},{l:"Fuel Advance (Pilot 179)",a:276.89},{l:"Fuel Advance (Pilot 150)",a:794.22},{l:"Escrow Regular",a:100},{l:"License Plate",a:55},{l:"Parking/Security",a:40},{l:"Physical Damage Ins.",a:33.64},{l:"OCC/ACC Insurance",a:32.64},{l:"Bobtail Insurance",a:10.61},{l:"Roadside Assistance",a:10.61},{l:"ELD Fee",a:10},{l:"Event Recorder Fee",a:10},{l:"2290 Escrow",a:10}]},
-  {vendor:"CPG",week:"12",label:"Week 12",from:"03/16/2026",to:"03/22/2026",gross:3479.98,net:1424.28,totalDeductions:2103.24,rebate:47.34,
-   moves:[{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"SPARROMD",to:"MONROVMD",mi:51,rt:168,fc:32.93},{t:"E",fr:"MONROVMD",to:"DUNDALMD",mi:49,rt:180,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"HAGERSMD",to:"BALTIMMD",mi:72,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"GREENCPA",to:"DUNDALMD",mi:94,rt:135,fc:53.47},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"NEWCASDE",to:"DUNDALMD",mi:67,rt:122,fc:41.92},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:45.95},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:45.95},{t:"L",fr:"DUNDALMD",to:"YORKPA",mi:63,rt:180,fc:38.92},{t:"E",fr:"YORKPA",to:"DUNDALMD",mi:63,rt:120,fc:38.92},{t:"L",fr:"DUNDALMD",to:"NEWCASDE",mi:66,rt:110,fc:41.92}],
-   deds:[{l:"Fuel Advance (Pilot 179)",a:841.95},{l:"Fuel Advance (Pilot 179)",a:942.23},{l:"Escrow Regular",a:100},{l:"License Plate",a:55},{l:"Parking/Security",a:40},{l:"Physical Damage Ins.",a:33.64},{l:"OCC/ACC Insurance",a:32.64},{l:"Bobtail Insurance",a:10.61},{l:"Roadside Assistance",a:10.61},{l:"ELD Fee",a:10},{l:"Event Recorder Fee",a:10},{l:"2290 Escrow",a:10},{l:"Fuel Highway Taxes",a:6.56}]},
-  {vendor:"CPG",week:"13",label:"Week 13",from:"03/23/2026",to:"03/29/2026",gross:4688.64,net:2857.82,totalDeductions:1870.04,rebate:38.95,
-   moves:[{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:100,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"SPARROMD",to:"HAGERSMD",mi:84,rt:198,fc:51.36},{t:"L",fr:"SPARROMD",to:"HAGERSMD",mi:84,rt:100,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"DUNDALMD",mi:1,rt:35,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"GREENCPA",to:"DUNDALMD",mi:94,rt:135,fc:57.40},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:48.33},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:48.33},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:75,fc:0},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:48.33},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:48.33},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:48.33},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:48.33},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:94,rt:202,fc:57.40},{t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:93,rt:12.50,fc:0}],
-   deds:[{l:"Fuel Advance (Pilot 179)",a:313.31},{l:"Fuel Advance (Pilot 150)",a:843.93},{l:"Fuel Advance (Pilot 179)",a:400.30},{l:"Escrow Regular",a:100},{l:"License Plate",a:55},{l:"Parking/Security",a:40},{l:"Physical Damage Ins.",a:33.64},{l:"OCC/ACC Insurance",a:32.64},{l:"Bobtail Insurance",a:10.61},{l:"Roadside Assistance",a:10.61},{l:"ELD Fee",a:10},{l:"Event Recorder Fee",a:10},{l:"2290 Escrow",a:10}]},
-  {vendor:"CPG",week:"14",label:"Week 14",from:"03/30/2026",to:"04/05/2026",gross:3783.73,net:2227.91,totalDeductions:1587.99,rebate:31.83,
-   moves:[{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:50,fc:0},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:50,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:48.33},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:50,fc:0},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36}],
-   deds:[{l:"Fuel Advance (Pilot 179)",a:910.88},{l:"Fuel Advance (Pilot 179)",a:367.95},{l:"Escrow Regular",a:100},{l:"License Plate",a:55},{l:"Parking/Security",a:40},{l:"Physical Damage Ins.",a:32.18},{l:"OCC/ACC Insurance",a:31.22},{l:"Bobtail Insurance",a:10.15},{l:"Roadside Assistance",a:10.61},{l:"ELD Fee",a:10},{l:"Event Recorder Fee",a:10},{l:"2290 Escrow",a:10}]},
-  {vendor:"CPG",week:"15",label:"Week 15",from:"04/06/2026",to:"04/12/2026",gross:5705.45,net:3000.28,totalDeductions:2764.49,rebate:58.91,gallons:392.70,
-   moves:[
-     {t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82, rt:132,   fc:57.66},
-     {t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:94, rt:202,   fc:64.45},
-     {t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81, rt:198,   fc:57.66},
-     {t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82, rt:132,   fc:57.66},
-     {t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82, rt:132,   fc:57.66},
-     {t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82, rt:132,   fc:57.66},
-     {t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81, rt:198,   fc:57.66},
-     {t:"E",fr:"GREENCPA", to:"DUNDALMD",mi:94, rt:135,   fc:62.18},
-     {t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:93, rt:122,   fc:0},
-     {t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81, rt:198,   fc:57.66},
-     {t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82, rt:132,   fc:57.66},
-     {t:"L",fr:"BALTIMMD",to:"WILLIAMD", mi:77, rt:195,   fc:52.36},
-     {t:"E",fr:"WILLIAMD", to:"BALTIMMD",mi:77, rt:130,   fc:54.27},
-     {t:"L",fr:"BALTIMMD",to:"WILLIAMD", mi:77, rt:50,    fc:0},
-     {t:"E",fr:"GREENCPA", to:"DUNDALMD",mi:94, rt:135,   fc:64.45},
-     {t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81, rt:198,   fc:57.66},
-     {t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82, rt:132,   fc:57.66},
-     {t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82, rt:30,    fc:0},
-     {t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82, rt:132,   fc:57.66},
-     {t:"L",fr:"BALTIMMD",to:"WILLIAMD", mi:77, rt:195,   fc:54.27},
-     {t:"E",fr:"WILLIAMD", to:"BALTIMMD",mi:77, rt:130,   fc:54.27},
-     {t:"L",fr:"BALTIMMD",to:"WILLIAMD", mi:77, rt:50,    fc:0},
-     {t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81, rt:198,   fc:57.66},
-     {t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81, rt:198,   fc:57.66},
-     {t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82, rt:132,   fc:57.66},
-     {t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81, rt:198,   fc:57.66},
-     {t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81, rt:198,   fc:57.66},
-     {t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:94, rt:202,   fc:64.45},
-     {t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:94, rt:34.01, fc:62.18},
-   ],
-   deds:[
-     {l:"Event Recorder Fee",          a:10.00},
-     {l:"ELD Fee",                     a:10.00},
-     {l:"Parking/Security",            a:40.00},
-     {l:"License Plate",               a:55.00},
-     {l:"Roadside Assistance",         a:10.61},
-     {l:"OCC/ACC Insurance",           a:31.22},
-     {l:"Liability Limiter Insurance", a:14.47},
-     {l:"Escrow Regular",              a:100.00},
-     {l:"Bobtail Insurance",           a:10.15},
-     {l:"Physical Damage Ins.",        a:32.18},
-     {l:"2290 Escrow",                 a:10.00},
-     {l:"Fuel Advance (Pilot 150)",    a:253.00},
-     {l:"Fuel Advance (Pilot 179)",    a:865.53},
-     {l:"Fuel Advance (Pilot 179)",    a:881.87},
-     {l:"Fuel Advance (Pilot 179)",    a:440.46},
-   ]},
+const W=[];
+
+// ── DEMO DATA (shown in demo mode only) ───────────────────────────────────
+const DEMO_W=[
+  {vendor:"CPG",week:"01",label:"Week 01",from:"01/06/2025",to:"01/10/2025",gross:4200.00,net:2310.00,totalDeductions:1890.00,rebate:45.00,gallons:280.00,
+   deds:[{l:"Operations Fee",a:840.00},{l:"Fuel Advance",a:750.00},{l:"Insurance",a:200.00},{l:"Escrow",a:100.00}],
+   moves:[{mi:62,rt:210,fc:45,t:"L"},{mi:58,rt:195,fc:42,t:"L"},{mi:71,rt:230,fc:48,t:"L"},{mi:45,rt:150,fc:38,t:"E"},{mi:68,rt:220,fc:46,t:"L"}]},
+  {vendor:"CPG",week:"02",label:"Week 02",from:"01/13/2025",to:"01/17/2025",gross:4850.00,net:2667.50,totalDeductions:2182.50,rebate:52.00,gallons:310.00,
+   deds:[{l:"Operations Fee",a:970.00},{l:"Fuel Advance",a:890.00},{l:"Insurance",a:200.00},{l:"Escrow",a:122.50}],
+   moves:[{mi:65,rt:225,fc:47,t:"L"},{mi:72,rt:240,fc:50,t:"L"},{mi:55,rt:185,fc:40,t:"L"},{mi:68,rt:220,fc:46,t:"L"},{mi:48,rt:160,fc:39,t:"E"}]},
+  {vendor:"CPG",week:"03",label:"Week 03",from:"01/20/2025",to:"01/24/2025",gross:3900.00,net:2145.00,totalDeductions:1755.00,rebate:38.00,gallons:265.00,
+   deds:[{l:"Operations Fee",a:780.00},{l:"Fuel Advance",a:720.00},{l:"Insurance",a:200.00},{l:"Escrow",a:55.00}],
+   moves:[{mi:58,rt:190,fc:41,t:"L"},{mi:62,rt:205,fc:44,t:"L"},{mi:70,rt:228,fc:47,t:"L"},{mi:52,rt:172,fc:38,t:"E"}]},
+  {vendor:"CPG",week:"04",label:"Week 04",from:"01/27/2025",to:"01/31/2025",gross:5200.00,net:2860.00,totalDeductions:2340.00,rebate:60.00,gallons:335.00,
+   deds:[{l:"Operations Fee",a:1040.00},{l:"Fuel Advance",a:950.00},{l:"Insurance",a:200.00},{l:"Escrow",a:150.00}],
+   moves:[{mi:70,rt:235,fc:49,t:"L"},{mi:65,rt:218,fc:46,t:"L"},{mi:75,rt:248,fc:52,t:"L"},{mi:68,rt:225,fc:47,t:"L"},{mi:60,rt:200,fc:43,t:"L"}]},
 ];
+
 
 // ── VENDOR CONFIG ─────────────────────────────────────────────────────────────
 const VENDORS={
-  CPG: {name:"ContainerPort Group", short:"CPG", icon:"🚛", color:"#00ffcc",  unit:"BAL975"},
-  STG: {name:"STG / Seagirt",       short:"STG", icon:"⚓", color:"#a78bfa",  unit:"107H089"},
+  CPG: {name:"ContainerPort Group", short:"CPG", icon:"🚛", color:"#00ffcc",  unit:""},
+  STG: {name:"STG / Seagirt",       short:"STG", icon:"⚓", color:"#a78bfa",  unit:""},
   AMZ: {name:"Amazon Freight",      short:"AMZ", icon:"📦", color:"#ff7a45",  unit:""},
   OTH: {name:"Other",               short:"OTH", icon:"🏢", color:"#fbbf24",  unit:""},
 };
@@ -283,6 +197,20 @@ function grpDeds(deds,gross){
 }
 
 // ── APP ───────────────────────────────────────────────────────────────────────
+
+// ── DEVICE FINGERPRINT (sharing prevention) ──────────────────────────────────
+function getDeviceFingerprint(){
+  try{
+    var cv=document.createElement("canvas");
+    var ctx=cv.getContext("2d");
+    ctx.fillText("ciq_fp",10,10);
+    var fp=cv.toDataURL()+navigator.userAgent+screen.width+"x"+screen.height+navigator.language+(navigator.hardwareConcurrency||"");
+    var hash=0;
+    for(var i=0;i<fp.length;i++){hash=((hash<<5)-hash)+fp.charCodeAt(i);hash|=0;}
+    return "fp_"+Math.abs(hash).toString(36);
+  }catch(e){return "fp_default";}
+}
+
 export default function ContractorIQv26(){
   const [tab,setTab]=useState("dashboard");
   const [sD,setSD]=useState(7); // selDed
@@ -341,7 +269,7 @@ export default function ContractorIQv26(){
   const expRef=useRef(null);
   const docRef=useRef(null);
   // AI chat
-  const [chat,setChat]=useState([{r:"a",t:"👋 ContractorIQ loaded — 8 weeks · $32,496.63 YTD gross. Ask me anything about your business."}]);
+  const [chat,setChat]=useState([{r:"a",t:"👋 Welcome to ContractorIQ! Upload your first settlement or explore demo mode. Ask me anything about your trucking business."}]);
   const [chatIn,setChatIn]=useState("");
   const [chatLoad,setChatLoad]=useState(false);
   // AI tools
@@ -357,6 +285,13 @@ export default function ContractorIQv26(){
   const [dlWk,setDlWk]=useState(null);
   const chatEnd=useRef(null);
 
+  // ── DEMO / ONBOARDING ────────────────────────────────────────────────────────
+  const [demoMode,setDemoMode]=useState(()=>{try{const d=localStorage.getItem("ciq_demo");const hasWeeks=localStorage.getItem("ciq_addedWeeks");const added=hasWeeks?JSON.parse(hasWeeks):[];return d==="true"||(added.length===0&&d!=="false");}catch{return true;}});
+  const [showWelcome,setShowWelcome]=useState(()=>{
+    try{const hasData=localStorage.getItem("ciq_added_w");const hasDismissed=localStorage.getItem("ciq_welcome_done");return !hasData&&!hasDismissed;}catch{return true;}
+  });
+  const [deviceFp]=useState(()=>getDeviceFingerprint());
+
   // ── Persistence ───────────────────────────────────────────────────────────
   useEffect(()=>{const h=()=>setWide(window.innerWidth>700);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[]);
   useEffect(()=>{chatEnd.current?.scrollIntoView({behavior:"smooth"});},[chat]);
@@ -369,14 +304,14 @@ export default function ContractorIQv26(){
   useEffect(()=>{try{localStorage.setItem("ciq_dis_ads",JSON.stringify(dismissedAds));}catch(e){};},[dismissedAds]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  const allW=[...W,...addedW];
+  const allW=demoMode?[...DEMO_W,...addedW]:[...W,...addedW];
   const visibleW=allW.filter(w=>{
     const vk=detectVendor(w);
     if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;
     if(hiddenVendors.includes(vk))return false;
     return true;
   });
-  const safeW=visibleW.length>0?visibleW:allW;
+  const safeW=visibleW.length>0?visibleW:(allW.length>0?allW:DEMO_W);
 
   // ── Vendor breakdown ──────────────────────────────────────────────────────
   const vendorKeys=Object.keys(VENDORS);
@@ -419,7 +354,7 @@ export default function ContractorIQv26(){
   const hwE2=(hw.deds||[]).find(d=>d.l==="2290 Escrow")?.a||0;
   const latFuel=(latest.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
 
-  const SYS=`Expert drayage business advisor for LILWEMMA SERVICES CO, CDL owner-operator, ContainerPort Group, BAL975, Baltimore MD. Real settlement data: ${allW.map(function(w){return "W"+w.week+": Gross $"+w.gross+", Net $"+w.net+", Margin "+(w.net/w.gross*100).toFixed(1)+"%, "+(w.moves||[]).length+" moves";}).join(" | ")}. YTD: Gross $${tGross.toFixed(0)}, Net $${tNet.toFixed(0)}, Margin ${margin}%, Avg RPM $${avgRPM}, Loaded ${ldPct}%. Be specific, practical, use real numbers. Under 300 words.`;
+  const SYS=`Expert drayage business advisor for YOUR COMPANY, CDL owner-operator, ContainerPort Group, UNIT#, Baltimore MD. Real settlement data: ${allW.map(function(w){return "W"+w.week+": Gross $"+w.gross+", Net $"+w.net+", Margin "+(w.net/w.gross*100).toFixed(1)+"%, "+(w.moves||[]).length+" moves";}).join(" | ")}. YTD: Gross $${tGross.toFixed(0)}, Net $${tNet.toFixed(0)}, Margin ${margin}%, Avg RPM $${avgRPM}, Loaded ${ldPct}%. Be specific, practical, use real numbers. Under 300 words.`;
 
   // ── PDF Scanner ───────────────────────────────────────────────────────────
   async function scanPDF(file, fileType){
@@ -462,7 +397,7 @@ export default function ContractorIQv26(){
     const prompt=`You are a data extraction expert for drayage/trucking settlement statements. This could be from ContainerPort Group, STG, or any other carrier. Extract ALL data and return ONLY valid JSON — no explanation, no markdown, just the JSON object.
 
 Required JSON format:
-{"week":"06","from":"02/03/2026","to":"02/07/2026","gross":2639.45,"net":2693.65,"totalDeductions":54.20,"rebate":0,"moves":[{"t":"L","fr":"PORTS AMERICA SEAGIRT","to":"NEW STG DRAYAGE BALTIMORE","mi":11,"rt":86,"fc":24.51}],"deds":[{"l":"Fuel Purchases","a":594.00}]}
+{"week":"01","from":"01/06/2025","to":"01/10/2025","gross":4200.00,"net":2310.00,"totalDeductions":1890.00,"rebate":45.00,"moves":[{"t":"L","fr":"PORT TERMINAL A","to":"WAREHOUSE DISTRICT","mi":65,"rt":220,"fc":46}],"deds":[{"l":"Operations Fee","a":840.00},{"l":"Fuel Advance","a":750.00}]}
 
 Extraction rules:
 - week: find the week number. Look for "Week No:", settlement date, or period covered. For STG statements use the week number from settlement date (e.g. 2/11/2026 = week 06 of 2026). For ContainerPort look for "Week No: 15-2026"
@@ -527,7 +462,7 @@ ${pasteText.slice(0,6000)}`;
           messages:[{role:"user",content:[
             {type:"document",source:{type:"url",url:url}},
             {type:"text",text:`You are a data extraction expert for drayage/trucking settlement statements from any carrier (ContainerPort Group, STG, etc). Extract ALL data and return ONLY valid JSON — no explanation, no markdown:
-{"week":"06","from":"02/03/2026","to":"02/07/2026","gross":2639.45,"net":2693.65,"totalDeductions":54.20,"rebate":0,"moves":[{"t":"L","fr":"PORTS AMERICA SEAGIRT","to":"NEW STG DRAYAGE","mi":11,"rt":86,"fc":24.51}],"deds":[{"l":"Fuel Purchases","a":594.00}]}
+{"week":"01","from":"01/06/2025","to":"01/10/2025","gross":4200.00,"net":2310.00,"totalDeductions":1890.00,"rebate":45.00,"moves":[{"t":"L","fr":"PORT TERMINAL A","to":"WAREHOUSE DISTRICT","mi":65,"rt":220,"fc":46}],"deds":[{"l":"Operations Fee","a":840.00},{"l":"Fuel Advance","a":750.00}]}
 Rules: week=number only, gross=total revenue before deductions, net=amount paid to driver, moves every row (t=L/E, fr=pickup, to=delivery, mi=miles, rt=linehaul rate, fc=fuel surcharge), deds=every deduction as positive number (skip credits/reimbursements).`}
           ]}]
         })
@@ -583,7 +518,7 @@ Write: 1) Week Summary 2) Top Profit Leak 3) Action Item 4) Outlook. Under 200 w
 
     if(mode==="bizplan"){
       sys="You write professional business plans for small trucking companies seeking bank financing. Use clear sections, specific numbers, professional tone. Plain text, no markdown symbols.";
-      prompt=`Write a complete business plan for LILWEMMA SERVICES CO seeking a small business loan to expand from 1 to 2 trucks.
+      prompt=`Write a complete business plan for YOUR COMPANY seeking a small business loan to expand from 1 to 2 trucks.
 
 Real financial data:
 - YTD Gross Revenue: $${tGross.toFixed(2)} over ${allW.length} weeks
@@ -592,9 +527,9 @@ Real financial data:
 - Average Weekly Gross: $${(tGross/allW.length).toFixed(2)}
 - Average Weekly Net: $${(tNet/allW.length).toFixed(2)}
 - Best Week: $${Math.max(...allW.map(w=>w.net)).toFixed(2)} net
-- Equipment: 1 truck, unit BAL975
+- Equipment: 1 truck, unit UNIT#
 - Contract: ContainerPort Group, Baltimore MD
-- Owner: Wemma Kigembe, CDL operator
+- Owner: Owner Name, CDL operator
 
 Write a professional business plan with these sections:
 1. Executive Summary
@@ -609,7 +544,7 @@ This plan will be presented to a bank or SBA lender. Make it professional, credi
 
     if(mode==="funding"){
       sys="You are a small business funding advisor specializing in trucking and transportation companies. Provide specific, actionable guidance with real institution names, programs, and contact information.";
-      prompt=`I am Wemma Kigembe, owner of LILWEMMA SERVICES CO, a CDL drayage owner-operator working with ContainerPort Group in Baltimore MD.
+      prompt=`I am Owner Name, owner of YOUR COMPANY, a CDL drayage owner-operator working with ContainerPort Group in Baltimore MD.
 
 Financial snapshot:
 - YTD Gross: $${tGross.toFixed(2)} in ${allW.length} weeks
@@ -678,8 +613,8 @@ Be specific with real institution names and programs, not generic advice.`;
   }
 
   function printReport(){
-    var name=profile.name||"LILWEMMA SERVICES CO";
-    var unit=profile.unit||"BAL975";
+    var name=profile.name||"YOUR COMPANY";
+    var unit=profile.unit||"UNIT#";
     var expRows=expenses.map(function(e){
       var wk=e.weekRef?("W"+e.weekRef):"None";
       return "<tr><td>"+e.date+"</td><td>"+e.category+"</td><td>"+e.desc+"</td><td>-$"+parseFloat(e.amount||0).toFixed(2)+"</td><td>"+wk+"</td></tr>";
@@ -717,7 +652,7 @@ Be specific with real institution names and programs, not generic advice.`;
   }
 
   function emailReport(){
-    var name=profile.name||"LILWEMMA SERVICES CO";
+    var name=profile.name||"YOUR COMPANY";
     var sub="ContractorIQ Report - "+name+" - "+new Date().toLocaleDateString();
     var body="Business Report\n\nYTD Gross: $"+tGross.toFixed(2)+"\nYTD Net: $"+tNet.toFixed(2)+"\nMargin: "+margin+"%\nWeeks: "+allW.length+"\nExpenses: "+expenses.length+"\nDocuments: "+docs.length+"\n\nGenerated by ContractorIQ";
     window.location.href="mailto:?subject="+encodeURIComponent(sub)+"&body="+encodeURIComponent(body);
@@ -729,12 +664,12 @@ Be specific with real institution names and programs, not generic advice.`;
     const moveRows=w.moves.map((m,i)=>{const s=scoreMove({miles:m.mi,rate:m.rt,fsc:m.fc,type:m.t});return`<tr style="background:${i%2===0?"transparent":"rgba(255,255,255,0.03)"}"><td><span style="padding:2px 7px;border-radius:4px;font-size:11px;background:${m.t==="L"?"#14532d":"#431407"};color:${m.t==="L"?"#86efac":"#fcd34d"}">${m.t==="L"?"LOAD":"EMPTY"}</span></td><td>${m.fr}→${m.to}</td><td style="text-align:right">${m.mi}</td><td style="text-align:right">$${m.rt}</td><td style="text-align:right;color:${m.fc>0?"#00ffcc":"#8fa3c0"}">${m.fc>0?"$"+m.fc:"—"}</td><td style="text-align:right;font-weight:700">$${(m.rt+m.fc).toFixed(2)}</td><td style="text-align:right;color:${+s.rpm>=2.5?"#4ade80":"#f87171"};font-weight:700">$${s.rpm}</td><td style="text-align:center;color:${gc(s.grade)};font-weight:700">${s.grade}</td></tr>`}).join("");
     const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>DrayageIQ — ${w.label}</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;background:#0b0f1c;color:#f0f6ff;padding:28px;font-size:13px}h1{font-family:Arial,sans-serif;font-size:20px;font-weight:800;color:#00ffcc}h2{font-size:13px;font-weight:700;color:#00ffcc;margin:22px 0 10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #2c3a52;padding-bottom:5px}.header{display:flex;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #2c3a52}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}.kpi{background:#1a2236;border:1px solid #2c3a52;border-radius:9px;padding:12px;text-align:center}.kpi .v{font-size:18px;font-weight:800;margin:5px 0 3px}.kpi .l{font-size:9px;color:#8fa3c0;text-transform:uppercase}.groups{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}.grp{background:#1a2236;border-radius:9px;padding:12px;text-align:center;border:1px solid #2c3a52}.grp .gv{font-size:16px;font-weight:800;margin:4px 0 2px}table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:left;padding:7px 9px;color:#8fa3c0;font-weight:700;font-size:10px;text-transform:uppercase;border-bottom:1px solid #2c3a52}td{padding:8px 9px;border-bottom:1px solid rgba(44,58,82,0.5);color:#f0f6ff}.footer{margin-top:24px;padding-top:12px;border-top:1px solid #2c3a52;font-size:10px;color:#8fa3c0;text-align:center}@media print{body{background:#fff;color:#000}.kpi,.grp{background:#f5f5f5;border-color:#ccc}}</style></head><body>
-<div class="header"><div><h1>🚛 DrayageIQ — Settlement Report</h1><div style="color:#8fa3c0;font-size:11px;margin-top:5px">LILWEMMA SERVICES CO · BAL975 · ContainerPort Group</div><div style="color:#8fa3c0;font-size:11px;margin-top:2px">${w.label} · ${w.from} – ${w.to}</div></div><div style="text-align:right;font-size:11px;color:#8fa3c0"><div>Generated ${new Date().toLocaleDateString()}</div></div></div>
+<div class="header"><div><h1>🚛 DrayageIQ — Settlement Report</h1><div style="color:#8fa3c0;font-size:11px;margin-top:5px">YOUR COMPANY · UNIT# · ContainerPort Group</div><div style="color:#8fa3c0;font-size:11px;margin-top:2px">${w.label} · ${w.from} – ${w.to}</div></div><div style="text-align:right;font-size:11px;color:#8fa3c0"><div>Generated ${new Date().toLocaleDateString()}</div></div></div>
 <div class="kpis"><div class="kpi"><div class="l">Gross</div><div class="v" style="color:#00ffcc">$${w.gross.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div><div class="kpi"><div class="l">Net Pay</div><div class="v" style="color:#4ade80">$${w.net.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div><div class="kpi"><div class="l">Margin</div><div class="v" style="color:#4ade80">${(w.net/w.gross*100).toFixed(1)}%</div></div><div class="kpi"><div class="l">Moves</div><div class="v" style="color:#a78bfa">${w.moves.length}</div></div></div>
 <h2>Cost Groups</h2><div class="groups">${groups.map(function(g){return '<div class="grp" style="border-color:'+g.color+'44"><div style="font-size:20px">'+g.icon+'</div><div class="gv" style="color:'+g.color+'">$'+g.amt.toFixed(0)+'</div><div style="font-size:9px;color:#8fa3c0">'+g.label+'</div><div style="font-size:10px;color:'+g.color+';margin-top:3px">'+g.pct+'% of gross</div></div>';}).join("")}</div>
 <h2>Deduction Breakdown</h2><table><thead><tr><th>Item</th><th style="text-align:right">% Gross</th><th style="text-align:right">Amount</th></tr></thead><tbody>${dedRows}</tbody><tfoot><tr style="border-top:2px solid #2c3a52"><td style="font-weight:700">Total Deductions</td><td style="text-align:right;color:#f87171;font-weight:700">${(w.totalDeductions/w.gross*100).toFixed(1)}%</td><td style="text-align:right;font-weight:800;font-size:14px;color:#f87171">$${w.totalDeductions.toFixed(2)}</td></tr></tfoot></table>
 <h2>Move Performance</h2><table><thead><tr><th>Type</th><th>Route</th><th style="text-align:right">Mi</th><th style="text-align:right">Rate</th><th style="text-align:right">FSC</th><th style="text-align:right">Total</th><th style="text-align:right">RPM</th><th style="text-align:center">Grade</th></tr></thead><tbody>${moveRows}</tbody></table>
-<div class="footer">DrayageIQ · LILWEMMA SERVICES CO · ${w.label} · ${new Date().toLocaleString()}</div></body></html>`;
+<div class="footer">DrayageIQ · YOUR COMPANY · ${w.label} · ${new Date().toLocaleString()}</div></body></html>`;
     const blob=new Blob([html],{type:"text/html"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");a.href=url;a.download=`DrayageIQ-Week${w.week}-2026.html`;
@@ -773,14 +708,23 @@ Be specific with real institution names and programs, not generic advice.`;
   const activateTrial=()=>{
     const now=Date.now();
     setTrialStart(now);
-    try{localStorage.setItem("ciq_trial_start",String(now));}catch(e){}
+    try{
+      localStorage.setItem("ciq_trial_start",String(now));
+      localStorage.setItem("ciq_device_fp",deviceFp);
+    }catch(e){}
     setShowUpgrade(false);
   };
   const activatePro=()=>{
     setIsPro(true);
-    try{localStorage.setItem("ciq_pro","true");}catch(e){}
+    try{
+      localStorage.setItem("ciq_pro","true");
+      localStorage.setItem("ciq_device_fp",deviceFp);
+    }catch(e){}
     setShowUpgrade(false);
   };
+  // Check if access is being used on a different device (sharing detection)
+  const storedFp=()=>{try{return localStorage.getItem("ciq_device_fp");}catch{return null;}};
+  const deviceMismatch=(isPro||trialStart)&&storedFp()&&storedFp()!==deviceFp;
 
   const upgradeModal=()=>{
     if(!showUpgrade)return null;
@@ -840,6 +784,58 @@ Be specific with real institution names and programs, not generic advice.`;
   return(
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
       {upgradeModal()}
+      {/* ── WELCOME SCREEN ── */}
+      {showWelcome&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+          <div style={{background:C.card,borderRadius:20,padding:"32px 22px",maxWidth:380,width:"100%",border:"1px solid "+C.border,boxShadow:"0 24px 60px rgba(0,0,0,0.8)"}}>
+            <div style={{textAlign:"center",marginBottom:24}}>
+              <div style={{fontSize:48,marginBottom:12}}>🚛</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.accent,marginBottom:8}}>Welcome to ContractorIQ</div>
+              <div style={{fontSize:13,color:C.sub,lineHeight:1.7}}>The profit decision system built for independent contractors — drayage drivers, owner-operators, Uber, Lyft, DoorDash, delivery, and any contractor who gets paid per job and needs to know if they're actually making money.</div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
+              <button onClick={()=>{
+                setDemoMode(true);
+                try{localStorage.setItem("ciq_demo","true");localStorage.setItem("ciq_welcome_done","true");}catch(e){}
+                setShowWelcome(false);
+              }} style={{padding:"16px",borderRadius:12,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+                <div>👀 Explore Demo</div>
+                <div style={{fontSize:11,fontWeight:400,marginTop:3}}>See the app with sample data — no account needed</div>
+              </button>
+              <button onClick={()=>{
+                try{localStorage.setItem("ciq_welcome_done","true");}catch(e){}
+                setShowWelcome(false);
+              }} style={{padding:"16px",borderRadius:12,background:C.raised,border:"1px solid "+C.border,color:C.text,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>
+                <div>📤 Upload My Settlement</div>
+                <div style={{fontSize:11,fontWeight:400,color:C.sub,marginTop:3}}>Start with your own real data</div>
+              </button>
+            </div>
+            <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,fontSize:10,color:C.sub,lineHeight:1.7,textAlign:"center"}}>
+              💡 One avoided bad load = $300–$800 saved. The app pays for itself immediately.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── DEVICE MISMATCH WARNING (sharing prevention) ── */}
+      {deviceMismatch&&(
+        <div style={{background:C.red+"18",borderBottom:"1px solid "+C.red+"44",padding:"10px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontSize:11,color:C.red,fontWeight:700}}>⚠️ Account detected on new device — please re-verify your subscription</div>
+          <button onClick={()=>window.open("https://buy.stripe.com/fZufZh2lr2co3Q6am29MY01","_blank")} style={{padding:"4px 10px",borderRadius:6,background:C.red+"22",border:"1px solid "+C.red+"55",color:C.red,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Verify</button>
+        </div>
+      )}
+
+      {/* ── DEMO MODE BANNER ── */}
+      {demoMode&&(
+        <div style={{background:"linear-gradient(135deg,"+C.a3+"22,"+C.accent+"12)",borderBottom:"1px solid "+C.a3+"44",padding:"8px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontSize:11,color:C.a3,fontWeight:700}}>👀 Demo Mode — Sample data only</div>
+          <button onClick={()=>{
+            setDemoMode(false);
+            try{localStorage.removeItem("ciq_demo");}catch(e){}
+          }} style={{padding:"4px 10px",borderRadius:6,background:C.a3+"22",border:"1px solid "+C.a3+"55",color:C.a3,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Use My Data</button>
+        </div>
+      )}
+
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 
       {/* HEADER */}
@@ -849,7 +845,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{width:32,height:32,borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🚛</div>
             <div>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,fontSize:15}}>DrayageIQ</div>
-              <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":"LILWEMMA"} · {hideUnitNum?"●●●●●":"BAL975"} · {allW.length} weeks · W15 ✓</div>
+              <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</div>
             </div>
           </div>
           <div style={{textAlign:"right"}}>
@@ -914,7 +910,7 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
               <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Privacy</div>
-                {[{label:"Hide owner name",val:hideOwnerName,set:setHideOwnerName},{label:"Hide unit number (BAL975)",val:hideUnitNum,set:setHideUnitNum}].map(item=>(
+                {[{label:"Hide owner name",val:hideOwnerName,set:setHideOwnerName},{label:"Hide unit number (UNIT#)",val:hideUnitNum,set:setHideUnitNum}].map(item=>(
                   <div key={item.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                     <span style={{fontSize:11,color:C.text}}>{item.label}</span>
                     <button onClick={()=>item.set(p=>!p)} style={{width:40,height:20,borderRadius:10,background:item.val?C.accent:C.border,border:"none",cursor:"pointer",position:"relative",flexShrink:0}}>
@@ -951,7 +947,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{display:"grid",gridTemplateColumns:wide?"repeat(3,1fr)":"1fr",gap:10}}>
               <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Who You Are</div>
-                {[{label:"Your Name",key:"name",ph:"Wemma Kigembe"},{label:"Company",key:"company",ph:"LILWEMMA SERVICES CO"},{label:"Truck / Unit",key:"unit",ph:"BAL975"}].map(f=>(
+                {[{label:"Your Name",key:"name",ph:"Owner Name"},{label:"Company",key:"company",ph:"YOUR COMPANY"},{label:"Truck / Unit",key:"unit",ph:"UNIT#"}].map(f=>(
                   <div key={f.key} style={{marginBottom:9}}>
                     <div style={{fontSize:9,color:C.sub,marginBottom:3,fontWeight:600,textTransform:"uppercase"}}>{f.label}</div>
                     <input value={profile[f.key]||""} onChange={e=>setProfile(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
@@ -1863,7 +1859,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 <textarea
                   value={pasteText}
                   onChange={e=>setPasteText(e.target.value)}
-                  placeholder={"Paste your full settlement text here...\n\nExample:\nSettlement Statement 673863\nWeek No: 15-2026  Week From: 04/06/2026  Week To: 04/12/2026\nIBP003320000/001  1  L  04/07/26  BAL975  BALTIMMD  WILLIAMD  77  195.00  52.36\n...\nTotal Gross: $4,200.00\nNet Check Amount $2,500.00"}
+                  placeholder={"Paste your full settlement text here...\n\nExample:\nSettlement Statement 673863\nWeek No: 15-2026  Week From: 04/06/2026  Week To: 04/12/2026\nIBP003320000/001  1  L  04/07/26  UNIT#  BALTIMMD  WILLIAMD  77  195.00  52.36\n...\nTotal Gross: $4,200.00\nNet Check Amount $2,500.00"}
                   style={{...inp,height:160,resize:"vertical",lineHeight:1.6,fontSize:12,marginBottom:12}}
                 />
                 <button
@@ -2230,7 +2226,7 @@ Be specific with real institution names and programs, not generic advice.`;
             {aiMode!=="chat"&&(
               <button onClick={()=>runAITool(aiMode)} disabled={aiLoad}
                 style={{width:"100%",padding:"14px",borderRadius:9,background:aiLoad?C.raised:aiMode==="bizplan"?`linear-gradient(135deg,${C.a3},${C.accent})`:aiMode==="funding"?`linear-gradient(135deg,${C.gold},${C.a2})`:C.accent,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:aiLoad?"not-allowed":"pointer",marginBottom:12}}>
-                {aiLoad?"⏳ Writing...":aiMode==="report"?`⚡ Generate ${((allW[sR]||allW[allW.length-1]).label)} Report`:aiMode==="bizplan"?"📄 Generate Business Plan for LILWEMMA SERVICES":"🏦 Find Funding Options for My Business"}
+                {aiLoad?"⏳ Writing...":aiMode==="report"?`⚡ Generate ${((allW[sR]||allW[allW.length-1]).label)} Report`:aiMode==="bizplan"?"📄 Generate Business Plan for YOUR CO SERVICES":"🏦 Find Funding Options for My Business"}
               </button>
             )}
 
@@ -2375,7 +2371,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 <tbody>
                   <tr>
                     <td style={{padding:"12px 10px",color:C.text,fontWeight:600,fontFamily:"'Space Grotesk',sans-serif"}}>WEMMA KIGEMBE</td>
-                    <td style={{padding:"12px 10px"}}><Tag color={C.accent}>BAL975</Tag></td>
+                    <td style={{padding:"12px 10px"}}><Tag color={C.accent}>UNIT#</Tag></td>
                     <td style={{padding:"12px 10px",color:C.text}}>{allW.length}</td>
                     <td style={{padding:"12px 10px",fontFamily:"'Space Grotesk',sans-serif",color:C.accent,fontWeight:700}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
                     <td style={{padding:"12px 10px",fontFamily:"'Space Grotesk',sans-serif",color:C.green,fontWeight:700}}>${tNet.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
