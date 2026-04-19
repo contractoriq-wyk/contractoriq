@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ContractorIQ Unlock</title>
+  <style>
+    body{background:#0b0f1c;color:#f0f6ff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;flex-direction:column;gap:20px;}
+    h1{color:#00ffcc;font-size:24px;}
+    button{padding:16px 32px;border-radius:12px;border:none;cursor:pointer;font-size:16px;font-weight:800;font-family:monospace;}
+    .pro{background:linear-gradient(135deg,#00ffcc,#a78bfa);color:#000;}
+    .reset{background:#2c3a52;color:#f0f6ff;border:1px solid #2c3a52;}
+    p{color:#8fa3c0;font-size:12px;text-align:center;}
+  </style>
+</head>
+<body>
+  <h1>🚛 ContractorIQ</h1>
+  <p>Owner unlock tool — use on navy URL only</p>
+  <button class="pro" onclick="unlock()">🔓 Unlock Pro Access</button>
+  <button class="reset" onclick="reset()">🔄 Reset All</button>
+  <div id="msg" style="color:#00ffcc;font-size:14px;"></div>
+  <script>
+    function unlock(){
+      localStorage.setItem("ciq_pro","true");
+      localStorage.setItem("ciq_welcome_done","true");
+      localStorage.removeItem("ciq_o_uses");
+      localStorage.removeItem("ciq_ai_uses");
+      document.getElementById("msg").textContent="✅ Pro unlocked! Go back to the app and refresh.";
+    }
+    function reset(){
+      localStorage.clear();
+      document.getElementById("msg").textContent="✅ Reset done! Refresh the app.";
+    }
+  </script>
+</body>
+</html>
