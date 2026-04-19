@@ -51,7 +51,7 @@ function scoreMove(m){
 }
 
 async function ai(msgs,sys){
-  const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,system:sys,messages:msgs})});
+  const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":typeof VITE_ANTHROPIC_KEY !== "undefined" ? VITE_ANTHROPIC_KEY : "","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,system:sys,messages:msgs})});
   const d=await r.json();return d.content?.map(b=>b.text||"").join("")||"No response.";
 }
 
@@ -288,12 +288,13 @@ export default function ContractorIQv26(){
 
   // ── DEMO / ONBOARDING ────────────────────────────────────────────────────────
   const [demoMode,setDemoMode]=useState(()=>{try{const d=localStorage.getItem("ciq_demo");const hasWeeks=localStorage.getItem("ciq_addedWeeks");const added=hasWeeks?JSON.parse(hasWeeks):[];return d==="true"||(added.length===0&&d!=="false");}catch{return true;}});
+  const isOwnerMode=typeof window!=="undefined"&&(window.location.hostname.includes("navy")||window.location.search.includes("owner=true"));
   const [showWelcome,setShowWelcome]=useState(()=>{
+    if(isOwnerMode)return false;
     try{
       const hasDismissed=localStorage.getItem("ciq_welcome_done");
       const hasAddedWeeks=localStorage.getItem("ciq_addedWeeks");
       const addedParsed=hasAddedWeeks?JSON.parse(hasAddedWeeks):[];
-      // Don't show welcome if: dismissed, has W data, or has added weeks
       if(hasDismissed==="true")return false;
       if(W.length>0)return false;
       if(addedParsed.length>0)return false;
@@ -376,7 +377,7 @@ export default function ContractorIQv26(){
       const contentBlock=isImage
         ?{type:"image",source:{type:"base64",media_type:mediaType,data:b64}}
         :{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
-      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1200,messages:[{role:"user",content:[contentBlock,{type:"text",text:`This is a drayage/trucking settlement statement. Extract ALL data and return ONLY valid JSON with no other text, no markdown:
+      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":typeof VITE_ANTHROPIC_KEY !== "undefined" ? VITE_ANTHROPIC_KEY : "","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1200,messages:[{role:"user",content:[contentBlock,{type:"text",text:`This is a drayage/trucking settlement statement. Extract ALL data and return ONLY valid JSON with no other text, no markdown:
 {"week":"15","from":"04/06/2026","to":"04/12/2026","gross":0.00,"net":0.00,"totalDeductions":0.00,"rebate":0.00,"moves":[{"t":"L","fr":"BALTIMMD","to":"WILLIAMD","mi":77,"rt":195,"fc":52.36}],"deds":[{"l":"Fuel Advance (Pilot 179)","a":500.00}]}`}]}]})});
       const d=await resp.json();
       const txt=d.content?.map(b=>b.text||"").join("").trim();
@@ -425,7 +426,7 @@ ${pasteText.slice(0,6000)}`;
     try{
       const resp=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        headers:{"Content-Type":"application/json","x-api-key":typeof VITE_ANTHROPIC_KEY !== "undefined" ? VITE_ANTHROPIC_KEY : "","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
         body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:3000,messages:[{role:"user",content:prompt}]})
       });
       const d=await resp.json();
@@ -465,7 +466,7 @@ ${pasteText.slice(0,6000)}`;
       // Fetch the PDF as base64 via our API
       const fetchResp=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        headers:{"Content-Type":"application/json","x-api-key":typeof VITE_ANTHROPIC_KEY !== "undefined" ? VITE_ANTHROPIC_KEY : "","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
         body:JSON.stringify({
           model:"claude-sonnet-4-20250514",
           max_tokens:3000,
@@ -597,7 +598,7 @@ Be specific with real institution names and programs, not generic advice.`;
       const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
       const isImg=file.type.startsWith("image/");
       const block=isImg?{type:"image",source:{type:"base64",media_type:file.type||"image/jpeg",data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
-      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,messages:[{role:"user",content:[block,{type:"text",text:'Read this receipt. Return ONLY valid JSON: {"date":"MM/DD/YYYY","vendor":"store name","amount":0.00,"category":"Parts|Labor|Tires|Maintenance|Fuel|Permits|Other","desc":"what was purchased"}'}]}]})});
+      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":typeof VITE_ANTHROPIC_KEY !== "undefined" ? VITE_ANTHROPIC_KEY : "","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,messages:[{role:"user",content:[block,{type:"text",text:'Read this receipt. Return ONLY valid JSON: {"date":"MM/DD/YYYY","vendor":"store name","amount":0.00,"category":"Parts|Labor|Tires|Maintenance|Fuel|Permits|Other","desc":"what was purchased"}'}]}]})});
       const d=await resp.json();
       const raw=d.content?.map(b=>b.text||"").join("")||"{}";
       const parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());
@@ -613,7 +614,7 @@ Be specific with real institution names and programs, not generic advice.`;
       var b64=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result.split(",")[1]);};r.onerror=rej;r.readAsDataURL(file);});
       var isImg=file.type.startsWith("image/");
       var block=isImg?{type:"image",source:{type:"base64",media_type:file.type||"image/jpeg",data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
-      var resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,messages:[{role:"user",content:[block,{type:"text",text:'Read this. Return ONLY JSON: {"date":"MM/DD/YYYY","title":"document title","category":"Maintenance|Inspection|Insurance|Registration|Medical|Permit|Other","note":"brief summary"}'}]}]})});
+      var resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":typeof VITE_ANTHROPIC_KEY !== "undefined" ? VITE_ANTHROPIC_KEY : "","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,messages:[{role:"user",content:[block,{type:"text",text:'Read this. Return ONLY JSON: {"date":"MM/DD/YYYY","title":"document title","category":"Maintenance|Inspection|Insurance|Registration|Medical|Permit|Other","note":"brief summary"}'}]}]})});
       var d=await resp.json();
       var parsed=JSON.parse((d.content?d.content.map(function(b){return b.text||"";}).join(""):"{}").replace(/```json|```/g,"").trim());
       setDocForm(function(p){return {...p,date:parsed.date||p.date,title:parsed.title||"",category:parsed.category||"Maintenance",note:parsed.note||""};});
@@ -801,7 +802,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{textAlign:"center",marginBottom:24}}>
               <div style={{fontSize:48,marginBottom:12}}>🚛</div>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.accent,marginBottom:8}}>Welcome to ContractorIQ</div>
-              <div style={{fontSize:13,color:C.sub,lineHeight:1.7}}>The profit decision system built for independent contractors — drayage drivers, owner-operators, Uber, Lyft, DoorDash, delivery, and any contractor who gets paid per job and needs to know if they're actually making money.</div>
+              <div style={{fontSize:13,color:C.sub,lineHeight:1.7,marginBottom:10}}>The profit decision system built for independent contractors — drayage drivers, owner-operators, Uber, Lyft, DoorDash, delivery, and any contractor who gets paid per job.</div><div style={{fontSize:11,color:C.a3,lineHeight:1.7,fontStyle:"italic",padding:"8px 12px",background:C.a3+"10",borderRadius:8,border:"1px solid "+C.a3+"33"}}>ContractorIQ is not competing with DAT or TruckLogics. It is competing with having a business analyst in your pocket — something that doesn't exist at any price in this market.</div>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
               <button onClick={()=>{
@@ -841,8 +842,8 @@ Be specific with real institution names and programs, not generic advice.`;
           <div style={{fontSize:11,color:C.a3,fontWeight:700}}>👀 Demo Mode — Sample data only</div>
           <button onClick={()=>{
             setDemoMode(false);
-            try{localStorage.removeItem("ciq_demo");localStorage.setItem("ciq_welcome_done","false");}catch(e){}
-            setShowWelcome(true);
+            try{localStorage.removeItem("ciq_demo");localStorage.setItem("ciq_welcome_done","true");}catch(e){}
+            setShowWelcome(false);
           }} style={{padding:"4px 10px",borderRadius:6,background:C.a3+"22",border:"1px solid "+C.a3+"55",color:C.a3,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Use My Data</button>
         </div>
       )}
