@@ -7,6 +7,6 @@ export default defineConfig({
     outDir: 'dist'
   },
   define: {
-    'VITE_ANTHROPIC_KEY': JSON.stringify(process.env.VITE_ANTHROPIC_KEY || '')
+    '__ANTHROPIC_KEY__': JSON.stringify(process.env.VITE_ANTHROPIC_KEY || '')
   }
 })
