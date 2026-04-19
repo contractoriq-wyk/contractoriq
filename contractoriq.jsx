@@ -63,16 +63,16 @@ const W=[];
 
 // ── DEMO DATA (shown in demo mode only) ───────────────────────────────────
 const DEMO_W=[
-  {vendor:"CPG",week:"01",label:"Week 01",from:"01/06/2025",to:"01/10/2025",gross:4200.00,net:2310.00,totalDeductions:1890.00,rebate:45.00,gallons:280.00,
+  {vendor:"JDT",week:"01",label:"Week 01",from:"01/06/2025",to:"01/10/2025",gross:4200.00,net:2310.00,totalDeductions:1890.00,rebate:45.00,gallons:280.00,
    deds:[{l:"Operations Fee",a:840.00},{l:"Fuel Advance",a:750.00},{l:"Insurance",a:200.00},{l:"Escrow",a:100.00}],
    moves:[{mi:62,rt:210,fc:45,t:"L"},{mi:58,rt:195,fc:42,t:"L"},{mi:71,rt:230,fc:48,t:"L"},{mi:45,rt:150,fc:38,t:"E"},{mi:68,rt:220,fc:46,t:"L"}]},
-  {vendor:"CPG",week:"02",label:"Week 02",from:"01/13/2025",to:"01/17/2025",gross:4850.00,net:2667.50,totalDeductions:2182.50,rebate:52.00,gallons:310.00,
+  {vendor:"JDT",week:"02",label:"Week 02",from:"01/13/2025",to:"01/17/2025",gross:4850.00,net:2667.50,totalDeductions:2182.50,rebate:52.00,gallons:310.00,
    deds:[{l:"Operations Fee",a:970.00},{l:"Fuel Advance",a:890.00},{l:"Insurance",a:200.00},{l:"Escrow",a:122.50}],
    moves:[{mi:65,rt:225,fc:47,t:"L"},{mi:72,rt:240,fc:50,t:"L"},{mi:55,rt:185,fc:40,t:"L"},{mi:68,rt:220,fc:46,t:"L"},{mi:48,rt:160,fc:39,t:"E"}]},
-  {vendor:"CPG",week:"03",label:"Week 03",from:"01/20/2025",to:"01/24/2025",gross:3900.00,net:2145.00,totalDeductions:1755.00,rebate:38.00,gallons:265.00,
+  {vendor:"JDT",week:"03",label:"Week 03",from:"01/20/2025",to:"01/24/2025",gross:3900.00,net:2145.00,totalDeductions:1755.00,rebate:38.00,gallons:265.00,
    deds:[{l:"Operations Fee",a:780.00},{l:"Fuel Advance",a:720.00},{l:"Insurance",a:200.00},{l:"Escrow",a:55.00}],
    moves:[{mi:58,rt:190,fc:41,t:"L"},{mi:62,rt:205,fc:44,t:"L"},{mi:70,rt:228,fc:47,t:"L"},{mi:52,rt:172,fc:38,t:"E"}]},
-  {vendor:"CPG",week:"04",label:"Week 04",from:"01/27/2025",to:"01/31/2025",gross:5200.00,net:2860.00,totalDeductions:2340.00,rebate:60.00,gallons:335.00,
+  {vendor:"JDT",week:"04",label:"Week 04",from:"01/27/2025",to:"01/31/2025",gross:5200.00,net:2860.00,totalDeductions:2340.00,rebate:60.00,gallons:335.00,
    deds:[{l:"Operations Fee",a:1040.00},{l:"Fuel Advance",a:950.00},{l:"Insurance",a:200.00},{l:"Escrow",a:150.00}],
    moves:[{mi:70,rt:235,fc:49,t:"L"},{mi:65,rt:218,fc:46,t:"L"},{mi:75,rt:248,fc:52,t:"L"},{mi:68,rt:225,fc:47,t:"L"},{mi:60,rt:200,fc:43,t:"L"}]},
 ];
@@ -80,8 +80,9 @@ const DEMO_W=[
 
 // ── VENDOR CONFIG ─────────────────────────────────────────────────────────────
 const VENDORS={
-  CPG: {name:"ContainerPort Group", short:"CPG", icon:"🚛", color:"#00ffcc",  unit:""},
-  STG: {name:"STG / Seagirt",       short:"STG", icon:"⚓", color:"#a78bfa",  unit:""},
+  JDT: {name:"John Doe Transport", short:"JDT", icon:"🚛", color:"#00ffcc",  unit:""},
+  CPG: {name:"John Doe Transport", short:"JDT", icon:"🚛", color:"#00ffcc",  unit:""},
+  STG: {name:"Jane Smith Logistics", short:"JSL", icon:"⚓", color:"#a78bfa",  unit:""},
   AMZ: {name:"Amazon Freight",      short:"AMZ", icon:"📦", color:"#ff7a45",  unit:""},
   OTH: {name:"Other",               short:"OTH", icon:"🏢", color:"#fbbf24",  unit:""},
 };
@@ -354,7 +355,7 @@ export default function ContractorIQv26(){
   const hwE2=(hw.deds||[]).find(d=>d.l==="2290 Escrow")?.a||0;
   const latFuel=(latest.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
 
-  const SYS=`Expert drayage business advisor for YOUR COMPANY, CDL owner-operator, ContainerPort Group, UNIT#, Baltimore MD. Real settlement data: ${allW.map(function(w){return "W"+w.week+": Gross $"+w.gross+", Net $"+w.net+", Margin "+(w.net/w.gross*100).toFixed(1)+"%, "+(w.moves||[]).length+" moves";}).join(" | ")}. YTD: Gross $${tGross.toFixed(0)}, Net $${tNet.toFixed(0)}, Margin ${margin}%, Avg RPM $${avgRPM}, Loaded ${ldPct}%. Be specific, practical, use real numbers. Under 300 words.`;
+  const SYS=`Expert drayage business advisor for YOUR COMPANY, CDL owner-operator, your carrier, Baltimore MD. Real settlement data: ${allW.map(function(w){return "W"+w.week+": Gross $"+w.gross+", Net $"+w.net+", Margin "+(w.net/w.gross*100).toFixed(1)+"%, "+(w.moves||[]).length+" moves";}).join(" | ")}. YTD: Gross $${tGross.toFixed(0)}, Net $${tNet.toFixed(0)}, Margin ${margin}%, Avg RPM $${avgRPM}, Loaded ${ldPct}%. Be specific, practical, use real numbers. Under 300 words.`;
 
   // ── PDF Scanner ───────────────────────────────────────────────────────────
   async function scanPDF(file, fileType){
@@ -366,7 +367,7 @@ export default function ContractorIQv26(){
       const contentBlock=isImage
         ?{type:"image",source:{type:"base64",media_type:mediaType,data:b64}}
         :{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
-      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1200,messages:[{role:"user",content:[contentBlock,{type:"text",text:`This is a ContainerPort Group drayage settlement statement. Extract ALL data and return ONLY valid JSON with no other text, no markdown:
+      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1200,messages:[{role:"user",content:[contentBlock,{type:"text",text:`This is a drayage/trucking settlement statement. Extract ALL data and return ONLY valid JSON with no other text, no markdown:
 {"week":"15","from":"04/06/2026","to":"04/12/2026","gross":0.00,"net":0.00,"totalDeductions":0.00,"rebate":0.00,"moves":[{"t":"L","fr":"BALTIMMD","to":"WILLIAMD","mi":77,"rt":195,"fc":52.36}],"deds":[{"l":"Fuel Advance (Pilot 179)","a":500.00}]}`}]}]})});
       const d=await resp.json();
       const txt=d.content?.map(b=>b.text||"").join("").trim();
@@ -394,10 +395,10 @@ export default function ContractorIQv26(){
   async function parsePasteText(){
     if(!pasteText.trim())return;
     setPasteLoading(true);setPasteResult(null);setScanMsg("");
-    const prompt=`You are a data extraction expert for drayage/trucking settlement statements. This could be from ContainerPort Group, STG, or any other carrier. Extract ALL data and return ONLY valid JSON — no explanation, no markdown, just the JSON object.
+    const prompt=`You are a data extraction expert for drayage/trucking settlement statements. This could be from any carrier. Extract ALL data and return ONLY valid JSON — no explanation, no markdown, just the JSON object.
 
 Required JSON format:
-{"week":"01","from":"01/06/2025","to":"01/10/2025","gross":4200.00,"net":2310.00,"totalDeductions":1890.00,"rebate":45.00,"moves":[{"t":"L","fr":"PORT TERMINAL A","to":"WAREHOUSE DISTRICT","mi":65,"rt":220,"fc":46}],"deds":[{"l":"Operations Fee","a":840.00},{"l":"Fuel Advance","a":750.00}]}
+{"week":"01","from":"01/06/2025","to":"01/10/2025","gross":4200.00,"net":2310.00,"totalDeductions":1890.00,"rebate":45.00,"moves":[{"t":"L","fr":"Port Terminal","to":"Distribution Center","mi":65,"rt":220,"fc":46}],"deds":[{"l":"Operations Fee","a":840.00},{"l":"Fuel Advance","a":750.00}]}
 
 Extraction rules:
 - week: find the week number. Look for "Week No:", settlement date, or period covered. For STG statements use the week number from settlement date (e.g. 2/11/2026 = week 06 of 2026). For ContainerPort look for "Week No: 15-2026"
@@ -461,8 +462,8 @@ ${pasteText.slice(0,6000)}`;
           max_tokens:3000,
           messages:[{role:"user",content:[
             {type:"document",source:{type:"url",url:url}},
-            {type:"text",text:`You are a data extraction expert for drayage/trucking settlement statements from any carrier (ContainerPort Group, STG, etc). Extract ALL data and return ONLY valid JSON — no explanation, no markdown:
-{"week":"01","from":"01/06/2025","to":"01/10/2025","gross":4200.00,"net":2310.00,"totalDeductions":1890.00,"rebate":45.00,"moves":[{"t":"L","fr":"PORT TERMINAL A","to":"WAREHOUSE DISTRICT","mi":65,"rt":220,"fc":46}],"deds":[{"l":"Operations Fee","a":840.00},{"l":"Fuel Advance","a":750.00}]}
+            {type:"text",text:`You are a data extraction expert for drayage/trucking settlement statements from any carrier. Extract ALL data and return ONLY valid JSON — no explanation, no markdown:
+{"week":"01","from":"01/06/2025","to":"01/10/2025","gross":4200.00,"net":2310.00,"totalDeductions":1890.00,"rebate":45.00,"moves":[{"t":"L","fr":"Port Terminal","to":"Distribution Center","mi":65,"rt":220,"fc":46}],"deds":[{"l":"Operations Fee","a":840.00},{"l":"Fuel Advance","a":750.00}]}
 Rules: week=number only, gross=total revenue before deductions, net=amount paid to driver, moves every row (t=L/E, fr=pickup, to=delivery, mi=miles, rt=linehaul rate, fc=fuel surcharge), deds=every deduction as positive number (skip credits/reimbursements).`}
           ]}]
         })
@@ -528,7 +529,7 @@ Real financial data:
 - Average Weekly Net: $${(tNet/allW.length).toFixed(2)}
 - Best Week: $${Math.max(...allW.map(w=>w.net)).toFixed(2)} net
 - Equipment: 1 truck, unit UNIT#
-- Contract: ContainerPort Group, Baltimore MD
+- Contract: Your Carrier, Baltimore MD
 - Owner: Owner Name, CDL operator
 
 Write a professional business plan with these sections:
@@ -544,7 +545,7 @@ This plan will be presented to a bank or SBA lender. Make it professional, credi
 
     if(mode==="funding"){
       sys="You are a small business funding advisor specializing in trucking and transportation companies. Provide specific, actionable guidance with real institution names, programs, and contact information.";
-      prompt=`I am Owner Name, owner of YOUR COMPANY, a CDL drayage owner-operator working with ContainerPort Group in Baltimore MD.
+      prompt=`I am Owner Name, owner of YOUR COMPANY, a CDL drayage owner-operator working with my carrier.
 
 Financial snapshot:
 - YTD Gross: $${tGross.toFixed(2)} in ${allW.length} weeks
@@ -664,7 +665,7 @@ Be specific with real institution names and programs, not generic advice.`;
     const moveRows=w.moves.map((m,i)=>{const s=scoreMove({miles:m.mi,rate:m.rt,fsc:m.fc,type:m.t});return`<tr style="background:${i%2===0?"transparent":"rgba(255,255,255,0.03)"}"><td><span style="padding:2px 7px;border-radius:4px;font-size:11px;background:${m.t==="L"?"#14532d":"#431407"};color:${m.t==="L"?"#86efac":"#fcd34d"}">${m.t==="L"?"LOAD":"EMPTY"}</span></td><td>${m.fr}→${m.to}</td><td style="text-align:right">${m.mi}</td><td style="text-align:right">$${m.rt}</td><td style="text-align:right;color:${m.fc>0?"#00ffcc":"#8fa3c0"}">${m.fc>0?"$"+m.fc:"—"}</td><td style="text-align:right;font-weight:700">$${(m.rt+m.fc).toFixed(2)}</td><td style="text-align:right;color:${+s.rpm>=2.5?"#4ade80":"#f87171"};font-weight:700">$${s.rpm}</td><td style="text-align:center;color:${gc(s.grade)};font-weight:700">${s.grade}</td></tr>`}).join("");
     const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>DrayageIQ — ${w.label}</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;background:#0b0f1c;color:#f0f6ff;padding:28px;font-size:13px}h1{font-family:Arial,sans-serif;font-size:20px;font-weight:800;color:#00ffcc}h2{font-size:13px;font-weight:700;color:#00ffcc;margin:22px 0 10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #2c3a52;padding-bottom:5px}.header{display:flex;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #2c3a52}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}.kpi{background:#1a2236;border:1px solid #2c3a52;border-radius:9px;padding:12px;text-align:center}.kpi .v{font-size:18px;font-weight:800;margin:5px 0 3px}.kpi .l{font-size:9px;color:#8fa3c0;text-transform:uppercase}.groups{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}.grp{background:#1a2236;border-radius:9px;padding:12px;text-align:center;border:1px solid #2c3a52}.grp .gv{font-size:16px;font-weight:800;margin:4px 0 2px}table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:left;padding:7px 9px;color:#8fa3c0;font-weight:700;font-size:10px;text-transform:uppercase;border-bottom:1px solid #2c3a52}td{padding:8px 9px;border-bottom:1px solid rgba(44,58,82,0.5);color:#f0f6ff}.footer{margin-top:24px;padding-top:12px;border-top:1px solid #2c3a52;font-size:10px;color:#8fa3c0;text-align:center}@media print{body{background:#fff;color:#000}.kpi,.grp{background:#f5f5f5;border-color:#ccc}}</style></head><body>
-<div class="header"><div><h1>🚛 DrayageIQ — Settlement Report</h1><div style="color:#8fa3c0;font-size:11px;margin-top:5px">YOUR COMPANY · UNIT# · ContainerPort Group</div><div style="color:#8fa3c0;font-size:11px;margin-top:2px">${w.label} · ${w.from} – ${w.to}</div></div><div style="text-align:right;font-size:11px;color:#8fa3c0"><div>Generated ${new Date().toLocaleDateString()}</div></div></div>
+<div class="header"><div><h1>🚛 DrayageIQ — Settlement Report</h1><div style="color:#8fa3c0;font-size:11px;margin-top:5px">YOUR COMPANY · UNIT# · Your Carrier</div><div style="color:#8fa3c0;font-size:11px;margin-top:2px">${w.label} · ${w.from} – ${w.to}</div></div><div style="text-align:right;font-size:11px;color:#8fa3c0"><div>Generated ${new Date().toLocaleDateString()}</div></div></div>
 <div class="kpis"><div class="kpi"><div class="l">Gross</div><div class="v" style="color:#00ffcc">$${w.gross.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div><div class="kpi"><div class="l">Net Pay</div><div class="v" style="color:#4ade80">$${w.net.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div><div class="kpi"><div class="l">Margin</div><div class="v" style="color:#4ade80">${(w.net/w.gross*100).toFixed(1)}%</div></div><div class="kpi"><div class="l">Moves</div><div class="v" style="color:#a78bfa">${w.moves.length}</div></div></div>
 <h2>Cost Groups</h2><div class="groups">${groups.map(function(g){return '<div class="grp" style="border-color:'+g.color+'44"><div style="font-size:20px">'+g.icon+'</div><div class="gv" style="color:'+g.color+'">$'+g.amt.toFixed(0)+'</div><div style="font-size:9px;color:#8fa3c0">'+g.label+'</div><div style="font-size:10px;color:'+g.color+';margin-top:3px">'+g.pct+'% of gross</div></div>';}).join("")}</div>
 <h2>Deduction Breakdown</h2><table><thead><tr><th>Item</th><th style="text-align:right">% Gross</th><th style="text-align:right">Amount</th></tr></thead><tbody>${dedRows}</tbody><tfoot><tr style="border-top:2px solid #2c3a52"><td style="font-weight:700">Total Deductions</td><td style="text-align:right;color:#f87171;font-weight:700">${(w.totalDeductions/w.gross*100).toFixed(1)}%</td><td style="text-align:right;font-weight:800;font-size:14px;color:#f87171">$${w.totalDeductions.toFixed(2)}</td></tr></tfoot></table>
@@ -831,7 +832,8 @@ Be specific with real institution names and programs, not generic advice.`;
           <div style={{fontSize:11,color:C.a3,fontWeight:700}}>👀 Demo Mode — Sample data only</div>
           <button onClick={()=>{
             setDemoMode(false);
-            try{localStorage.removeItem("ciq_demo");}catch(e){}
+            try{localStorage.removeItem("ciq_demo");localStorage.setItem("ciq_welcome_done","false");}catch(e){}
+            setShowWelcome(true);
           }} style={{padding:"4px 10px",borderRadius:6,background:C.a3+"22",border:"1px solid "+C.a3+"55",color:C.a3,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Use My Data</button>
         </div>
       )}
@@ -2321,7 +2323,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 📋 All Settlements ({allW.length} weeks · ${allW.reduce((s,w)=>s+w.gross,0).toLocaleString("en-US",{minimumFractionDigits:2})} YTD)
               </div>
               {addedW.length>0&&(
-                <button onClick={()=>{if(window.confirm(`Remove all ${addedW.length} added weeks? Hardcoded weeks 06-14 stay.`)){setAddedW([]);}}}
+                <button onClick={()=>{if(window.confirm(`Remove all ${addedW.length} added weeks?`)){setAddedW([]);}}}
                   style={{padding:"6px 12px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,color:C.red,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
                   🗑 Clear Added
                 </button>
@@ -2333,7 +2335,7 @@ Be specific with real institution names and programs, not generic advice.`;
               <span>{addedW.length>0?`${addedW.length} added week${addedW.length>1?"s":""} saved to this device — survives app restarts`:"No added weeks saved yet — weeks you add will persist here"}</span>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {[...allW].reverse().map((w,i)=>{const g=wg(w);const isNew=!W.find(hw=>hw.week===w.week);const isLast=w.week===W[W.length-1].week&&!isNew;return(
+              {[...allW].reverse().map((w,i)=>{const g=wg(w);const isNew=!W.find(hw=>hw.week===w.week);const lastW=W.length>0?W[W.length-1]:null;const isLast=lastW?w.week===lastW.week&&!isNew:false;return(
                 <div key={w.week+i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 14px",background:C.bg,borderRadius:10,border:`1px solid ${isLast?C.accent+"55":isNew?C.a3+"55":C.border}`}}>
                   <div style={{display:"flex",alignItems:"center",gap:11}}>
                     <div style={{width:9,height:9,borderRadius:"50%",background:isNew?C.a3:isLast?C.accent:g.c,boxShadow:`0 0 5px ${isNew?C.a3:isLast?C.accent:g.c}`}}/>
