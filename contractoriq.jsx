@@ -859,7 +859,7 @@ Be specific with real institution names and programs, not generic advice.`;
             try{
               const newMode=!demoMode;
               if(newMode){localStorage.setItem("ciq_demo","true");}
-              else{localStorage.removeItem("ciq_demo");}
+              else{localStorage.setItem("ciq_demo","false");}
             }catch(e){}
           }} style={{padding:"4px 10px",borderRadius:6,background:C.a3+"22",border:"1px solid "+C.a3+"55",color:C.a3,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Use My Data</button>
         </div>
