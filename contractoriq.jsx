@@ -519,10 +519,9 @@ export default function ContractorIQv26(){
       const hasAddedWeeks=localStorage.getItem("ciq_addedWeeks");
       const addedParsed=hasAddedWeeks?JSON.parse(hasAddedWeeks):[];
       if(hasDismissed==="true")return false;
-      if(W.length>0)return false;
       if(addedParsed.length>0)return false;
       return true;
-    }catch{return W.length===0;}
+    }catch{return true;}
   });
   const [deviceFp]=useState(()=>getDeviceFingerprint());
 
@@ -1020,33 +1019,75 @@ Be specific with real institution names and programs, not generic advice.`;
       {upgradeModal()}
       {/* ── WELCOME SCREEN ── */}
       {showWelcome&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
-          <div style={{background:C.card,borderRadius:20,padding:"32px 22px",maxWidth:380,width:"100%",border:"1px solid "+C.border,boxShadow:"0 24px 60px rgba(0,0,0,0.8)"}}>
-            <div style={{textAlign:"center",marginBottom:24}}>
-              <div style={{fontSize:48,marginBottom:12}}>🚛</div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.accent,marginBottom:8}}>Welcome to ContractorIQ</div>
-              <div style={{fontSize:13,color:C.sub,lineHeight:1.7,marginBottom:10}}>The profit decision system built for independent contractors — drayage drivers, owner-operators, Uber, Lyft, DoorDash, delivery, and any contractor who gets paid per job.</div><div style={{fontSize:11,color:C.a3,lineHeight:1.7,fontStyle:"italic",padding:"8px 12px",background:C.a3+"10",borderRadius:8,border:"1px solid "+C.a3+"33"}}>ContractorIQ is not competing with DAT or TruckLogics. It is competing with having a business analyst in your pocket — something that doesn't exist at any price in this market.</div>
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.95)",display:"flex",alignItems:"center",justifyContent:"center",padding:16,backdropFilter:"blur(6px)"}}>
+          <div style={{background:C.card,borderRadius:24,padding:"32px 24px",maxWidth:400,width:"100%",border:"1px solid "+C.border,boxShadow:"0 32px 80px rgba(0,0,0,0.9)"}}>
+
+            {/* Logo + Title */}
+            <div style={{textAlign:"center",marginBottom:22}}>
+              <div style={{width:64,height:64,borderRadius:18,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,margin:"0 auto 14px"}}>🚛</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:800,color:C.text,marginBottom:6}}>Welcome to ContractorIQ</div>
+              <div style={{fontSize:13,color:C.sub,lineHeight:1.6}}>Your personal business analyst — built for drayage drivers and owner-operators who want to <span style={{color:C.accent,fontWeight:700}}>know their real numbers</span>.</div>
             </div>
-            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
+
+            {/* What it does */}
+            <div style={{background:C.bg,borderRadius:12,padding:"12px 14px",marginBottom:18,border:"1px solid "+C.border}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>What ContractorIQ does for you</div>
+              {[
+                {i:"📊",t:"Reads your settlement PDF in seconds"},
+                {i:"💰",t:"Shows exactly where your money goes"},
+                {i:"⚡",t:"Scores every load offer before you accept"},
+                {i:"🧠",t:"AI advisor that knows your real numbers"},
+              ].map(r=>(
+                <div key={r.t} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                  <span style={{fontSize:16,flexShrink:0}}>{r.i}</span>
+                  <span style={{fontSize:12,color:C.text}}>{r.t}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Step label */}
+            <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>How do you want to start?</div>
+
+            {/* Buttons */}
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
+
+              <button onClick={()=>{
+                try{localStorage.setItem("ciq_welcome_done","true");localStorage.setItem("ciq_demo","false");}catch(e){}
+                setDemoMode(false);
+                setShowWelcome(false);
+                setTab("growth");
+              }} style={{padding:"16px 14px",borderRadius:14,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit",textAlign:"left"}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <span style={{fontSize:22}}>📤</span>
+                  <div>
+                    <div>Upload My Settlement</div>
+                    <div style={{fontSize:11,fontWeight:500,opacity:0.7,marginTop:2}}>Takes 30 seconds — your real numbers, private to you</div>
+                  </div>
+                </div>
+              </button>
+
               <button onClick={()=>{
                 setDemoMode(true);
                 try{localStorage.setItem("ciq_demo","true");localStorage.setItem("ciq_welcome_done","true");}catch(e){}
                 setShowWelcome(false);
-              }} style={{padding:"16px",borderRadius:12,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
-                <div>👀 Explore Demo</div>
-                <div style={{fontSize:11,fontWeight:400,marginTop:3}}>See the app with sample data — no account needed</div>
+              }} style={{padding:"16px 14px",borderRadius:14,background:C.raised,border:"1px solid "+C.border,color:C.text,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit",textAlign:"left"}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <span style={{fontSize:22}}>👀</span>
+                  <div>
+                    <div>Explore with Demo Data</div>
+                    <div style={{fontSize:11,fontWeight:400,color:C.sub,marginTop:2}}>See how it works with sample numbers — no account needed</div>
+                  </div>
+                </div>
               </button>
-              <button onClick={()=>{
-                try{localStorage.setItem("ciq_welcome_done","true");}catch(e){}
-                setShowWelcome(false);
-              }} style={{padding:"16px",borderRadius:12,background:C.raised,border:"1px solid "+C.border,color:C.text,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>
-                <div>📤 Upload My Settlement</div>
-                <div style={{fontSize:11,fontWeight:400,color:C.sub,marginTop:3}}>Start with your own real data</div>
-              </button>
+
             </div>
-            <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,fontSize:10,color:C.sub,lineHeight:1.7,textAlign:"center"}}>
-              💡 One avoided bad load = $300–$800 saved. The app pays for itself immediately.
+
+            {/* Footer note */}
+            <div style={{display:"flex",alignItems:"flex-start",gap:8,padding:"10px 12px",background:C.gold+"12",borderRadius:10,border:"1px solid "+C.gold+"33"}}>
+              <span style={{fontSize:14,flexShrink:0}}>💡</span>
+              <div style={{fontSize:10,color:C.gold,lineHeight:1.6}}>One avoided bad load = <strong>$300–$800 saved</strong>. ContractorIQ pays for itself the first time you use the Offer Scorer.</div>
             </div>
+
           </div>
         </div>
       )}
@@ -1061,16 +1102,16 @@ Be specific with real institution names and programs, not generic advice.`;
 
       {/* ── DEMO MODE BANNER ── */}
       {demoMode&&(
-        <div style={{background:"linear-gradient(135deg,"+C.a3+"22,"+C.accent+"12)",borderBottom:"1px solid "+C.a3+"44",padding:"8px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontSize:11,color:C.a3,fontWeight:700}}>👀 Demo Mode — Sample data only</div>
+        <div style={{background:"linear-gradient(135deg,"+C.a3+"22,"+C.accent+"12)",borderBottom:"1px solid "+C.a3+"44",padding:"9px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+          <div>
+            <div style={{fontSize:11,color:C.a3,fontWeight:700}}>👀 Demo Mode — Sample data</div>
+            <div style={{fontSize:9,color:C.sub,marginTop:1}}>Upload your settlement to see your real numbers</div>
+          </div>
           <button onClick={()=>{
-            setDemoMode(p=>!p);
-            try{
-              const newMode=!demoMode;
-              if(newMode){localStorage.setItem("ciq_demo","true");}
-              else{localStorage.setItem("ciq_demo","false");}
-            }catch(e){}
-          }} style={{padding:"4px 10px",borderRadius:6,background:C.a3+"22",border:"1px solid "+C.a3+"55",color:C.a3,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Use My Data</button>
+            setDemoMode(false);
+            try{localStorage.setItem("ciq_demo","false");}catch(e){}
+            setTab("growth");
+          }} style={{padding:"6px 12px",borderRadius:7,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",border:"none",color:"#000",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:800,flexShrink:0}}>📤 Add My Data</button>
         </div>
       )}
 
