@@ -2837,6 +2837,32 @@ Be specific with real institution names and programs, not generic advice.`;
       </div>
 
       {/* ── BOTTOM NAV — mobile tab switcher ── */}
+      {/* ── LEGAL DISCLAIMER FOOTER ── */}
+      <div style={{background:C.bg,borderTop:"1px solid "+C.border,padding:"14px 16px",marginBottom:0}}>
+        <div style={{fontSize:9,color:C.sub,lineHeight:1.8,textAlign:"center",maxWidth:600,margin:"0 auto"}}>
+          <div style={{fontWeight:700,color:C.sub,marginBottom:6,fontSize:10,letterSpacing:"0.05em",textTransform:"uppercase"}}>⚖️ Legal Disclaimer</div>
+          <div style={{marginBottom:6}}>
+            <strong style={{color:C.sub}}>Not Financial or Legal Advice.</strong> ContractorIQ is an informational tool only. All data, analysis, AI responses, offer scores, and business insights provided are for educational and informational purposes only. Nothing on this platform constitutes financial, legal, tax, or professional business advice. Always consult a qualified professional before making business decisions.
+          </div>
+          <div style={{marginBottom:6}}>
+            <strong style={{color:C.sub}}>Your Data Stays On Your Device.</strong> All settlement data you upload or enter is stored locally on your device only. ContractorIQ does not transmit, store, sell, or share your personal or financial data on any server. You are solely responsible for the data you enter and how you use the results.
+          </div>
+          <div style={{marginBottom:6}}>
+            <strong style={{color:C.sub}}>No Earnings Guarantee.</strong> Results, scores, and projections shown in this app are estimates based on data you provide. ContractorIQ makes no guarantee of income, profit, or business outcomes. Actual results will vary based on market conditions, carrier contracts, fuel prices, and individual circumstances.
+          </div>
+          <div style={{marginBottom:6}}>
+            <strong style={{color:C.sub}}>Use At Your Own Risk.</strong> ContractorIQ, its owners, developers, and affiliates are not liable for any financial loss, business decision, or damages arising from the use of this application. By using this tool you agree to these terms.
+          </div>
+          <div style={{marginBottom:4}}>
+            <strong style={{color:C.sub}}>AI Technology Disclaimer.</strong> AI-generated responses are produced by Anthropic Claude and may not always be accurate, complete, or current. Do not rely solely on AI output for critical business or financial decisions.
+          </div>
+          <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid "+C.border,fontSize:8,color:C.border}}>
+            © {new Date().getFullYear()} ContractorIQ · All Rights Reserved · getcontractoriq.com · By using this app you accept our Terms of Use and Privacy Policy.
+          </div>
+        </div>
+      </div>
+
+      {/* ── BOTTOM NAV ── */}
       <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:C.surf,borderTop:"1px solid "+C.border,display:"flex",alignItems:"stretch",height:58,boxShadow:"0 -4px 20px rgba(0,0,0,0.4)"}}>
         {[
           {t:"dashboard", icon:"📊", label:"Dash"},
