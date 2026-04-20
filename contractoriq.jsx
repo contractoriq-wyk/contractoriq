@@ -266,7 +266,7 @@ export default function ContractorIQv26(){
   const [docScan,setDocScan]=useState(false);
   const [docScanMsg,setDocScanMsg]=useState("");
   // ── MONETIZATION ──────────────────────────────────────────────────────
-  const [isPro,setIsPro]=useState(()=>{try{return localStorage.getItem("ciq_pro")==="true";}catch{return false;}});
+  const [isPro,setIsPro]=useState(()=>{if(typeof window!=="undefined"&&window.location.hostname.includes("navy"))return true;try{return localStorage.getItem("ciq_pro")==="true";}catch{return false;}});
   const [trialStart,setTrialStart]=useState(()=>{try{const t=localStorage.getItem("ciq_trial_start");return t?parseInt(t):null;}catch{return null;}});
   const [showUpgrade,setShowUpgrade]=useState(false);
   const [ownerTaps,setOwnerTaps]=useState(0);
