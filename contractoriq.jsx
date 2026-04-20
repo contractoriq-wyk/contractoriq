@@ -1048,37 +1048,78 @@ Be specific with real institution names and programs, not generic advice.`;
               ))}
             </div>
 
-            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:14}}>
-              <button onClick={()=>{
-                try{localStorage.setItem("ciq_welcome_done","true");localStorage.setItem("ciq_demo","false");}catch(e){}
-                setDemoMode(false);setShowWelcome(false);setTab("growth");
-              }} style={{padding:"16px 14px",borderRadius:14,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer",fontFamily:"inherit",textAlign:"left"}}>
-                <div style={{display:"flex",alignItems:"center",gap:10}}>
-                  <span style={{fontSize:22}}>📤</span>
-                  <div>
-                    <div>Upload My Settlement — See My Real Numbers</div>
-                    <div style={{fontSize:10,fontWeight:500,opacity:0.65,marginTop:2}}>30 seconds. Private to you. No fluff.</div>
-                  </div>
-                </div>
-              </button>
-              <button onClick={()=>{
-                setDemoMode(true);
-                try{localStorage.setItem("ciq_demo","true");localStorage.setItem("ciq_welcome_done","true");}catch(e){}
-                setShowWelcome(false);
-              }} style={{padding:"16px 14px",borderRadius:14,background:C.raised,border:"1px solid "+C.border,color:C.text,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit",textAlign:"left"}}>
-                <div style={{display:"flex",alignItems:"center",gap:10}}>
-                  <span style={{fontSize:22}}>👀</span>
-                  <div>
-                    <div>Show Me a Demo First</div>
-                    <div style={{fontSize:10,fontWeight:400,color:C.sub,marginTop:2}}>See the app with sample data — no account needed</div>
-                  </div>
-                </div>
-              </button>
+            {/* ── URGENCY BANNER ── */}
+            <div style={{background:"linear-gradient(135deg,"+C.red+"22,"+C.gold+"18)",border:"1px solid "+C.gold+"55",borderRadius:10,padding:"8px 12px",marginBottom:12,textAlign:"center"}}>
+              <div style={{fontSize:11,fontWeight:800,color:C.gold}}>⏰ PRICE GOING UP SOON</div>
+              <div style={{fontSize:9,color:C.sub,marginTop:2}}>Lock in $19.99/mo before we raise to $39.99. Limited time only.</div>
             </div>
 
+            {/* ── PRICING GRID ── */}
+            <div style={{marginBottom:14}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"center",marginBottom:10}}>Choose Your Plan</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+
+                {/* FREE TRIAL — $1 */}
+                <div onClick={()=>window.open("https://buy.stripe.com/aFa8wP7FLbMY4Ua0Ls9MY00","_blank")} style={{background:C.raised,border:"1px solid "+C.gold+"44",borderRadius:14,padding:"12px 10px",cursor:"pointer",textAlign:"center"}}>
+                  <div style={{fontSize:18,marginBottom:4}}>🔥</div>
+                  <div style={{fontSize:11,fontWeight:800,color:C.gold}}>5-Day Trial</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.gold,margin:"4px 0"}}>$1</div>
+                  <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>Full access<br/>Cancel anytime</div>
+                </div>
+
+                {/* PRO — $19.99 — HERO CARD */}
+                <div onClick={()=>window.open("https://buy.stripe.com/fZufZh2lr2co3Q6am29MY01","_blank")} style={{background:"linear-gradient(145deg,#00ffcc22,#a78bfa22)",border:"2px solid "+C.accent,borderRadius:14,padding:"12px 10px",cursor:"pointer",textAlign:"center",position:"relative",boxShadow:"0 0 24px "+C.accent+"44, 0 4px 20px rgba(0,0,0,0.4)"}}>
+                  {/* BEST VALUE badge */}
+                  <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",borderRadius:20,padding:"3px 12px",fontSize:8,fontWeight:800,color:"#000",whiteSpace:"nowrap",boxShadow:"0 2px 8px "+C.accent+"55"}}>⭐ MOST POPULAR</div>
+                  <div style={{fontSize:20,marginBottom:2}}>💰</div>
+                  <div style={{fontSize:12,fontWeight:800,color:C.accent}}>Go Pro</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:26,fontWeight:800,color:C.accent,margin:"2px 0",lineHeight:1}}>$19.99</div>
+                  <div style={{fontSize:9,color:C.accent,opacity:0.7,marginBottom:4}}>/month</div>
+                  <div style={{fontSize:9,color:C.sub,lineHeight:1.6}}>Unlimited AI · No ads<br/>Cancel anytime</div>
+                  <div style={{marginTop:6,padding:"3px 0",background:C.red+"22",borderRadius:6,border:"1px solid "+C.red+"44"}}>
+                    <div style={{fontSize:8,color:C.red,fontWeight:700}}>🔺 Goes to $39.99 soon</div>
+                  </div>
+                </div>
+
+                {/* FOUNDING MEMBER — $97 */}
+                <div onClick={()=>window.open("https://buy.stripe.com/3cIcN5f8d5oAeuKeCi9MY02","_blank")} style={{background:C.raised,border:"1px solid "+C.a3+"55",borderRadius:14,padding:"12px 10px",cursor:"pointer",textAlign:"center"}}>
+                  <div style={{fontSize:18,marginBottom:4}}>💎</div>
+                  <div style={{fontSize:11,fontWeight:800,color:C.a3}}>Founding Member</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.a3,margin:"4px 0"}}>$97<span style={{fontSize:9,fontWeight:400,color:C.sub}}> once</span></div>
+                  <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>Everything forever<br/>First 50 spots only</div>
+                </div>
+
+                {/* FREE DEMO */}
+                <div onClick={()=>{
+                  setDemoMode(true);
+                  try{localStorage.setItem("ciq_demo","true");localStorage.setItem("ciq_welcome_done","true");}catch(e){}
+                  setShowWelcome(false);
+                }} style={{background:C.raised,border:"1px solid "+C.border,borderRadius:14,padding:"12px 10px",cursor:"pointer",textAlign:"center"}}>
+                  <div style={{fontSize:18,marginBottom:4}}>👀</div>
+                  <div style={{fontSize:11,fontWeight:800,color:C.sub}}>Try Demo</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.sub,margin:"4px 0"}}>FREE</div>
+                  <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>Sample data<br/>No account needed</div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Upload CTA */}
+            <button onClick={()=>{
+              try{localStorage.setItem("ciq_welcome_done","true");localStorage.setItem("ciq_demo","false");}catch(e){}
+              setDemoMode(false);setShowWelcome(false);setTab("growth");
+            }} style={{width:"100%",padding:"13px 14px",borderRadius:14,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer",fontFamily:"inherit",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              <span style={{fontSize:18}}>📤</span>
+              <div style={{textAlign:"left"}}>
+                <div>Already have a settlement? Upload it free</div>
+                <div style={{fontSize:10,fontWeight:500,opacity:0.65,marginTop:1}}>30 seconds. Private to you. No account needed.</div>
+              </div>
+            </button>
+
+            {/* Footer tip */}
             <div style={{display:"flex",alignItems:"flex-start",gap:8,padding:"10px 12px",background:C.gold+"10",borderRadius:10,border:"1px solid "+C.gold+"30"}}>
               <span style={{fontSize:14,flexShrink:0}}>⚡</span>
-              <div style={{fontSize:10,color:C.gold,lineHeight:1.6}}><strong>One avoided bad load = $300–$800 back in your pocket.</strong> ContractorIQ pays for itself the first time you use it — for less than what the big guys charge just to log in.</div>
+              <div style={{fontSize:10,color:C.gold,lineHeight:1.6}}><strong>One avoided bad load = $300–$800 back in your pocket.</strong> ContractorIQ pays for itself the first time you use it.</div>
             </div>
 
           </div>
