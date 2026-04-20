@@ -1019,73 +1019,53 @@ Be specific with real institution names and programs, not generic advice.`;
       {upgradeModal()}
       {/* ── WELCOME SCREEN ── */}
       {showWelcome&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.95)",display:"flex",alignItems:"center",justifyContent:"center",padding:16,backdropFilter:"blur(6px)"}}>
-          <div style={{background:C.card,borderRadius:24,padding:"32px 24px",maxWidth:400,width:"100%",border:"1px solid "+C.border,boxShadow:"0 32px 80px rgba(0,0,0,0.9)"}}>
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",padding:16,backdropFilter:"blur(4px)"}}>
+          <div style={{background:C.card,borderRadius:24,padding:"30px 22px",maxWidth:400,width:"100%",border:"1px solid "+C.border,boxShadow:"0 32px 80px rgba(0,0,0,0.9)"}}>
 
-            {/* Logo + Title */}
-            <div style={{textAlign:"center",marginBottom:22}}>
-              <div style={{width:64,height:64,borderRadius:18,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,margin:"0 auto 14px"}}>🚛</div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:800,color:C.text,marginBottom:6}}>Welcome to ContractorIQ</div>
-              <div style={{fontSize:13,color:C.sub,lineHeight:1.6}}>Your personal business analyst — built for drayage drivers and owner-operators who want to <span style={{color:C.accent,fontWeight:700}}>know their real numbers</span>.</div>
+            <div style={{textAlign:"center",marginBottom:18}}>
+              <div style={{width:72,height:72,borderRadius:20,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",fontSize:36}}>💰</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.text,marginBottom:8,lineHeight:1.2}}>Stop Guessing.<br/>Start Knowing.</div>
+              <div style={{fontSize:12,color:C.sub,lineHeight:1.65,marginBottom:12}}>ContractorIQ is your personal profit analyst — built for every gig worker who wants to see <span style={{color:C.accent,fontWeight:700}}>exactly where the money goes</span> and what to do about it. In seconds. Not hours.</div>
+              <div style={{display:"inline-block",padding:"8px 14px",background:C.a3+"12",border:"1px solid "+C.a3+"33",borderRadius:20,fontSize:10,color:C.a3,fontWeight:700,lineHeight:1.6}}>We don't compete with DAT, TruckLogics, or the big platforms.<br/>We compete with <em>not knowing your numbers</em> — and we win.</div>
             </div>
 
-            {/* What it does */}
-            <div style={{background:C.bg,borderRadius:12,padding:"12px 14px",marginBottom:18,border:"1px solid "+C.border}}>
-              <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>What ContractorIQ does for you</div>
-              {[
-                {i:"📊",t:"Reads your settlement PDF in seconds"},
-                {i:"💰",t:"Shows exactly where your money goes"},
-                {i:"⚡",t:"Scores every load offer before you accept"},
-                {i:"🧠",t:"AI advisor that knows your real numbers"},
-              ].map(r=>(
-                <div key={r.t} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-                  <span style={{fontSize:16,flexShrink:0}}>{r.i}</span>
-                  <span style={{fontSize:12,color:C.text}}>{r.t}</span>
-                </div>
+            <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:7,marginBottom:18}}>
+              {["🚛 Owner-Op","🛣️ OTR Driver","⚓ Drayage","🚗 Rideshare","🛵 Dasher","📦 Delivery","💼 Any 1099"].map(g=>(
+                <span key={g} style={{padding:"4px 10px",borderRadius:20,fontSize:10,background:C.accent+"10",border:"1px solid "+C.accent+"25",color:C.accent,fontWeight:600}}>{g}</span>
               ))}
             </div>
 
-            {/* Step label */}
-            <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>How do you want to start?</div>
-
-            {/* Buttons */}
-            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
-
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:14}}>
               <button onClick={()=>{
                 try{localStorage.setItem("ciq_welcome_done","true");localStorage.setItem("ciq_demo","false");}catch(e){}
-                setDemoMode(false);
-                setShowWelcome(false);
-                setTab("growth");
-              }} style={{padding:"16px 14px",borderRadius:14,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit",textAlign:"left"}}>
+                setDemoMode(false);setShowWelcome(false);setTab("growth");
+              }} style={{padding:"16px 14px",borderRadius:14,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer",fontFamily:"inherit",textAlign:"left"}}>
                 <div style={{display:"flex",alignItems:"center",gap:10}}>
                   <span style={{fontSize:22}}>📤</span>
                   <div>
-                    <div>Upload My Settlement</div>
-                    <div style={{fontSize:11,fontWeight:500,opacity:0.7,marginTop:2}}>Takes 30 seconds — your real numbers, private to you</div>
+                    <div>Upload My Settlement — See My Real Numbers</div>
+                    <div style={{fontSize:10,fontWeight:500,opacity:0.65,marginTop:2}}>30 seconds. Private to you. No fluff.</div>
                   </div>
                 </div>
               </button>
-
               <button onClick={()=>{
                 setDemoMode(true);
                 try{localStorage.setItem("ciq_demo","true");localStorage.setItem("ciq_welcome_done","true");}catch(e){}
                 setShowWelcome(false);
-              }} style={{padding:"16px 14px",borderRadius:14,background:C.raised,border:"1px solid "+C.border,color:C.text,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit",textAlign:"left"}}>
+              }} style={{padding:"16px 14px",borderRadius:14,background:C.raised,border:"1px solid "+C.border,color:C.text,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit",textAlign:"left"}}>
                 <div style={{display:"flex",alignItems:"center",gap:10}}>
                   <span style={{fontSize:22}}>👀</span>
                   <div>
-                    <div>Explore with Demo Data</div>
-                    <div style={{fontSize:11,fontWeight:400,color:C.sub,marginTop:2}}>See how it works with sample numbers — no account needed</div>
+                    <div>Show Me a Demo First</div>
+                    <div style={{fontSize:10,fontWeight:400,color:C.sub,marginTop:2}}>See the app with sample data — no account needed</div>
                   </div>
                 </div>
               </button>
-
             </div>
 
-            {/* Footer note */}
-            <div style={{display:"flex",alignItems:"flex-start",gap:8,padding:"10px 12px",background:C.gold+"12",borderRadius:10,border:"1px solid "+C.gold+"33"}}>
-              <span style={{fontSize:14,flexShrink:0}}>💡</span>
-              <div style={{fontSize:10,color:C.gold,lineHeight:1.6}}>One avoided bad load = <strong>$300–$800 saved</strong>. ContractorIQ pays for itself the first time you use the Offer Scorer.</div>
+            <div style={{display:"flex",alignItems:"flex-start",gap:8,padding:"10px 12px",background:C.gold+"10",borderRadius:10,border:"1px solid "+C.gold+"30"}}>
+              <span style={{fontSize:14,flexShrink:0}}>⚡</span>
+              <div style={{fontSize:10,color:C.gold,lineHeight:1.6}}><strong>One avoided bad load = $300–$800 back in your pocket.</strong> ContractorIQ pays for itself the first time you use it — for less than what the big guys charge just to log in.</div>
             </div>
 
           </div>
