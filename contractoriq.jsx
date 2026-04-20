@@ -1029,8 +1029,8 @@ Be specific with real institution names and programs, not generic advice.`;
       {upgradeModal()}
       {/* ── WELCOME SCREEN ── */}
       {showWelcome&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",padding:16,backdropFilter:"blur(4px)"}}>
-          <div style={{background:C.card,borderRadius:24,padding:"30px 22px",maxWidth:400,width:"100%",border:"1px solid "+C.border,boxShadow:"0 32px 80px rgba(0,0,0,0.9)"}}>
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"12px 16px",backdropFilter:"blur(4px)",overflowY:"auto"}}>
+          <div style={{background:C.card,borderRadius:24,padding:"28px 22px",maxWidth:400,width:"100%",border:"1px solid "+C.border,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}}>
 
             <div style={{textAlign:"center",marginBottom:18}}>
               <div style={{width:72,height:72,borderRadius:"50%",background:"linear-gradient(135deg,#fbbf24,#f59e0b)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",fontSize:40,boxShadow:"0 0 0 6px #fbbf2420"}}>💰</div>
