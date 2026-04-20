@@ -1000,6 +1000,16 @@ Be specific with real institution names and programs, not generic advice.`;
   const helpBtn=(id)=>(
     <button onClick={e=>{e.stopPropagation();setHelpCard(helpCard===id?null:id);}} style={{width:17,height:17,borderRadius:"50%",background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:9,cursor:"pointer",fontFamily:"inherit",flexShrink:0,display:"inline-flex",alignItems:"center",justifyContent:"center",fontWeight:700,marginLeft:5}}>?</button>
   );
+
+  const NoBadge=()=>(
+    <div style={{marginTop:12,padding:"8px 11px",background:C.gold+"12",borderRadius:9,border:"1px solid "+C.gold+"35",display:"flex",alignItems:"flex-start",gap:7}}>
+      <span style={{fontSize:13,flexShrink:0,marginTop:1}}>💰</span>
+      <div style={{fontSize:9,lineHeight:1.6}}>
+        <span style={{fontWeight:800,color:C.gold}}>WE DON'T COMPETE WITH DAT OR TRUCKLOGICS. </span>
+        <span style={{color:C.sub}}>We Show You Where You're Losing Money and Help You Fix It With AI Technology.</span>
+      </div>
+    </div>
+  );
   const helpModal=(id)=>{
     if(helpCard!==id)return null;
     const h=HELP[id];
@@ -1023,10 +1033,13 @@ Be specific with real institution names and programs, not generic advice.`;
           <div style={{background:C.card,borderRadius:24,padding:"30px 22px",maxWidth:400,width:"100%",border:"1px solid "+C.border,boxShadow:"0 32px 80px rgba(0,0,0,0.9)"}}>
 
             <div style={{textAlign:"center",marginBottom:18}}>
-              <div style={{width:72,height:72,borderRadius:20,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",fontSize:36}}>💰</div>
+              <div style={{width:72,height:72,borderRadius:"50%",background:"linear-gradient(135deg,#fbbf24,#f59e0b)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",fontSize:40,boxShadow:"0 0 0 6px #fbbf2420"}}>💰</div>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.text,marginBottom:8,lineHeight:1.2}}>Stop Guessing.<br/>Start Knowing.</div>
               <div style={{fontSize:12,color:C.sub,lineHeight:1.65,marginBottom:12}}>ContractorIQ is your personal profit analyst — built for every gig worker who wants to see <span style={{color:C.accent,fontWeight:700}}>exactly where the money goes</span> and what to do about it. In seconds. Not hours.</div>
-              <div style={{display:"inline-block",padding:"8px 14px",background:C.a3+"12",border:"1px solid "+C.a3+"33",borderRadius:20,fontSize:10,color:C.a3,fontWeight:700,lineHeight:1.6}}>We don't compete with DAT, TruckLogics, or the big platforms.<br/>We compete with <em>not knowing your numbers</em> — and we win.</div>
+              <div style={{padding:"10px 14px",background:C.gold+"15",border:"2px solid "+C.gold+"60",borderRadius:12,textAlign:"left"}}>
+                <div style={{fontSize:11,fontWeight:800,color:C.gold,marginBottom:4,letterSpacing:"0.03em"}}>⚡ WE DON'T COMPETE WITH DAT OR TRUCKLOGICS.</div>
+                <div style={{fontSize:11,color:C.gold,lineHeight:1.6}}>We <strong>Show You Where You're Losing Money</strong> and <strong>Help You Fix It With AI Technology</strong> — for a fraction of what they charge.</div>
+              </div>
             </div>
 
             <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:7,marginBottom:18}}>
@@ -1412,7 +1425,7 @@ Be specific with real institution names and programs, not generic advice.`;
           )}
 
           {/* ── Main KPIs ── */}
-          <div style={{display:"grid",gridTemplateColumns:wide?"repeat(4,1fr)":"repeat(2,1fr)",gap:12,marginBottom:16}}>
+          <div style={{display:"grid",gridTemplateColumns:wide?"repeat(4,1fr)":"repeat(2,1fr)",gap:12,marginBottom:8}}>
             {[{l:"YTD Gross",v:`$${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:`All ${allW.length} weeks`,c:C.accent},{l:"YTD Net",v:`$${tNet.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:`${margin}% margin`,c:C.green},{l:"Deductions",v:`$${tDed.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:"All expenses",c:C.red},{l:"Avg RPM",v:`$${avgRPM}`,s:`${tMi.toLocaleString()} mi`,c:C.a3}].map(k=>(
               <div key={k.l} style={K({borderTop:`3px solid ${k.c}`,padding:"14px"})}>
                 <div style={{fontSize:10,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>{k.l}</div>
@@ -1421,6 +1434,7 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
             ))}
           </div>
+          <NoBadge/>
 
           {/* Trend — color coded by vendor */}
           <div style={K({marginBottom:16,padding:"14px 16px"})}>
@@ -2324,6 +2338,7 @@ Be specific with real institution names and programs, not generic advice.`;
               </>):(<><div style={{fontSize:38}}>📋</div><div style={{color:C.sub,fontSize:13}}>Enter offer details to score</div><div style={{fontSize:11,color:C.sub}}>A=take it · B=good · C=marginal · D=pass</div></>)}
             </div>
           </div>
+          <NoBadge/>
 
           {/* Add Move */}
           {showAdd&&(
@@ -2540,10 +2555,9 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
             </div>
           )}
+          <NoBadge/>
         </div>
       )}
-
-      {/* ══ GROWTH ═══════════════════════════════════════════════════════════ */}
       {tab==="growth"&&(
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
           <div>
@@ -2796,6 +2810,7 @@ Be specific with real institution names and programs, not generic advice.`;
           })()}
 
           {/* ── EXPORT ── */}
+          <NoBadge/>
           <div style={K({marginBottom:80})}>
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📤 Export Report</div>
             <div style={{fontSize:10,color:C.sub,marginBottom:12}}>YTD financials + expenses + documents. Print or email to your accountant, broker, or lender.</div>
