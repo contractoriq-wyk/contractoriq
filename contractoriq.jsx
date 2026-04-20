@@ -1048,6 +1048,18 @@ Be specific with real institution names and programs, not generic advice.`;
               ))}
             </div>
 
+            {/* Upload CTA — TOP */}
+            <button onClick={()=>{
+              try{localStorage.setItem("ciq_welcome_done","true");localStorage.setItem("ciq_demo","false");}catch(e){}
+              setDemoMode(false);setShowWelcome(false);setTab("growth");
+            }} style={{width:"100%",padding:"13px 14px",borderRadius:14,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer",fontFamily:"inherit",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              <span style={{fontSize:18}}>📤</span>
+              <div style={{textAlign:"left"}}>
+                <div>Upload My Settlement — See My Real Numbers</div>
+                <div style={{fontSize:10,fontWeight:500,opacity:0.65,marginTop:1}}>30 seconds. Private to you. No account needed.</div>
+              </div>
+            </button>
+
             {/* ── URGENCY BANNER ── */}
             <div style={{background:"linear-gradient(135deg,"+C.red+"22,"+C.gold+"18)",border:"1px solid "+C.gold+"55",borderRadius:10,padding:"8px 12px",marginBottom:12,textAlign:"center"}}>
               <div style={{fontSize:11,fontWeight:800,color:C.gold}}>⏰ PRICE GOING UP SOON</div>
@@ -1103,18 +1115,6 @@ Be specific with real institution names and programs, not generic advice.`;
 
               </div>
             </div>
-
-            {/* Upload CTA */}
-            <button onClick={()=>{
-              try{localStorage.setItem("ciq_welcome_done","true");localStorage.setItem("ciq_demo","false");}catch(e){}
-              setDemoMode(false);setShowWelcome(false);setTab("growth");
-            }} style={{width:"100%",padding:"13px 14px",borderRadius:14,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer",fontFamily:"inherit",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-              <span style={{fontSize:18}}>📤</span>
-              <div style={{textAlign:"left"}}>
-                <div>Already have a settlement? Upload it free</div>
-                <div style={{fontSize:10,fontWeight:500,opacity:0.65,marginTop:1}}>30 seconds. Private to you. No account needed.</div>
-              </div>
-            </button>
 
             {/* Footer tip */}
             <div style={{display:"flex",alignItems:"flex-start",gap:8,padding:"10px 12px",background:C.gold+"10",borderRadius:10,border:"1px solid "+C.gold+"30"}}>
