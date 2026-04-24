@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const C={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#8fa3c0",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
+const DARK={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#8fa3c0",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
+const LIGHT={bg:"#f0f4f8",surf:"#ffffff",card:"#ffffff",raised:"#e8edf5",border:"#d1dae8",accent:"#00aa88",a2:"#e05a20",a3:"#7c3aed",text:"#0f172a",sub:"#4a5568",green:"#16a34a",red:"#dc2626",gold:"#d97706"};
+const C=DARK; // default — overridden by component state
 const K=(x={})=>({background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"18px",...x});
 const gc=g=>g==="A"?C.green:g==="B"?C.accent:g==="C"?C.gold:C.red;
 const inp={width:"100%",padding:"11px 13px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:9,color:C.text,fontSize:13,boxSizing:"border-box",fontFamily:"inherit",outline:"none"};
@@ -440,6 +442,11 @@ export default function ContractorIQv26(){
   const [sH,setSH]=useState(7); // selHealth
   const [sR,setSR]=useState(7); // selReport
   const [wide,setWide]=useState(window.innerWidth>700);
+  const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
+  const C=darkMode?DARK:LIGHT;
+  const [searchQ,setSearchQ]=useState("");
+  const [searchResult,setSearchResult]=useState("");
+  const [searchLoading,setSearchLoading]=useState(false);
   // Loads
   const [offer,setOffer]=useState({miles:"",rate:"",fsc:"",type:"L"});
   const [offerRes,setOfferRes]=useState(null);
@@ -555,7 +562,9 @@ export default function ContractorIQv26(){
   // ── Derived ───────────────────────────────────────────────────────────────
   // CRITICAL: Real owner data (W) only available on navy dev site
   const baseW=ownerDataAvailable?W:[];
-  const allW=demoMode?[...DEMO_W,...addedW]:[...baseW,...addedW];
+  // In demo mode: show ONLY demo weeks — never mix in owner data
+  // In real mode: show owner weeks + customer uploaded weeks
+  const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
   const visibleW=allW.filter(w=>{
     const vk=detectVendor(w);
     if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;
@@ -649,6 +658,31 @@ export default function ContractorIQv26(){
       setScanMsg("⚠️ Error: "+e.message+". Try the Paste Text tab instead — copy all text from your PDF and paste it.");
     }
     setScanning(false);
+  }
+
+  async function runSearch(q){
+    const query=q||searchQ;
+    if(!query||!query.trim())return;
+    setSearchLoading(true);setSearchResult("");
+    try{
+      const apiKey=import.meta.env.VITE_ANTHROPIC_KEY||(window.__CIQ_KEY__||"");
+      const resp=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+        body:JSON.stringify({
+          model:"claude-sonnet-4-5",
+          max_tokens:600,
+          tools:[{type:"web_search_20250305",name:"web_search"}],
+          messages:[{role:"user",content:`You are a helpful assistant for a truck driver in the Baltimore MD area. Answer this question concisely and practically: ${query}. Keep answer under 150 words. Use bullet points if listing multiple items.`}]
+        })
+      });
+      const d=await resp.json();
+      const txt=d.content?.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
+      setSearchResult(txt||"No results found. Try rephrasing your search.");
+    }catch(e){
+      setSearchResult("⚠️ Search unavailable. Check your connection and try again.");
+    }
+    setSearchLoading(false);
   }
 
   function confirmScan(){
@@ -1214,6 +1248,11 @@ Be specific with real institution names and programs, not generic advice.`;
           <button onClick={()=>setShowSettings(p=>!p)}
             style={{padding:"9px 10px",borderRadius:8,background:showSettings?`${C.a3}22`:C.raised,border:`1px solid ${showSettings?C.a3:C.border}`,color:showSettings?C.a3:C.sub,fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
             ⚙️
+          </button>
+          <button onClick={()=>{const next=!darkMode;setDarkMode(next);try{localStorage.setItem("ciq_theme",next?"dark":"light");}catch(e){}}}
+            style={{padding:"9px 10px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}
+            title={darkMode?"Switch to Light Mode":"Switch to Dark Mode"}>
+            {darkMode?"☀️":"🌙"}
           </button>
           <button onClick={()=>setShowProfile(p=>!p)}
             style={{padding:"9px 10px",borderRadius:8,background:showProfile?`${C.gold}22`:(profile.setupDone?`${C.green}15`:C.raised),border:`1px solid ${showProfile?C.gold:(profile.setupDone?C.green:C.border)}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.sub),fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
@@ -2641,6 +2680,39 @@ Be specific with real institution names and programs, not generic advice.`;
 
           {/* Quick questions */}
           {aiMode==="chat"&&(
+            {/* ── AI SEARCH WIDGET ── */}
+            <div style={K({marginBottom:0})}>
+              <div style={{fontSize:11,fontWeight:700,color:C.sub,marginBottom:10,textTransform:"uppercase",letterSpacing:"0.08em"}}>🔍 Quick Search — Weather, Gas, Places</div>
+              <div style={{display:"flex",gap:8,marginBottom:10}}>
+                <input
+                  value={searchQ||""}
+                  onChange={e=>setSearchQ(e.target.value)}
+                  onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}}
+                  placeholder="e.g. Baltimore weather · McDonald's near me · Gas prices MD"
+                  style={{...inp,flex:1,marginBottom:0}}
+                />
+                <button
+                  onClick={runSearch}
+                  disabled={!(searchQ||"").trim()||searchLoading}
+                  style={{padding:"12px 16px",borderRadius:9,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
+                  {searchLoading?"⏳":"🔍"}
+                </button>
+              </div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
+                {["Baltimore weather","Gas prices near me","McDonald's near me","Truck stops I-70 MD","Fuel prices today","Traffic I-95 Baltimore"].map(s=>(
+                  <button key={s} onClick={()=>{setSearchQ(s);setTimeout(()=>runSearch(s),50);}}
+                    style={{padding:"5px 10px",borderRadius:20,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+              {searchResult&&(
+                <div style={{background:C.bg,borderRadius:10,padding:"13px",border:`1px solid ${C.a3}44`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
+                  {searchResult}
+                </div>
+              )}
+            </div>
+
             <div style={K()}>
               <div style={{fontSize:10,fontWeight:700,color:C.sub,marginBottom:11,textTransform:"uppercase",letterSpacing:"0.1em"}}>⚡ Quick Questions</div>
               <div style={{display:"grid",gridTemplateColumns:wide?"repeat(2,1fr)":"1fr",gap:7}}>
