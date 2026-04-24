@@ -2675,8 +2675,9 @@ Be specific with real institution names and programs, not generic advice.`;
             )}
           </div>
 
-          {/* Quick questions */}
+          {/* Quick questions + Search Widget */}
           {aiMode==="chat"&&(
+            <div>
             {/* ── AI SEARCH WIDGET ── */}
             <div style={K({marginBottom:0})}>
               <div style={{fontSize:11,fontWeight:700,color:C.sub,marginBottom:10,textTransform:"uppercase",letterSpacing:"0.08em"}}>🔍 Quick Search — Weather, Gas, Places</div>
@@ -2717,6 +2718,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   <button key={q} onClick={()=>setChatIn(q)} style={{padding:"11px 13px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,textAlign:"left",cursor:"pointer",fontFamily:"inherit",lineHeight:1.5}}>{q}</button>
                 ))}
               </div>
+            </div>
             </div>
           )}
 
