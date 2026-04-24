@@ -301,11 +301,11 @@ const DEMO_W=[
 
 // ── VENDOR CONFIG ─────────────────────────────────────────────────────────────
 const VENDORS={
-  JDT: {name:"John Doe Transport", short:"JDT", icon:"🚛", color:"#00ffcc",  unit:""},
-  CPG: {name:"John Doe Transport", short:"JDT", icon:"🚛", color:"#00ffcc",  unit:""},
-  STG: {name:"Jane Smith Logistics", short:"JSL", icon:"⚓", color:"#a78bfa",  unit:""},
-  AMZ: {name:"Amazon Freight",      short:"AMZ", icon:"📦", color:"#ff7a45",  unit:""},
-  OTH: {name:"Other",               short:"OTH", icon:"🏢", color:"#fbbf24",  unit:""},
+  JDT: {name:"Demo Driver Co",       short:"DEMO", icon:"🚛", color:"#00ffcc",  unit:""},
+  CPG: {name:"Lilwemma Services Co", short:"CPG", icon:"⚓", color:"#00ffcc",  unit:"BAL975"},
+  STG: {name:"STG Drayage",          short:"STG", icon:"⚓", color:"#a78bfa",  unit:""},
+  AMZ: {name:"Amazon Freight",       short:"AMZ", icon:"📦", color:"#ff7a45",  unit:""},
+  OTH: {name:"Other",                short:"OTH", icon:"🏢", color:"#fbbf24",  unit:""},
 };
 
 function detectVendor(w){
@@ -1826,7 +1826,12 @@ Be specific with real institution names and programs, not generic advice.`;
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                         <div style={{display:"flex",alignItems:"center",gap:7}}>
                           <span style={{fontSize:16}}>{v.icon}</span>
-                          <span style={{fontSize:11,fontWeight:700,color:v.color}}>{v.name}</span>
+                          <span style={{fontSize:11,fontWeight:700,color:v.color}}>
+                            {demoMode
+                              ? "Demo Driver Co"
+                              : (profile.company||profile.name||v.name)
+                            }
+                          </span>
                         </div>
                         <Tag color={v.color}>{vMargin}% margin</Tag>
                       </div>
