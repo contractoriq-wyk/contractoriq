@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const DARK={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#8fa3c0",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
-const LIGHT={bg:"#f0f4f8",surf:"#ffffff",card:"#ffffff",raised:"#e2e8f0",border:"#cbd5e1",accent:"#0077aa",a2:"#c2410c",a3:"#6d28d9",text:"#0f172a",sub:"#334155",green:"#15803d",red:"#b91c1c",gold:"#b45309"};
+const LIGHT={bg:"#e8eef5",surf:"#ffffff",card:"#f5f8fc",raised:"#dce4ef",border:"#a8b8cc",accent:"#005f8a",a2:"#a02800",a3:"#4c1d95",text:"#050d1a",sub:"#1a2d45",green:"#0f4c25",red:"#8b0000",gold:"#7a4a00"};
 const C=DARK; // default — overridden by component state
-const K=(x={})=>({background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"18px",...x});
+const _K=(C)=>(x={})=>({background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"18px",...x});
 const gc=g=>g==="A"?C.green:g==="B"?C.accent:g==="C"?C.gold:C.red;
 const inp={width:"100%",padding:"11px 13px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:9,color:C.text,fontSize:13,boxSizing:"border-box",fontFamily:"inherit",outline:"none"};
 const lbl={fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:5,display:"block"};
@@ -441,6 +441,9 @@ export default function ContractorIQv26(){
   const [wide,setWide]=useState(window.innerWidth>700);
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
   const C=darkMode?DARK:LIGHT;
+  const K=_K(C); // bind card style helper to current theme
+  // Sync body background with theme
+  useEffect(()=>{document.body.style.background=C.bg;document.body.style.color=C.text;},[darkMode]);
   const [searchQ,setSearchQ]=useState("");
   const [searchResult,setSearchResult]=useState("");
   const [searchLoading,setSearchLoading]=useState(false);
@@ -473,6 +476,8 @@ export default function ContractorIQv26(){
   const [focusMode,setFocusMode]=useState(false);
   const [showSettings,setShowSettings]=useState(false);
   const [showMenu,setShowMenu]=useState(false);
+  const [showAbout,setShowAbout]=useState(false);
+  const [showAbout,setShowAbout]=useState(false);
   const [hiddenVendors,setHiddenVendors]=useState([]);
   const [hideOwnerName,setHideOwnerName]=useState(false);
   const [hideUnitNum,setHideUnitNum]=useState(false);
@@ -1105,6 +1110,113 @@ Be specific with real institution names and programs, not generic advice.`;
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
       {upgradeModal()}
       {/* ── WELCOME SCREEN ── */}
+      {/* ── ABOUT US MODAL ── */}
+      {showAbout&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px",backdropFilter:"blur(4px)",overflowY:"auto"}}>
+          <div style={{background:C.card,borderRadius:24,padding:"28px 22px",maxWidth:420,width:"100%",border:`1px solid ${C.border}`,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}}>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{width:68,height:68,borderRadius:"50%",background:"linear-gradient(135deg,#fbbf24,#f59e0b)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",fontSize:36,boxShadow:"0 0 0 6px #fbbf2420"}}>💰</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.text,marginBottom:8}}>About ContractorIQ</div>
+              <div style={{fontSize:11,color:C.sub,lineHeight:1.8,marginBottom:14}}>Your personal profit analyst — built for every gig worker and independent contractor who deserves to know the truth about their business.</div>
+              <div style={{padding:"10px 14px",background:`${C.gold}15`,border:`2px solid ${C.gold}55`,borderRadius:12,marginBottom:16}}>
+                <div style={{fontSize:12,fontWeight:800,color:C.gold,marginBottom:4}}>⚡ WE DON'T COMPETE WITH DAT OR TRUCKLOGICS.</div>
+                <div style={{fontSize:11,color:C.gold,lineHeight:1.6}}>We Show You Where You're Losing Money and Help You Fix It With AI Technology — for a fraction of what they charge.</div>
+              </div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:18}}>
+              {[
+                {i:"📊",t:"Know Your Real Numbers",d:"Upload your settlement and see exactly where every dollar goes — gross, net, deductions, margin — all in seconds."},
+                {i:"⚡",t:"Score Every Load Before You Accept",d:"Never take a bad load again. Our AI scores every offer and tells you if it's worth your time and fuel."},
+                {i:"🧠",t:"AI That Knows YOUR Business",d:"Unlike generic AI, ContractorIQ's advisor is trained on your actual settlement data. Ask it anything about your money."},
+                {i:"🔒",t:"Your Data Stays Private",d:"Everything lives on your device. No servers. No data selling. No third-party access. Ever."},
+                {i:"💡",t:"Built for Every 1099 Worker",d:"Owner-operators, OTR drivers, drayage, Uber, Lyft, DoorDash, delivery — if you're a contractor, this tool is for you."},
+              ].map(r=>(
+                <div key={r.t} style={{display:"flex",gap:12,padding:"10px 12px",background:C.bg,borderRadius:10,border:`1px solid ${C.border}`}}>
+                  <span style={{fontSize:20,flexShrink:0,marginTop:2}}>{r.i}</span>
+                  <div>
+                    <div style={{fontSize:12,fontWeight:700,color:C.text,marginBottom:3}}>{r.t}</div>
+                    <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>{r.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{padding:"12px 14px",background:`${C.accent}12`,borderRadius:10,border:`1px solid ${C.accent}33`,marginBottom:16,textAlign:"center"}}>
+              <div style={{fontSize:12,fontWeight:800,color:C.accent,marginBottom:4}}>🎯 Our Mission</div>
+              <div style={{fontSize:11,color:C.sub,lineHeight:1.7}}>To help every independent contractor stop guessing and start knowing — so you can build the business and life you deserve. One avoided bad load saves $300–$800. ContractorIQ pays for itself immediately.</div>
+            </div>
+            <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:7,marginBottom:16}}>
+              {["🚛 Owner-Op","🛣️ OTR Driver","⚓ Drayage","🚗 Rideshare","🛵 Dasher","📦 Delivery","💼 Any 1099"].map(g=>(
+                <span key={g} style={{padding:"4px 10px",borderRadius:20,fontSize:10,background:`${C.accent}12`,border:`1px solid ${C.accent}25`,color:C.accent,fontWeight:600}}>{g}</span>
+              ))}
+            </div>
+            <button onClick={()=>setShowAbout(false)} style={{width:"100%",padding:"13px",borderRadius:12,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+              Got It — Let's Get Started 🚀
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── ABOUT US MODAL ── */}
+      {showAbout&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px",overflowY:"auto",backdropFilter:"blur(4px)"}} onClick={()=>setShowAbout(false)}>
+          <div style={{background:C.card,borderRadius:24,padding:"28px 22px",maxWidth:420,width:"100%",border:`1px solid ${C.border}`,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}} onClick={e=>e.stopPropagation()}>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{width:72,height:72,borderRadius:"50%",background:"linear-gradient(135deg,#fbbf24,#f59e0b)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",fontSize:38,boxShadow:"0 0 0 6px #fbbf2420"}}>💰</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.text,marginBottom:8}}>About ContractorIQ</div>
+              <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>Built for every gig worker who deserves to know the truth about their business.</div>
+            </div>
+
+            <div style={{padding:"14px",background:C.bg,borderRadius:12,border:`2px solid ${C.gold}55`,marginBottom:16}}>
+              <div style={{fontSize:12,fontWeight:800,color:C.gold,marginBottom:8}}>⚡ STOP GUESSING. START KNOWING.</div>
+              <div style={{fontSize:11,color:C.text,lineHeight:1.8}}>You drove all week. You hustled. You delivered. But do you actually know where the money went? ContractorIQ is the only tool built to show you <strong style={{color:C.accent}}>exactly where every dollar goes</strong> — and what to do about it. In seconds. Not hours.</div>
+            </div>
+
+            <div style={{padding:"12px 14px",background:C.bg,borderRadius:12,border:`2px solid ${C.red}44`,marginBottom:16}}>
+              <div style={{fontSize:11,fontWeight:800,color:C.gold,marginBottom:6}}>⚡ WE DON'T COMPETE WITH DAT OR TRUCKLOGICS.</div>
+              <div style={{fontSize:11,color:C.text,lineHeight:1.7}}>We <strong style={{color:C.gold}}>Show You Where You're Losing Money</strong> and <strong style={{color:C.gold}}>Help You Fix It With AI Technology</strong> — for a fraction of what the big platforms charge.</div>
+            </div>
+
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>Who We Serve</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+                {["🚛 Owner-Operators","🛣️ OTR Drivers","⚓ Drayage Drivers","🚗 Rideshare","🛵 Dashers","📦 Delivery","💼 Any 1099 Worker"].map(g=>(
+                  <span key={g} style={{padding:"5px 11px",borderRadius:20,fontSize:10,background:`${C.accent}15`,border:`1px solid ${C.accent}33`,color:C.accent,fontWeight:700}}>{g}</span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>What We Do</div>
+              {[
+                {i:"📄",t:"Reads your settlement PDF in 30 seconds"},
+                {i:"💰",t:"Shows every deduction, every leak, every dollar"},
+                {i:"⚡",t:"Scores every load offer before you accept it"},
+                {i:"🧠",t:"AI advisor that knows YOUR real numbers"},
+                {i:"📊",t:"Tracks your business health week over week"},
+                {i:"🎯",t:"Helps you set and reach your income goals"},
+              ].map(r=>(
+                <div key={r.t} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                  <span style={{fontSize:16,flexShrink:0}}>{r.i}</span>
+                  <span style={{fontSize:11,color:C.text,lineHeight:1.5}}>{r.t}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{padding:"12px 14px",background:`${C.gold}12`,borderRadius:10,border:`1px solid ${C.gold}33`,marginBottom:16}}>
+              <div style={{fontSize:11,color:C.gold,lineHeight:1.7}}><strong>Our Goal:</strong> To help every independent contractor, gig worker, and owner-operator build a profitable, sustainable business — with the same intelligence that used to cost thousands of dollars per year. <strong>Your success is our mission.</strong></div>
+            </div>
+
+            <div style={{padding:"10px 12px",background:`${C.red}10`,borderRadius:10,border:`1px solid ${C.red}33`,marginBottom:18}}>
+              <div style={{fontSize:10,color:C.red,lineHeight:1.6,fontWeight:700}}>⚡ One avoided bad load = $300–$800 back in your pocket. ContractorIQ pays for itself the first time you use it.</div>
+            </div>
+
+            <button onClick={()=>setShowAbout(false)} style={{width:"100%",padding:"14px",borderRadius:12,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+              Let's Get Started 🚀
+            </button>
+          </div>
+        </div>
+      )}
+
       {showWelcome&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"12px 16px",backdropFilter:"blur(4px)",overflowY:"auto"}}>
           <div style={{background:C.card,borderRadius:24,padding:"28px 22px",maxWidth:400,width:"100%",border:"1px solid "+C.border,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}}>
@@ -1230,47 +1342,6 @@ Be specific with real institution names and programs, not generic advice.`;
 
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 
-      {/* ── SMART SEARCH BAR ── always visible top of app ── */}
-      <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"10px 14px"}}>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.raised,borderRadius:10,padding:"0 12px",border:`1px solid ${C.border}`}}>
-            <span style={{fontSize:14,flexShrink:0}}>{searchLoading?"⏳":"🔍"}</span>
-            <input
-              value={searchQ||""}
-              onChange={e=>setSearchQ(e.target.value)}
-              onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}}
-              placeholder="Weather · Gas prices · McDonald's near me..."
-              style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"10px 0",width:"100%",outline:"none"}}
-            />
-            {(searchQ||"").trim()&&<button onClick={()=>{setSearchQ("");setSearchResult("");}} style={{background:"none",border:"none",color:C.sub,fontSize:16,cursor:"pointer",padding:"0 4px",flexShrink:0}}>×</button>}
-          </div>
-          <button
-            onClick={()=>runSearch()}
-            disabled={!(searchQ||"").trim()||searchLoading}
-            style={{padding:"10px 14px",borderRadius:10,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:!(searchQ||"").trim()||searchLoading?C.sub:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
-            Search
-          </button>
-        </div>
-        {/* Quick chips */}
-        {!searchResult&&!searchLoading&&(
-          <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
-            {["⛅ Weather","⛽ Gas prices","🍔 McDonald's","🚛 Truck stops","🛣️ Traffic I-95"].map(s=>(
-              <button key={s} onClick={()=>{const q=s.replace(/^[^\s]+\s/,"");setSearchQ(q);setTimeout(()=>runSearch(q),50);}}
-                style={{padding:"4px 10px",borderRadius:20,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
-        {/* Search result */}
-        {searchResult&&(
-          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}44`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
-            {searchResult}
-            <button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
-          </div>
-        )}
-      </div>
-
       {/* HEADER */}
       <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"13px 16px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:11}}>
@@ -1292,8 +1363,8 @@ Be specific with real institution names and programs, not generic advice.`;
           <TB t="ai" l="🧠 AI"/>
           <TB t="growth" l="🚀 Growth"/>
           <button onClick={()=>setFocusMode(p=>!p)}
-            style={{padding:"9px 10px",borderRadius:8,background:focusMode?`${C.gold}22`:C.raised,border:`1px solid ${focusMode?C.gold:C.border}`,color:focusMode?C.gold:C.sub,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
-            {focusMode?"⚡":"📋"}
+            style={{padding:"9px 14px",borderRadius:8,background:focusMode?C.gold:`linear-gradient(135deg,${C.gold}33,${C.gold}15)`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,letterSpacing:"0.03em"}}>
+            {focusMode?"⚡ FOCUS":"⚡ Focus"}
           </button>
           {/* ── GROUPED MENU BUTTON ── */}
           <div style={{position:"relative",flexShrink:0}}>
@@ -1304,6 +1375,11 @@ Be specific with real institution names and programs, not generic advice.`;
             </button>
             {showMenu&&(
               <div style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:8,zIndex:999,minWidth:180,boxShadow:"0 8px 32px rgba(0,0,0,0.3)"}}>
+                {/* About Us */}
+                <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
+                </button>
                 {/* Profile */}
                 <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
                   style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
@@ -1317,8 +1393,13 @@ Be specific with real institution names and programs, not generic advice.`;
                 </button>
                 {/* Theme toggle */}
                 <button onClick={()=>{const next=!darkMode;setDarkMode(next);try{localStorage.setItem("ciq_theme",next?"dark":"light");}catch(e){}setShowMenu(false);}}
-                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                   <span>{darkMode?"☀️":"🌙"}</span><span style={{fontWeight:600}}>{darkMode?"Light Mode":"Dark Mode"}</span>
+                </button>
+                {/* About Us */}
+                <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
+                  <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
                 </button>
               </div>
             )}
@@ -1331,6 +1412,68 @@ Be specific with real institution names and programs, not generic advice.`;
             <button onClick={()=>{const t=ownerTaps+1;setOwnerTaps(t);if(t>=5){setIsPro(true);setOwnerTaps(0);try{localStorage.setItem("ciq_pro","true");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}else{openUpgrade("header");}}} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{ownerTaps>0?`(${ownerTaps}/5)`:"Upgrade"}</button>
           )}
         </div>
+      </div>
+
+      {/* ── SMART SEARCH BAR ── highlighted below header ── */}
+      <div style={{background:`linear-gradient(135deg,${C.a3}22,${C.accent}15)`,borderBottom:`2px solid ${C.a3}55`,padding:"11px 14px"}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:10,padding:"0 12px",border:`2px solid ${C.a3}`,boxShadow:`0 0 14px ${C.a3}33`}}>
+            <span style={{fontSize:14,flexShrink:0,color:C.a3}}>{searchLoading?"⏳":"🔍"}</span>
+            <input value={searchQ||""} onChange={e=>setSearchQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}} placeholder="Search weather · gas prices · truck stops · traffic..." style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"11px 0",width:"100%",outline:"none"}}/>
+            {(searchQ||"").trim()&&<button onClick={()=>{setSearchQ("");setSearchResult("");}} style={{background:"none",border:"none",color:C.sub,fontSize:16,cursor:"pointer",padding:"0 4px",flexShrink:0}}>×</button>}
+          </div>
+          <button onClick={()=>runSearch()} disabled={!(searchQ||"").trim()||searchLoading} style={{padding:"11px 16px",borderRadius:10,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:!(searchQ||"").trim()||searchLoading?C.sub:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Go</button>
+        </div>
+        {!searchResult&&!searchLoading&&(
+          <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
+            {["⛅ Weather","⛽ Gas prices","🚛 Truck stops","🛣️ Traffic I-95","⛽ Diesel prices"].map(s=>(
+              <button key={s} onClick={()=>{setSearchQ(s.replace(/^[^\s]+\s/,""));setTimeout(()=>runSearch(s.replace(/^[^\s]+\s/,"")),50);}} style={{padding:"5px 11px",borderRadius:20,background:C.raised,border:`1px solid ${C.a3}55`,color:C.a3,fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",fontWeight:700}}>{s}</button>
+            ))}
+          </div>
+        )}
+        {searchResult&&(
+          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}44`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
+            {searchResult}
+            <button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
+          </div>
+        )}
+      </div>
+      <div style={{background:`linear-gradient(135deg,${C.a3}18,${C.accent}12)`,borderBottom:`2px solid ${C.a3}55`,padding:"10px 14px",position:"sticky",top:0,zIndex:99}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:12,padding:"0 12px",border:`2px solid ${C.a3}66`,boxShadow:`0 2px 12px ${C.a3}22`}}>
+            <span style={{fontSize:15,flexShrink:0}}>{searchLoading?"⏳":"🔍"}</span>
+            <input
+              value={searchQ||""}
+              onChange={e=>setSearchQ(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}}
+              placeholder="Search weather, gas, truck stops, traffic..."
+              style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"11px 0",width:"100%",outline:"none"}}
+            />
+            {(searchQ||"").trim()&&<button onClick={()=>{setSearchQ("");setSearchResult("");}} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer",padding:"0 4px",flexShrink:0}}>×</button>}
+          </div>
+          <button
+            onClick={()=>runSearch()}
+            disabled={!(searchQ||"").trim()||searchLoading}
+            style={{padding:"11px 16px",borderRadius:12,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:!(searchQ||"").trim()||searchLoading?C.sub:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
+            {searchLoading?"⏳ ...":"Search"}
+          </button>
+        </div>
+        {!searchResult&&!searchLoading&&(
+          <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
+            {["⛅ Weather","⛽ Gas prices","🚛 Truck stops I-70","🛣️ Traffic I-95","🔧 Mechanic near me"].map(s=>(
+              <button key={s} onClick={()=>{const q=s.replace(/^[^\s]+\s/,"");setSearchQ(q);setTimeout(()=>runSearch(q),50);}}
+                style={{padding:"5px 11px",borderRadius:20,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+        {searchResult&&(
+          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}55`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap",boxShadow:`0 2px 12px ${C.a3}22`}}>
+            {searchResult}
+            <button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
+          </div>
+        )}
       </div>
 
       {/* ── SETTINGS PANEL ── */}
@@ -1617,9 +1760,22 @@ Be specific with real institution names and programs, not generic advice.`;
           </div>
           <NoBadge/>
 
+          {/* ── PROTECT YOUR INCOME CARD ── */}
+          {!demoMode&&tNet>0&&(
+            <div style={{background:`linear-gradient(135deg,${C.a3}15,${C.gold}10)`,borderRadius:14,padding:"14px 16px",marginBottom:12,border:`1px solid ${C.a3}44`,display:"flex",alignItems:"center",gap:12}}>
+              <div style={{fontSize:28,flexShrink:0}}>🛡️</div>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:800,color:C.text,marginBottom:2}}>Protect Your Income</div>
+                <div style={{fontSize:10,color:C.sub,lineHeight:1.6}}>You've earned <strong style={{color:C.accent}}>${tNet.toLocaleString("en-US",{maximumFractionDigits:0})}</strong> net this year. As a 1099 worker you have <strong style={{color:C.gold}}>zero employer coverage.</strong> Book a free life insurance review.</div>
+              </div>
+              <button onClick={()=>window.open("https://calendly.com","_blank")} style={{padding:"8px 11px",borderRadius:9,background:`linear-gradient(135deg,${C.a3},${C.accent})`,color:"#000",fontWeight:800,fontSize:10,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
+                📅 Free Review
+              </button>
+            </div>
+          )}
+
           {/* Trend — color coded by vendor */}
-          <div style={K({marginBottom:16,padding:"14px 16px"})}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div style={K({marginBottom:16,padding:"14px 16px"})}>            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em"}}>📈 Weekly Net Pay Trend{helpBtn("trend")}</div>
             </div>
             {helpModal("trend")}
@@ -2177,7 +2333,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 9px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>{mwMoves.map((m,i)=>{const s=scoreMove(m);return(
                   <tr key={i} style={{borderBottom:`1px solid ${C.border}`,background:i%2?"#ffffff06":"transparent"}}>
-                    <td style={{padding:"9px"}}><span style={{padding:"3px 8px",borderRadius:5,fontSize:10,fontWeight:700,background:m.type==="L"?"#14532d":"#431407",color:m.type==="L"?"#86efac":"#fcd34d"}}>{m.type==="L"?"LOAD":"EMPTY"}</span></td>
+                    <td style={{padding:"9px"}}><span style={{padding:"3px 8px",borderRadius:5,fontSize:10,fontWeight:700,background:m.type==="L"?`${C.green}25`:`${C.gold}25`,color:m.type==="L"?C.green:C.gold}}>{m.type==="L"?"LOAD":"EMPTY"}</span></td>
                     <td style={{padding:"9px",color:C.text,whiteSpace:"nowrap",fontSize:11}}>{m.from}→{m.to}</td>
                     <td style={{padding:"9px",color:C.text}}>{m.miles}</td>
                     <td style={{padding:"9px",color:C.text}}>${m.rate}</td>
@@ -2633,7 +2789,7 @@ Be specific with real institution names and programs, not generic advice.`;
                       const vk=allW.find(w=>w.week===m.wk)?detectVendor(allW.find(w=>w.week===m.wk)):"CPG";
                       const vc=VENDORS[vk]?.color||C.accent;
                       return(
-                        <tr key={i} style={{borderBottom:`1px solid ${C.border}`,background:m.isRoundTrip?`${C.a3}10`:i%2?"#ffffff05":"transparent"}}>
+                        <tr key={i} style={{borderBottom:`1px solid ${C.border}`,background:m.isRoundTrip?`${C.a3}10`:i%2?`${C.border}30`:"transparent"}}>
                           <td style={{padding:"8px 6px",color:C.sub,fontWeight:600}}>W{m.wk}</td>
                           <td style={{padding:"8px 6px"}}>
                             <span style={{padding:"2px 7px",borderRadius:5,fontSize:9,fontWeight:700,background:`${vc}22`,color:vc}}>{vk}</span>
@@ -2641,7 +2797,7 @@ Be specific with real institution names and programs, not generic advice.`;
                           <td style={{padding:"8px 6px"}}>
                             {m.isRoundTrip
                               ? <span style={{padding:"2px 7px",borderRadius:5,fontSize:10,fontWeight:700,background:`${C.a3}30`,color:C.a3}}>🔄 RT</span>
-                              : <span style={{padding:"2px 7px",borderRadius:5,fontSize:10,fontWeight:700,background:m.type==="L"?"#14532d":"#431407",color:m.type==="L"?"#86efac":"#fcd34d"}}>{m.type}</span>
+                              : <span style={{padding:"2px 7px",borderRadius:5,fontSize:10,fontWeight:700,background:m.type==="L"?`${C.green}25`:`${C.gold}25`,color:m.type==="L"?C.green:C.gold}}>{m.type}</span>
                             }
                             {s.isDropHook&&<span style={{marginLeft:3,padding:"1px 4px",borderRadius:4,fontSize:9,fontWeight:700,background:`${C.a3}22`,color:C.a3}}>D&H</span>}
                             {s.isFlatRate&&!s.isDropHook&&!m.isRoundTrip&&<span style={{marginLeft:3,padding:"1px 4px",borderRadius:4,fontSize:9,fontWeight:700,background:`${C.gold}22`,color:C.gold}}>FLAT</span>}
