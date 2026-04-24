@@ -477,6 +477,8 @@ export default function ContractorIQv26(){
   const [showSettings,setShowSettings]=useState(false);
   const [showMenu,setShowMenu]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
+  const [showMarket,setShowMarket]=useState(false);
+  const [showInsurance,setShowInsurance]=useState(false);
   const [hiddenVendors,setHiddenVendors]=useState([]);
   const [hideOwnerName,setHideOwnerName]=useState(false);
   const [hideUnitNum,setHideUnitNum]=useState(false);
@@ -1109,6 +1111,161 @@ Be specific with real institution names and programs, not generic advice.`;
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
       {upgradeModal()}
       {/* ── WELCOME SCREEN ── */}
+      {/* ── INSURANCE / PROTECT YOUR INCOME MODAL ── */}
+      {showInsurance&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.93)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px",overflowY:"auto",backdropFilter:"blur(4px)"}} onClick={()=>setShowInsurance(false)}>
+          <div style={{background:C.card,borderRadius:24,padding:"26px 20px",maxWidth:420,width:"100%",border:`1px solid ${C.a3}44`,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}} onClick={e=>e.stopPropagation()}>
+
+            {/* Header */}
+            <div style={{textAlign:"center",marginBottom:18}}>
+              <div style={{width:68,height:68,borderRadius:"50%",background:"linear-gradient(135deg,#a78bfa,#6d28d9)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:34,boxShadow:"0 0 0 6px #a78bfa20"}}>🛡️</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:21,fontWeight:800,color:C.text,marginBottom:6}}>Protect Your Income</div>
+              <div style={{fontSize:11,color:C.sub,lineHeight:1.7}}>You work hard for every dollar. But what happens to your family if you can't work? As a 1099 worker you have <strong style={{color:C.red}}>zero employer protection.</strong> That changes today.</div>
+            </div>
+
+            {/* Emotional hook with real numbers */}
+            <div style={{background:`linear-gradient(135deg,${C.a3}18,${C.accent}10)`,borderRadius:12,padding:"14px",marginBottom:16,border:`1px solid ${C.a3}44`}}>
+              <div style={{fontSize:11,fontWeight:800,color:C.a3,marginBottom:6}}>💡 YOUR NUMBERS TELL THE STORY</div>
+              <div style={{fontSize:11,color:C.text,lineHeight:1.8}}>
+                You earned <strong style={{color:C.accent}}>${tNet>0?tNet.toLocaleString("en-US",{minimumFractionDigits:2}):"--"}</strong> net this year working as an independent contractor. <strong>No employer. No benefits. No safety net.</strong> One accident, one illness, one bad week — and it all stops. <span style={{color:C.gold,fontWeight:700}}>Life insurance changes that.</span>
+              </div>
+            </div>
+
+            {/* Why gig workers are the perfect market */}
+            <div style={{background:C.bg,borderRadius:12,padding:"13px",marginBottom:14,border:`1px solid ${C.border}`}}>
+              <div style={{fontSize:10,fontWeight:800,color:C.gold,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>⚡ Why Every 1099 Worker Needs This</div>
+              {[
+                {i:"🚫",t:"No employer benefits",d:"No group life, no disability, no 401k. You are 100% on your own."},
+                {i:"💸",t:"Income instability",d:"Gig income fluctuates. Life insurance locks in protection when you're earning."},
+                {i:"🏦",t:"Tax advantages",d:"Certain products like IUL build tax-free wealth — perfect for self-employed."},
+                {i:"🤝",t:"Warm, trusted relationship",d:"You already use ContractorIQ. This is the same person looking out for you."},
+              ].map(r=>(
+                <div key={r.t} style={{display:"flex",gap:10,marginBottom:10}}>
+                  <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{r.i}</span>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:C.text}}>{r.t}</div>
+                    <div style={{fontSize:10,color:C.sub,lineHeight:1.5,marginTop:1}}>{r.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Products */}
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:10,fontWeight:800,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>📋 Products We'll Discuss On Your Free Call</div>
+              {[
+                {name:"Term Life",icon:"🏠",color:"#00aa88",tag:"Most Popular",desc:"Pure income replacement. If you die, your family gets paid. Simple, affordable, powerful. Replaces the income you bring home every week."},
+                {name:"Disability / Accident",icon:"🦺",color:"#f59e0b",tag:"Critical for Drivers",desc:"You already pay for OCC/ACC through your carrier — but it's limited. A personal disability policy pays YOU directly if you're injured and can't drive."},
+                {name:"Whole Life / IUL",icon:"📈",color:"#a78bfa",tag:"Build Wealth",desc:"Tax-free retirement savings that grows even when the market drops. No 401k? This IS your retirement plan. Especially powerful for self-employed."},
+                {name:"Final Expense",icon:"💙",color:"#6d28d9",tag:"Easy to Qualify",desc:"Covers funeral costs and final bills. No medical exam needed. Protects your family from being left with debt on top of grief."},
+              ].map(p=>(
+                <div key={p.name} style={{background:C.bg,borderRadius:10,padding:"12px 13px",marginBottom:8,border:`1px solid ${p.color}33`}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
+                    <span style={{fontSize:18}}>{p.icon}</span>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",alignItems:"center",gap:7}}>
+                        <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:800,color:p.color}}>{p.name}</span>
+                        <span style={{fontSize:8,background:p.color+"22",color:p.color,padding:"2px 7px",borderRadius:10,fontWeight:700,border:`1px solid ${p.color}44`}}>{p.tag}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{fontSize:10,color:C.sub,lineHeight:1.65,paddingLeft:26}}>{p.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* What happens on the call */}
+            <div style={{background:`${C.gold}10`,borderRadius:12,padding:"12px 14px",marginBottom:16,border:`1px solid ${C.gold}33`}}>
+              <div style={{fontSize:10,fontWeight:800,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:"0.07em"}}>📞 What Happens on Your Free 15-Min Call</div>
+              {["We review your real income numbers together","You learn which products fit YOUR situation","No pressure. No jargon. Just real education.","Walk away knowing exactly what you need and why."].map((s,i)=>(
+                <div key={i} style={{display:"flex",gap:8,marginBottom:5}}>
+                  <span style={{color:C.gold,fontWeight:800,fontSize:11,flexShrink:0}}>{i+1}.</span>
+                  <span style={{fontSize:10,color:C.text,lineHeight:1.5}}>{s}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA Button */}
+            <button
+              onClick={()=>window.open("https://calendly.com","_blank")}
+              style={{width:"100%",padding:"16px",borderRadius:14,background:"linear-gradient(135deg,#a78bfa,#6d28d9)",color:"#fff",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit",marginBottom:10,boxShadow:"0 4px 20px rgba(167,139,250,0.4)"}}>
+              📅 Book My Free 15-Min Review
+            </button>
+            <div style={{textAlign:"center",fontSize:10,color:C.sub,marginBottom:14}}>No obligation · No pressure · 100% educational · Zoom call</div>
+
+            <button onClick={()=>setShowInsurance(false)} style={{width:"100%",padding:"11px",borderRadius:10,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>
+              Maybe Later
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── MARKET OVERVIEW MODAL ── */}
+      {showMarket&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.93)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px",overflowY:"auto",backdropFilter:"blur(4px)"}} onClick={()=>setShowMarket(false)}>
+          <div style={{background:C.card,borderRadius:24,padding:"26px 20px",maxWidth:440,width:"100%",border:`1px solid ${C.green}44`,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}} onClick={e=>e.stopPropagation()}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <div>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.text}}>📈 Market Overview</div>
+                <div style={{fontSize:10,color:C.sub,marginTop:2}}>Live data via AI search</div>
+              </div>
+              <button onClick={()=>setShowMarket(false)} style={{background:"none",border:"none",color:C.sub,fontSize:20,cursor:"pointer"}}>×</button>
+            </div>
+
+            {/* Embedded TradingView widget */}
+            <div style={{borderRadius:12,overflow:"hidden",marginBottom:14,border:`1px solid ${C.border}`}}>
+              <iframe
+                src="https://widget.finances.yahoo.com/v2/tickers/SPY,QQQ,DOW,^VIX?lang=en-US&region=US&corsDomain=finance.yahoo.com"
+                style={{width:"100%",height:0,border:"none"}}
+                title="Market"
+              />
+              {/* Manual market cards since iframe may not work */}
+              <div style={{background:C.bg,padding:"14px 12px"}}>
+                <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>Key Indices — tap to search live data</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+                  {[
+                    {name:"S&P 500",sym:"SPY",desc:"US Large Cap"},
+                    {name:"Nasdaq",sym:"QQQ",desc:"Tech Heavy"},
+                    {name:"Dow Jones",sym:"DIA",desc:"30 Blue Chips"},
+                    {name:"VIX",sym:"^VIX",desc:"Fear Index"},
+                    {name:"Crude Oil",sym:"CL=F",desc:"Energy"},
+                    {name:"Gold",sym:"GC=F",desc:"Safe Haven"},
+                  ].map(s=>(
+                    <button key={s.sym} onClick={()=>{setShowMarket(false);setSearchQ(s.name+" stock price today");setTimeout(()=>runSearch(s.name+" stock price today"),100);}}
+                      style={{background:C.raised,borderRadius:10,padding:"11px 10px",border:`1px solid ${C.border}`,cursor:"pointer",textAlign:"left",fontFamily:"inherit"}}>
+                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.green}}>{s.sym}</div>
+                      <div style={{fontSize:11,fontWeight:700,color:C.text,marginTop:2}}>{s.name}</div>
+                      <div style={{fontSize:9,color:C.sub,marginTop:1}}>{s.desc}</div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Sector chips */}
+                <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>Quick Searches</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                  {["Market news today","Best dividend stocks 2026","Trucking stocks","IUL vs 401k","Best ETFs for 1099 workers","Fuel futures price"].map(q=>(
+                    <button key={q} onClick={()=>{setShowMarket(false);setSearchQ(q);setTimeout(()=>runSearch(q),100);}}
+                      style={{padding:"5px 10px",borderRadius:20,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600,whiteSpace:"nowrap"}}>
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Google Finance link */}
+            <button onClick={()=>window.open("https://finance.google.com","_blank")}
+              style={{width:"100%",padding:"13px",borderRadius:12,background:`linear-gradient(135deg,${C.green},#16a34a)`,color:"#fff",fontWeight:800,fontSize:13,border:"none",cursor:"pointer",fontFamily:"inherit",marginBottom:8}}>
+              📊 Open Google Finance
+            </button>
+            <button onClick={()=>window.open("https://finance.yahoo.com","_blank")}
+              style={{width:"100%",padding:"13px",borderRadius:12,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
+              📈 Open Yahoo Finance
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── ABOUT US MODAL ── */}
       {showAbout&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px",backdropFilter:"blur(4px)",overflowY:"auto"}}>
@@ -1318,6 +1475,17 @@ Be specific with real institution names and programs, not generic advice.`;
                 <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
                   style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                   <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
+                </button>
+                {/* Insurance */}
+                <button onClick={()=>{setShowInsurance(true);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>🛡️</span><span style={{fontWeight:600}}>Protect Your Income</span>
+                  <span style={{marginLeft:"auto",fontSize:9,background:C.red,color:"#fff",padding:"2px 6px",borderRadius:10,fontWeight:700}}>FREE</span>
+                </button>
+                {/* Market */}
+                <button onClick={()=>{setShowMarket(true);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>📈</span><span style={{fontWeight:600}}>Market Overview</span>
                 </button>
                 {/* Profile */}
                 <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
