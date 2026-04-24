@@ -510,18 +510,19 @@ export default function ContractorIQv26(){
   const chatEnd=useRef(null);
 
   // ── DEMO / ONBOARDING ────────────────────────────────────────────────────────
+  // Real owner data (W array) only available on dev/navy site
+  const ownerDataAvailable=typeof window!=="undefined"&&window.location.hostname.includes("navy");
+
   const [demoMode,setDemoMode]=useState(()=>{
-    // Owner/dev site — always default to REAL data (W array)
+    // Owner/dev site — always default to REAL data
     if(typeof window!=="undefined"&&window.location.hostname.includes("navy"))return false;
+    // Customer sites — always start in demo until they upload their own data
     try{
       const d=localStorage.getItem("ciq_demo");
       const hasWeeks=localStorage.getItem("ciq_addedWeeks");
       const added=hasWeeks?JSON.parse(hasWeeks):[];
-      // If explicitly set, respect that
-      if(d==="true")return true;
-      if(d==="false")return false;
-      // If no preference and no data, show demo
-      return added.length===0;
+      if(d==="false"&&added.length>0)return false; // They have their own data
+      return true; // Default to demo for all customers
     }catch{return true;}
   });
   const isOwnerMode=typeof window!=="undefined"&&(window.location.hostname.includes("navy")||window.location.search.includes("owner=true"));
@@ -531,8 +532,10 @@ export default function ContractorIQv26(){
       const hasDismissed=localStorage.getItem("ciq_welcome_done");
       const hasAddedWeeks=localStorage.getItem("ciq_addedWeeks");
       const addedParsed=hasAddedWeeks?JSON.parse(hasAddedWeeks):[];
-      if(hasDismissed==="true")return false;
-      if(addedParsed.length>0)return false;
+      // Only skip welcome if they explicitly dismissed AND have their own data
+      if(hasDismissed==="true"&&addedParsed.length>0)return false;
+      // If they subscribed (isPro) and dismissed, skip too
+      if(hasDismissed==="true"&&localStorage.getItem("ciq_pro")==="true")return false;
       return true;
     }catch{return true;}
   });
@@ -550,7 +553,9 @@ export default function ContractorIQv26(){
   useEffect(()=>{try{localStorage.setItem("ciq_dis_ads",JSON.stringify(dismissedAds));}catch(e){};},[dismissedAds]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  const allW=demoMode?[...DEMO_W,...addedW]:[...W,...addedW];
+  // CRITICAL: Real owner data (W) only available on navy dev site
+  const baseW=ownerDataAvailable?W:[];
+  const allW=demoMode?[...DEMO_W,...addedW]:[...baseW,...addedW];
   const visibleW=allW.filter(w=>{
     const vk=detectVendor(w);
     if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;
