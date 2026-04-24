@@ -489,6 +489,7 @@ export default function ContractorIQv26(){
   const [pasteResult,setPasteResult]=useState(null);
   const [pasteLoading,setPasteLoading]=useState(false);
   const fileRef=useRef(null);
+  const imgRef=useRef(null);
   const expRef=useRef(null);
   const docRef=useRef(null);
   // AI chat
@@ -2137,8 +2138,10 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
             {helpModal("addSettlement")}
 
-            {/* hidden file input */}
-            <input ref={fileRef} type="file" accept=".pdf,image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(f){setScanMode("scan");scanPDF(f,f.type.startsWith("image/")?"image":"pdf");}e.target.value="";}}/>
+            {/* hidden file input - PDF only */}
+            <input ref={fileRef} type="file" accept="application/pdf,.pdf" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(f){setScanMode("scan");scanPDF(f,"pdf");}e.target.value="";}}/>
+            {/* hidden file input - camera/photo */}
+            <input ref={imgRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(f){setScanMode("scan");scanPDF(f,"image");}e.target.value="";}}/>
 
             {/* Mode tabs */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,marginBottom:16}}>
@@ -2161,11 +2164,25 @@ Be specific with real institution names and programs, not generic advice.`;
             {scanMode==="scan"&&(
               <div>
                 {!scanning&&!scanResult&&(
-                  <button onClick={()=>fileRef.current?.click()} style={{width:"100%",padding:"28px 14px",borderRadius:14,background:`linear-gradient(135deg,${C.a3}15,${C.accent}10)`,border:`2px dashed ${C.a3}88`,cursor:"pointer",fontFamily:"inherit",textAlign:"center",marginBottom:12}}>
-                    <div style={{fontSize:42,marginBottom:10}}>📤</div>
-                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.a3,marginBottom:6}}>Tap to Upload Settlement PDF</div>
-                    <div style={{fontSize:11,color:C.sub,lineHeight:1.7}}>Supports PDF files and photos of settlements<br/>AI reads everything automatically in seconds</div>
-                  </button>
+                  <div style={{marginBottom:12}}>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                      {/* PDF from Files */}
+                      <button onClick={()=>fileRef.current?.click()} style={{padding:"22px 10px",borderRadius:14,background:`linear-gradient(135deg,${C.a3}20,${C.accent}15)`,border:`2px solid ${C.a3}`,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
+                        <div style={{fontSize:32,marginBottom:8}}>📂</div>
+                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.a3,marginBottom:4}}>Open PDF File</div>
+                        <div style={{fontSize:10,color:C.sub,lineHeight:1.5}}>Browse your Downloads or Files app</div>
+                      </button>
+                      {/* Camera / Photo */}
+                      <button onClick={()=>imgRef.current?.click()} style={{padding:"22px 10px",borderRadius:14,background:`linear-gradient(135deg,${C.gold}15,${C.a3}10)`,border:`2px solid ${C.gold}`,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
+                        <div style={{fontSize:32,marginBottom:8}}>📷</div>
+                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.gold,marginBottom:4}}>Take a Photo</div>
+                        <div style={{fontSize:10,color:C.sub,lineHeight:1.5}}>Photo of printed statement</div>
+                      </button>
+                    </div>
+                    <div style={{padding:"10px 12px",background:`${C.gold}10`,borderRadius:9,border:`1px solid ${C.gold}30`,fontSize:10,color:C.sub,lineHeight:1.7}}>
+                      💡 <strong style={{color:C.gold}}>Tip:</strong> Use <strong style={{color:C.text}}>Open PDF File</strong> if your settlement is saved as a PDF in Downloads. Use <strong style={{color:C.text}}>Take a Photo</strong> if you have a printed copy.
+                    </div>
+                  </div>
                 )}
                 {scanning&&(
                   <div style={{textAlign:"center",padding:"32px 16px"}}>
@@ -2202,11 +2219,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     <button onClick={()=>{setScanResult(null);setScanMsg("");fileRef.current?.click();}} style={{width:"100%",padding:"10px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>📤 Upload a Different PDF</button>
                   </div>
                 )}
-                {!scanning&&!scanResult&&(
-                  <div style={{padding:"10px 12px",background:`${C.gold}10`,borderRadius:9,border:`1px solid ${C.gold}30`,fontSize:10,color:C.sub,lineHeight:1.7,marginTop:8}}>
-                    💡 <strong style={{color:C.gold}}>Works with:</strong> ContainerPort, STG, and most carrier PDFs. Also works with a clear photo of your printed statement.
-                  </div>
-                )}
+                {!scanning&&!scanResult&&<div style={{display:"none"}}/>}
               </div>
             )}
 
