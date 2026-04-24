@@ -477,7 +477,6 @@ export default function ContractorIQv26(){
   const [showSettings,setShowSettings]=useState(false);
   const [showMenu,setShowMenu]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
-  const [showAbout,setShowAbout]=useState(false);
   const [hiddenVendors,setHiddenVendors]=useState([]);
   const [hideOwnerName,setHideOwnerName]=useState(false);
   const [hideUnitNum,setHideUnitNum]=useState(false);
@@ -1156,66 +1155,7 @@ Be specific with real institution names and programs, not generic advice.`;
         </div>
       )}
 
-      {/* ── ABOUT US MODAL ── */}
-      {showAbout&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px",overflowY:"auto",backdropFilter:"blur(4px)"}} onClick={()=>setShowAbout(false)}>
-          <div style={{background:C.card,borderRadius:24,padding:"28px 22px",maxWidth:420,width:"100%",border:`1px solid ${C.border}`,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}} onClick={e=>e.stopPropagation()}>
-            <div style={{textAlign:"center",marginBottom:20}}>
-              <div style={{width:72,height:72,borderRadius:"50%",background:"linear-gradient(135deg,#fbbf24,#f59e0b)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",fontSize:38,boxShadow:"0 0 0 6px #fbbf2420"}}>💰</div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.text,marginBottom:8}}>About ContractorIQ</div>
-              <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>Built for every gig worker who deserves to know the truth about their business.</div>
-            </div>
 
-            <div style={{padding:"14px",background:C.bg,borderRadius:12,border:`2px solid ${C.gold}55`,marginBottom:16}}>
-              <div style={{fontSize:12,fontWeight:800,color:C.gold,marginBottom:8}}>⚡ STOP GUESSING. START KNOWING.</div>
-              <div style={{fontSize:11,color:C.text,lineHeight:1.8}}>You drove all week. You hustled. You delivered. But do you actually know where the money went? ContractorIQ is the only tool built to show you <strong style={{color:C.accent}}>exactly where every dollar goes</strong> — and what to do about it. In seconds. Not hours.</div>
-            </div>
-
-            <div style={{padding:"12px 14px",background:C.bg,borderRadius:12,border:`2px solid ${C.red}44`,marginBottom:16}}>
-              <div style={{fontSize:11,fontWeight:800,color:C.gold,marginBottom:6}}>⚡ WE DON'T COMPETE WITH DAT OR TRUCKLOGICS.</div>
-              <div style={{fontSize:11,color:C.text,lineHeight:1.7}}>We <strong style={{color:C.gold}}>Show You Where You're Losing Money</strong> and <strong style={{color:C.gold}}>Help You Fix It With AI Technology</strong> — for a fraction of what the big platforms charge.</div>
-            </div>
-
-            <div style={{marginBottom:16}}>
-              <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>Who We Serve</div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
-                {["🚛 Owner-Operators","🛣️ OTR Drivers","⚓ Drayage Drivers","🚗 Rideshare","🛵 Dashers","📦 Delivery","💼 Any 1099 Worker"].map(g=>(
-                  <span key={g} style={{padding:"5px 11px",borderRadius:20,fontSize:10,background:`${C.accent}15`,border:`1px solid ${C.accent}33`,color:C.accent,fontWeight:700}}>{g}</span>
-                ))}
-              </div>
-            </div>
-
-            <div style={{marginBottom:16}}>
-              <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>What We Do</div>
-              {[
-                {i:"📄",t:"Reads your settlement PDF in 30 seconds"},
-                {i:"💰",t:"Shows every deduction, every leak, every dollar"},
-                {i:"⚡",t:"Scores every load offer before you accept it"},
-                {i:"🧠",t:"AI advisor that knows YOUR real numbers"},
-                {i:"📊",t:"Tracks your business health week over week"},
-                {i:"🎯",t:"Helps you set and reach your income goals"},
-              ].map(r=>(
-                <div key={r.t} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-                  <span style={{fontSize:16,flexShrink:0}}>{r.i}</span>
-                  <span style={{fontSize:11,color:C.text,lineHeight:1.5}}>{r.t}</span>
-                </div>
-              ))}
-            </div>
-
-            <div style={{padding:"12px 14px",background:`${C.gold}12`,borderRadius:10,border:`1px solid ${C.gold}33`,marginBottom:16}}>
-              <div style={{fontSize:11,color:C.gold,lineHeight:1.7}}><strong>Our Goal:</strong> To help every independent contractor, gig worker, and owner-operator build a profitable, sustainable business — with the same intelligence that used to cost thousands of dollars per year. <strong>Your success is our mission.</strong></div>
-            </div>
-
-            <div style={{padding:"10px 12px",background:`${C.red}10`,borderRadius:10,border:`1px solid ${C.red}33`,marginBottom:18}}>
-              <div style={{fontSize:10,color:C.red,lineHeight:1.6,fontWeight:700}}>⚡ One avoided bad load = $300–$800 back in your pocket. ContractorIQ pays for itself the first time you use it.</div>
-            </div>
-
-            <button onClick={()=>setShowAbout(false)} style={{width:"100%",padding:"14px",borderRadius:12,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
-              Let's Get Started 🚀
-            </button>
-          </div>
-        </div>
-      )}
 
       {showWelcome&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"12px 16px",backdropFilter:"blur(4px)",overflowY:"auto"}}>
