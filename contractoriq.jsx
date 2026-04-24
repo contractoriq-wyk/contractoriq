@@ -295,9 +295,6 @@ const DEMO_W=[
   {vendor:"JDT",week:"03",label:"Week 03",from:"01/20/2025",to:"01/24/2025",gross:3900.00,net:2145.00,totalDeductions:1755.00,rebate:38.00,gallons:265.00,
    deds:[{l:"Operations Fee",a:780.00},{l:"Fuel Advance",a:720.00},{l:"Insurance",a:200.00},{l:"Escrow",a:55.00}],
    moves:[{mi:58,rt:190,fc:41,t:"L"},{mi:62,rt:205,fc:44,t:"L"},{mi:70,rt:228,fc:47,t:"L"},{mi:52,rt:172,fc:38,t:"E"}]},
-  {vendor:"JDT",week:"04",label:"Week 04",from:"01/27/2025",to:"01/31/2025",gross:5200.00,net:2860.00,totalDeductions:2340.00,rebate:60.00,gallons:335.00,
-   deds:[{l:"Operations Fee",a:1040.00},{l:"Fuel Advance",a:950.00},{l:"Insurance",a:200.00},{l:"Escrow",a:150.00}],
-   moves:[{mi:70,rt:235,fc:49,t:"L"},{mi:65,rt:218,fc:46,t:"L"},{mi:75,rt:248,fc:52,t:"L"},{mi:68,rt:225,fc:47,t:"L"},{mi:60,rt:200,fc:43,t:"L"}]},
 ];
 
 
