@@ -52,7 +52,7 @@ function scoreMove(m){
 
 async function ai(msgs,sys){
   try{
-    const apiKey=import.meta.env.VITE_ANTHROPIC_KEY||(window.__CIQ_KEY__||"");
+    const apiKey=typeof __ANTHROPIC_KEY__!=="undefined"&&__ANTHROPIC_KEY__?__ANTHROPIC_KEY__:(window.__CIQ_KEY__||"");
     if(!apiKey)return "⚠️ AI features require setup. Contact support at getcontractoriq.com";
     const r=await fetch("https://api.anthropic.com/v1/messages",{
       method:"POST",
@@ -606,7 +606,7 @@ export default function ContractorIQv26(){
   async function scanPDF(file, fileType){
     setScanning(true);setScanResult(null);setScanMsg("");
     try{
-      const apiKey=import.meta.env.VITE_ANTHROPIC_KEY||(window.__CIQ_KEY__||"");
+      const apiKey=typeof __ANTHROPIC_KEY__!=="undefined"&&__ANTHROPIC_KEY__?__ANTHROPIC_KEY__:(window.__CIQ_KEY__||"");
       if(!apiKey){setScanMsg("⚠️ API key not configured. Go to Vercel dashboard → Settings → Environment Variables → add ANTHROPIC_KEY");setScanning(false);return;}
       const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
       const isImage=fileType==="image"||file.type.startsWith("image/");
@@ -614,7 +614,7 @@ export default function ContractorIQv26(){
       const contentBlock=isImage
         ?{type:"image",source:{type:"base64",media_type:mediaType,data:b64}}
         :{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
-      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:1200,messages:[{role:"user",content:[contentBlock,{type:"text",text:`This is a drayage/trucking settlement statement. Extract ALL data and return ONLY valid JSON with no other text, no markdown:\n{"week":"15","from":"04/06/2026","to":"04/12/2026","gross":0.00,"net":0.00,"totalDeductions":0.00,"rebate":0.00,"moves":[{"t":"L","fr":"BALTIMMD","to":"WILLIAMD","mi":77,"rt":195,"fc":52.36}],"deds":[{"l":"Fuel Advance (Pilot 179)","a":500.00}]}`}]}]})});
+      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:4000,messages:[{role:"user",content:[contentBlock,{type:"text",text:`This is a drayage/trucking settlement statement. Extract ALL data and return ONLY valid JSON with no other text, no markdown:\n{"week":"15","from":"04/06/2026","to":"04/12/2026","gross":0.00,"net":0.00,"totalDeductions":0.00,"rebate":0.00,"moves":[{"t":"L","fr":"BALTIMMD","to":"WILLIAMD","mi":77,"rt":195,"fc":52.36}],"deds":[{"l":"Fuel Advance (Pilot 179)","a":500.00}]}`}]}]})});
       if(!resp.ok){
         const errText=await resp.text();
         if(resp.status===401)setScanMsg("⚠️ API key invalid or expired. Check Vercel Environment Variables.");
@@ -628,7 +628,14 @@ export default function ContractorIQv26(){
       const jsonStart=txt.indexOf("{");
       const jsonEnd=txt.lastIndexOf("}")+1;
       if(jsonStart===-1){setScanMsg("⚠️ AI could not extract data from this file. Try the Paste Text method — copy text from PDF and paste it.");setScanning(false);return;}
-      const parsed=JSON.parse(txt.slice(jsonStart,jsonEnd));
+      let jsonStr=txt.slice(jsonStart,jsonEnd);
+      // Fix truncated JSON — if moves array is cut off, close it gracefully
+      try{JSON.parse(jsonStr);}catch(truncErr){
+        // Try to close open arrays/objects
+        let depth=0;for(const c of jsonStr){if(c==="{"||c==="[")depth++;else if(c==="}"||c==="]")depth--;}
+        if(depth>0)jsonStr+="]".repeat(Math.max(0,jsonStr.split("[").length-jsonStr.split("]").length))+"}".repeat(Math.max(0,jsonStr.split("{").length-jsonStr.split("}").length));
+      }
+      const parsed=JSON.parse(jsonStr);
       parsed.label=`Week ${String(parsed.week).padStart(2,"0")}`;
       parsed.week=String(parsed.week).padStart(2,"0");
       setScanResult(parsed);
@@ -670,7 +677,7 @@ ${pasteText.slice(0,6000)}`;
     try{
       const resp=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
-        headers:{"Content-Type":"application/json","x-api-key":(import.meta.env.VITE_ANTHROPIC_KEY||(window.__CIQ_KEY__||"")),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+        headers:{"Content-Type":"application/json","x-api-key":(typeof __ANTHROPIC_KEY__!=="undefined"&&__ANTHROPIC_KEY__?__ANTHROPIC_KEY__:(window.__CIQ_KEY__||"")),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
         body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:3000,messages:[{role:"user",content:prompt}]})
       });
       const d=await resp.json();
@@ -710,7 +717,7 @@ ${pasteText.slice(0,6000)}`;
       // Fetch the PDF as base64 via our API
       const fetchResp=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
-        headers:{"Content-Type":"application/json","x-api-key":(import.meta.env.VITE_ANTHROPIC_KEY||(window.__CIQ_KEY__||"")),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+        headers:{"Content-Type":"application/json","x-api-key":(typeof __ANTHROPIC_KEY__!=="undefined"&&__ANTHROPIC_KEY__?__ANTHROPIC_KEY__:(window.__CIQ_KEY__||"")),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
         body:JSON.stringify({
           model:"claude-sonnet-4-5",
           max_tokens:3000,
@@ -842,7 +849,7 @@ Be specific with real institution names and programs, not generic advice.`;
       const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
       const isImg=file.type.startsWith("image/");
       const block=isImg?{type:"image",source:{type:"base64",media_type:file.type||"image/jpeg",data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
-      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":(import.meta.env.VITE_ANTHROPIC_KEY||(window.__CIQ_KEY__||"")),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:400,messages:[{role:"user",content:[block,{type:"text",text:'Read this receipt. Return ONLY valid JSON: {"date":"MM/DD/YYYY","vendor":"store name","amount":0.00,"category":"Parts|Labor|Tires|Maintenance|Fuel|Permits|Other","desc":"what was purchased"}'}]}]})});
+      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":(typeof __ANTHROPIC_KEY__!=="undefined"&&__ANTHROPIC_KEY__?__ANTHROPIC_KEY__:(window.__CIQ_KEY__||"")),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:400,messages:[{role:"user",content:[block,{type:"text",text:'Read this receipt. Return ONLY valid JSON: {"date":"MM/DD/YYYY","vendor":"store name","amount":0.00,"category":"Parts|Labor|Tires|Maintenance|Fuel|Permits|Other","desc":"what was purchased"}'}]}]})});
       const d=await resp.json();
       const raw=d.content?.map(b=>b.text||"").join("")||"{}";
       const parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());
@@ -858,7 +865,7 @@ Be specific with real institution names and programs, not generic advice.`;
       var b64=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result.split(",")[1]);};r.onerror=rej;r.readAsDataURL(file);});
       var isImg=file.type.startsWith("image/");
       var block=isImg?{type:"image",source:{type:"base64",media_type:file.type||"image/jpeg",data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
-      var resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":(import.meta.env.VITE_ANTHROPIC_KEY||(window.__CIQ_KEY__||"")),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:300,messages:[{role:"user",content:[block,{type:"text",text:'Read this. Return ONLY JSON: {"date":"MM/DD/YYYY","title":"document title","category":"Maintenance|Inspection|Insurance|Registration|Medical|Permit|Other","note":"brief summary"}'}]}]})});
+      var resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":(typeof __ANTHROPIC_KEY__!=="undefined"&&__ANTHROPIC_KEY__?__ANTHROPIC_KEY__:(window.__CIQ_KEY__||"")),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:300,messages:[{role:"user",content:[block,{type:"text",text:'Read this. Return ONLY JSON: {"date":"MM/DD/YYYY","title":"document title","category":"Maintenance|Inspection|Insurance|Registration|Medical|Permit|Other","note":"brief summary"}'}]}]})});
       var d=await resp.json();
       var parsed=JSON.parse((d.content?d.content.map(function(b){return b.text||"";}).join(""):"{}").replace(/```json|```/g,"").trim());
       setDocForm(function(p){return {...p,date:parsed.date||p.date,title:parsed.title||"",category:parsed.category||"Maintenance",note:parsed.note||""};});
