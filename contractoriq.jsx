@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const DARK={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#8fa3c0",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
-const LIGHT={bg:"#f0f4f8",surf:"#ffffff",card:"#ffffff",raised:"#e8edf5",border:"#d1dae8",accent:"#00aa88",a2:"#e05a20",a3:"#7c3aed",text:"#0f172a",sub:"#4a5568",green:"#16a34a",red:"#dc2626",gold:"#d97706"};
+const LIGHT={bg:"#f0f4f8",surf:"#ffffff",card:"#ffffff",raised:"#e2e8f0",border:"#cbd5e1",accent:"#0077aa",a2:"#c2410c",a3:"#6d28d9",text:"#0f172a",sub:"#334155",green:"#15803d",red:"#b91c1c",gold:"#b45309"};
 const C=DARK; // default — overridden by component state
 const K=(x={})=>({background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"18px",...x});
 const gc=g=>g==="A"?C.green:g==="B"?C.accent:g==="C"?C.gold:C.red;
@@ -444,6 +444,17 @@ export default function ContractorIQv26(){
   const [searchQ,setSearchQ]=useState("");
   const [searchResult,setSearchResult]=useState("");
   const [searchLoading,setSearchLoading]=useState(false);
+  // ── Visitor tracking ──
+  useState(()=>{
+    try{
+      const key="ciq_visits";
+      const visits=JSON.parse(localStorage.getItem(key)||"[]");
+      visits.push({t:Date.now(),ua:navigator.userAgent.slice(0,60),ref:document.referrer.slice(0,80)||"direct"});
+      // Keep last 100 visits only
+      if(visits.length>100)visits.splice(0,visits.length-100);
+      localStorage.setItem(key,JSON.stringify(visits));
+    }catch(e){}
+  });
   // Loads
   const [offer,setOffer]=useState({miles:"",rate:"",fsc:"",type:"L"});
   const [offerRes,setOfferRes]=useState(null);
@@ -461,6 +472,7 @@ export default function ContractorIQv26(){
   const [milesBuffer,setMilesBuffer]=useState(5); // % buffer for unreported miles
   const [focusMode,setFocusMode]=useState(false);
   const [showSettings,setShowSettings]=useState(false);
+  const [showMenu,setShowMenu]=useState(false);
   const [hiddenVendors,setHiddenVendors]=useState([]);
   const [hideOwnerName,setHideOwnerName]=useState(false);
   const [hideUnitNum,setHideUnitNum]=useState(false);
@@ -1276,26 +1288,41 @@ Be specific with real institution names and programs, not generic advice.`;
         </div>
         <div style={{display:"flex",gap:7,alignItems:"center"}}>
           <TB t="dashboard" l="📊 Dash"/>
-          <TB t="loads" l="📦 Loads"/>
+          <TB t="loads" l="📋 Doc Analyzer"/>
           <TB t="ai" l="🧠 AI"/>
           <TB t="growth" l="🚀 Growth"/>
           <button onClick={()=>setFocusMode(p=>!p)}
             style={{padding:"9px 10px",borderRadius:8,background:focusMode?`${C.gold}22`:C.raised,border:`1px solid ${focusMode?C.gold:C.border}`,color:focusMode?C.gold:C.sub,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
             {focusMode?"⚡":"📋"}
           </button>
-          <button onClick={()=>setShowSettings(p=>!p)}
-            style={{padding:"9px 10px",borderRadius:8,background:showSettings?`${C.a3}22`:C.raised,border:`1px solid ${showSettings?C.a3:C.border}`,color:showSettings?C.a3:C.sub,fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
-            ⚙️
-          </button>
-          <button onClick={()=>{const next=!darkMode;setDarkMode(next);try{localStorage.setItem("ciq_theme",next?"dark":"light");}catch(e){}}}
-            style={{padding:"9px 10px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}
-            title={darkMode?"Switch to Light Mode":"Switch to Dark Mode"}>
-            {darkMode?"☀️":"🌙"}
-          </button>
-          <button onClick={()=>setShowProfile(p=>!p)}
-            style={{padding:"9px 10px",borderRadius:8,background:showProfile?`${C.gold}22`:(profile.setupDone?`${C.green}15`:C.raised),border:`1px solid ${showProfile?C.gold:(profile.setupDone?C.green:C.border)}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.sub),fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
-            👤
-          </button>
+          {/* ── GROUPED MENU BUTTON ── */}
+          <div style={{position:"relative",flexShrink:0}}>
+            <button onClick={()=>setShowMenu(p=>!p)}
+              style={{padding:"9px 12px",borderRadius:8,background:showMenu?`${C.a3}22`:C.raised,border:`1px solid ${showMenu?C.a3:C.border}`,color:showMenu?C.a3:C.sub,fontSize:13,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5}}>
+              <span>☰</span>
+              <span style={{fontSize:10,fontWeight:700}}>Menu</span>
+            </button>
+            {showMenu&&(
+              <div style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:8,zIndex:999,minWidth:180,boxShadow:"0 8px 32px rgba(0,0,0,0.3)"}}>
+                {/* Profile */}
+                <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>👤</span><span style={{fontWeight:600}}>My Profile</span>
+                  {profile.setupDone&&<span style={{marginLeft:"auto",fontSize:10,color:C.green}}>✅</span>}
+                </button>
+                {/* Settings */}
+                <button onClick={()=>{setShowSettings(p=>!p);setShowProfile(false);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showSettings?`${C.a3}15`:C.raised,border:`1px solid ${showSettings?C.a3:C.border}`,color:showSettings?C.a3:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>⚙️</span><span style={{fontWeight:600}}>Display Settings</span>
+                </button>
+                {/* Theme toggle */}
+                <button onClick={()=>{const next=!darkMode;setDarkMode(next);try{localStorage.setItem("ciq_theme",next?"dark":"light");}catch(e){}setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
+                  <span>{darkMode?"☀️":"🌙"}</span><span style={{fontWeight:600}}>{darkMode?"Light Mode":"Dark Mode"}</span>
+                </button>
+              </div>
+            )}
+          </div>
           {isPro?(
             <div onClick={()=>{setIsPro(false);try{localStorage.removeItem("ciq_pro");localStorage.removeItem("ciq_trial_start");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}} style={{padding:"6px 10px",borderRadius:8,background:"linear-gradient(135deg,"+C.accent+"22,"+C.a3+"22)",border:"1px solid "+C.accent+"55",fontSize:9,fontWeight:800,color:C.accent,letterSpacing:"0.05em",flexShrink:0,cursor:"pointer"}}>PRO ✓</div>
           ):trialDaysLeft>0?(
@@ -2216,8 +2243,8 @@ Be specific with real institution names and programs, not generic advice.`;
         <div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
             <div>
-              <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,margin:0}}>Load Manager</h1>
-              <p style={{color:C.sub,fontSize:11,marginTop:4,marginBottom:0}}>Scan PDF · Score offers · Record moves · Full history</p>
+              <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,margin:0}}>📋 Document Analyzer</h1>
+              <p style={{color:C.sub,fontSize:11,marginTop:4,marginBottom:0}}>Upload · Scan · Score · Analyze · Full history</p>
             </div>
             <button onClick={()=>setShowAdd(p=>!p)} style={{padding:"10px 16px",borderRadius:9,background:C.accent,color:"#000",fontWeight:700,fontSize:12,border:"none",cursor:"pointer"}}>+ Add Move</button>
           </div>
@@ -2770,7 +2797,7 @@ Be specific with real institution names and programs, not generic advice.`;
               <div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>Add Settlement Week</div><div style={{fontSize:11,color:C.sub,marginTop:2}}>Enter numbers from your statement · 30 seconds</div></div>
             </div>
             <div style={{padding:"10px 14px",background:`${C.gold}10`,borderRadius:9,border:`1px solid ${C.gold}33`,fontSize:11,color:C.sub,marginBottom:14,lineHeight:1.7}}>
-              💡 <strong style={{color:C.gold}}>Tip:</strong> Use the <strong style={{color:C.a3}}>📷 Scan PDF</strong> button in the Loads tab to auto-fill everything from your PDF. Or enter manually below.
+              💡 <strong style={{color:C.gold}}>Tip:</strong> Use the <strong style={{color:C.a3}}>📷 Scan PDF</strong> button in the Doc Analyzer tab to auto-fill everything from your PDF. Or enter manually below.
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:13}}>
               {[["week","Week #","e.g. 15","Header says 'Week No:'"],["moves","# Moves","e.g. 20","Count rows"],["from","From Date","MM/DD/YYYY","Start date"],["to","To Date","MM/DD/YYYY","End date"],["gross","Gross $","e.g. 4688.64","Gross Check Amount"],["deductions","Deductions $","e.g. 1870.04","Total deducted"]].map(([k,l,ph,hint])=>(
@@ -3007,6 +3034,39 @@ Be specific with real institution names and programs, not generic advice.`;
             );
           })()}
 
+          {/* ── VISITOR TRACKING (dev/owner only) ── */}
+          {ownerDataAvailable&&(()=>{
+            try{
+              const visits=JSON.parse(localStorage.getItem("ciq_visits")||"[]");
+              const today=new Date().toDateString();
+              const todayV=visits.filter(v=>new Date(v.t).toDateString()===today).length;
+              const week=visits.filter(v=>(Date.now()-v.t)<7*24*3600*1000).length;
+              const total=visits.length;
+              const sources=[...new Set(visits.map(v=>v.ref||"direct"))].slice(0,4);
+              return(
+                <div style={K({border:`1px solid ${C.a3}44`,marginBottom:16})}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:12}}>📊 Visitor Tracking</div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
+                    {[{l:"Today",v:todayV,c:C.accent},{l:"This Week",v:week,c:C.a3},{l:"Total",v:total,c:C.gold}].map(s=>(
+                      <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px",textAlign:"center",border:`1px solid ${C.border}`}}>
+                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:s.c}}>{s.v}</div>
+                        <div style={{fontSize:10,color:C.sub,marginTop:3}}>{s.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>Traffic Sources</div>
+                  {sources.map((s,i)=>(
+                    <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:`1px solid ${C.border}`,fontSize:11}}>
+                      <span style={{color:C.text}}>{s||"direct"}</span>
+                      <span style={{color:C.sub}}>{visits.filter(v=>(v.ref||"direct")===s).length} visits</span>
+                    </div>
+                  ))}
+                  <div style={{fontSize:9,color:C.sub,marginTop:8,fontStyle:"italic"}}>Note: Visits tracked per browser session on this device. For full analytics connect Google Analytics.</div>
+                </div>
+              );
+            }catch(e){return null;}
+          })()}
+
           {/* ── EXPORT ── */}
           <NoBadge/>
           <div style={K({marginBottom:80})}>
@@ -3064,7 +3124,7 @@ Be specific with real institution names and programs, not generic advice.`;
       <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:C.surf,borderTop:"1px solid "+C.border,display:"flex",alignItems:"stretch",height:58,boxShadow:"0 -4px 20px rgba(0,0,0,0.4)"}}>
         {[
           {t:"dashboard", icon:"📊", label:"Dash"},
-          {t:"loads",     icon:"📦", label:"Loads"},
+          {t:"loads", icon:"📋", label:"Analyzer"},
           {t:"ai",        icon:"🧠", label:"AI"},
           {t:"growth",    icon:"🚀", label:"Growth"},
         ].map(item=>(
