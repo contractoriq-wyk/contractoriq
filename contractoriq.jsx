@@ -1156,7 +1156,6 @@ Be specific with real institution names and programs, not generic advice.`;
       )}
 
 
-
       {showWelcome&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"12px 16px",backdropFilter:"blur(4px)",overflowY:"auto"}}>
           <div style={{background:C.card,borderRadius:24,padding:"28px 22px",maxWidth:400,width:"100%",border:"1px solid "+C.border,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}}>
@@ -1336,11 +1335,6 @@ Be specific with real institution names and programs, not generic advice.`;
                   style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                   <span>{darkMode?"☀️":"🌙"}</span><span style={{fontWeight:600}}>{darkMode?"Light Mode":"Dark Mode"}</span>
                 </button>
-                {/* About Us */}
-                <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
-                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
-                  <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
-                </button>
               </div>
             )}
           </div>
@@ -1373,43 +1367,6 @@ Be specific with real institution names and programs, not generic advice.`;
         )}
         {searchResult&&(
           <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}44`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
-            {searchResult}
-            <button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
-          </div>
-        )}
-      </div>
-      <div style={{background:`linear-gradient(135deg,${C.a3}18,${C.accent}12)`,borderBottom:`2px solid ${C.a3}55`,padding:"10px 14px",position:"sticky",top:0,zIndex:99}}>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:12,padding:"0 12px",border:`2px solid ${C.a3}66`,boxShadow:`0 2px 12px ${C.a3}22`}}>
-            <span style={{fontSize:15,flexShrink:0}}>{searchLoading?"⏳":"🔍"}</span>
-            <input
-              value={searchQ||""}
-              onChange={e=>setSearchQ(e.target.value)}
-              onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}}
-              placeholder="Search weather, gas, truck stops, traffic..."
-              style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"11px 0",width:"100%",outline:"none"}}
-            />
-            {(searchQ||"").trim()&&<button onClick={()=>{setSearchQ("");setSearchResult("");}} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer",padding:"0 4px",flexShrink:0}}>×</button>}
-          </div>
-          <button
-            onClick={()=>runSearch()}
-            disabled={!(searchQ||"").trim()||searchLoading}
-            style={{padding:"11px 16px",borderRadius:12,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:!(searchQ||"").trim()||searchLoading?C.sub:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
-            {searchLoading?"⏳ ...":"Search"}
-          </button>
-        </div>
-        {!searchResult&&!searchLoading&&(
-          <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
-            {["⛅ Weather","⛽ Gas prices","🚛 Truck stops I-70","🛣️ Traffic I-95","🔧 Mechanic near me"].map(s=>(
-              <button key={s} onClick={()=>{const q=s.replace(/^[^\s]+\s/,"");setSearchQ(q);setTimeout(()=>runSearch(q),50);}}
-                style={{padding:"5px 11px",borderRadius:20,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
-        {searchResult&&(
-          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}55`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap",boxShadow:`0 2px 12px ${C.a3}22`}}>
             {searchResult}
             <button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
           </div>
