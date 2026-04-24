@@ -2128,24 +2128,27 @@ Be specific with real institution names and programs, not generic advice.`;
 
           {/* Settlement Input Card */}
           <div style={K({border:`1px solid ${C.a3}55`,marginBottom:16})}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
               <div style={{width:38,height:38,borderRadius:10,background:`${C.a3}18`,border:`1px solid ${C.a3}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>📄</div>
               <div>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>Add Settlement Week{helpBtn("addSettlement")}</div>
-                <div style={{fontSize:11,color:C.sub,marginTop:2}}>3 ways to enter — pick what's easiest</div>
+                <div style={{fontSize:11,color:C.sub,marginTop:2}}>Upload PDF · Paste text · Type numbers</div>
               </div>
             </div>
             {helpModal("addSettlement")}
 
+            {/* hidden file input */}
+            <input ref={fileRef} type="file" accept=".pdf,image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(f){setScanMode("scan");scanPDF(f,f.type.startsWith("image/")?"image":"pdf");}e.target.value="";}}/>
+
             {/* Mode tabs */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,marginBottom:16}}>
               {[
-                {m:"upload",icon:"📎", label:"Upload URL", desc:"Google Drive"},
+                {m:"scan",  icon:"📤", label:"Upload PDF", desc:"Tap to scan"},
                 {m:"paste", icon:"📋", label:"Paste Text",  desc:"Copy & paste"},
                 {m:"form",  icon:"✏️", label:"Type In",    desc:"Manual"},
                 {m:"tips",  icon:"💡", label:"How To",     desc:"Guide"},
               ].map(t=>(
-                <button key={t.m} onClick={()=>setScanMode(t.m)}
+                <button key={t.m} onClick={()=>{setScanMode(t.m);if(t.m==="scan")fileRef.current?.click();}}
                   style={{padding:"9px 4px",borderRadius:9,background:scanMode===t.m?`${C.a3}25`:C.raised,border:`1px solid ${scanMode===t.m?C.a3:C.border}`,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
                   <div style={{fontSize:16,marginBottom:3}}>{t.icon}</div>
                   <div style={{fontSize:10,fontWeight:700,color:scanMode===t.m?C.a3:C.text}}>{t.label}</div>
@@ -2154,33 +2157,56 @@ Be specific with real institution names and programs, not generic advice.`;
               ))}
             </div>
 
-            {/* ── MODE: UPLOAD URL ── */}
-            {scanMode==="upload"&&(
+            {/* ── MODE: SCAN / UPLOAD PDF ── */}
+            {scanMode==="scan"&&(
               <div>
-                <div style={{padding:"11px 13px",background:`${C.a3}10`,borderRadius:8,border:`1px solid ${C.a3}33`,fontSize:11,color:C.sub,marginBottom:14,lineHeight:1.9}}>
-                  <strong style={{color:C.a3}}>How it works:</strong><br/>
-                  1. Open your settlement PDF on your phone<br/>
-                  2. Share it to <strong style={{color:C.text}}>Google Drive</strong> → tap <strong style={{color:C.text}}>Share</strong> → <strong style={{color:C.text}}>Copy link</strong><br/>
-                  3. Paste the link below → AI reads the full PDF<br/>
-                  <br/>
-                  Works with Google Drive, Dropbox, OneDrive, or any direct PDF link.
-                </div>
-                <div style={{fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>PDF Link / URL</div>
-                <input
-                  value={pdfUrl}
-                  onChange={e=>setPdfUrl(e.target.value)}
-                  placeholder="https://drive.google.com/file/d/..."
-                  style={{...inp,marginBottom:12}}
-                />
-                <button
-                  onClick={readPdfUrl}
-                  disabled={!pdfUrl.trim()||pasteLoading}
-                  style={{width:"100%",padding:"14px",borderRadius:9,background:(!pdfUrl.trim()||pasteLoading)?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:(!pdfUrl.trim()||pasteLoading)?"not-allowed":"pointer",marginBottom:10}}>
-                  {pasteLoading?"⏳ AI Reading PDF...":"📎 Read PDF from Link"}
-                </button>
-                <div style={{padding:"9px 12px",background:`${C.gold}10`,borderRadius:8,border:`1px solid ${C.gold}33`,fontSize:10,color:C.sub,lineHeight:1.7}}>
-                  💡 <strong style={{color:C.gold}}>Google Drive tip:</strong> After sharing, change the URL from <code style={{color:C.text}}>/view</code> to <code style={{color:C.text}}>/export?format=txt</code> for best results. Or just paste the share link as-is.
-                </div>
+                {!scanning&&!scanResult&&(
+                  <button onClick={()=>fileRef.current?.click()} style={{width:"100%",padding:"28px 14px",borderRadius:14,background:`linear-gradient(135deg,${C.a3}15,${C.accent}10)`,border:`2px dashed ${C.a3}88`,cursor:"pointer",fontFamily:"inherit",textAlign:"center",marginBottom:12}}>
+                    <div style={{fontSize:42,marginBottom:10}}>📤</div>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.a3,marginBottom:6}}>Tap to Upload Settlement PDF</div>
+                    <div style={{fontSize:11,color:C.sub,lineHeight:1.7}}>Supports PDF files and photos of settlements<br/>AI reads everything automatically in seconds</div>
+                  </button>
+                )}
+                {scanning&&(
+                  <div style={{textAlign:"center",padding:"32px 16px"}}>
+                    <div style={{fontSize:42,marginBottom:12}}>⏳</div>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.a3,marginBottom:6}}>AI Reading Your Settlement...</div>
+                    <div style={{fontSize:11,color:C.sub,marginBottom:16}}>Extracting all moves, deductions, and totals</div>
+                    <div style={{height:4,background:C.raised,borderRadius:4,overflow:"hidden"}}><div style={{height:"100%",width:"70%",background:`linear-gradient(90deg,${C.a3},${C.accent})`,borderRadius:4}}/></div>
+                  </div>
+                )}
+                {scanResult&&!scanning&&(
+                  <div style={{background:C.bg,borderRadius:10,border:`1px solid ${C.a3}44`,padding:14}}>
+                    <div style={{fontSize:11,fontWeight:700,color:C.a3,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.08em"}}>✅ PDF Read — Review & Confirm</div>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8,marginBottom:12}}>
+                      {[
+                        {l:"Week",v:`Week ${scanResult.week}`},
+                        {l:"Dates",v:`${scanResult.from||"?"}–${scanResult.to||"?"}`},
+                        {l:"Gross",v:`$${Number(scanResult.gross||0).toFixed(2)}`},
+                        {l:"Net Pay",v:`$${Number(scanResult.net||0).toFixed(2)}`},
+                        {l:"Deductions",v:`$${Number(scanResult.totalDeductions||0).toFixed(2)}`},
+                        {l:"Margin",v:`${scanResult.gross>0?(scanResult.net/scanResult.gross*100).toFixed(1):0}%`},
+                        {l:"Moves",v:`${scanResult.moves?.length||0} found`},
+                        {l:"Ded. Lines",v:`${scanResult.deds?.length||0} items`},
+                      ].map(s=>(
+                        <div key={s.l} style={{background:C.raised,borderRadius:8,padding:"9px 11px",border:`1px solid ${C.border}`}}>
+                          <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div>
+                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.text}}>{s.v}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{display:"flex",gap:10,marginBottom:10}}>
+                      <button onClick={confirmScan} style={{flex:1,padding:"13px",borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer"}}>✅ Save Week {scanResult.week}</button>
+                      <button onClick={()=>{setScanResult(null);setScanMsg("");}} style={{padding:"13px 16px",borderRadius:9,background:"transparent",color:C.sub,fontWeight:700,border:`1px solid ${C.border}`,cursor:"pointer"}}>✕</button>
+                    </div>
+                    <button onClick={()=>{setScanResult(null);setScanMsg("");fileRef.current?.click();}} style={{width:"100%",padding:"10px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>📤 Upload a Different PDF</button>
+                  </div>
+                )}
+                {!scanning&&!scanResult&&(
+                  <div style={{padding:"10px 12px",background:`${C.gold}10`,borderRadius:9,border:`1px solid ${C.gold}30`,fontSize:10,color:C.sub,lineHeight:1.7,marginTop:8}}>
+                    💡 <strong style={{color:C.gold}}>Works with:</strong> ContainerPort, STG, and most carrier PDFs. Also works with a clear photo of your printed statement.
+                  </div>
+                )}
               </div>
             )}
 
@@ -2266,7 +2292,8 @@ Be specific with real institution names and programs, not generic advice.`;
             {scanMode==="tips"&&(
               <div style={{display:"flex",flexDirection:"column",gap:10}}>
                 {[
-                  {icon:"📋",title:"Paste Text (Recommended)",color:C.a3,steps:["Open your settlement PDF in Google Drive, Adobe, or any PDF app","Tap and hold → Select All → Copy","Switch back to DrayageIQ → tap Paste Text tab → paste","Tap 'Read & Extract' — AI fills in everything in seconds"]},
+                  {icon:"📤",title:"Upload PDF (Best & Easiest)",color:C.a3,steps:["Tap the 'Upload PDF' tab above","Tap the big upload button — your phone's file picker opens","Find your settlement PDF in Downloads or Files","AI reads everything — review numbers and tap Save"]},
+                  {icon:"📋",title:"Paste Text (Alternative)",color:C.accent,steps:["Open your settlement PDF in any app","Tap and hold → Select All → Copy","Switch back here → tap Paste Text tab → paste","Tap 'Read & Extract' — AI fills everything in seconds"]},
                   {icon:"✏️",title:"Type Numbers",color:C.accent,steps:["Open PDF side by side or on another device","Switch to 'Type Numbers' tab","Enter Week #, Gross, Net, Deductions","Tap Save — done in 30 seconds"]},
                   {icon:"🔢",title:"Key numbers to find",color:C.gold,steps:["Week # → top of statement: 'Week No: 15-2026'","Gross → bottom: 'Gross Check Amount'","Net → bottom: 'Net Check Amount'","Deductions → 'Total Deductions' or subtract net from gross"]},
                 ].map(s=>(
