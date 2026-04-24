@@ -1218,6 +1218,47 @@ Be specific with real institution names and programs, not generic advice.`;
 
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 
+      {/* ── SMART SEARCH BAR ── always visible top of app ── */}
+      <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"10px 14px"}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.raised,borderRadius:10,padding:"0 12px",border:`1px solid ${C.border}`}}>
+            <span style={{fontSize:14,flexShrink:0}}>{searchLoading?"⏳":"🔍"}</span>
+            <input
+              value={searchQ||""}
+              onChange={e=>setSearchQ(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}}
+              placeholder="Weather · Gas prices · McDonald's near me..."
+              style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"10px 0",width:"100%",outline:"none"}}
+            />
+            {(searchQ||"").trim()&&<button onClick={()=>{setSearchQ("");setSearchResult("");}} style={{background:"none",border:"none",color:C.sub,fontSize:16,cursor:"pointer",padding:"0 4px",flexShrink:0}}>×</button>}
+          </div>
+          <button
+            onClick={()=>runSearch()}
+            disabled={!(searchQ||"").trim()||searchLoading}
+            style={{padding:"10px 14px",borderRadius:10,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:!(searchQ||"").trim()||searchLoading?C.sub:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
+            Search
+          </button>
+        </div>
+        {/* Quick chips */}
+        {!searchResult&&!searchLoading&&(
+          <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
+            {["⛅ Weather","⛽ Gas prices","🍔 McDonald's","🚛 Truck stops","🛣️ Traffic I-95"].map(s=>(
+              <button key={s} onClick={()=>{const q=s.replace(/^[^\s]+\s/,"");setSearchQ(q);setTimeout(()=>runSearch(q),50);}}
+                style={{padding:"4px 10px",borderRadius:20,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+        {/* Search result */}
+        {searchResult&&(
+          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}44`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
+            {searchResult}
+            <button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
+          </div>
+        )}
+      </div>
+
       {/* HEADER */}
       <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"13px 16px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:11}}>
@@ -1225,7 +1266,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{width:32,height:32,borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🚛</div>
             <div>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,fontSize:15}}>DrayageIQ</div>
-              <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</div>
+              <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":demoMode?"Demo Driver":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</div>
             </div>
           </div>
           <div style={{textAlign:"right"}}>
@@ -1372,7 +1413,7 @@ Be specific with real institution names and programs, not generic advice.`;
         <div>
           <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
             <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,margin:0,letterSpacing:"-0.02em"}}>
-              {profile.setupDone&&profile.name?"Welcome back, "+profile.name.split(" ")[0]+" 👋":"Business Dashboard"}
+              {demoMode?"👀 Demo Mode — Sample Data":profile.setupDone&&profile.name?"Welcome back, "+profile.name.split(" ")[0]+" 👋":"Business Dashboard"}
             </h1>
             {helpBtn("dashboard")}
           </div>
@@ -2677,40 +2718,6 @@ Be specific with real institution names and programs, not generic advice.`;
 
           {/* Quick questions + Search Widget */}
           {aiMode==="chat"&&(
-            <div>
-            {/* ── AI SEARCH WIDGET ── */}
-            <div style={K({marginBottom:0})}>
-              <div style={{fontSize:11,fontWeight:700,color:C.sub,marginBottom:10,textTransform:"uppercase",letterSpacing:"0.08em"}}>🔍 Quick Search — Weather, Gas, Places</div>
-              <div style={{display:"flex",gap:8,marginBottom:10}}>
-                <input
-                  value={searchQ||""}
-                  onChange={e=>setSearchQ(e.target.value)}
-                  onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}}
-                  placeholder="e.g. Baltimore weather · McDonald's near me · Gas prices MD"
-                  style={{...inp,flex:1,marginBottom:0}}
-                />
-                <button
-                  onClick={runSearch}
-                  disabled={!(searchQ||"").trim()||searchLoading}
-                  style={{padding:"12px 16px",borderRadius:9,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
-                  {searchLoading?"⏳":"🔍"}
-                </button>
-              </div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
-                {["Baltimore weather","Gas prices near me","McDonald's near me","Truck stops I-70 MD","Fuel prices today","Traffic I-95 Baltimore"].map(s=>(
-                  <button key={s} onClick={()=>{setSearchQ(s);setTimeout(()=>runSearch(s),50);}}
-                    style={{padding:"5px 10px",borderRadius:20,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-              {searchResult&&(
-                <div style={{background:C.bg,borderRadius:10,padding:"13px",border:`1px solid ${C.a3}44`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
-                  {searchResult}
-                </div>
-              )}
-            </div>
-
             <div style={K()}>
               <div style={{fontSize:10,fontWeight:700,color:C.sub,marginBottom:11,textTransform:"uppercase",letterSpacing:"0.1em"}}>⚡ Quick Questions</div>
               <div style={{display:"grid",gridTemplateColumns:wide?"repeat(2,1fr)":"1fr",gap:7}}>
@@ -2718,7 +2725,6 @@ Be specific with real institution names and programs, not generic advice.`;
                   <button key={q} onClick={()=>setChatIn(q)} style={{padding:"11px 13px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,textAlign:"left",cursor:"pointer",fontFamily:"inherit",lineHeight:1.5}}>{q}</button>
                 ))}
               </div>
-            </div>
             </div>
           )}
 
