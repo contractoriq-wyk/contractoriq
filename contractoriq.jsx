@@ -479,6 +479,9 @@ export default function ContractorIQv26(){
   const [showAbout,setShowAbout]=useState(false);
   const [showMarket,setShowMarket]=useState(false);
   const [showInsurance,setShowInsurance]=useState(false);
+  const [favStocks,setFavStocks]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_favstocks")||'["AAPL","TSLA","NVDA"]');}catch{return ["AAPL","TSLA","NVDA"];}});
+  const [addingStock,setAddingStock]=useState(false);
+  const [newStock,setNewStock]=useState("");
   const [hiddenVendors,setHiddenVendors]=useState([]);
   const [hideOwnerName,setHideOwnerName]=useState(false);
   const [hideUnitNum,setHideUnitNum]=useState(false);
@@ -1113,8 +1116,13 @@ Be specific with real institution names and programs, not generic advice.`;
       {/* ── WELCOME SCREEN ── */}
       {/* ── INSURANCE / PROTECT YOUR INCOME MODAL ── */}
       {showInsurance&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.93)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px",overflowY:"auto",backdropFilter:"blur(4px)"}} onClick={()=>setShowInsurance(false)}>
-          <div style={{background:C.card,borderRadius:24,padding:"26px 20px",maxWidth:420,width:"100%",border:`1px solid ${C.a3}44`,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}} onClick={e=>e.stopPropagation()}>
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"#080c16",display:"flex",flexDirection:"column"}}>
+          {/* Close header */}
+          <div style={{background:"#0d1525",borderBottom:"1px solid #2c3a52",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:"#f0f6ff"}}>🛡️ Protect Your Income</div>
+            <button onClick={()=>setShowInsurance(false)} style={{padding:"8px 14px",borderRadius:9,background:"#1a2436",border:"1px solid #2c3a52",color:"#8fa3c0",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
+          </div>
+          <div style={{background:"#0d1525",flex:1,overflowY:"auto",padding:"20px 16px 80px",maxWidth:520,width:"100%",margin:"0 auto"}}>
 
             {/* Header */}
             <div style={{textAlign:"center",marginBottom:18}}>
@@ -1200,73 +1208,99 @@ Be specific with real institution names and programs, not generic advice.`;
         </div>
       )}
 
-      {/* ── MARKET OVERVIEW MODAL ── */}
+      {/* ── MARKET OVERVIEW MODAL ── FULL PAGE ── */}
       {showMarket&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.93)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px",overflowY:"auto",backdropFilter:"blur(4px)"}} onClick={()=>setShowMarket(false)}>
-          <div style={{background:C.card,borderRadius:24,padding:"26px 20px",maxWidth:440,width:"100%",border:`1px solid ${C.green}44`,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}} onClick={e=>e.stopPropagation()}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <div>
-                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.text}}>📈 Market Overview</div>
-                <div style={{fontSize:10,color:C.sub,marginTop:2}}>Live data via AI search</div>
-              </div>
-              <button onClick={()=>setShowMarket(false)} style={{background:"none",border:"none",color:C.sub,fontSize:20,cursor:"pointer"}}>×</button>
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"#080c16",display:"flex",flexDirection:"column"}}>
+          {/* Top bar */}
+          <div style={{background:"#0d1525",borderBottom:"1px solid #1e2a3a",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+            <div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:"#f0f6ff"}}>📈 Market Overview</div>
+              <div style={{fontSize:10,color:"#4a6080",marginTop:1}}>Live data · Tap any symbol for chart</div>
+            </div>
+            <button onClick={()=>setShowMarket(false)} style={{padding:"8px 14px",borderRadius:9,background:"#1a2436",border:"1px solid #2c3a52",color:"#8fa3c0",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
+          </div>
+
+          {/* TradingView ticker tape */}
+          <div style={{background:"#0d1525",borderBottom:"1px solid #1e2a3a",flexShrink:0}}>
+            <iframe scrolling="no" allowTransparency="true" frameBorder="0"
+              src="https://s.tradingview.com/embed-widget/tickers/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P500%22%2C%22proName%22%3A%22SP%3ASPX%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22DJ%3ADJI%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3ANDX%22%7D%2C%7B%22description%22%3A%22Russell%22%2C%22proName%22%3A%22TVC%3ARUT%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22TVC%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22BINANCE%3ABTCUSDT%22%7D%5D%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22showSymbolLogo%22%3Afalse%2C%22locale%22%3A%22en%22%7D"
+              style={{width:"100%",height:76,display:"block"}} title="Market Ticker"/>
+          </div>
+
+          {/* Main content scrollable */}
+          <div style={{flex:1,overflowY:"auto",padding:"14px 14px 80px"}}>
+
+            {/* TradingView Market Overview Widget */}
+            <div style={{borderRadius:14,overflow:"hidden",marginBottom:14,border:"1px solid #1e2a3a"}}>
+              <iframe scrolling="no" allowTransparency="true" frameBorder="0"
+                src="https://s.tradingview.com/embed-widget/market-overview/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%221D%22%2C%22showChart%22%3Atrue%2C%22locale%22%3A%22en%22%2C%22largeChartUrl%22%3A%22%22%2C%22isTransparent%22%3Atrue%2C%22showSymbolLogo%22%3Atrue%2C%22showFloatingTooltip%22%3Atrue%2C%22plotLineColorGrowing%22%3A%22rgba(41%2C%2098%2C%20255%2C%201)%22%2C%22plotLineColorFalling%22%3A%22rgba(41%2C%2098%2C%20255%2C%201)%22%2C%22gridLineColor%22%3A%22rgba(42%2C%2046%2C%2057%2C%200)%22%2C%22scaleFontColor%22%3A%22rgba(209%2C%20212%2C%20220%2C%201)%22%2C%22belowLineFillColorGrowing%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22belowLineFillColorFalling%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22belowLineFillColorGrowingBottom%22%3A%22rgba(41%2C%2098%2C%20255%2C%200)%22%2C%22belowLineFillColorFallingBottom%22%3A%22rgba(41%2C%2098%2C%20255%2C%200)%22%2C%22symbolActiveColor%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22tabs%22%3A%5B%7B%22title%22%3A%22US%20Indices%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22SP%3ASPX%22%2C%22d%22%3A%22S%26P%20500%22%7D%2C%7B%22s%22%3A%22DJ%3ADJI%22%2C%22d%22%3A%22Dow%2030%22%7D%2C%7B%22s%22%3A%22NASDAQ%3ANDX%22%2C%22d%22%3A%22Nasdaq%22%7D%2C%7B%22s%22%3A%22TVC%3ARUT%22%2C%22d%22%3A%22Russell%202000%22%7D%2C%7B%22s%22%3A%22TVC%3AVIX%22%2C%22d%22%3A%22VIX%22%7D%5D%7D%2C%7B%22title%22%3A%22Commodities%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22TVC%3AGOLD%22%2C%22d%22%3A%22Gold%22%7D%2C%7B%22s%22%3A%22TVC%3AUSOIL%22%2C%22d%22%3A%22Crude%20Oil%22%7D%2C%7B%22s%22%3A%22TVC%3ASILVER%22%2C%22d%22%3A%22Silver%22%7D%5D%7D%2C%7B%22title%22%3A%22Crypto%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22BINANCE%3ABTCUSDT%22%2C%22d%22%3A%22Bitcoin%22%7D%2C%7B%22s%22%3A%22BINANCE%3AETHUSDT%22%2C%22d%22%3A%22Ethereum%22%7D%5D%7D%5D%7D"
+                style={{width:"100%",height:500,display:"block"}} title="Market Overview"/>
             </div>
 
-            {/* Embedded TradingView widget */}
-            <div style={{borderRadius:12,overflow:"hidden",marginBottom:14,border:`1px solid ${C.border}`}}>
-              <iframe
-                src="https://widget.finances.yahoo.com/v2/tickers/SPY,QQQ,DOW,^VIX?lang=en-US&region=US&corsDomain=finance.yahoo.com"
-                style={{width:"100%",height:0,border:"none"}}
-                title="Market"
-              />
-              {/* Manual market cards since iframe may not work */}
-              <div style={{background:C.bg,padding:"14px 12px"}}>
-                <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>Key Indices — tap to search live data</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-                  {[
-                    {name:"S&P 500",sym:"SPY",desc:"US Large Cap"},
-                    {name:"Nasdaq",sym:"QQQ",desc:"Tech Heavy"},
-                    {name:"Dow Jones",sym:"DIA",desc:"30 Blue Chips"},
-                    {name:"VIX",sym:"^VIX",desc:"Fear Index"},
-                    {name:"Crude Oil",sym:"CL=F",desc:"Energy"},
-                    {name:"Gold",sym:"GC=F",desc:"Safe Haven"},
-                  ].map(s=>(
-                    <button key={s.sym} onClick={()=>{setShowMarket(false);setSearchQ(s.name+" stock price today");setTimeout(()=>runSearch(s.name+" stock price today"),100);}}
-                      style={{background:C.raised,borderRadius:10,padding:"11px 10px",border:`1px solid ${C.border}`,cursor:"pointer",textAlign:"left",fontFamily:"inherit"}}>
-                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.green}}>{s.sym}</div>
-                      <div style={{fontSize:11,fontWeight:700,color:C.text,marginTop:2}}>{s.name}</div>
-                      <div style={{fontSize:9,color:C.sub,marginTop:1}}>{s.desc}</div>
-                    </button>
-                  ))}
+            {/* Personal Favorites */}
+            <div style={{background:"#0d1525",borderRadius:14,padding:"14px",marginBottom:14,border:"1px solid #1e2a3a"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#8fa3c0",textTransform:"uppercase",letterSpacing:"0.08em"}}>⭐ My Favorite Stocks</div>
+                <button onClick={()=>setAddingStock(true)} style={{padding:"4px 10px",borderRadius:7,background:"#1a2436",border:"1px solid #2c3a52",color:"#00ffcc",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>+ Add</button>
+              </div>
+              {addingStock&&(
+                <div style={{display:"flex",gap:6,marginBottom:10}}>
+                  <input value={newStock} onChange={e=>setNewStock(e.target.value.toUpperCase())}
+                    onKeyDown={e=>{if(e.key==="Enter"&&newStock.trim()){const n=[...favStocks,newStock.trim()];setFavStocks(n);try{localStorage.setItem("ciq_favstocks",JSON.stringify(n));}catch(ex){}setNewStock("");setAddingStock(false);}}}
+                    placeholder="Type symbol e.g. AAPL" maxLength={8}
+                    style={{flex:1,padding:"8px 12px",borderRadius:8,background:"#1a2436",border:"2px solid #00ffcc",color:"#00ffcc",fontSize:12,fontFamily:"inherit",outline:"none"}}
+                    autoFocus/>
+                  <button onClick={()=>{if(newStock.trim()){const n=[...favStocks,newStock.trim()];setFavStocks(n);try{localStorage.setItem("ciq_favstocks",JSON.stringify(n));}catch(ex){}}setNewStock("");setAddingStock(false);}}
+                    style={{padding:"8px 14px",borderRadius:8,background:"#00ffcc",color:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit"}}>✓ Add</button>
+                  <button onClick={()=>{setAddingStock(false);setNewStock("");}}
+                    style={{padding:"8px 10px",borderRadius:8,background:"transparent",color:"#4a6080",fontSize:14,border:"none",cursor:"pointer"}}>✕</button>
                 </div>
-
-                {/* Sector chips */}
-                <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>Quick Searches</div>
-                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                  {["Market news today","Best dividend stocks 2026","Trucking stocks","IUL vs 401k","Best ETFs for 1099 workers","Fuel futures price"].map(q=>(
-                    <button key={q} onClick={()=>{setShowMarket(false);setSearchQ(q);setTimeout(()=>runSearch(q),100);}}
-                      style={{padding:"5px 10px",borderRadius:20,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600,whiteSpace:"nowrap"}}>
-                      {q}
+              )}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+                {favStocks.map(sym=>(
+                  <div key={sym} style={{background:"#1a2436",borderRadius:10,padding:"10px",border:"1px solid #2c3a52",textAlign:"center",position:"relative"}}>
+                    <button onClick={()=>{const n=favStocks.filter(s=>s!==sym);setFavStocks(n);try{localStorage.setItem("ciq_favstocks",JSON.stringify(n));}catch(ex){}}}
+                      style={{position:"absolute",top:4,right:4,background:"none",border:"none",color:"#2c3a52",fontSize:11,cursor:"pointer",lineHeight:1}}>✕</button>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#00ffcc",marginBottom:2}}>{sym}</div>
+                    <button onClick={()=>setSearchQ(sym+" stock price today change")}
+                      style={{padding:"4px 8px",borderRadius:6,background:"#0d1525",border:"1px solid #2c3a52",color:"#8fa3c0",fontSize:9,cursor:"pointer",fontFamily:"inherit",marginTop:4,width:"100%"}}
+                      onMouseDown={()=>setTimeout(()=>runSearch(sym+" stock price today change"),100)}>
+                      📊 Get Price
                     </button>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Google Finance link */}
-            <button onClick={()=>window.open("https://finance.google.com","_blank")}
-              style={{width:"100%",padding:"13px",borderRadius:12,background:`linear-gradient(135deg,${C.green},#16a34a)`,color:"#fff",fontWeight:800,fontSize:13,border:"none",cursor:"pointer",fontFamily:"inherit",marginBottom:8}}>
-              📊 Open Google Finance
-            </button>
-            <button onClick={()=>window.open("https://finance.yahoo.com","_blank")}
-              style={{width:"100%",padding:"13px",borderRadius:12,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
-              📈 Open Yahoo Finance
-            </button>
+            {/* Quick Searches */}
+            <div style={{background:"#0d1525",borderRadius:14,padding:"14px",marginBottom:14,border:"1px solid #1e2a3a"}}>
+              <div style={{fontSize:11,fontWeight:700,color:"#8fa3c0",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>🔍 Quick Market Searches</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {["Market news today","S&P 500 today","Best dividend stocks 2026","Trucking stocks","IUL vs 401k","Best ETFs for 1099 workers","Fuel futures price","Bitcoin price today","Fed interest rate","Recession 2026"].map(q=>(
+                  <button key={q} onClick={()=>{setShowMarket(false);setSearchQ(q);setTimeout(()=>runSearch(q),100);}}
+                    style={{padding:"6px 12px",borderRadius:20,background:"#1a2436",border:"1px solid #00aa8844",color:"#00aa88",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* External Links */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <button onClick={()=>window.open("https://finance.google.com","_blank")}
+                style={{padding:"13px",borderRadius:12,background:"linear-gradient(135deg,#15803d,#16a34a)",color:"#fff",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+                📊 Google Finance
+              </button>
+              <button onClick={()=>window.open("https://finance.yahoo.com","_blank")}
+                style={{padding:"13px",borderRadius:12,background:"#1a2436",border:"1px solid #2c3a52",color:"#f0f6ff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>
+                📈 Yahoo Finance
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── ABOUT US MODAL ── */}
+            {/* ── ABOUT US MODAL ── */}
       {showAbout&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px",backdropFilter:"blur(4px)",overflowY:"auto"}}>
           <div style={{background:C.card,borderRadius:24,padding:"28px 22px",maxWidth:420,width:"100%",border:`1px solid ${C.border}`,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}}>
@@ -1437,6 +1471,51 @@ Be specific with real institution names and programs, not generic advice.`;
       </div>
 
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+
+      {/* ── MARKET TICKER BAR ── */}
+      <div style={{background:"#0a0e1a",borderBottom:"1px solid #1e2a3a",overflow:"hidden"}}>
+        {/* TradingView Ticker Tape */}
+        <div className="tradingview-widget-container" style={{width:"100%"}}>
+          <iframe
+            scrolling="no"
+            allowTransparency="true"
+            frameBorder="0"
+            src="https://s.tradingview.com/embed-widget/tickers/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P500%22%2C%22proName%22%3A%22SP%3ASPX%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22DJ%3ADJI%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3ANDX%22%7D%2C%7B%22description%22%3A%22Russell%22%2C%22proName%22%3A%22TVC%3ARUT%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22TVC%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22BINANCE%3ABTCUSDT%22%7D%5D%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22showSymbolLogo%22%3Afalse%2C%22locale%22%3A%22en%22%7D"
+            style={{width:"100%",height:76,display:"block"}}
+            title="Market Ticker"
+          />
+        </div>
+        {/* Personal Favorites Row */}
+        <div style={{display:"flex",alignItems:"center",gap:6,padding:"5px 10px",overflowX:"auto",borderTop:"1px solid #1e2a3a"}}>
+          <span style={{fontSize:9,color:"#4a6080",fontWeight:700,flexShrink:0,textTransform:"uppercase",letterSpacing:"0.06em"}}>MY STOCKS</span>
+          {favStocks.map(sym=>(
+            <button key={sym} onClick={()=>{setShowMarket(true);setTimeout(()=>{setSearchQ(sym+" stock price today");runSearch(sym+" stock price today");},200);}}
+              style={{padding:"3px 9px",borderRadius:8,background:"#1a2436",border:"1px solid #2c3a52",color:"#00ffcc",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,display:"flex",alignItems:"center",gap:5}}>
+              📈 {sym}
+              <span onClick={e=>{e.stopPropagation();const n=favStocks.filter(s=>s!==sym);setFavStocks(n);try{localStorage.setItem("ciq_favstocks",JSON.stringify(n));}catch(ex){}}}
+                style={{color:"#4a6080",fontSize:12,lineHeight:1,marginLeft:2,cursor:"pointer"}}>×</span>
+            </button>
+          ))}
+          {addingStock?(
+            <div style={{display:"flex",gap:4,flexShrink:0}}>
+              <input value={newStock} onChange={e=>setNewStock(e.target.value.toUpperCase())}
+                onKeyDown={e=>{if(e.key==="Enter"&&newStock.trim()){const n=[...favStocks,newStock.trim()];setFavStocks(n);try{localStorage.setItem("ciq_favstocks",JSON.stringify(n));}catch(ex){}setNewStock("");setAddingStock(false);}}}
+                placeholder="AAPL" maxLength={6}
+                style={{width:60,padding:"3px 8px",borderRadius:7,background:"#1a2436",border:"1px solid #00ffcc",color:"#00ffcc",fontSize:11,fontFamily:"inherit",outline:"none"}}
+                autoFocus/>
+              <button onClick={()=>{if(newStock.trim()){const n=[...favStocks,newStock.trim()];setFavStocks(n);try{localStorage.setItem("ciq_favstocks",JSON.stringify(n));}catch(ex){}}setNewStock("");setAddingStock(false);}}
+                style={{padding:"3px 8px",borderRadius:7,background:"#00ffcc",color:"#000",fontSize:10,fontWeight:800,border:"none",cursor:"pointer",fontFamily:"inherit"}}>✓</button>
+              <button onClick={()=>{setAddingStock(false);setNewStock("");}}
+                style={{padding:"3px 7px",borderRadius:7,background:"transparent",color:"#4a6080",fontSize:12,border:"none",cursor:"pointer"}}>×</button>
+            </div>
+          ):(
+            <button onClick={()=>setAddingStock(true)}
+              style={{padding:"3px 9px",borderRadius:8,background:"transparent",border:"1px dashed #2c3a52",color:"#4a6080",fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
+              + Add
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* HEADER */}
       <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"13px 16px",position:"sticky",top:0,zIndex:100}}>
