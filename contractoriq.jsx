@@ -1197,35 +1197,43 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{background:"linear-gradient(135deg,#1a1a3a,#0d1525)",borderRadius:16,padding:"18px 16px",marginBottom:14,border:"2px solid #a78bfa55"}}>
               <div style={{fontSize:10,fontWeight:800,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>🛡️ Your Trusted Agent — Ready to Help</div>
 
-              {/* Nelle's Profile Card */}
-              <div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:14,background:"#ffffff08",borderRadius:12,padding:"14px"}}>
-                <div style={{width:60,height:60,borderRadius:"50%",background:"linear-gradient(135deg,#a78bfa,#6d28d9)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0,border:"2px solid #a78bfa66"}}>👩🏾</div>
-                <div style={{flex:1}}>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:"#f0f6ff",marginBottom:2}}>Nelle Kigembe</div>
-                  <div style={{fontSize:10,color:"#a78bfa",fontWeight:700,marginBottom:6}}>Licensed Insurance Producer · Life & Annuities</div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:8}}>
-                    <span style={{padding:"3px 9px",borderRadius:20,background:"#a78bfa18",border:"1px solid #a78bfa44",color:"#a78bfa",fontSize:9,fontWeight:700}}>🌊 West Coast</span>
-                    <span style={{padding:"3px 9px",borderRadius:20,background:"#00aa8818",border:"1px solid #00aa8844",color:"#00aa88",fontSize:9,fontWeight:700}}>🌎 Nationwide</span>
-                    <span style={{padding:"3px 9px",borderRadius:20,background:"#fbbf2418",border:"1px solid #fbbf2444",color:"#fbbf24",fontSize:9,fontWeight:700}}>📍 San Diego, CA</span>
-                  </div>
-                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                    <a href="tel:757-395-7841" style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",borderRadius:8,background:"#1a2436",border:"1px solid #2c3a52",color:"#00ffcc",fontSize:10,fontWeight:700,textDecoration:"none"}}>
-                      📞 757-395-7841
-                    </a>
-                    <a href="mailto:nkigembe35@gmail.com" style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",borderRadius:8,background:"#1a2436",border:"1px solid #2c3a52",color:"#a78bfa",fontSize:10,fontWeight:700,textDecoration:"none"}}>
-                      ✉️ Email Nelle
-                    </a>
+              {/* Agent Cards */}
+              <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:14}}>
+
+                {/* Nelle - West Coast */}
+                <div style={{display:"flex",gap:12,alignItems:"flex-start",background:"#ffffff08",borderRadius:12,padding:"13px"}}>
+                  <div style={{width:52,height:52,borderRadius:"50%",background:"linear-gradient(135deg,#a78bfa,#6d28d9)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0,border:"2px solid #a78bfa66"}}>👩🏾</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#f0f6ff",marginBottom:1}}>Nelle Kigembe</div>
+                    <div style={{fontSize:9,color:"#a78bfa",fontWeight:700,marginBottom:5}}>Licensed Insurance Producer</div>
+                    <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:7}}>
+                      <span style={{padding:"2px 8px",borderRadius:20,background:"#a78bfa18",border:"1px solid #a78bfa44",color:"#a78bfa",fontSize:9,fontWeight:700}}>🌊 West Coast</span>
+                      <span style={{padding:"2px 8px",borderRadius:20,background:"#00aa8818",border:"1px solid #00aa8844",color:"#00aa88",fontSize:9,fontWeight:700}}>🌎 Nationwide</span>
+                    </div>
+                    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                      <a href="tel:757-395-7841" style={{padding:"5px 9px",borderRadius:7,background:"#1a2436",border:"1px solid #2c3a52",color:"#00ffcc",fontSize:9,fontWeight:700,textDecoration:"none"}}>📞 757-395-7841</a>
+                      <button onClick={()=>window.open("https://calendly.com/nellekigembe/60min?month=2026-04","_blank")} style={{padding:"5px 9px",borderRadius:7,background:"linear-gradient(135deg,#a78bfa,#6d28d9)",border:"none",color:"#fff",fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📅 Book with Nelle</button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Book button */}
-              <button
-                onClick={()=>window.open("https://calendly.com/nellekigembe/60min?month=2026-04","_blank")}
-                style={{width:"100%",padding:"16px",borderRadius:14,background:"linear-gradient(135deg,#a78bfa,#6d28d9)",color:"#fff",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit",marginBottom:10,boxShadow:"0 4px 20px rgba(167,139,250,0.5)"}}>
-                📅 Book Free 60-Min Opportunity Call with Nelle
-              </button>
-              <div style={{textAlign:"center",fontSize:10,color:"#4a6080",marginBottom:4}}>No obligation · No pressure · 100% educational · Zoom call</div>
+                {/* Owner - DMV */}
+                <div style={{display:"flex",gap:12,alignItems:"flex-start",background:"#ffffff08",borderRadius:12,padding:"13px"}}>
+                  <div style={{width:52,height:52,borderRadius:"50%",background:"linear-gradient(135deg,#00ffcc,#0077aa)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0,border:"2px solid #00ffcc66"}}>👨🏾</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#f0f6ff",marginBottom:1}}>Wemma Kigembe</div>
+                    <div style={{fontSize:9,color:"#00ffcc",fontWeight:700,marginBottom:5}}>Licensed Insurance Producer · ContractorIQ Founder</div>
+                    <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:7}}>
+                      <span style={{padding:"2px 8px",borderRadius:20,background:"#00ffcc18",border:"1px solid #00ffcc44",color:"#00ffcc",fontSize:9,fontWeight:700}}>🏛️ DMV Area</span>
+                      <span style={{padding:"2px 8px",borderRadius:20,background:"#00aa8818",border:"1px solid #00aa8844",color:"#00aa88",fontSize:9,fontWeight:700}}>🌎 Nationwide</span>
+                    </div>
+                    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                      <button onClick={()=>window.open("https://calendly.com/wkigembe-crvm/30min","_blank")} style={{padding:"5px 9px",borderRadius:7,background:"linear-gradient(135deg,#00ffcc,#0077aa)",border:"none",color:"#000",fontSize:9,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>📅 Book with Wemma</button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
 
             {/* Multi-Agent Vision */}
@@ -1577,61 +1585,60 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.accent}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</div>
           </div>
         </div>
-        <div style={{display:"flex",gap:6,alignItems:"center",overflowX:"auto",paddingBottom:2,scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
-          <TB t="dashboard" l="📊 Dash"/>
-          <TB t="loads" l="📋 Docs"/>
-          <TB t="growth" l="🚀 Growth"/>
-          <button onClick={()=>setShowInsurance(true)} style={{padding:"0 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa55",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",gap:4}}>🛡️ Protect</button>
-          <TB t="ai" l="🧠 AI"/>
-          <button onClick={()=>setFocusMode(p=>!p)}
-            style={{padding:"0 12px",borderRadius:8,background:focusMode?C.gold:`linear-gradient(135deg,${C.gold}33,${C.gold}15)`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",gap:4,letterSpacing:"0.03em"}}>
-            {focusMode?"⚡ FOCUS":"⚡ Focus"}
-          </button>
-          {/* ── GROUPED MENU BUTTON ── */}
-          <div style={{position:"relative",flexShrink:0}}>
-            <button onClick={()=>setShowMenu(p=>!p)}
-              style={{padding:"0 12px",borderRadius:8,background:showMenu?`${C.a3}22`:C.raised,border:`1px solid ${showMenu?C.a3:C.border}`,color:showMenu?C.a3:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5,height:40,whiteSpace:"nowrap",fontWeight:700}}>
-              <span>☰</span>
-              <span>Menu</span>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          {/* Scrollable nav tabs */}
+          <div style={{display:"flex",gap:6,alignItems:"center",overflowX:"auto",flex:1,scrollbarWidth:"none",WebkitOverflowScrolling:"touch",paddingBottom:2}}>
+            <TB t="dashboard" l="📊 Dash"/>
+            <TB t="loads" l="📋 Docs"/>
+            <TB t="growth" l="🚀 Growth"/>
+            <button onClick={()=>setShowInsurance(true)} style={{padding:"0 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa55",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",gap:4}}>🛡️ Protect</button>
+            <TB t="ai" l="🧠 AI"/>
+            <button onClick={()=>setFocusMode(p=>!p)}
+              style={{padding:"0 12px",borderRadius:8,background:focusMode?C.gold:`linear-gradient(135deg,${C.gold}33,${C.gold}15)`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",gap:4}}>
+              {focusMode?"⚡":"⚡ Focus"}
             </button>
-            {showMenu&&(
-              <div style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:8,zIndex:999,minWidth:180,boxShadow:"0 8px 32px rgba(0,0,0,0.3)"}}>
-                {/* About Us */}
-                <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
-                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
-                  <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
-                </button>
-                {/* Market */}
-                <button onClick={()=>{setShowMarket(true);setShowMenu(false);}}
-                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
-                  <span>📈</span><span style={{fontWeight:600}}>Market Overview</span>
-                </button>
-                {/* Profile */}
-                <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
-                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
-                  <span>👤</span><span style={{fontWeight:600}}>My Profile</span>
-                  {profile.setupDone&&<span style={{marginLeft:"auto",fontSize:10,color:C.green}}>✅</span>}
-                </button>
-                {/* Settings */}
-                <button onClick={()=>{setShowSettings(p=>!p);setShowProfile(false);setShowMenu(false);}}
-                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showSettings?`${C.a3}15`:C.raised,border:`1px solid ${showSettings?C.a3:C.border}`,color:showSettings?C.a3:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
-                  <span>⚙️</span><span style={{fontWeight:600}}>Display Settings</span>
-                </button>
-                {/* Theme toggle */}
-                <button onClick={()=>{const next=!darkMode;setDarkMode(next);try{localStorage.setItem("ciq_theme",next?"dark":"light");}catch(e){}setShowMenu(false);}}
-                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
-                  <span>{darkMode?"☀️":"🌙"}</span><span style={{fontWeight:600}}>{darkMode?"Light Mode":"Dark Mode"}</span>
-                </button>
-              </div>
+          </div>
+          {/* Menu + PRO — fixed outside scroll so dropdown never clips */}
+          <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
+            <div style={{position:"relative"}}>
+              <button onClick={()=>setShowMenu(p=>!p)}
+                style={{padding:"0 12px",borderRadius:8,background:showMenu?`${C.a3}22`:C.raised,border:`1px solid ${showMenu?C.a3:C.border}`,color:showMenu?C.a3:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5,height:40,whiteSpace:"nowrap",fontWeight:700}}>
+                <span>☰</span><span>Menu</span>
+              </button>
+              {showMenu&&(
+                <div style={{position:"fixed",top:"auto",right:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:8,zIndex:9998,minWidth:190,boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
+                  <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
+                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                    <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
+                  </button>
+                  <button onClick={()=>{setShowMarket(true);setShowMenu(false);}}
+                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                    <span>📈</span><span style={{fontWeight:600}}>Market Overview</span>
+                  </button>
+                  <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
+                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                    <span>👤</span><span style={{fontWeight:600}}>My Profile</span>
+                    {profile.setupDone&&<span style={{marginLeft:"auto",fontSize:10,color:C.green}}>✅</span>}
+                  </button>
+                  <button onClick={()=>{setShowSettings(p=>!p);setShowProfile(false);setShowMenu(false);}}
+                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showSettings?`${C.a3}15`:C.raised,border:`1px solid ${showSettings?C.a3:C.border}`,color:showSettings?C.a3:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                    <span>⚙️</span><span style={{fontWeight:600}}>Display Settings</span>
+                  </button>
+                  <button onClick={()=>{const next=!darkMode;setDarkMode(next);try{localStorage.setItem("ciq_theme",next?"dark":"light");}catch(e){}setShowMenu(false);}}
+                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
+                    <span>{darkMode?"☀️":"🌙"}</span><span style={{fontWeight:600}}>{darkMode?"Light Mode":"Dark Mode"}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+            {isPro?(
+              <div onClick={()=>{setIsPro(false);try{localStorage.removeItem("ciq_pro");localStorage.removeItem("ciq_trial_start");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}} style={{padding:"6px 10px",borderRadius:8,background:"linear-gradient(135deg,"+C.accent+"22,"+C.a3+"22)",border:"1px solid "+C.accent+"55",fontSize:9,fontWeight:800,color:C.accent,cursor:"pointer",whiteSpace:"nowrap"}}>PRO ✓</div>
+            ):trialDaysLeft>0?(
+              <div style={{padding:"6px 9px",borderRadius:8,background:C.gold+"20",border:"1px solid "+C.gold+"55",fontSize:9,fontWeight:700,color:C.gold,flexShrink:0}}>{trialDaysLeft}d left</div>
+            ):(
+              <button onClick={()=>{const t=ownerTaps+1;setOwnerTaps(t);if(t>=5){setIsPro(true);setOwnerTaps(0);try{localStorage.setItem("ciq_pro","true");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}else{openUpgrade("header");}}} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{ownerTaps>0?`(${ownerTaps}/5)`:"Upgrade"}</button>
             )}
           </div>
-          {isPro?(
-            <div onClick={()=>{setIsPro(false);try{localStorage.removeItem("ciq_pro");localStorage.removeItem("ciq_trial_start");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}} style={{padding:"6px 10px",borderRadius:8,background:"linear-gradient(135deg,"+C.accent+"22,"+C.a3+"22)",border:"1px solid "+C.accent+"55",fontSize:9,fontWeight:800,color:C.accent,letterSpacing:"0.05em",flexShrink:0,cursor:"pointer"}}>PRO ✓</div>
-          ):trialDaysLeft>0?(
-            <div style={{padding:"6px 9px",borderRadius:8,background:C.gold+"20",border:"1px solid "+C.gold+"55",fontSize:9,fontWeight:700,color:C.gold,flexShrink:0}}>{trialDaysLeft}d left</div>
-          ):(
-            <button onClick={()=>{const t=ownerTaps+1;setOwnerTaps(t);if(t>=5){setIsPro(true);setOwnerTaps(0);try{localStorage.setItem("ciq_pro","true");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}else{openUpgrade("header");}}} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{ownerTaps>0?`(${ownerTaps}/5)`:"Upgrade"}</button>
-          )}
         </div>
       </div>
 
