@@ -1184,7 +1184,7 @@ Be specific with real institution names and programs, not generic advice.`;
 
             {/* What happens on the call */}
             <div style={{background:`${C.gold}10`,borderRadius:12,padding:"12px 14px",marginBottom:16,border:`1px solid ${C.gold}33`}}>
-              <div style={{fontSize:10,fontWeight:800,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:"0.07em"}}>📞 What Happens on Your Free 15-Min Call</div>
+              <div style={{fontSize:10,fontWeight:800,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:"0.07em"}}>📞 What Happens on Your Free Call</div>
               {["We review your real income numbers together","You learn which products fit YOUR situation","No pressure. No jargon. Just real education.","Walk away knowing exactly what you need and why."].map((s,i)=>(
                 <div key={i} style={{display:"flex",gap:8,marginBottom:5}}>
                   <span style={{color:C.gold,fontWeight:800,fontSize:11,flexShrink:0}}>{i+1}.</span>
@@ -1193,13 +1193,60 @@ Be specific with real institution names and programs, not generic advice.`;
               ))}
             </div>
 
-            {/* CTA Button */}
-            <button
-              onClick={()=>window.open("https://calendly.com/wkigembe-crvm/30min","_blank")}
-              style={{width:"100%",padding:"16px",borderRadius:14,background:"linear-gradient(135deg,#a78bfa,#6d28d9)",color:"#fff",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit",marginBottom:10,boxShadow:"0 4px 20px rgba(167,139,250,0.4)"}}>
-              📅 Book My Free 15-Min Review
-            </button>
-            <div style={{textAlign:"center",fontSize:10,color:C.sub,marginBottom:14}}>No obligation · No pressure · 100% educational · Zoom call</div>
+            {/* Agent Section */}
+            <div style={{background:"linear-gradient(135deg,#1a1a3a,#0d1525)",borderRadius:16,padding:"18px 16px",marginBottom:14,border:"2px solid #a78bfa55"}}>
+              <div style={{fontSize:10,fontWeight:800,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>🛡️ Your Trusted Agent — Ready to Help</div>
+
+              {/* Nelle's Profile Card */}
+              <div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:14,background:"#ffffff08",borderRadius:12,padding:"14px"}}>
+                <div style={{width:60,height:60,borderRadius:"50%",background:"linear-gradient(135deg,#a78bfa,#6d28d9)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0,border:"2px solid #a78bfa66"}}>👩🏾</div>
+                <div style={{flex:1}}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:"#f0f6ff",marginBottom:2}}>Nelle Kigembe</div>
+                  <div style={{fontSize:10,color:"#a78bfa",fontWeight:700,marginBottom:6}}>Licensed Insurance Producer · Life & Annuities</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:8}}>
+                    <span style={{padding:"3px 9px",borderRadius:20,background:"#a78bfa18",border:"1px solid #a78bfa44",color:"#a78bfa",fontSize:9,fontWeight:700}}>🌊 West Coast</span>
+                    <span style={{padding:"3px 9px",borderRadius:20,background:"#00aa8818",border:"1px solid #00aa8844",color:"#00aa88",fontSize:9,fontWeight:700}}>🌎 Nationwide</span>
+                    <span style={{padding:"3px 9px",borderRadius:20,background:"#fbbf2418",border:"1px solid #fbbf2444",color:"#fbbf24",fontSize:9,fontWeight:700}}>📍 San Diego, CA</span>
+                  </div>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                    <a href="tel:757-395-7841" style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",borderRadius:8,background:"#1a2436",border:"1px solid #2c3a52",color:"#00ffcc",fontSize:10,fontWeight:700,textDecoration:"none"}}>
+                      📞 757-395-7841
+                    </a>
+                    <a href="mailto:nkigembe35@gmail.com" style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",borderRadius:8,background:"#1a2436",border:"1px solid #2c3a52",color:"#a78bfa",fontSize:10,fontWeight:700,textDecoration:"none"}}>
+                      ✉️ Email Nelle
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Book button */}
+              <button
+                onClick={()=>window.open("https://calendly.com/nellekigembe/60min?month=2026-04","_blank")}
+                style={{width:"100%",padding:"16px",borderRadius:14,background:"linear-gradient(135deg,#a78bfa,#6d28d9)",color:"#fff",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit",marginBottom:10,boxShadow:"0 4px 20px rgba(167,139,250,0.5)"}}>
+                📅 Book Free 60-Min Opportunity Call with Nelle
+              </button>
+              <div style={{textAlign:"center",fontSize:10,color:"#4a6080",marginBottom:4}}>No obligation · No pressure · 100% educational · Zoom call</div>
+            </div>
+
+            {/* Multi-Agent Vision */}
+            <div style={{background:"#0d1525",borderRadius:12,padding:"14px",marginBottom:16,border:"1px solid #1e2a3a"}}>
+              <div style={{fontSize:10,fontWeight:800,color:"#4a6080",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>🗺️ Coverage Coming Nationwide</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                {[
+                  {zone:"🌊 West Coast",status:"✅ Available",agent:"Nelle Kigembe",color:"#00aa88"},
+                  {zone:"🗽 East Coast",status:"🔜 Coming Soon",agent:"Agent Needed",color:"#4a6080"},
+                  {zone:"🌵 South",status:"🔜 Coming Soon",agent:"Agent Needed",color:"#4a6080"},
+                  {zone:"❄️ North/Midwest",status:"🔜 Coming Soon",agent:"Agent Needed",color:"#4a6080"},
+                ].map(z=>(
+                  <div key={z.zone} style={{background:"#1a2436",borderRadius:9,padding:"10px",border:`1px solid ${z.color}33`}}>
+                    <div style={{fontSize:12,marginBottom:3}}>{z.zone}</div>
+                    <div style={{fontSize:9,fontWeight:700,color:z.color,marginBottom:2}}>{z.status}</div>
+                    <div style={{fontSize:9,color:"#4a6080"}}>{z.agent}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{fontSize:9,color:"#4a6080",marginTop:10,textAlign:"center",fontStyle:"italic"}}>Are you a licensed agent? Contact us to join our network.</div>
+            </div>
 
             <button onClick={()=>setShowInsurance(false)} style={{width:"100%",padding:"11px",borderRadius:10,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>
               Maybe Later
@@ -1905,8 +1952,8 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:800,color:C.text,marginBottom:2}}>Protect Your Income</div>
                 <div style={{fontSize:10,color:C.sub,lineHeight:1.6}}>You've earned <strong style={{color:C.accent}}>${tNet.toLocaleString("en-US",{maximumFractionDigits:0})}</strong> net this year. As a 1099 worker you have <strong style={{color:C.gold}}>zero employer coverage.</strong> Book a free life insurance review.</div>
               </div>
-              <button onClick={()=>window.open("https://calendly.com/wkigembe-crvm/30min","_blank")} style={{padding:"8px 11px",borderRadius:9,background:`linear-gradient(135deg,${C.a3},${C.accent})`,color:"#000",fontWeight:800,fontSize:10,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
-                📅 Free Review
+              <button onClick={()=>setShowInsurance(true)} style={{padding:"8px 11px",borderRadius:9,background:"linear-gradient(135deg,#a78bfa,#6d28d9)",color:"#fff",fontWeight:800,fontSize:10,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
+                🛡️ Meet Nelle
               </button>
             </div>
           )}
