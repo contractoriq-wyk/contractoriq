@@ -684,6 +684,18 @@ export default function ContractorIQv26(){
     setSearchLoading(true);setSearchResult("");
     try{
       const apiKey=import.meta.env.VITE_ANTHROPIC_KEY||(window.__CIQ_KEY__||"");
+
+      // Get real GPS location first
+      let locationContext="";
+      try{
+        const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000,maximumAge:60000}));
+        const lat=pos.coords.latitude.toFixed(4);
+        const lng=pos.coords.longitude.toFixed(4);
+        locationContext=`The user's current GPS location is latitude ${lat}, longitude ${lng}. Use this EXACT location for any nearby searches - do NOT use Baltimore or any default city.`;
+      }catch(geoErr){
+        locationContext="Location access denied. Ask the user to share their city if they need local results.";
+      }
+
       const resp=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
         headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
@@ -691,7 +703,7 @@ export default function ContractorIQv26(){
           model:"claude-sonnet-4-5",
           max_tokens:600,
           tools:[{type:"web_search_20250305",name:"web_search"}],
-          messages:[{role:"user",content:`You are a helpful assistant for a truck driver in the Baltimore MD area. Answer this question concisely and practically: ${query}. Keep answer under 150 words. Use bullet points if listing multiple items.`}]
+          messages:[{role:"user",content:`You are a helpful assistant for a truck driver or gig worker. ${locationContext} Answer this question concisely and practically: ${query}. Keep answer under 200 words. Use bullet points for lists. Include specific names and addresses when searching for nearby places.`}]
         })
       });
       const d=await resp.json();
