@@ -1122,7 +1122,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:"#f0f6ff"}}>🛡️ Protect Your Income</div>
             <button onClick={()=>setShowInsurance(false)} style={{padding:"8px 14px",borderRadius:9,background:"#1a2436",border:"1px solid #2c3a52",color:"#8fa3c0",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
           </div>
-          <div style={{background:"#0d1525",flex:1,overflowY:"auto",padding:"20px 16px 80px",maxWidth:520,width:"100%",margin:"0 auto"}}>
+          <div style={{background:"#080c16",flex:1,overflowY:"auto",padding:"20px 20px 80px",width:"100%"}}>
 
             {/* Header */}
             <div style={{textAlign:"center",marginBottom:18}}>
@@ -1195,7 +1195,7 @@ Be specific with real institution names and programs, not generic advice.`;
 
             {/* CTA Button */}
             <button
-              onClick={()=>window.open("https://calendly.com","_blank")}
+              onClick={()=>window.open("https://calendly.com/wkigembe-crm","_blank")}
               style={{width:"100%",padding:"16px",borderRadius:14,background:"linear-gradient(135deg,#a78bfa,#6d28d9)",color:"#fff",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit",marginBottom:10,boxShadow:"0 4px 20px rgba(167,139,250,0.4)"}}>
               📅 Book My Free 15-Min Review
             </button>
@@ -1223,8 +1223,8 @@ Be specific with real institution names and programs, not generic advice.`;
           {/* TradingView ticker tape */}
           <div style={{background:"#0d1525",borderBottom:"1px solid #1e2a3a",flexShrink:0}}>
             <iframe scrolling="no" allowTransparency="true" frameBorder="0"
-              src="https://s.tradingview.com/embed-widget/tickers/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P500%22%2C%22proName%22%3A%22SP%3ASPX%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22DJ%3ADJI%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3ANDX%22%7D%2C%7B%22description%22%3A%22Russell%22%2C%22proName%22%3A%22TVC%3ARUT%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22TVC%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22BINANCE%3ABTCUSDT%22%7D%5D%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22showSymbolLogo%22%3Afalse%2C%22locale%22%3A%22en%22%7D"
-              style={{width:"100%",height:76,display:"block"}} title="Market Ticker"/>
+              src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P500%22%2C%22proName%22%3A%22SP%3ASPX%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22DJ%3ADJI%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3ANDX%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22TVC%3ARUT%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22TVC%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22BINANCE%3ABTCUSDT%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22locale%22%3A%22en%22%7D"
+              style={{width:"100%",height:54,display:"block"}} title="Market Ticker"/>
           </div>
 
           {/* Main content scrollable */}
@@ -1535,8 +1535,9 @@ Be specific with real institution names and programs, not generic advice.`;
         <div style={{display:"flex",gap:7,alignItems:"center"}}>
           <TB t="dashboard" l="📊 Dash"/>
           <TB t="loads" l="📋 Doc Analyzer"/>
-          <TB t="ai" l="🧠 AI"/>
           <TB t="growth" l="🚀 Growth"/>
+          <button onClick={()=>setShowInsurance(true)} style={{padding:"9px 14px",borderRadius:10,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa55",color:"#a78bfa",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>🛡️ Protect</button>
+          <TB t="ai" l="🧠 AI"/>
           <button onClick={()=>setFocusMode(p=>!p)}
             style={{padding:"9px 14px",borderRadius:8,background:focusMode?C.gold:`linear-gradient(135deg,${C.gold}33,${C.gold}15)`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,letterSpacing:"0.03em"}}>
             {focusMode?"⚡ FOCUS":"⚡ Focus"}
@@ -1554,12 +1555,6 @@ Be specific with real institution names and programs, not generic advice.`;
                 <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
                   style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                   <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
-                </button>
-                {/* Insurance */}
-                <button onClick={()=>{setShowInsurance(true);setShowMenu(false);}}
-                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
-                  <span>🛡️</span><span style={{fontWeight:600}}>Protect Your Income</span>
-                  <span style={{marginLeft:"auto",fontSize:9,background:C.red,color:"#fff",padding:"2px 6px",borderRadius:10,fontWeight:700}}>FREE</span>
                 </button>
                 {/* Market */}
                 <button onClick={()=>{setShowMarket(true);setShowMenu(false);}}
@@ -1912,7 +1907,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:800,color:C.text,marginBottom:2}}>Protect Your Income</div>
                 <div style={{fontSize:10,color:C.sub,lineHeight:1.6}}>You've earned <strong style={{color:C.accent}}>${tNet.toLocaleString("en-US",{maximumFractionDigits:0})}</strong> net this year. As a 1099 worker you have <strong style={{color:C.gold}}>zero employer coverage.</strong> Book a free life insurance review.</div>
               </div>
-              <button onClick={()=>window.open("https://calendly.com","_blank")} style={{padding:"8px 11px",borderRadius:9,background:`linear-gradient(135deg,${C.a3},${C.accent})`,color:"#000",fontWeight:800,fontSize:10,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
+              <button onClick={()=>window.open("https://calendly.com/wkigembe-crm","_blank")} style={{padding:"8px 11px",borderRadius:9,background:`linear-gradient(135deg,${C.a3},${C.accent})`,color:"#000",fontWeight:800,fontSize:10,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
                 📅 Free Review
               </button>
             </div>
@@ -3424,9 +3419,9 @@ Be specific with real institution names and programs, not generic advice.`;
       <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:C.surf,borderTop:"1px solid "+C.border,display:"flex",alignItems:"stretch",height:58,boxShadow:"0 -4px 20px rgba(0,0,0,0.4)"}}>
         {[
           {t:"dashboard", icon:"📊", label:"Dash"},
-          {t:"loads", icon:"📋", label:"Analyzer"},
-          {t:"ai",        icon:"🧠", label:"AI"},
+          {t:"loads", icon:"📋", label:"Docs"},
           {t:"growth",    icon:"🚀", label:"Growth"},
+          {t:"ai",        icon:"🧠", label:"AI"},
         ].map(item=>(
           <button key={item.t} onClick={()=>{setTab(item.t);window.scrollTo({top:0,behavior:"smooth"});}}
             style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",padding:"6px 0",borderTop:"2px solid "+(tab===item.t?C.accent:"transparent"),transition:"border-color 0.15s"}}>
