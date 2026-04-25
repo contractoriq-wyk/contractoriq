@@ -1108,7 +1108,7 @@ Be specific with real institution names and programs, not generic advice.`;
       </div>
     );
   };
-  const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:1,padding:"9px 4px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:11,letterSpacing:"0.04em",textTransform:"uppercase",border:"none",background:tab===t?C.accent:C.raised,color:tab===t?"#000":C.sub,transition:"all 0.15s"}}>{l}</button>;
+  const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:'0 0 auto',padding:"9px 10px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:10,letterSpacing:"0.03em",textTransform:"uppercase",border:"none",background:tab===t?C.accent:C.raised,color:tab===t?"#000":C.sub,transition:"all 0.15s",whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",justifyContent:"center"}}>{l}</button>;
 
   return(
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
@@ -1224,7 +1224,7 @@ Be specific with real institution names and programs, not generic advice.`;
           <div style={{background:"#0d1525",borderBottom:"1px solid #1e2a3a",flexShrink:0}}>
             <iframe scrolling="no" allowTransparency="true" frameBorder="0"
               src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P500%22%2C%22proName%22%3A%22FOREXCOM%3ASPXUSD%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22INDEX%3ADJI%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3ACOMP%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22TVC%3ARUT%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22TVC%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22COINBASE%3ABTCUSD%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22locale%22%3A%22en%22%7D"
-              style={{width:"100%",height:54,display:"block"}} title="Market Ticker"/>
+              style={{width:"100%",height:72,display:"block"}} title="Market Ticker"/>
           </div>
 
           {/* Main content scrollable */}
@@ -1480,7 +1480,7 @@ Be specific with real institution names and programs, not generic advice.`;
           allowTransparency="true"
           frameBorder="0"
           src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P%20500%22%2C%22proName%22%3A%22FOREXCOM%3ASPXUSD%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22FOREXCOM%3ADJI30%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3ANDX%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22TVC%3ARUT%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22TVC%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22COINBASE%3ABTCUSD%22%7D%2C%7B%22description%22%3A%22Apple%22%2C%22proName%22%3A%22NASDAQ%3AAAPL%22%7D%2C%7B%22description%22%3A%22Tesla%22%2C%22proName%22%3A%22NASDAQ%3ATSLA%22%7D%2C%7B%22description%22%3A%22Nvidia%22%2C%22proName%22%3A%22NASDAQ%3ANVDA%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22colorTheme%22%3A%22dark%22%2C%22locale%22%3A%22en%22%7D"
-          style={{width:"100%",height:54,display:"block"}}
+          style={{width:"100%",height:72,display:"block"}}
           title="Market Ticker Tape"
         />
         {/* Personal Favorites Row */}
@@ -1530,22 +1530,22 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.accent}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</div>
           </div>
         </div>
-        <div style={{display:"flex",gap:7,alignItems:"center"}}>
+        <div style={{display:"flex",gap:6,alignItems:"center",overflowX:"auto",paddingBottom:2,scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
           <TB t="dashboard" l="📊 Dash"/>
-          <TB t="loads" l="📋 Doc Analyzer"/>
+          <TB t="loads" l="📋 Docs"/>
           <TB t="growth" l="🚀 Growth"/>
-          <button onClick={()=>setShowInsurance(true)} style={{padding:"9px 14px",borderRadius:10,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa55",color:"#a78bfa",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>🛡️ Protect</button>
+          <button onClick={()=>setShowInsurance(true)} style={{padding:"0 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa55",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",gap:4}}>🛡️ Protect</button>
           <TB t="ai" l="🧠 AI"/>
           <button onClick={()=>setFocusMode(p=>!p)}
-            style={{padding:"9px 14px",borderRadius:8,background:focusMode?C.gold:`linear-gradient(135deg,${C.gold}33,${C.gold}15)`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,letterSpacing:"0.03em"}}>
+            style={{padding:"0 12px",borderRadius:8,background:focusMode?C.gold:`linear-gradient(135deg,${C.gold}33,${C.gold}15)`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",gap:4,letterSpacing:"0.03em"}}>
             {focusMode?"⚡ FOCUS":"⚡ Focus"}
           </button>
           {/* ── GROUPED MENU BUTTON ── */}
           <div style={{position:"relative",flexShrink:0}}>
             <button onClick={()=>setShowMenu(p=>!p)}
-              style={{padding:"9px 12px",borderRadius:8,background:showMenu?`${C.a3}22`:C.raised,border:`1px solid ${showMenu?C.a3:C.border}`,color:showMenu?C.a3:C.sub,fontSize:13,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5}}>
+              style={{padding:"0 12px",borderRadius:8,background:showMenu?`${C.a3}22`:C.raised,border:`1px solid ${showMenu?C.a3:C.border}`,color:showMenu?C.a3:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5,height:40,whiteSpace:"nowrap",fontWeight:700}}>
               <span>☰</span>
-              <span style={{fontSize:10,fontWeight:700}}>Menu</span>
+              <span>Menu</span>
             </button>
             {showMenu&&(
               <div style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:8,zIndex:999,minWidth:180,boxShadow:"0 8px 32px rgba(0,0,0,0.3)"}}>
@@ -1929,8 +1929,13 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
 
             {/* Bars */}
-            <div style={{display:"flex",alignItems:"flex-end",gap:4,height:80,padding:"0 2px"}}>
-              {allW.map((w,i)=>{
+            <div style={{display:"flex",alignItems:"flex-end",gap:4,height:80,padding:"0 2px",overflowX:"auto"}}>
+              {[...allW].sort((a,b)=>{
+                const ay=a.from?parseInt(a.from.split('/')[2]||'2025'):2025;
+                const by=b.from?parseInt(b.from.split('/')[2]||'2025'):2025;
+                if(ay!==by)return ay-by;
+                return parseInt(a.week)-parseInt(b.week);
+              }).map((w,i)=>{
                 const maxNet=Math.max(...allW.map(x=>x.net));
                 const h=Math.max(8,(w.net/maxNet)*68);
                 const vc=VENDORS[detectVendor(w)]?.color||C.accent;
