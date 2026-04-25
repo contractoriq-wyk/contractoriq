@@ -1212,7 +1212,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     </div>
                     <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                       <a href="tel:757-395-7841" style={{padding:"5px 9px",borderRadius:7,background:"#1a2436",border:"1px solid #2c3a52",color:"#00ffcc",fontSize:9,fontWeight:700,textDecoration:"none"}}>📞 757-395-7841</a>
-                      <button onClick={()=>window.open("https://calendly.com/nellekigembe/60min?month=2026-04","_blank")} style={{padding:"5px 9px",borderRadius:7,background:"linear-gradient(135deg,#a78bfa,#6d28d9)",border:"none",color:"#fff",fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📅 Book with Nelle</button>
+                      <button onClick={()=>window.open("https://calendly.com/nellekigembe/60min?utm_source=contractoriq&utm_medium=app&utm_campaign=protect_income&utm_content=west_coast","_blank")} style={{padding:"5px 9px",borderRadius:7,background:"linear-gradient(135deg,#a78bfa,#6d28d9)",border:"none",color:"#fff",fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📅 Book with Nelle</button>
                     </div>
                   </div>
                 </div>
@@ -1228,7 +1228,7 @@ Be specific with real institution names and programs, not generic advice.`;
                       <span style={{padding:"2px 8px",borderRadius:20,background:"#00aa8818",border:"1px solid #00aa8844",color:"#00aa88",fontSize:9,fontWeight:700}}>🌎 Nationwide</span>
                     </div>
                     <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                      <button onClick={()=>window.open("https://calendly.com/wkigembe-crvm/30min","_blank")} style={{padding:"5px 9px",borderRadius:7,background:"linear-gradient(135deg,#00ffcc,#0077aa)",border:"none",color:"#000",fontSize:9,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>📅 Book with Wemma</button>
+                      <button onClick={()=>window.open("https://calendly.com/wkigembe-crvm/30min?utm_source=contractoriq&utm_medium=app&utm_campaign=protect_income&utm_content=dmv","_blank")} style={{padding:"5px 9px",borderRadius:7,background:"linear-gradient(135deg,#00ffcc,#0077aa)",border:"none",color:"#000",fontSize:9,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>📅 Book with Wemma</button>
                     </div>
                   </div>
                 </div>
@@ -1278,7 +1278,7 @@ Be specific with real institution names and programs, not generic advice.`;
           {/* TradingView ticker tape */}
           <div style={{background:"#0d1525",borderBottom:"1px solid #1e2a3a",flexShrink:0}}>
             <iframe scrolling="no" allowTransparency="true" frameBorder="0"
-              src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P500%22%2C%22proName%22%3A%22FOREXCOM%3ASPXUSD%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22INDEX%3ADJI%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3ACOMP%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22TVC%3ARUT%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22TVC%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22COINBASE%3ABTCUSD%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22locale%22%3A%22en%22%7D"
+              src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P%20500%22%2C%22proName%22%3A%22AMEX%3ASPY%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22AMEX%3ADIA%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3AQQQ%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22AMEX%3AIWM%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22CBOE%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22COINBASE%3ABTCUSD%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22locale%22%3A%22en%22%7D"
               style={{width:"100%",height:72,display:"block"}} title="Market Ticker"/>
           </div>
 
@@ -1288,7 +1288,7 @@ Be specific with real institution names and programs, not generic advice.`;
             {/* TradingView Market Overview Widget */}
             <div style={{borderRadius:14,overflow:"hidden",marginBottom:14,border:"1px solid #1e2a3a"}}>
               <iframe scrolling="no" allowTransparency="true" frameBorder="0"
-                src="https://s.tradingview.com/embed-widget/market-overview/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%221D%22%2C%22showChart%22%3Atrue%2C%22locale%22%3A%22en%22%2C%22largeChartUrl%22%3A%22%22%2C%22isTransparent%22%3Atrue%2C%22showSymbolLogo%22%3Atrue%2C%22showFloatingTooltip%22%3Atrue%2C%22plotLineColorGrowing%22%3A%22rgba(41%2C%2098%2C%20255%2C%201)%22%2C%22plotLineColorFalling%22%3A%22rgba(41%2C%2098%2C%20255%2C%201)%22%2C%22gridLineColor%22%3A%22rgba(42%2C%2046%2C%2057%2C%200)%22%2C%22scaleFontColor%22%3A%22rgba(209%2C%20212%2C%20220%2C%201)%22%2C%22belowLineFillColorGrowing%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22belowLineFillColorFalling%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22belowLineFillColorGrowingBottom%22%3A%22rgba(41%2C%2098%2C%20255%2C%200)%22%2C%22belowLineFillColorFallingBottom%22%3A%22rgba(41%2C%2098%2C%20255%2C%200)%22%2C%22symbolActiveColor%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22tabs%22%3A%5B%7B%22title%22%3A%22US%20Indices%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22FOREXCOM%3ASPXUSD%22%2C%22d%22%3A%22S%26P%20500%22%7D%2C%7B%22s%22%3A%22INDEX%3ADJI%22%2C%22d%22%3A%22Dow%2030%22%7D%2C%7B%22s%22%3A%22NASDAQ%3ACOMP%22%2C%22d%22%3A%22Nasdaq%22%7D%2C%7B%22s%22%3A%22TVC%3ARUT%22%2C%22d%22%3A%22Russell%202000%22%7D%2C%7B%22s%22%3A%22TVC%3AVIX%22%2C%22d%22%3A%22VIX%22%7D%5D%7D%2C%7B%22title%22%3A%22Commodities%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22TVC%3AGOLD%22%2C%22d%22%3A%22Gold%22%7D%2C%7B%22s%22%3A%22TVC%3AUSOIL%22%2C%22d%22%3A%22Crude%20Oil%22%7D%2C%7B%22s%22%3A%22TVC%3ASILVER%22%2C%22d%22%3A%22Silver%22%7D%5D%7D%2C%7B%22title%22%3A%22Crypto%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22COINBASE%3ABTCUSD%22%2C%22d%22%3A%22Bitcoin%22%7D%2C%7B%22s%22%3A%22BINANCE%3AETHUSDT%22%2C%22d%22%3A%22Ethereum%22%7D%5D%7D%5D%7D"
+                src="https://s.tradingview.com/embed-widget/market-overview/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%221D%22%2C%22showChart%22%3Atrue%2C%22locale%22%3A%22en%22%2C%22largeChartUrl%22%3A%22%22%2C%22isTransparent%22%3Atrue%2C%22showSymbolLogo%22%3Atrue%2C%22showFloatingTooltip%22%3Atrue%2C%22plotLineColorGrowing%22%3A%22rgba(41%2C%2098%2C%20255%2C%201)%22%2C%22plotLineColorFalling%22%3A%22rgba(41%2C%2098%2C%20255%2C%201)%22%2C%22gridLineColor%22%3A%22rgba(42%2C%2046%2C%2057%2C%200)%22%2C%22scaleFontColor%22%3A%22rgba(209%2C%20212%2C%20220%2C%201)%22%2C%22belowLineFillColorGrowing%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22belowLineFillColorFalling%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22belowLineFillColorGrowingBottom%22%3A%22rgba(41%2C%2098%2C%20255%2C%200)%22%2C%22belowLineFillColorFallingBottom%22%3A%22rgba(41%2C%2098%2C%20255%2C%200)%22%2C%22symbolActiveColor%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22tabs%22%3A%5B%7B%22title%22%3A%22US%20Indices%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22AMEX%3ASPY%22%2C%22d%22%3A%22S%26P%20500%22%7D%2C%7B%22s%22%3A%22AMEX%3ADIA%22%2C%22d%22%3A%22Dow%2030%22%7D%2C%7B%22s%22%3A%22NASDAQ%3AQQQ%22%2C%22d%22%3A%22Nasdaq%22%7D%2C%7B%22s%22%3A%22AMEX%3AIWM%22%2C%22d%22%3A%22Russell%202000%22%7D%2C%7B%22s%22%3A%22CBOE%3AVIX%22%2C%22d%22%3A%22VIX%22%7D%5D%7D%2C%7B%22title%22%3A%22Commodities%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22TVC%3AGOLD%22%2C%22d%22%3A%22Gold%22%7D%2C%7B%22s%22%3A%22TVC%3AUSOIL%22%2C%22d%22%3A%22Crude%20Oil%22%7D%2C%7B%22s%22%3A%22TVC%3ASILVER%22%2C%22d%22%3A%22Silver%22%7D%5D%7D%2C%7B%22title%22%3A%22Crypto%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22COINBASE%3ABTCUSD%22%2C%22d%22%3A%22Bitcoin%22%7D%2C%7B%22s%22%3A%22BINANCE%3AETHUSDT%22%2C%22d%22%3A%22Ethereum%22%7D%5D%7D%5D%7D"
                 style={{width:"100%",height:680,display:"block"}} title="Market Overview"/>
             </div>
 
@@ -1450,7 +1450,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   <div style={{fontSize:18,marginBottom:4}}>🔥</div>
                   <div style={{fontSize:11,fontWeight:800,color:C.gold}}>5-Day Trial</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.gold,margin:"4px 0"}}>$1</div>
-                  <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>Full access<br/>Cancel anytime</div>
+                  <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Full access<br/>Cancel anytime</div>
                 </div>
 
                 {/* PRO — $19.99 — HERO CARD */}
@@ -1461,7 +1461,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   <div style={{fontSize:12,fontWeight:800,color:C.accent}}>Go Pro</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:26,fontWeight:800,color:C.accent,margin:"2px 0",lineHeight:1}}>$19.99</div>
                   <div style={{fontSize:9,color:C.accent,opacity:0.7,marginBottom:4}}>/month</div>
-                  <div style={{fontSize:9,color:C.sub,lineHeight:1.6}}>Unlimited AI · No ads<br/>Cancel anytime</div>
+                  <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Unlimited AI · No ads<br/>Cancel anytime</div>
                   <div style={{marginTop:6,padding:"3px 0",background:C.red+"22",borderRadius:6,border:"1px solid "+C.red+"44"}}>
                     <div style={{fontSize:8,color:C.red,fontWeight:700}}>🔺 Goes to $39.99 soon</div>
                   </div>
@@ -1472,7 +1472,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   <div style={{fontSize:18,marginBottom:4}}>💎</div>
                   <div style={{fontSize:11,fontWeight:800,color:C.a3}}>Founding Member</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.a3,margin:"4px 0"}}>$97<span style={{fontSize:9,fontWeight:400,color:C.sub}}> once</span></div>
-                  <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>Everything forever<br/>First 50 spots only</div>
+                  <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Everything forever<br/>First 50 spots only</div>
                 </div>
 
                 {/* FREE DEMO */}
@@ -1484,7 +1484,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   <div style={{fontSize:18,marginBottom:4}}>👀</div>
                   <div style={{fontSize:11,fontWeight:800,color:C.sub}}>Try Demo</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.sub,margin:"4px 0"}}>FREE</div>
-                  <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>Sample data<br/>No account needed</div>
+                  <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Sample data<br/>No account needed</div>
                 </div>
 
               </div>
@@ -1534,7 +1534,7 @@ Be specific with real institution names and programs, not generic advice.`;
           scrolling="no"
           allowTransparency="true"
           frameBorder="0"
-          src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P%20500%22%2C%22proName%22%3A%22FOREXCOM%3ASPXUSD%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22FOREXCOM%3ADJI30%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3ANDX%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22TVC%3ARUT%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22TVC%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22COINBASE%3ABTCUSD%22%7D%2C%7B%22description%22%3A%22Apple%22%2C%22proName%22%3A%22NASDAQ%3AAAPL%22%7D%2C%7B%22description%22%3A%22Tesla%22%2C%22proName%22%3A%22NASDAQ%3ATSLA%22%7D%2C%7B%22description%22%3A%22Nvidia%22%2C%22proName%22%3A%22NASDAQ%3ANVDA%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22colorTheme%22%3A%22dark%22%2C%22locale%22%3A%22en%22%7D"
+          src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P%20500%22%2C%22proName%22%3A%22AMEX%3ASPY%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22AMEX%3ADIA%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3AQQQ%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22AMEX%3AIWM%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22CBOE%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22COINBASE%3ABTCUSD%22%7D%2C%7B%22description%22%3A%22Apple%22%2C%22proName%22%3A%22NASDAQ%3AAAPL%22%7D%2C%7B%22description%22%3A%22Tesla%22%2C%22proName%22%3A%22NASDAQ%3ATSLA%22%7D%2C%7B%22description%22%3A%22Nvidia%22%2C%22proName%22%3A%22NASDAQ%3ANVDA%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22colorTheme%22%3A%22dark%22%2C%22locale%22%3A%22en%22%7D"
           style={{width:"100%",height:72,display:"block"}}
           title="Market Ticker Tape"
         />
@@ -1705,7 +1705,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     </button>
                   </div>
                 ))}
-                <div style={{fontSize:9,color:C.sub,lineHeight:1.5,marginTop:6}}>Use when sharing screenshots. Data stays saved — display only.</div>
+                <div style={{fontSize:11,color:C.sub,lineHeight:1.6,marginTop:6}}>Use when sharing screenshots. Data stays saved — display only.</div>
               </div>
               <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Active Filters</div>
@@ -3447,6 +3447,33 @@ Be specific with real institution names and programs, not generic advice.`;
       </div>
 
       {/* ── BOTTOM NAV — mobile tab switcher ── */}
+      {/* ── SOCIAL MEDIA FOOTER ── */}
+      <div style={{background:C.surf,borderTop:`1px solid ${C.border}`,padding:"18px 16px",textAlign:"center"}}>
+        <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14}}>Follow Us · Share · Connect</div>
+        <div style={{display:"flex",justifyContent:"center",gap:12,flexWrap:"wrap",marginBottom:12}}>
+          {[
+            {name:"Facebook",icon:"📘",color:"#1877F2",url:"https://facebook.com"},
+            {name:"Instagram",icon:"📸",color:"#E1306C",url:"https://instagram.com"},
+            {name:"TikTok",icon:"🎵",color:"#00F2EA",url:"https://tiktok.com"},
+            {name:"YouTube",icon:"▶️",color:"#FF0000",url:"https://youtube.com"},
+            {name:"WhatsApp",icon:"💬",color:"#25D366",url:"https://wa.me"},
+            {name:"LinkedIn",icon:"💼",color:"#0A66C2",url:"https://linkedin.com"},
+            {name:"X/Twitter",icon:"𝕏",color:"#f0f6ff",url:"https://x.com"},
+          ].map(s=>(
+            <button key={s.name} onClick={()=>window.open(s.url,"_blank")}
+              style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,padding:"10px 12px",borderRadius:12,background:C.raised,border:`1px solid ${C.border}`,cursor:"pointer",fontFamily:"inherit",minWidth:56,transition:"all 0.15s"}}
+              onMouseOver={e=>e.currentTarget.style.borderColor=s.color}
+              onMouseOut={e=>e.currentTarget.style.borderColor=C.border}>
+              <span style={{fontSize:22}}>{s.icon}</span>
+              <span style={{fontSize:9,fontWeight:700,color:C.sub}}>{s.name}</span>
+            </button>
+          ))}
+        </div>
+        <div style={{fontSize:10,color:C.sub,lineHeight:1.7}}>
+          Share ContractorIQ with a fellow driver 🚛 · Help them know their numbers · Tag us <strong style={{color:C.accent}}>@ContractorIQ</strong>
+        </div>
+      </div>
+
       {/* ── LEGAL DISCLAIMER FOOTER ── */}
       <div style={{background:C.bg,borderTop:"1px solid "+C.border,padding:"14px 16px",marginBottom:0}}>
         <div style={{fontSize:9,color:C.sub,lineHeight:1.8,textAlign:"center",maxWidth:600,margin:"0 auto"}}>
