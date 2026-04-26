@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 const DARK={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#8fa3c0",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
 const LIGHT={bg:"#e8eef5",surf:"#ffffff",card:"#f5f8fc",raised:"#dce4ef",border:"#a8b8cc",accent:"#005f8a",a2:"#a02800",a3:"#4c1d95",text:"#050d1a",sub:"#1a2d45",green:"#0f4c25",red:"#8b0000",gold:"#7a4a00"};
 const C=DARK; // default — overridden by component state
-const _K=(C)=>(x={})=>({background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"18px",...x});
+const _K=(C)=>(x={})=>({background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:"18px",boxShadow:"0 2px 12px rgba(0,0,0,0.15)",...x});
 const gc=g=>g==="A"?C.green:g==="B"?C.accent:g==="C"?C.gold:C.red;
 const inp={width:"100%",padding:"11px 13px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:9,color:C.text,fontSize:13,boxSizing:"border-box",fontFamily:"inherit",outline:"none"};
 const lbl={fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:5,display:"block"};
@@ -1100,7 +1100,7 @@ Be specific with real institution names and programs, not generic advice.`;
   );
 
   const NoBadge=()=>(
-    <div style={{marginTop:12,padding:"8px 11px",background:C.gold+"12",borderRadius:9,border:"1px solid "+C.gold+"35",display:"flex",alignItems:"flex-start",gap:7}}>
+    <div style={{marginTop:12,padding:"10px 14px",background:C.gold+"10",borderRadius:12,border:"1px solid "+C.gold+"30",display:"flex",alignItems:"center",gap:8,boxShadow:"0 1px 6px rgba(0,0,0,0.1)"}}>
       <span style={{fontSize:13,flexShrink:0,marginTop:1}}>💰</span>
       <div style={{fontSize:9,lineHeight:1.6}}>
         <span style={{fontWeight:800,color:C.gold}}>WE DON'T COMPETE WITH DAT OR TRUCKLOGICS. </span>
@@ -1120,7 +1120,7 @@ Be specific with real institution names and programs, not generic advice.`;
       </div>
     );
   };
-  const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:'0 0 auto',padding:"9px 10px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:10,letterSpacing:"0.03em",textTransform:"uppercase",border:"none",background:tab===t?C.accent:C.raised,color:tab===t?"#000":C.sub,transition:"all 0.15s",whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",justifyContent:"center"}}>{l}</button>;
+  const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:"0 0 auto",padding:"0 14px",borderRadius:9,cursor:"pointer",fontWeight:700,fontSize:10,letterSpacing:"0.04em",textTransform:"uppercase",border:"none",background:tab===t?C.accent:C.raised,color:tab===t?"#000":C.sub,transition:"all 0.2s",whiteSpace:"nowrap",height:38,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:tab===t?"0 2px 8px rgba(0,0,0,0.2)":"none"}}>{l}</button>;
 
   return(
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
@@ -1583,7 +1583,7 @@ Be specific with real institution names and programs, not generic advice.`;
       </div>
 
       {/* HEADER */}
-      <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"13px 16px",position:"sticky",top:0,zIndex:100}}>
+      <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"11px 14px",position:"sticky",top:0,zIndex:100,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:11}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:32,height:32,borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🚛</div>
@@ -1644,7 +1644,7 @@ Be specific with real institution names and programs, not generic advice.`;
               )}
             </div>
             {isPro?(
-              <div onClick={()=>{setIsPro(false);try{localStorage.removeItem("ciq_pro");localStorage.removeItem("ciq_trial_start");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}} style={{padding:"6px 10px",borderRadius:8,background:"linear-gradient(135deg,"+C.accent+"22,"+C.a3+"22)",border:"1px solid "+C.accent+"55",fontSize:9,fontWeight:800,color:C.accent,cursor:"pointer",whiteSpace:"nowrap"}}>PRO ✓</div>
+              <div onClick={()=>{setIsPro(false);try{localStorage.removeItem("ciq_pro");localStorage.removeItem("ciq_trial_start");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}} style={{padding:"6px 10px",borderRadius:8,background:"linear-gradient(135deg,"+C.accent+"33,"+C.a3+"22)",border:"1px solid "+C.accent+"66",fontSize:9,fontWeight:800,color:C.accent,cursor:"pointer",whiteSpace:"nowrap",boxShadow:"0 0 10px "+C.accent+"33",letterSpacing:"0.06em"}}>PRO ✓</div>
             ):trialDaysLeft>0?(
               <div style={{padding:"6px 9px",borderRadius:8,background:C.gold+"20",border:"1px solid "+C.gold+"55",fontSize:9,fontWeight:700,color:C.gold,flexShrink:0}}>{trialDaysLeft}d left</div>
             ):(
@@ -1655,7 +1655,7 @@ Be specific with real institution names and programs, not generic advice.`;
       </div>
 
       {/* ── SMART SEARCH BAR ── highlighted below header ── */}
-      <div style={{background:`linear-gradient(135deg,${C.a3}22,${C.accent}15)`,borderBottom:`2px solid ${C.a3}55`,padding:"11px 14px"}}>
+      <div style={{background:`linear-gradient(135deg,${C.a3}15,${C.accent}08)`,borderBottom:`1px solid ${C.a3}33`,padding:"10px 14px"}}>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:10,padding:"0 12px",border:`2px solid ${C.a3}`,boxShadow:`0 0 14px ${C.a3}33`}}>
             <span style={{fontSize:14,flexShrink:0,color:C.a3}}>{searchLoading?"⏳":"🔍"}</span>
@@ -1954,7 +1954,7 @@ Be specific with real institution names and programs, not generic advice.`;
           {/* ── Main KPIs ── */}
           <div style={{display:"grid",gridTemplateColumns:wide?"repeat(4,1fr)":"repeat(2,1fr)",gap:12,marginBottom:8}}>
             {[{l:"YTD Gross",v:`$${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:`All ${allW.length} weeks`,c:C.accent},{l:"YTD Net",v:`$${tNet.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:`${margin}% margin`,c:C.green},{l:"Deductions",v:`$${tDed.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:"All expenses",c:C.red},{l:"Avg RPM",v:`$${avgRPM}`,s:`${tMi.toLocaleString()} mi`,c:C.a3}].map(k=>(
-              <div key={k.l} style={K({borderTop:`3px solid ${k.c}`,padding:"14px"})}>
+              <div key={k.l} style={K({borderTop:`3px solid ${k.c}`,padding:"16px",background:C.card,boxShadow:"0 2px 8px rgba(0,0,0,0.12)"})}>
                 <div style={{fontSize:10,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>{k.l}</div>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:k.c}}>{k.v}</div>
                 <div style={{fontSize:10,color:C.sub,marginTop:4}}>{k.s}</div>
@@ -1995,7 +1995,7 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
 
             {/* Bars */}
-            <div style={{display:"flex",alignItems:"flex-end",gap:3,height:110,padding:"22px 2px 0",overflowX:"auto",overflowY:"visible",position:"relative"}}>
+            <div style={{display:"flex",alignItems:"flex-end",gap:3,height:120,padding:"0 2px",overflowX:"auto",overflowY:"visible"}}>
               {[...allW].sort((a,b)=>{
                 const ay=a.from?parseInt(a.from.split('/')[2]||'2025'):2025;
                 const by=b.from?parseInt(b.from.split('/')[2]||'2025'):2025;
@@ -2003,33 +2003,35 @@ Be specific with real institution names and programs, not generic advice.`;
                 return parseInt(a.week)-parseInt(b.week);
               }).map((w,i)=>{
                 const maxNet=Math.max(...allW.map(x=>x.net));
-                const h=Math.max(18,(w.net/maxNet)*88);
+                const h=Math.max(32,(w.net/maxNet)*100);
                 const vc=VENDORS[detectVendor(w)]?.color||C.accent;
                 const isSelected=sD===i;
                 const label=`$${(w.net/1000).toFixed(1)}k`;
                 return(
-                  <div key={w.week+i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",maxWidth:44,minWidth:28}}
+                  <div key={w.week+i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,minWidth:28}}
                     onClick={()=>{setSD(i);setSM(i);setSH(i);}}>
-                    {/* Value label ALWAYS visible above bar */}
-                    <div style={{fontSize:9,color:isSelected?vc:C.sub,fontWeight:800,lineHeight:1,marginBottom:2,whiteSpace:"nowrap"}}>
-                      {label}
-                    </div>
-                    {/* Bar */}
+                    {/* Bar with label INSIDE at top — never clips */}
                     <div style={{
-                      width:"75%",height:h,
-                      borderRadius:"4px 4px 0 0",
-                      background:isSelected?vc:`${vc}99`,
-                      boxShadow:isSelected?`0 0 10px ${vc}88`:"none",
-                      transition:"all 0.15s",
-                      minWidth:8,
+                      width:"80%",height:h,minWidth:8,
+                      borderRadius:"5px 5px 0 0",
+                      background:isSelected?vc:`${vc}88`,
+                      boxShadow:isSelected?`0 0 12px ${vc}99`:"none",
+                      transition:"all 0.2s",
                       position:"relative",
-                    }}/>
+                      display:"flex",flexDirection:"column",
+                      alignItems:"center",justifyContent:"flex-start",
+                      paddingTop:3,
+                    }}>
+                      <span style={{fontSize:8,fontWeight:800,color:"#000",opacity:0.85,lineHeight:1,whiteSpace:"nowrap",textShadow:"none"}}>
+                        {label}
+                      </span>
+                    </div>
                     {/* Week label */}
-                    <div style={{fontSize:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?700:400,marginTop:2,lineHeight:1,whiteSpace:"nowrap"}}>
+                    <div style={{fontSize:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?700:400,marginTop:3,lineHeight:1,whiteSpace:"nowrap"}}>
                       W{w.week}
                     </div>
                     {/* Vendor dot */}
-                    <div style={{width:5,height:5,borderRadius:"50%",background:vc,marginTop:1}}/>
+                    <div style={{width:5,height:5,borderRadius:"50%",background:vc,marginTop:2}}/>
                   </div>
                 );
               })}
