@@ -408,13 +408,24 @@ function pairRoundTrips(moves){
 
 function grpDeds(deds,gross){
   const fuel=deds.filter(d=>d.l.toLowerCase().includes("fuel advance")).reduce((s,d)=>s+d.a,0);
-  const ins =deds.filter(d=>["physical damage","bobtail","occ/acc","roadside"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
-  const ops =deds.filter(d=>["eld","event recorder","parking","license","highway tax"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
-  return [
-    {icon:"⛽",label:"Fuel Advances",amt:fuel,color:C.red,  pct:(fuel/gross*100).toFixed(1)},
-    {icon:"🛡️",label:"Insurance",   amt:ins, color:C.gold, pct:(ins/gross*100).toFixed(1)},
-    {icon:"🔧",label:"Operations",  amt:ops, color:C.accent,pct:(ops/gross*100).toFixed(1)},
+  const ins =deds.filter(d=>["physical damage","bobtail","occ/acc","roadside","liability limiter","insurance"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+  const ops =deds.filter(d=>["eld","event recorder","parking","license","highway tax","tolls"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+  const escrow=deds.filter(d=>d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
+  const other=deds.filter(d=>{
+    const l=d.l.toLowerCase();
+    return !l.includes("fuel advance")&&
+           !["physical damage","bobtail","occ/acc","roadside","liability limiter","insurance"].some(k=>l.includes(k))&&
+           !["eld","event recorder","parking","license","highway tax","tolls"].some(k=>l.includes(k))&&
+           !l.includes("escrow");
+  }).reduce((s,d)=>s+d.a,0);
+  const groups=[
+    {icon:"⛽",label:"Fuel Advances",amt:fuel,  color:C.red,   pct:(fuel/gross*100).toFixed(1)},
+    {icon:"🛡️",label:"Insurance",   amt:ins,   color:C.gold,  pct:(ins/gross*100).toFixed(1)},
+    {icon:"🔧",label:"Operations",  amt:ops,   color:C.accent,pct:(ops/gross*100).toFixed(1)},
+    {icon:"🏦",label:"Escrow",      amt:escrow,color:C.a3,    pct:(escrow/gross*100).toFixed(1)},
   ];
+  if(other>0) groups.push({icon:"📋",label:"Other",amt:other,color:C.sub,pct:(other/gross*100).toFixed(1)});
+  return groups.filter(g=>g.amt>0);
 }
 
 // ── APP ───────────────────────────────────────────────────────────────────────
@@ -794,7 +805,7 @@ ${pasteText.slice(0,6000)}`;
             {type:"document",source:{type:"url",url:url}},
             {type:"text",text:`You are a data extraction expert for drayage/trucking settlement statements from any carrier. Extract ALL data and return ONLY valid JSON — no explanation, no markdown:
 {"week":"01","from":"01/06/2025","to":"01/10/2025","gross":4200.00,"net":2310.00,"totalDeductions":1890.00,"rebate":45.00,"moves":[{"t":"L","fr":"Port Terminal","to":"Distribution Center","mi":65,"rt":220,"fc":46}],"deds":[{"l":"Operations Fee","a":840.00},{"l":"Fuel Advance","a":750.00}]}
-Rules: week=number only, gross=total revenue before deductions, net=amount paid to driver, moves every row (t=L/E, fr=pickup, to=delivery, mi=miles, rt=linehaul rate, fc=fuel surcharge), deds=every deduction as positive number (skip credits/reimbursements).`}
+Rules: week=number only, gross=total revenue before deductions, net=amount paid to driver, moves every row (t=L/E, fr=pickup, to=delivery, mi=miles, rt=linehaul rate, fc=fuel surcharge), deds=EVERY deduction line as positive number INCLUDING escrow, insurance, ELD, parking, fuel advances — skip only items with negative amounts (those are reimbursements/credits back to driver).`}
           ]}]
         })
       });
@@ -2067,7 +2078,7 @@ Be specific with real institution names and programs, not generic advice.`;
               {/* ── COST GROUPS ── */}
               <div style={{marginBottom:14}}>
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>Cost Groups</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9,marginBottom:10}}>
+                <div style={{display:"grid",gridTemplateColumns:dwGroups.length<=3?"repeat(3,1fr)":dwGroups.length===4?"repeat(4,1fr)":"repeat(3,1fr)",gap:9,marginBottom:10}}>
                   {dwGroups.map(g=>(
                     <div key={g.label} style={{background:C.bg,borderRadius:10,padding:"12px 8px",border:`1px solid ${g.color}55`,textAlign:"center"}}>
                       <div style={{fontSize:20,marginBottom:5}}>{g.icon}</div>
@@ -2272,18 +2283,19 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
 
               {/* Individual deduction bars — hidden in focus mode */}
-              {!focusMode&&[...dwDeds].filter(d=>!d.l.toLowerCase().includes("escrow")).sort((a,b)=>b.a-a.a).map((d,i)=>{
+              {!focusMode&&[...dwDeds].sort((a,b)=>b.a-a.a).map((d,i)=>{
                 const pct=(d.a/dw.gross*100).toFixed(1);const big=d.a>200;
+                const isEscrow=d.l.toLowerCase().includes("escrow");
                 return(
                   <div key={i} style={{marginBottom:9}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
-                      <span style={{fontSize:11,color:C.sub,flex:1}}>{d.l}</span>
+                      <span style={{fontSize:11,color:isEscrow?C.a3:C.sub,flex:1}}>{d.l}{isEscrow&&<span style={{fontSize:9,color:C.a3,marginLeft:5,fontWeight:700}}>SAVINGS</span>}</span>
                       <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-                        <Tag color={big?C.red:C.gold}>{pct}%</Tag>
-                        <span style={{fontSize:12,fontWeight:700,color:big?C.red:C.text,minWidth:64,textAlign:"right"}}>${d.a.toFixed(2)}</span>
+                        <Tag color={isEscrow?C.a3:big?C.red:C.gold}>{pct}%</Tag>
+                        <span style={{fontSize:12,fontWeight:700,color:isEscrow?C.a3:big?C.red:C.text,minWidth:64,textAlign:"right"}}>${d.a.toFixed(2)}</span>
                       </div>
                     </div>
-                    <Bar pct={d.a/dw.totalDeductions*100} color={big?C.red:d.a>50?C.gold:C.accent}/>
+                    <Bar pct={d.a/dw.totalDeductions*100} color={isEscrow?C.a3:big?C.red:d.a>50?C.gold:C.accent}/>
                   </div>
                 );
               })}
