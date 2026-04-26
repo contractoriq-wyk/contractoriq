@@ -2910,16 +2910,28 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div style={{display:"flex",flexDirection:"column",gap:7}}>
                   {addedW.map((w,i)=>(
                     <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 13px",background:C.bg,borderRadius:9,border:`1px solid ${C.a3}55`}}>
-                      <div style={{display:"flex",alignItems:"center",gap:10}}>
-                        <div style={{width:8,height:8,borderRadius:"50%",background:C.a3,boxShadow:`0 0 5px ${C.a3}`}}/>
-                        <div>
+                      <div style={{display:"flex",alignItems:"center",gap:10,flex:1}}>
+                        <div style={{width:8,height:8,borderRadius:"50%",background:C.a3,boxShadow:`0 0 5px ${C.a3}`,flexShrink:0}}/>
+                        <div style={{flex:1}}>
                           <div style={{fontSize:12,fontWeight:700,color:C.text}}>{w.label} <Tag color={C.a3}>Added</Tag></div>
                           <div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from}{w.to?` – ${w.to}`:""} · {w.moves?.length||0} moves · {w.deds?.length||0} deductions</div>
                         </div>
                       </div>
-                      <div style={{textAlign:"right"}}>
-                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${Number(w.net).toLocaleString("en-US",{minimumFractionDigits:2})}</div>
-                        <div style={{fontSize:10,color:C.sub}}>{w.gross>0?(w.net/w.gross*100).toFixed(1):0}% margin</div>
+                      <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${Number(w.net).toLocaleString("en-US",{minimumFractionDigits:2})}</div>
+                          <div style={{fontSize:10,color:C.sub}}>{w.gross>0?(w.net/w.gross*100).toFixed(1):0}% margin</div>
+                        </div>
+                        <button
+                          onClick={()=>{
+                            if(window.confirm(`Delete ${w.label}? This cannot be undone.`)){
+                              setAddedW(p=>p.filter((_,j)=>j!==i));
+                              setScanMsg(`🗑️ ${w.label} deleted`);
+                            }
+                          }}
+                          style={{padding:"6px 10px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,color:C.red,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,flexShrink:0}}>
+                          🗑️
+                        </button>
                       </div>
                     </div>
                   ))}
