@@ -407,24 +407,32 @@ function pairRoundTrips(moves){
 }
 
 function grpDeds(deds,gross){
-  const fuel=deds.filter(d=>d.l.toLowerCase().includes("fuel advance")).reduce((s,d)=>s+d.a,0);
-  const ins =deds.filter(d=>["physical damage","bobtail","occ/acc","roadside","liability limiter","insurance"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
-  const ops =deds.filter(d=>["eld","event recorder","parking","license","highway tax","tolls"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+  // FUEL: any deduction with "fuel" in the label (covers "Fuel Advance", "Fuel", "Diesel" etc)
+  const fuelKw=["fuel advance","fuel","diesel"];
+  const fuel=deds.filter(d=>fuelKw.some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
+  // INSURANCE: specific insurance product names
+  const insKw=["physical damage","bobtail","occ/acc","roadside assistance","liability limiter","occ acc","occupational","accident"];
+  const ins=deds.filter(d=>insKw.some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+  // OPERATIONS: admin/compliance fees
+  const opsKw=["eld","event recorder","parking","license plate","highway tax","toll","2290","ifta"];
+  const ops=deds.filter(d=>opsKw.some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
+  // ESCROW: savings — shown separately, NOT a true cost
   const escrow=deds.filter(d=>d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
+  // OTHER: anything not caught above
   const other=deds.filter(d=>{
     const l=d.l.toLowerCase();
-    return !l.includes("fuel advance")&&
-           !["physical damage","bobtail","occ/acc","roadside","liability limiter","insurance"].some(k=>l.includes(k))&&
-           !["eld","event recorder","parking","license","highway tax","tolls"].some(k=>l.includes(k))&&
+    return !fuelKw.some(k=>l.includes(k))&&
+           !insKw.some(k=>l.includes(k))&&
+           !opsKw.some(k=>l.includes(k))&&
            !l.includes("escrow");
   }).reduce((s,d)=>s+d.a,0);
   const groups=[
-    {icon:"⛽",label:"Fuel Advances",amt:fuel,  color:C.red,   pct:(fuel/gross*100).toFixed(1)},
-    {icon:"🛡️",label:"Insurance",   amt:ins,   color:C.gold,  pct:(ins/gross*100).toFixed(1)},
-    {icon:"🔧",label:"Operations",  amt:ops,   color:C.accent,pct:(ops/gross*100).toFixed(1)},
-    {icon:"🏦",label:"Escrow",      amt:escrow,color:C.a3,    pct:(escrow/gross*100).toFixed(1)},
+    {icon:"⛽",label:"Fuel",       amt:fuel,  color:C.red,  pct:(fuel/gross*100).toFixed(1)},
+    {icon:"🛡️",label:"Insurance", amt:ins,   color:C.gold, pct:(ins/gross*100).toFixed(1)},
+    {icon:"🔧",label:"Operations", amt:ops,   color:C.accent,pct:(ops/gross*100).toFixed(1)},
+    {icon:"🏦",label:"Escrow",     amt:escrow,color:C.a3,   pct:(escrow/gross*100).toFixed(1),isSavings:true},
   ];
-  if(other>0) groups.push({icon:"📋",label:"Other",amt:other,color:C.sub,pct:(other/gross*100).toFixed(1)});
+  if(other>0) groups.push({icon:"📋",label:"Other",amt:other,color:"#8fa3c0",pct:(other/gross*100).toFixed(1)});
   return groups.filter(g=>g.amt>0);
 }
 
@@ -2080,11 +2088,12 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>Cost Groups</div>
                 <div style={{display:"grid",gridTemplateColumns:dwGroups.length<=3?"repeat(3,1fr)":dwGroups.length===4?"repeat(4,1fr)":"repeat(3,1fr)",gap:9,marginBottom:10}}>
                   {dwGroups.map(g=>(
-                    <div key={g.label} style={{background:C.bg,borderRadius:10,padding:"12px 8px",border:`1px solid ${g.color}55`,textAlign:"center"}}>
+                    <div key={g.label} style={{background:C.bg,borderRadius:10,padding:"12px 8px",border:`2px solid ${g.isSavings?"#a78bfa55":g.color+"55"}`,textAlign:"center",position:"relative"}}>
+                      {g.isSavings&&<div style={{position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",background:"#a78bfa",color:"#fff",fontSize:8,fontWeight:800,padding:"2px 7px",borderRadius:10,whiteSpace:"nowrap"}}>SAVINGS</div>}
                       <div style={{fontSize:20,marginBottom:5}}>{g.icon}</div>
-                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:g.color}}>${g.amt.toFixed(0)}</div>
+                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:g.isSavings?"#a78bfa":g.color}}>${g.amt.toFixed(0)}</div>
                       <div style={{fontSize:9,color:C.sub,marginTop:3,textTransform:"uppercase",letterSpacing:"0.04em"}}>{g.label}</div>
-                      <div style={{marginTop:7}}><Tag color={g.color}>{g.pct}% gross</Tag></div>
+                      <div style={{marginTop:7}}><Tag color={g.isSavings?"#a78bfa":g.color}>{g.pct}% gross</Tag></div>
                     </div>
                   ))}
                 </div>
@@ -2103,7 +2112,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   {(()=>{
                     // ══ FIXED SETTLEMENT FACTS — nothing changes these ══════════
                     const reportedMiles = (dw.moves||[]).reduce((s,m)=>s+(m.mi||m.miles||0),0);
-                    const dwFuelCost    = (dw.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel advance")).reduce((s,d)=>s+d.a,0);
+                    const dwFuelCost    = (dw.deds||[]).filter(d=>["fuel advance","fuel","diesel"].some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
 
                     // ══ ACTUAL GALLONS — from settlement data if available ═══
                     // Use dw.gallons (from rebate note) if present — this is the real number
@@ -2299,11 +2308,24 @@ Be specific with real institution names and programs, not generic advice.`;
                   </div>
                 );
               })}
-              <div style={{marginTop:12,paddingTop:11,borderTop:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span style={{fontSize:11,color:C.sub}}>Total Deductions</span>
-                <div style={{display:"flex",gap:9,alignItems:"center"}}>
-                  <Tag color={C.red}>{(dw.totalDeductions/dw.gross*100).toFixed(1)}% of gross</Tag>
-                  <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.red}}>${dw.totalDeductions.toFixed(2)}</span>
+              <div style={{marginTop:12,paddingTop:11,borderTop:`1px solid ${C.border}`}}>
+                {/* Escrow shown separately as SAVINGS */}
+                {dwDeds.filter(d=>d.l.toLowerCase().includes("escrow")).length>0&&(
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,padding:"8px 12px",background:"#a78bfa12",borderRadius:8,border:"1px solid #a78bfa33"}}>
+                    <span style={{fontSize:11,color:"#a78bfa",fontWeight:700}}>🏦 Escrow (Your Savings)</span>
+                    <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#a78bfa"}}>
+                      +${dwDeds.filter(d=>d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{fontSize:11,color:C.sub}}>Total Costs (excl. escrow)</span>
+                  <div style={{display:"flex",gap:9,alignItems:"center"}}>
+                    <Tag color={C.red}>{((dw.totalDeductions - dwDeds.filter(d=>d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0))/dw.gross*100).toFixed(1)}% of gross</Tag>
+                    <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.red}}>
+                      ${(dw.totalDeductions - dwDeds.filter(d=>d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0)).toFixed(2)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
