@@ -1995,7 +1995,7 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
 
             {/* Bars */}
-            <div style={{display:"flex",alignItems:"flex-end",gap:4,height:80,padding:"0 2px",overflowX:"auto"}}>
+            <div style={{display:"flex",alignItems:"flex-end",gap:3,height:110,padding:"20px 2px 0",overflowX:"auto",position:"relative"}}>
               {[...allW].sort((a,b)=>{
                 const ay=a.from?parseInt(a.from.split('/')[2]||'2025'):2025;
                 const by=b.from?parseInt(b.from.split('/')[2]||'2025'):2025;
@@ -2003,32 +2003,33 @@ Be specific with real institution names and programs, not generic advice.`;
                 return parseInt(a.week)-parseInt(b.week);
               }).map((w,i)=>{
                 const maxNet=Math.max(...allW.map(x=>x.net));
-                const h=Math.max(8,(w.net/maxNet)*68);
+                const h=Math.max(18,(w.net/maxNet)*88);
                 const vc=VENDORS[detectVendor(w)]?.color||C.accent;
                 const isSelected=sD===i;
+                const label=`$${(w.net/1000).toFixed(1)}k`;
                 return(
-                  <div key={w.week+i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",maxWidth:44}}
+                  <div key={w.week+i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",maxWidth:44,minWidth:28}}
                     onClick={()=>{setSD(i);setSM(i);setSH(i);}}>
-                    {/* Dollar label — only show if selected or has enough space */}
-                    <div style={{fontSize:8,color:isSelected?vc:C.sub,fontWeight:isSelected?800:500,lineHeight:1,marginBottom:1}}>
-                      ${(w.net/1000).toFixed(1)}k
+                    {/* Value label ALWAYS visible above bar */}
+                    <div style={{fontSize:9,color:isSelected?vc:C.sub,fontWeight:800,lineHeight:1,marginBottom:2,whiteSpace:"nowrap"}}>
+                      {label}
                     </div>
                     {/* Bar */}
                     <div style={{
-                      width:"70%",height:h,
-                      borderRadius:"3px 3px 0 0",
-                      background:vc,
-                      opacity:isSelected?1:0.7,
-                      boxShadow:isSelected?`0 0 8px ${vc}66`:"none",
+                      width:"75%",height:h,
+                      borderRadius:"4px 4px 0 0",
+                      background:isSelected?vc:`${vc}99`,
+                      boxShadow:isSelected?`0 0 10px ${vc}88`:"none",
                       transition:"all 0.15s",
-                      minWidth:6,
+                      minWidth:8,
+                      position:"relative",
                     }}/>
-                    {/* Week number */}
-                    <div style={{fontSize:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?700:400,marginTop:2,lineHeight:1}}>
+                    {/* Week label */}
+                    <div style={{fontSize:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?700:400,marginTop:2,lineHeight:1,whiteSpace:"nowrap"}}>
                       W{w.week}
                     </div>
                     {/* Vendor dot */}
-                    <div style={{width:4,height:4,borderRadius:"50%",background:vc,opacity:0.8,marginTop:1}}/>
+                    <div style={{width:5,height:5,borderRadius:"50%",background:vc,marginTop:1}}/>
                   </div>
                 );
               })}
