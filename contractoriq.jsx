@@ -453,9 +453,9 @@ function getDeviceFingerprint(){
 
 export default function ContractorIQv26(){
   const [tab,setTab]=useState("dashboard");
-  const [sD,setSD]=useState(7); // selDed
-  const [sM,setSM]=useState(7); // selMove
-  const [sH,setSH]=useState(7); // selHealth
+  const [sD,setSD]=useState(()=>Math.max(0,allW.length-1)); // selDed — default to latest week
+  const [sM,setSM]=useState(()=>Math.max(0,allW.length-1)); // selMove
+  const [sH,setSH]=useState(()=>Math.max(0,allW.length-1)); // selHealth
   const [sR,setSR]=useState(7); // selReport
   const [wide,setWide]=useState(window.innerWidth>700);
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
@@ -2020,16 +2020,18 @@ Be specific with real institution names and programs, not generic advice.`;
                 const by=b.from?parseInt(b.from.split('/')[2]||'2025'):2025;
                 if(ay!==by)return ay-by;
                 return parseInt(a.week)-parseInt(b.week);
-              }).map((w,i)=>{
+              }).map((w,si)=>{
+                // ⭐ KEY FIX: find real index in unsorted allW so sD points to correct week
+                const realIdx=allW.findIndex(x=>x.week===w.week&&x.from===w.from&&x.vendor===w.vendor);
                 const maxNet=Math.max(...allW.map(x=>x.net));
                 const h=Math.max(32,(w.net/maxNet)*100);
                 const vc=VENDORS[detectVendor(w)]?.color||C.accent;
-                const isSelected=sD===i;
+                const isSelected=sD===realIdx;
                 const label=`$${(w.net/1000).toFixed(1)}k`;
                 return(
-                  <div key={w.week+i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,minWidth:28}}
-                    onClick={()=>{setSD(i);setSM(i);setSH(i);}}>
-                    {/* Bar with label INSIDE at top — never clips */}
+                  <div key={w.week+si} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,minWidth:28}}
+                    onClick={()=>{setSD(realIdx);setSM(realIdx);setSH(realIdx);}}>
+                    {/* Bar with label INSIDE at top */}
                     <div style={{
                       width:"80%",height:h,minWidth:8,
                       borderRadius:"5px 5px 0 0",
@@ -2048,6 +2050,12 @@ Be specific with real institution names and programs, not generic advice.`;
                     {/* Week label */}
                     <div style={{fontSize:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?700:400,marginTop:3,lineHeight:1,whiteSpace:"nowrap"}}>
                       W{w.week}
+                    </div>
+                    {/* Vendor dot */}
+                    <div style={{width:5,height:5,borderRadius:"50%",background:vc,marginTop:2}}/>
+                  </div>
+                );
+              })}
                     </div>
                     {/* Vendor dot */}
                     <div style={{width:5,height:5,borderRadius:"50%",background:vc,marginTop:2}}/>
