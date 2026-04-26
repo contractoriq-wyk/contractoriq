@@ -1978,7 +1978,7 @@ Be specific with real institution names and programs, not generic advice.`;
           )}
 
           {/* Trend — color coded by vendor */}
-          <div style={K({marginBottom:16,padding:"14px 16px"})}>            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div style={{...K({marginBottom:16,padding:"14px 16px"}),overflow:"visible"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em"}}>📈 Weekly Net Pay Trend{helpBtn("trend")}</div>
             </div>
             {helpModal("trend")}
@@ -1995,7 +1995,7 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
 
             {/* Bars */}
-            <div style={{display:"flex",alignItems:"flex-end",gap:3,height:110,padding:"20px 2px 0",overflowX:"auto",position:"relative"}}>
+            <div style={{display:"flex",alignItems:"flex-end",gap:3,height:110,padding:"22px 2px 0",overflowX:"auto",overflowY:"visible",position:"relative"}}>
               {[...allW].sort((a,b)=>{
                 const ay=a.from?parseInt(a.from.split('/')[2]||'2025'):2025;
                 const by=b.from?parseInt(b.from.split('/')[2]||'2025'):2025;
