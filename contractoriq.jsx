@@ -611,12 +611,6 @@ export default function ContractorIQv26(){
   // In real mode: show owner weeks + customer uploaded weeks
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
   // Auto-select latest week whenever weeks change
-  useEffect(()=>{
-    if(sortedW.length>0){
-      const latest=sortedW.length-1;
-      setSD(latest);setSM(latest);setSH(latest);
-    }
-  },[sortedW.length,demoMode]);
   const visibleW=allW.filter(w=>{
     const vk=detectVendor(w);
     if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;
@@ -3129,8 +3123,7 @@ Be specific with real institution names and programs, not generic advice.`;
           {/* History */}
           <div style={K()}>
             {focusMode?(
-              /* FOCUS MODE: Top 3 best + Top 3 worst */
-              <div>
+              <div>{/* FOCUS MODE: Top 3 best + Top 3 worst */}
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:4}}>⚡ Top & Bottom Moves{helpBtn("topBottom")}</div>
                 {helpModal("topBottom")}
                 <div style={{fontSize:10,color:C.sub,marginBottom:14}}>Focus mode — tap 📋 FULL to see all {allMoves.length} moves</div>
@@ -3165,8 +3158,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 ))}
               </div>
             ):(
-              /* FULL MODE: complete history with vendor tags */
-              <div>
+              <div>{/* FULL MODE: complete history with vendor tags */}
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}</div>
                 {helpModal("fullHistory")}
                 <div style={{overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
@@ -3633,10 +3625,8 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
           </div>
 
-        </div>
       )}
 
-      </div>
 
       {/* ── BOTTOM NAV — mobile tab switcher ── */}
       {/* ── SOCIAL MEDIA FOOTER ── */}
