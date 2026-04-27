@@ -3624,7 +3624,7 @@ Be specific with real institution names and programs, not generic advice.`;
               {allW.length} weeks · {expenses.length} expenses · {docs.length} documents
             </div>
           </div>
-
+        </div>
       )}
 
 
