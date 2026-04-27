@@ -595,6 +595,12 @@ export default function ContractorIQv26(){
   useEffect(()=>{try{localStorage.setItem("ciq_docs",JSON.stringify(docs));}catch(e){};},[docs]);
   useEffect(()=>{try{localStorage.setItem("ciq_o_uses",String(oUses));}catch(e){};},[oUses]);
   useEffect(()=>{try{localStorage.setItem("ciq_ai_uses",String(aiUses));}catch(e){};},[aiUses]);
+  // Auto-select latest week whenever data changes
+  useEffect(()=>{
+    if(allW.length>0){
+      setSD(allW.length-1);setSM(allW.length-1);setSH(allW.length-1);
+    }
+  },[allW.length,demoMode]);
   useEffect(()=>{try{localStorage.setItem("ciq_dis_ads",JSON.stringify(dismissedAds));}catch(e){};},[dismissedAds]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
@@ -2140,12 +2146,6 @@ Be specific with real institution names and programs, not generic advice.`;
                     <div style={{fontSize:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?700:400,marginTop:3,lineHeight:1,whiteSpace:"nowrap"}}>
                       W{w.week}
                     </div>
-                    <div style={{width:5,height:5,borderRadius:"50%",background:vc,marginTop:2}}/>
-                  </div>
-                );
-              })}
-                    </div>
-                    {/* Vendor dot */}
                     <div style={{width:5,height:5,borderRadius:"50%",background:vc,marginTop:2}}/>
                   </div>
                 );
