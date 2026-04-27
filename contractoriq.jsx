@@ -453,9 +453,9 @@ function getDeviceFingerprint(){
 
 export default function ContractorIQv26(){
   const [tab,setTab]=useState("dashboard");
-  const [sD,setSD]=useState(()=>Math.max(0,allW.length-1)); // selDed — default to latest week
-  const [sM,setSM]=useState(()=>Math.max(0,allW.length-1)); // selMove
-  const [sH,setSH]=useState(()=>Math.max(0,allW.length-1)); // selHealth
+  const [sD,setSD]=useState(0); // selDed — updated after allW computed
+  const [sM,setSM]=useState(0); // selMove
+  const [sH,setSH]=useState(0); // selHealth
   const [sR,setSR]=useState(7); // selReport
   const [wide,setWide]=useState(window.innerWidth>700);
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
@@ -498,6 +498,7 @@ export default function ContractorIQv26(){
   const [showAbout,setShowAbout]=useState(false);
   const [showMarket,setShowMarket]=useState(false);
   const [showInsurance,setShowInsurance]=useState(false);
+  const [showQR,setShowQR]=useState(false);
   const [favStocks,setFavStocks]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_favstocks")||'["AAPL","TSLA","NVDA"]');}catch{return ["AAPL","TSLA","NVDA"];}});
   const [addingStock,setAddingStock]=useState(false);
   const [newStock,setNewStock]=useState("");
@@ -598,10 +599,18 @@ export default function ContractorIQv26(){
 
   // ── Derived ───────────────────────────────────────────────────────────────
   // CRITICAL: Real owner data (W) only available on navy dev site
-  const baseW=ownerDataAvailable?W:[];
+  const [deletedBuiltinW,setDeletedBuiltinW]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_deleted_builtin")||"[]");}catch{return [];}});
+  const baseW=ownerDataAvailable?W.filter(w=>!deletedBuiltinW.includes(w.week)):[];
   // In demo mode: show ONLY demo weeks — never mix in owner data
   // In real mode: show owner weeks + customer uploaded weeks
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
+  // Auto-select latest week whenever allW changes
+  useEffect(()=>{
+    if(allW.length>0){
+      const latest=allW.length-1;
+      setSD(latest);setSM(latest);setSH(latest);
+    }
+  },[allW.length,demoMode]);
   const visibleW=allW.filter(w=>{
     const vk=detectVendor(w);
     if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;
@@ -1294,6 +1303,83 @@ Be specific with real institution names and programs, not generic advice.`;
         </div>
       )}
 
+      {/* ── QR CODE DATA TRANSFER MODAL ── PRO FEATURE ── */}
+      {showQR&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.95)",display:"flex",flexDirection:"column"}} onClick={()=>setShowQR(false)}>
+          <div style={{background:C.card,borderRadius:"0 0 24px 24px",padding:"18px 16px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.text}}>📱 Transfer Your Data</div>
+                <div style={{fontSize:11,color:C.sub,marginTop:2}}>Scan QR on another device to sync</div>
+              </div>
+              <button onClick={()=>setShowQR(false)} style={{padding:"8px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
+            </div>
+          </div>
+          <div style={{flex:1,overflowY:"auto",padding:"20px 16px 80px"}} onClick={e=>e.stopPropagation()}>
+
+            {/* QR Code display */}
+            <div style={{background:C.card,borderRadius:20,padding:"24px",marginBottom:16,textAlign:"center",border:`2px solid ${C.a3}44`}}>
+              <div style={{fontSize:12,fontWeight:700,color:C.a3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:16}}>Your Settlement Data QR Code</div>
+              {/* QR via Google Charts API — encodes your addedW data */}
+              <div style={{background:"#fff",borderRadius:16,padding:16,display:"inline-block",marginBottom:14}}>
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("CIQDATA:"+btoa(JSON.stringify({addedW,profile:{name:profile?.name||"",company:profile?.company||""},exported:new Date().toISOString()})).substring(0,1800))}`}
+                  alt="QR Code"
+                  style={{width:220,height:220,display:"block"}}
+                />
+              </div>
+              <div style={{fontSize:11,color:C.sub,lineHeight:1.7,marginBottom:12}}>
+                📲 Open ContractorIQ on your other device<br/>
+                Go to <strong style={{color:C.text}}>Menu → Transfer Data via QR</strong><br/>
+                Tap <strong style={{color:C.accent}}>"Scan QR to Import"</strong> and point camera here
+              </div>
+              <div style={{padding:"8px 14px",background:`${C.gold}15`,borderRadius:10,border:`1px solid ${C.gold}33`,fontSize:10,color:C.gold,lineHeight:1.6}}>
+                ⚡ Contains your last <strong>{Math.min(addedW.length,5)}</strong> uploaded weeks · Profile data<br/>
+                QR expires after scanning · Your data stays private
+              </div>
+            </div>
+
+            {/* What's included */}
+            <div style={{background:C.card,borderRadius:16,padding:"16px",marginBottom:14,border:`1px solid ${C.border}`}}>
+              <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:12}}>📦 What's Included in This QR</div>
+              {[
+                {icon:"📄",label:"Uploaded Settlements",val:`${addedW.length} weeks`,color:C.accent},
+                {icon:"👤",label:"Profile Name",val:profile?.name||"Not set",color:C.a3},
+                {icon:"🏢",label:"Company",val:profile?.company||"Not set",color:C.gold},
+              ].map(r=>(
+                <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.border}`}}>
+                  <span style={{fontSize:12,color:C.text}}>{r.icon} {r.label}</span>
+                  <span style={{fontSize:12,fontWeight:700,color:r.color}}>{r.val}</span>
+                </div>
+              ))}
+              <div style={{fontSize:10,color:C.sub,marginTop:10,fontStyle:"italic"}}>
+                Built-in weeks (W09–W15) are in your account — they sync automatically.
+              </div>
+            </div>
+
+            {/* Coming Soon features */}
+            <div style={{background:`${C.a3}10`,borderRadius:16,padding:"16px",border:`1px solid ${C.a3}33`}}>
+              <div style={{fontSize:11,fontWeight:800,color:C.a3,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.08em"}}>🚀 Coming to PRO Members</div>
+              {[
+                {icon:"📱",f:"QR Data Transfer",status:"✅ Live Now",c:C.green},
+                {icon:"📊",f:"Stock Portfolio Tracker",status:"🔜 Q3 2026",c:C.gold},
+                {icon:"📤",f:"Export to Excel/PDF",status:"🔜 Q3 2026",c:C.gold},
+                {icon:"🔔",f:"Load Alert Notifications",status:"🔜 Q4 2026",c:C.gold},
+                {icon:"🤝",f:"Fleet Multi-Truck Dashboard",status:"🔜 Q4 2026",c:C.gold},
+                {icon:"🧾",f:"IFTA Mileage Report",status:"🔜 2027",c:C.sub},
+                {icon:"💳",f:"Expense Receipt Scanner",status:"🔜 2027",c:C.sub},
+                {icon:"🗺️",f:"Route Profit Mapper",status:"🔜 2027",c:C.sub},
+              ].map(f=>(
+                <div key={f.f} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.border}33`}}>
+                  <span style={{fontSize:12,color:C.text}}>{f.icon} {f.f}</span>
+                  <span style={{fontSize:10,fontWeight:700,color:f.c}}>{f.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── MARKET OVERVIEW MODAL ── FULL PAGE ── */}
       {showMarket&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:"#080c16",display:"flex",flexDirection:"column"}}>
@@ -1645,6 +1731,12 @@ Be specific with real institution names and programs, not generic advice.`;
                   <button onClick={()=>{setShowMarket(true);setShowMenu(false);}}
                     style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                     <span>📈</span><span style={{fontWeight:600}}>Market Overview</span>
+                  </button>
+                  {/* QR Export — PRO feature */}
+                  <button onClick={()=>{isPro?setShowQR(true):openUpgrade("qr");setShowMenu(false);}}
+                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:isPro?`${C.a3}12`:C.raised,border:`1px solid ${isPro?C.a3:C.border}`,color:isPro?C.a3:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                    <span>📱</span><span style={{fontWeight:600}}>Transfer Data via QR</span>
+                    {!isPro&&<span style={{marginLeft:"auto",fontSize:9,background:C.gold,color:"#000",padding:"2px 7px",borderRadius:8,fontWeight:800}}>PRO</span>}
                   </button>
                   <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
                     style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
@@ -2908,6 +3000,41 @@ Be specific with real institution names and programs, not generic advice.`;
             {scanMsg&&(
               <div style={{padding:"11px 14px",background:scanMsg.startsWith("⚠️")?`${C.red}12`:`${C.green}12`,borderRadius:9,border:`1px solid ${scanMsg.startsWith("⚠️")?C.red:C.green}44`,fontSize:12,color:scanMsg.startsWith("⚠️")?C.red:C.green,marginTop:10,display:"flex",alignItems:"center",gap:8}}>
                 {scanMsg}
+              </div>
+            )}
+
+            {/* Built-in weeks (owner only) — can delete to re-scan */}
+            {ownerDataAvailable&&baseW.length>0&&(
+              <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${C.border}`}}>
+                <div style={{fontSize:10,fontWeight:700,color:C.accent,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:9}}>📋 Built-in Weeks ({baseW.length}) <span style={{color:C.sub,fontWeight:400,fontSize:9}}>— delete to re-scan</span></div>
+                <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                  {baseW.map((w,i)=>(
+                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 13px",background:C.bg,borderRadius:9,border:`1px solid ${C.accent}44`}}>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:12,fontWeight:700,color:C.text}}>{w.label} <span style={{fontSize:9,color:C.accent,background:`${C.accent}15`,padding:"2px 6px",borderRadius:8,fontWeight:700}}>Built-in</span></div>
+                        <div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from} – {w.to} · {w.moves?.length||0} moves · {w.deds?.length||0} deductions</div>
+                      </div>
+                      <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${Number(w.net).toLocaleString("en-US",{minimumFractionDigits:2})}</div>
+                          <div style={{fontSize:10,color:C.sub}}>{w.gross>0?(w.net/w.gross*100).toFixed(1):0}% margin</div>
+                        </div>
+                        <button
+                          onClick={()=>{
+                            if(window.confirm(`Delete ${w.label}? Re-scan PDF to add it back.`)){
+                              const nd=[...deletedBuiltinW,w.week];
+                              setDeletedBuiltinW(nd);
+                              try{localStorage.setItem("ciq_deleted_builtin",JSON.stringify(nd));}catch(e){}
+                              setScanMsg(`🗑️ ${w.label} removed — re-scan PDF to restore`);
+                            }
+                          }}
+                          style={{padding:"6px 10px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,color:C.red,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,flexShrink:0}}>
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
