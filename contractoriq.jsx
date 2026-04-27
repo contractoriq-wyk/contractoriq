@@ -453,9 +453,9 @@ function getDeviceFingerprint(){
 
 export default function ContractorIQv26(){
   const [tab,setTab]=useState("dashboard");
-  const [sD,setSD]=useState(0); // selDed — updated after allW computed
-  const [sM,setSM]=useState(0); // selMove
-  const [sH,setSH]=useState(0); // selHealth
+  const [sD,setSD]=useState(W.length>0?W.length-1:0); // selDed
+  const [sM,setSM]=useState(W.length>0?W.length-1:0); // selMove
+  const [sH,setSH]=useState(W.length>0?W.length-1:0); // selHealth
   const [sR,setSR]=useState(7); // selReport
   const [wide,setWide]=useState(window.innerWidth>700);
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
@@ -497,6 +497,7 @@ export default function ContractorIQv26(){
   const [showMenu,setShowMenu]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
   const [showMarket,setShowMarket]=useState(false);
+  const [deletedBuiltinW,setDeletedBuiltinW]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_deleted_builtin")||"[]");}catch{return [];}});
   const [showInsurance,setShowInsurance]=useState(false);
   const [showQR,setShowQR]=useState(false);
   const [favStocks,setFavStocks]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_favstocks")||'["AAPL","TSLA","NVDA"]');}catch{return ["AAPL","TSLA","NVDA"];}});
@@ -598,16 +599,8 @@ export default function ContractorIQv26(){
   useEffect(()=>{try{localStorage.setItem("ciq_dis_ads",JSON.stringify(dismissedAds));}catch(e){};},[dismissedAds]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  // CRITICAL: Real owner data (W) only available on navy dev site
-  const [deletedBuiltinW,setDeletedBuiltinW]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_deleted_builtin")||"[]");}catch{return [];}});
   const baseW=ownerDataAvailable?W.filter(w=>!deletedBuiltinW.includes(w.week)):[];
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
-  // Auto-select latest week whenever data changes — must be AFTER allW is defined
-  useEffect(()=>{
-    if(allW.length>0){
-      setSD(allW.length-1);setSM(allW.length-1);setSH(allW.length-1);
-    }
-  },[allW.length,demoMode]);
   const visibleW=allW.filter(w=>{
     const vk=detectVendor(w);
     if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;
