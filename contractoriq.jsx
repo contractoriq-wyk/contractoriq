@@ -604,13 +604,13 @@ export default function ContractorIQv26(){
   // In demo mode: show ONLY demo weeks — never mix in owner data
   // In real mode: show owner weeks + customer uploaded weeks
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
-  // Auto-select latest week whenever allW changes
+  // Auto-select latest week whenever weeks change
   useEffect(()=>{
-    if(allW.length>0){
-      const latest=allW.length-1;
+    if(sortedW.length>0){
+      const latest=sortedW.length-1;
       setSD(latest);setSM(latest);setSH(latest);
     }
-  },[allW.length,demoMode]);
+  },[sortedW.length,demoMode]);
   const visibleW=allW.filter(w=>{
     const vk=detectVendor(w);
     if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;
@@ -618,6 +618,13 @@ export default function ContractorIQv26(){
     return true;
   });
   const safeW=visibleW.length>0?visibleW:(allW.length>0?allW:DEMO_W);
+  // Sort allW chronologically ONCE — used by chart AND all detail cards
+  const sortedW=[...allW].sort((a,b)=>{
+    const ay=a.from?parseInt(a.from.split('/')[2]||'2025'):2025;
+    const by=b.from?parseInt(b.from.split('/')[2]||'2025'):2025;
+    if(ay!==by)return ay-by;
+    return parseInt(a.week||'0')-parseInt(b.week||'0');
+  });
 
   // ── Vendor breakdown ──────────────────────────────────────────────────────
   const vendorKeys=Object.keys(VENDORS);
@@ -643,16 +650,16 @@ export default function ContractorIQv26(){
   const tEscReg=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="Escrow Regular")?.a||0),0);
   const tEsc290=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="2290 Escrow")?.a||0),0);
   const tRebates=allW.reduce((s,w)=>s+(w.rebate||0),0);
-  const dw=allW[sD]||allW[allW.length-1]; const dg=wg(dw);
+  const dw=sortedW[sD]||sortedW[sortedW.length-1]; const dg=wg(dw);
   const dwDeds=dw.deds||[];
   const dwGroups=grpDeds(dwDeds,dw.gross);
   const dwGroupTotal=dwGroups.reduce((s,g)=>s+g.amt,0);
-  const mwBase=allW[sM]||allW[allW.length-1];
+  const mwBase=sortedW[sM]||sortedW[sortedW.length-1];
   const mwMoves=pairRoundTrips(mergeExtraPay([...(mwBase.moves||[]),...(sM===allW.length-1?extra:[])])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0}));
   const mwMi=mwMoves.reduce((s,m)=>s+m.miles,0);
   const mwRPM=mwMi>0?(mwMoves.reduce((s,m)=>s+m.rate+m.fsc,0)/mwMi).toFixed(2):"0.00";
   const mwLd=mwMoves.length>0?Math.round(mwMoves.filter(m=>m.type==="L").length/mwMoves.length*100):0;
-  const hw=allW[sH]||allW[allW.length-1]; const hwg=wg(hw);
+  const hw=sortedW[sH]||sortedW[sortedW.length-1]; const hwg=wg(hw);
   const hwFuel=(hw.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
   const hwLd=(hw.moves||[]).length>0?Math.round((hw.moves||[]).filter(m=>m.t==="L"||m.type==="L").length/(hw.moves||[]).length*100):0;
   const hwM=(hw.net/hw.gross*100).toFixed(1);
@@ -862,7 +869,7 @@ Rules: week=number only, gross=total revenue before deductions, net=amount paid 
 
   async function runAITool(mode){
     setAiMode(mode);setAiOut("");setAiLoad(true);
-    const w=allW[sR]||allW[allW.length-1]||safeW[safeW.length-1];
+    const w=sortedW[sR]||sortedW[sortedW.length-1]||safeW[safeW.length-1];
     const fuel=w.deds.filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
     let prompt="",sys="";
 
@@ -2105,45 +2112,34 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
             </div>
 
-            {/* Bars */}
+            {/* Bars — sortedW matches sD index exactly */}
             <div style={{display:"flex",alignItems:"flex-end",gap:3,height:120,padding:"0 2px",overflowX:"auto",overflowY:"visible"}}>
-              {[...allW].sort((a,b)=>{
-                const ay=a.from?parseInt(a.from.split('/')[2]||'2025'):2025;
-                const by=b.from?parseInt(b.from.split('/')[2]||'2025'):2025;
-                if(ay!==by)return ay-by;
-                return parseInt(a.week)-parseInt(b.week);
-              }).map((w,si)=>{
-                // ⭐ KEY FIX: find real index in unsorted allW so sD points to correct week
-                const realIdx=allW.findIndex(x=>x.week===w.week&&x.from===w.from&&x.vendor===w.vendor);
-                const maxNet=Math.max(...allW.map(x=>x.net));
+              {sortedW.map((w,si)=>{
+                const maxNet=Math.max(...sortedW.map(x=>x.net));
                 const h=Math.max(32,(w.net/maxNet)*100);
                 const vc=VENDORS[detectVendor(w)]?.color||C.accent;
-                const isSelected=sD===realIdx;
+                const isSelected=sD===si;
                 const label=`$${(w.net/1000).toFixed(1)}k`;
                 return(
-                  <div key={w.week+si} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,minWidth:28}}
-                    onClick={()=>{setSD(realIdx);setSM(realIdx);setSH(realIdx);}}>
-                    {/* Bar with label INSIDE at top */}
+                  <div key={w.week+w.from+si} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,minWidth:28}}
+                    onClick={()=>{setSD(si);setSM(si);setSH(si);}}>
                     <div style={{
                       width:"80%",height:h,minWidth:8,
                       borderRadius:"5px 5px 0 0",
                       background:isSelected?vc:`${vc}88`,
                       boxShadow:isSelected?`0 0 12px ${vc}99`:"none",
                       transition:"all 0.2s",
-                      position:"relative",
                       display:"flex",flexDirection:"column",
                       alignItems:"center",justifyContent:"flex-start",
                       paddingTop:3,
                     }}>
-                      <span style={{fontSize:8,fontWeight:800,color:"#000",opacity:0.85,lineHeight:1,whiteSpace:"nowrap",textShadow:"none"}}>
+                      <span style={{fontSize:8,fontWeight:800,color:"#000",opacity:0.85,lineHeight:1,whiteSpace:"nowrap"}}>
                         {label}
                       </span>
                     </div>
-                    {/* Week label */}
                     <div style={{fontSize:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?700:400,marginTop:3,lineHeight:1,whiteSpace:"nowrap"}}>
                       W{w.week}
                     </div>
-                    {/* Vendor dot */}
                     <div style={{width:5,height:5,borderRadius:"50%",background:vc,marginTop:2}}/>
                   </div>
                 );
@@ -2157,7 +2153,7 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
 
             <div style={{fontSize:9,color:C.sub,marginTop:8,textAlign:"center"}}>
-              Tap any bar to sync all cards · W{allW[sD]?.week} selected
+              Tap any bar to sync all cards · W{sortedW[sD]?.week} selected
             </div>
           </div>
 
@@ -2168,7 +2164,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={K()}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔍 Deduction Breakdown{helpBtn("deductions")}</div>
-                <Nav i={sD} max={allW.length-1} prev={()=>setSD(p=>p-1)} next={()=>setSD(p=>p+1)} label={"W"+dw.week}/>
+                <Nav i={sD} max={sortedW.length-1} prev={()=>setSD(p=>Math.max(0,p-1))} next={()=>setSD(p=>Math.min(sortedW.length-1,p+1))} label={"W"+dw.week}/>
               </div>
               {helpModal("deductions")}
               {/* Week badge */}
@@ -2663,7 +2659,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🚛 Move Performance{helpBtn("movePerf")}</div>
             </div>{helpModal("movePerf")}
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div/><Nav i={sM} max={allW.length-1} prev={()=>setSM(p=>p-1)} next={()=>setSM(p=>p+1)} label={`W${mwBase.week}`}/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div/><Nav i={sM} max={sortedW.length-1} prev={()=>setSM(p=>Math.max(0,p-1))} next={()=>setSM(p=>Math.min(sortedW.length-1,p+1))} label={`W${mwBase.week}`}/>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:14}}>
               {[{l:"Gross",v:`$${mwBase.gross.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.accent},{l:"Net",v:`$${mwBase.net.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.green},{l:"Avg RPM",v:`$${mwRPM}`,c:C.a3},{l:"Loaded %",v:`${mwLd}%`,c:mwLd>=60?C.green:C.gold}].map(s=>(
