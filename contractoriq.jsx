@@ -453,9 +453,9 @@ function getDeviceFingerprint(){
 
 export default function ContractorIQv26(){
   const [tab,setTab]=useState("dashboard");
-  const [sD,setSD]=useState(W.length>0?W.length-1:0); // selDed
-  const [sM,setSM]=useState(W.length>0?W.length-1:0); // selMove
-  const [sH,setSH]=useState(W.length>0?W.length-1:0); // selHealth
+  const [sD,setSD]=useState(0); // selDed - clamped below
+  const [sM,setSM]=useState(0); // selMove
+  const [sH,setSH]=useState(0); // selHealth
   const [sR,setSR]=useState(7); // selReport
   const [wide,setWide]=useState(window.innerWidth>700);
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
@@ -640,16 +640,19 @@ export default function ContractorIQv26(){
   const tEscReg=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="Escrow Regular")?.a||0),0);
   const tEsc290=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="2290 Escrow")?.a||0),0);
   const tRebates=allW.reduce((s,w)=>s+(w.rebate||0),0);
-  const dw=sortedW[sD]||sortedW[sortedW.length-1]; const dg=wg(dw);
+  const safeSD=Math.min(sD,sortedW.length-1);
+  const safeSM=Math.min(sM,sortedW.length-1);
+  const safeSH=Math.min(sH,sortedW.length-1);
+  const dw=sortedW[safeSD]||sortedW[sortedW.length-1]||DEMO_W[0]; const dg=wg(dw);
   const dwDeds=dw.deds||[];
   const dwGroups=grpDeds(dwDeds,dw.gross);
   const dwGroupTotal=dwGroups.reduce((s,g)=>s+g.amt,0);
-  const mwBase=sortedW[sM]||sortedW[sortedW.length-1];
+  const mwBase=sortedW[safeSM]||sortedW[sortedW.length-1];
   const mwMoves=pairRoundTrips(mergeExtraPay([...(mwBase.moves||[]),...(sM===allW.length-1?extra:[])])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0}));
   const mwMi=mwMoves.reduce((s,m)=>s+m.miles,0);
   const mwRPM=mwMi>0?(mwMoves.reduce((s,m)=>s+m.rate+m.fsc,0)/mwMi).toFixed(2):"0.00";
   const mwLd=mwMoves.length>0?Math.round(mwMoves.filter(m=>m.type==="L").length/mwMoves.length*100):0;
-  const hw=sortedW[sH]||sortedW[sortedW.length-1]; const hwg=wg(hw);
+  const hw=sortedW[safeSH]||sortedW[sortedW.length-1]; const hwg=wg(hw);
   const hwFuel=(hw.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
   const hwLd=(hw.moves||[]).length>0?Math.round((hw.moves||[]).filter(m=>m.t==="L"||m.type==="L").length/(hw.moves||[]).length*100):0;
   const hwM=(hw.net/hw.gross*100).toFixed(1);
@@ -2137,7 +2140,7 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
 
             <div style={{fontSize:9,color:C.sub,marginTop:8,textAlign:"center"}}>
-              Tap any bar to sync all cards · W{sortedW[sD]?.week} selected
+              Tap any bar to sync all cards · W{dw?.week} selected
             </div>
           </div>
 
@@ -2148,7 +2151,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={K()}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔍 Deduction Breakdown{helpBtn("deductions")}</div>
-                <Nav i={sD} max={sortedW.length-1} prev={()=>setSD(p=>Math.max(0,p-1))} next={()=>setSD(p=>Math.min(sortedW.length-1,p+1))} label={"W"+dw.week}/>
+                <Nav i={safeSD} max={sortedW.length-1} prev={()=>setSD(p=>Math.max(0,p-1))} next={()=>setSD(p=>Math.min(sortedW.length-1,p+1))} label={"W"+dw.week}/>
               </div>
               {helpModal("deductions")}
               {/* Week badge */}
@@ -2486,7 +2489,7 @@ Be specific with real institution names and programs, not generic advice.`;
                       </div>
                       <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                         {vwi.map(({w,i})=>{const g=wg(w);return(
-                          <div key={w.week} onClick={()=>setSH(i)} style={{padding:"5px 9px",borderRadius:7,background:i===sH?`${v.color}30`:`${v.color}12`,border:`2px solid ${i===sH?v.color:v.color+"33"}`,textAlign:"center",cursor:"pointer",minWidth:52}}>
+                          <div key={w.week} onClick={()=>setSH(i)} style={{padding:"5px 9px",borderRadius:7,background:i===safeSH?`${v.color}30`:`${v.color}12`,border:`2px solid ${i===safeSH?v.color:v.color+"33"}`,textAlign:"center",cursor:"pointer",minWidth:52}}>
                             <div style={{fontSize:8,color:C.sub}}>W{w.week}</div>
                             <div style={{fontSize:10,fontWeight:800,color:v.color}}>{g.i}</div>
                             <div style={{fontSize:8,color:v.color,opacity:0.8}}>{g.l}</div>
@@ -2643,7 +2646,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🚛 Move Performance{helpBtn("movePerf")}</div>
             </div>{helpModal("movePerf")}
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div/><Nav i={sM} max={sortedW.length-1} prev={()=>setSM(p=>Math.max(0,p-1))} next={()=>setSM(p=>Math.min(sortedW.length-1,p+1))} label={`W${mwBase.week}`}/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div/><Nav i={safeSM} max={sortedW.length-1} prev={()=>setSM(p=>Math.max(0,p-1))} next={()=>setSM(p=>Math.min(sortedW.length-1,p+1))} label={`W${mwBase.week}`}/>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:14}}>
               {[{l:"Gross",v:`$${mwBase.gross.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.accent},{l:"Net",v:`$${mwBase.net.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.green},{l:"Avg RPM",v:`$${mwRPM}`,c:C.a3},{l:"Loaded %",v:`${mwLd}%`,c:mwLd>=60?C.green:C.gold}].map(s=>(
