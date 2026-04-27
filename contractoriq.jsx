@@ -595,22 +595,19 @@ export default function ContractorIQv26(){
   useEffect(()=>{try{localStorage.setItem("ciq_docs",JSON.stringify(docs));}catch(e){};},[docs]);
   useEffect(()=>{try{localStorage.setItem("ciq_o_uses",String(oUses));}catch(e){};},[oUses]);
   useEffect(()=>{try{localStorage.setItem("ciq_ai_uses",String(aiUses));}catch(e){};},[aiUses]);
-  // Auto-select latest week whenever data changes
-  useEffect(()=>{
-    if(allW.length>0){
-      setSD(allW.length-1);setSM(allW.length-1);setSH(allW.length-1);
-    }
-  },[allW.length,demoMode]);
   useEffect(()=>{try{localStorage.setItem("ciq_dis_ads",JSON.stringify(dismissedAds));}catch(e){};},[dismissedAds]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
   // CRITICAL: Real owner data (W) only available on navy dev site
   const [deletedBuiltinW,setDeletedBuiltinW]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_deleted_builtin")||"[]");}catch{return [];}});
   const baseW=ownerDataAvailable?W.filter(w=>!deletedBuiltinW.includes(w.week)):[];
-  // In demo mode: show ONLY demo weeks — never mix in owner data
-  // In real mode: show owner weeks + customer uploaded weeks
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
-  // Auto-select latest week whenever weeks change
+  // Auto-select latest week whenever data changes — must be AFTER allW is defined
+  useEffect(()=>{
+    if(allW.length>0){
+      setSD(allW.length-1);setSM(allW.length-1);setSH(allW.length-1);
+    }
+  },[allW.length,demoMode]);
   const visibleW=allW.filter(w=>{
     const vk=detectVendor(w);
     if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;
