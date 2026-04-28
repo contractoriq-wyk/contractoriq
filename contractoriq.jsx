@@ -403,7 +403,7 @@ function pairRoundTrips(moves){
   return result;
 }
 
-function grpDeds(deds,gross){
+functiongrpDeds(deds,gross,C){(deds,gross){
   // FUEL: any deduction with "fuel" in the label (covers "Fuel Advance", "Fuel", "Diesel" etc)
   const fuelKw=["fuel advance","fuel","diesel"];
   const fuel=deds.filter(d=>fuelKw.some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
@@ -642,7 +642,7 @@ export default function ContractorIQv26(){
   const safeSH=Math.min(sH,sortedW.length-1);
   const dw=sortedW[safeSD]||sortedW[sortedW.length-1]||DEMO_W[0]; const dg=wg(dw);
   const dwDeds=dw.deds||[];
-  const dwGroups=grpDeds(dwDeds,dw.gross);
+  const dwGroups=grpDeds(dwDeds,dw.gross,C);
   const dwGroupTotal=dwGroups.reduce((s,g)=>s+g.amt,0);
   const mwBase=sortedW[safeSM]||sortedW[sortedW.length-1];
   const mwMoves=pairRoundTrips(mergeExtraPay([...(mwBase.moves||[]),...(sM===allW.length-1?extra:[])])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0}));
@@ -1015,7 +1015,7 @@ Be specific with real institution names and programs, not generic advice.`;
   }
 
   function generatePDF(w){
-    const groups=grpDeds(w.deds,w.gross);
+    const groups=grpDeds(w.deds,w.gross,C);
     const dedRows=w.deds.filter(d=>!d.l.toLowerCase().includes("escrow")).sort((a,b)=>b.a-a.a).map(d=>`<tr><td>${d.l}</td><td style="text-align:right;color:${d.a>200?"#f87171":"#f0f6ff"}">${(d.a/w.gross*100).toFixed(1)}%</td><td style="text-align:right;font-weight:700;color:${d.a>200?"#f87171":"#f0f6ff"}">$${d.a.toFixed(2)}</td></tr>`).join("");
     const moveRows=w.moves.map((m,i)=>{const s=scoreMove({miles:m.mi,rate:m.rt,fsc:m.fc,type:m.t});return`<tr style="background:${i%2===0?"transparent":"rgba(255,255,255,0.03)"}"><td><span style="padding:2px 7px;border-radius:4px;font-size:11px;background:${m.t==="L"?"#14532d":"#431407"};color:${m.t==="L"?"#86efac":"#fcd34d"}">${m.t==="L"?"LOAD":"EMPTY"}</span></td><td>${m.fr}→${m.to}</td><td style="text-align:right">${m.mi}</td><td style="text-align:right">$${m.rt}</td><td style="text-align:right;color:${m.fc>0?"#00ffcc":"#8fa3c0"}">${m.fc>0?"$"+m.fc:"—"}</td><td style="text-align:right;font-weight:700">$${(m.rt+m.fc).toFixed(2)}</td><td style="text-align:right;color:${+s.rpm>=2.5?"#4ade80":"#f87171"};font-weight:700">$${s.rpm}</td><td style="text-align:center;color:${gc(s.grade)};font-weight:700">${s.grade}</td></tr>`}).join("");
     const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>DrayageIQ — ${w.label}</title>
