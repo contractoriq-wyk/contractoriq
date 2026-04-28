@@ -2,13 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 
 const DARK={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#a8bdd4",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
 const LIGHT={bg:"#e8eef5",surf:"#ffffff",card:"#f5f8fc",raised:"#dce4ef",border:"#a8b8cc",accent:"#005f8a",a2:"#a02800",a3:"#4c1d95",text:"#050d1a",sub:"#1a2d45",green:"#0f4c25",red:"#8b0000",gold:"#7a4a00"};
-
+const C=DARK; // default — overridden by component state
 const _K=(C)=>(x={})=>({background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:"18px",boxShadow:"0 2px 12px rgba(0,0,0,0.15)",...x});
-const gc=g=>g==="A"?"#4ade80":g==="B"?"#00ffcc":g==="C"?"#fbbf24":"#f87171";
+const gc=g=>g==="A"?C.green:g==="B"?C.accent:g==="C"?C.gold:C.red;
+const inp={width:"100%",padding:"11px 13px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:9,color:C.text,fontSize:13,boxSizing:"border-box",fontFamily:"inherit",outline:"none"};
+const lbl={fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:5,display:"block"};
 
 function Bar({pct,color,h=8}){return <div style={{background:"#0a0f1a",borderRadius:4,height:h,overflow:"hidden"}}><div style={{width:`${Math.min(pct,100)}%`,background:color,height:"100%",borderRadius:4,transition:"width 0.7s"}}/></div>;}
-function Nav({i,max,prev,next,label}){return <div style={{display:"flex",gap:6,alignItems:"center"}}><button onClick={prev} disabled={i===0} style={{width:28,height:28,borderRadius:7,background:"#232f45",border:"1px solid #2c3a52",color:i===0?"#2c3a52":"#f0f6ff",cursor:i===0?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button><span style={{fontSize:12,fontWeight:700,color:"#00ffcc",minWidth:42,textAlign:"center"}}>{label}</span><button onClick={next} disabled={i===max} style={{width:28,height:28,borderRadius:7,background:"#232f45",border:"1px solid #2c3a52",color:i===max?"#2c3a52":"#f0f6ff",cursor:i===max?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button></div>;}
+function Nav({i,max,prev,next,label}){return <div style={{display:"flex",gap:6,alignItems:"center"}}><button onClick={prev} disabled={i===0} style={{width:28,height:28,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:i===0?C.border:C.text,cursor:i===0?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button><span style={{fontSize:12,fontWeight:700,color:C.accent,minWidth:42,textAlign:"center"}}>{label}</span><button onClick={next} disabled={i===max} style={{width:28,height:28,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:i===max?C.border:C.text,cursor:i===max?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button></div>;}
 function Tag({color,children}){return <span style={{padding:"3px 9px",borderRadius:20,fontSize:11,background:`${color}18`,border:`1px solid ${color}44`,color}}>{children}</span>;}
+
 function scoreMove(m){
   const miles=m.miles||m.mi||0;
   const rate=m.rate||m.rt||0;
@@ -403,7 +406,7 @@ function pairRoundTrips(moves){
   return result;
 }
 
-function grpDeds(deds,gross,C){
+function grpDeds(deds,gross){
   // FUEL: any deduction with "fuel" in the label (covers "Fuel Advance", "Fuel", "Diesel" etc)
   const fuelKw=["fuel advance","fuel","diesel"];
   const fuel=deds.filter(d=>fuelKw.some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
@@ -450,7 +453,7 @@ function getDeviceFingerprint(){
 
 export default function ContractorIQv26(){
   const [tab,setTab]=useState("dashboard");
-  const [sD,setSD]=useState(0); // selDed - clamped below
+  const [sD,setSD]=useState(0); // selDed — updated after allW computed
   const [sM,setSM]=useState(0); // selMove
   const [sH,setSH]=useState(0); // selHealth
   const [sR,setSR]=useState(7); // selReport
@@ -494,7 +497,6 @@ export default function ContractorIQv26(){
   const [showMenu,setShowMenu]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
   const [showMarket,setShowMarket]=useState(false);
-  const [deletedBuiltinW,setDeletedBuiltinW]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_deleted_builtin")||"[]");}catch{return [];}});
   const [showInsurance,setShowInsurance]=useState(false);
   const [showQR,setShowQR]=useState(false);
   const [favStocks,setFavStocks]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_favstocks")||'["AAPL","TSLA","NVDA"]');}catch{return ["AAPL","TSLA","NVDA"];}});
@@ -593,11 +595,28 @@ export default function ContractorIQv26(){
   useEffect(()=>{try{localStorage.setItem("ciq_docs",JSON.stringify(docs));}catch(e){};},[docs]);
   useEffect(()=>{try{localStorage.setItem("ciq_o_uses",String(oUses));}catch(e){};},[oUses]);
   useEffect(()=>{try{localStorage.setItem("ciq_ai_uses",String(aiUses));}catch(e){};},[aiUses]);
+  // Auto-select latest week whenever data changes
+  useEffect(()=>{
+    if(allW.length>0){
+      setSD(allW.length-1);setSM(allW.length-1);setSH(allW.length-1);
+    }
+  },[allW.length,demoMode]);
   useEffect(()=>{try{localStorage.setItem("ciq_dis_ads",JSON.stringify(dismissedAds));}catch(e){};},[dismissedAds]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
+  // CRITICAL: Real owner data (W) only available on navy dev site
+  const [deletedBuiltinW,setDeletedBuiltinW]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_deleted_builtin")||"[]");}catch{return [];}});
   const baseW=ownerDataAvailable?W.filter(w=>!deletedBuiltinW.includes(w.week)):[];
+  // In demo mode: show ONLY demo weeks — never mix in owner data
+  // In real mode: show owner weeks + customer uploaded weeks
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
+  // Auto-select latest week whenever weeks change
+  useEffect(()=>{
+    if(sortedW.length>0){
+      const latest=sortedW.length-1;
+      setSD(latest);setSM(latest);setSH(latest);
+    }
+  },[sortedW.length,demoMode]);
   const visibleW=allW.filter(w=>{
     const vk=detectVendor(w);
     if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;
@@ -637,19 +656,16 @@ export default function ContractorIQv26(){
   const tEscReg=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="Escrow Regular")?.a||0),0);
   const tEsc290=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="2290 Escrow")?.a||0),0);
   const tRebates=allW.reduce((s,w)=>s+(w.rebate||0),0);
-  const safeSD=Math.min(sD,sortedW.length-1);
-  const safeSM=Math.min(sM,sortedW.length-1);
-  const safeSH=Math.min(sH,sortedW.length-1);
-  const dw=sortedW[safeSD]||sortedW[sortedW.length-1]||DEMO_W[0]; const dg=wg(dw);
+  const dw=sortedW[sD]||sortedW[sortedW.length-1]; const dg=wg(dw);
   const dwDeds=dw.deds||[];
-  const dwGroups=grpDeds(dwDeds,dw.gross,C);
+  const dwGroups=grpDeds(dwDeds,dw.gross);
   const dwGroupTotal=dwGroups.reduce((s,g)=>s+g.amt,0);
-  const mwBase=sortedW[safeSM]||sortedW[sortedW.length-1];
+  const mwBase=sortedW[sM]||sortedW[sortedW.length-1];
   const mwMoves=pairRoundTrips(mergeExtraPay([...(mwBase.moves||[]),...(sM===allW.length-1?extra:[])])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0}));
   const mwMi=mwMoves.reduce((s,m)=>s+m.miles,0);
   const mwRPM=mwMi>0?(mwMoves.reduce((s,m)=>s+m.rate+m.fsc,0)/mwMi).toFixed(2):"0.00";
   const mwLd=mwMoves.length>0?Math.round(mwMoves.filter(m=>m.type==="L").length/mwMoves.length*100):0;
-  const hw=sortedW[safeSH]||sortedW[sortedW.length-1]; const hwg=wg(hw);
+  const hw=sortedW[sH]||sortedW[sortedW.length-1]; const hwg=wg(hw);
   const hwFuel=(hw.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
   const hwLd=(hw.moves||[]).length>0?Math.round((hw.moves||[]).filter(m=>m.t==="L"||m.type==="L").length/(hw.moves||[]).length*100):0;
   const hwM=(hw.net/hw.gross*100).toFixed(1);
@@ -1015,7 +1031,7 @@ Be specific with real institution names and programs, not generic advice.`;
   }
 
   function generatePDF(w){
-    const groups=grpDeds(w.deds,w.gross,C);
+    const groups=grpDeds(w.deds,w.gross);
     const dedRows=w.deds.filter(d=>!d.l.toLowerCase().includes("escrow")).sort((a,b)=>b.a-a.a).map(d=>`<tr><td>${d.l}</td><td style="text-align:right;color:${d.a>200?"#f87171":"#f0f6ff"}">${(d.a/w.gross*100).toFixed(1)}%</td><td style="text-align:right;font-weight:700;color:${d.a>200?"#f87171":"#f0f6ff"}">$${d.a.toFixed(2)}</td></tr>`).join("");
     const moveRows=w.moves.map((m,i)=>{const s=scoreMove({miles:m.mi,rate:m.rt,fsc:m.fc,type:m.t});return`<tr style="background:${i%2===0?"transparent":"rgba(255,255,255,0.03)"}"><td><span style="padding:2px 7px;border-radius:4px;font-size:11px;background:${m.t==="L"?"#14532d":"#431407"};color:${m.t==="L"?"#86efac":"#fcd34d"}">${m.t==="L"?"LOAD":"EMPTY"}</span></td><td>${m.fr}→${m.to}</td><td style="text-align:right">${m.mi}</td><td style="text-align:right">$${m.rt}</td><td style="text-align:right;color:${m.fc>0?"#00ffcc":"#8fa3c0"}">${m.fc>0?"$"+m.fc:"—"}</td><td style="text-align:right;font-weight:700">$${(m.rt+m.fc).toFixed(2)}</td><td style="text-align:right;color:${+s.rpm>=2.5?"#4ade80":"#f87171"};font-weight:700">$${s.rpm}</td><td style="text-align:center;color:${gc(s.grade)};font-weight:700">${s.grade}</td></tr>`}).join("");
     const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>DrayageIQ — ${w.label}</title>
@@ -2137,7 +2153,7 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
 
             <div style={{fontSize:9,color:C.sub,marginTop:8,textAlign:"center"}}>
-              Tap any bar to sync all cards · W{dw?.week} selected
+              Tap any bar to sync all cards · W{sortedW[sD]?.week} selected
             </div>
           </div>
 
@@ -2148,7 +2164,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={K()}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔍 Deduction Breakdown{helpBtn("deductions")}</div>
-                <Nav i={safeSD} max={sortedW.length-1} prev={()=>setSD(p=>Math.max(0,p-1))} next={()=>setSD(p=>Math.min(sortedW.length-1,p+1))} label={"W"+dw.week}/>
+                <Nav i={sD} max={sortedW.length-1} prev={()=>setSD(p=>Math.max(0,p-1))} next={()=>setSD(p=>Math.min(sortedW.length-1,p+1))} label={"W"+dw.week}/>
               </div>
               {helpModal("deductions")}
               {/* Week badge */}
@@ -2486,7 +2502,7 @@ Be specific with real institution names and programs, not generic advice.`;
                       </div>
                       <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                         {vwi.map(({w,i})=>{const g=wg(w);return(
-                          <div key={w.week} onClick={()=>setSH(i)} style={{padding:"5px 9px",borderRadius:7,background:i===safeSH?`${v.color}30`:`${v.color}12`,border:`2px solid ${i===safeSH?v.color:v.color+"33"}`,textAlign:"center",cursor:"pointer",minWidth:52}}>
+                          <div key={w.week} onClick={()=>setSH(i)} style={{padding:"5px 9px",borderRadius:7,background:i===sH?`${v.color}30`:`${v.color}12`,border:`2px solid ${i===sH?v.color:v.color+"33"}`,textAlign:"center",cursor:"pointer",minWidth:52}}>
                             <div style={{fontSize:8,color:C.sub}}>W{w.week}</div>
                             <div style={{fontSize:10,fontWeight:800,color:v.color}}>{g.i}</div>
                             <div style={{fontSize:8,color:v.color,opacity:0.8}}>{g.l}</div>
@@ -2643,7 +2659,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🚛 Move Performance{helpBtn("movePerf")}</div>
             </div>{helpModal("movePerf")}
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div/><Nav i={safeSM} max={sortedW.length-1} prev={()=>setSM(p=>Math.max(0,p-1))} next={()=>setSM(p=>Math.min(sortedW.length-1,p+1))} label={`W${mwBase.week}`}/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div/><Nav i={sM} max={sortedW.length-1} prev={()=>setSM(p=>Math.max(0,p-1))} next={()=>setSM(p=>Math.min(sortedW.length-1,p+1))} label={`W${mwBase.week}`}/>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:14}}>
               {[{l:"Gross",v:`$${mwBase.gross.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.accent},{l:"Net",v:`$${mwBase.net.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.green},{l:"Avg RPM",v:`$${mwRPM}`,c:C.a3},{l:"Loaded %",v:`${mwLd}%`,c:mwLd>=60?C.green:C.gold}].map(s=>(
@@ -3113,7 +3129,8 @@ Be specific with real institution names and programs, not generic advice.`;
           {/* History */}
           <div style={K()}>
             {focusMode?(
-              <div>{/* FOCUS MODE: Top 3 best + Top 3 worst */}
+              /* FOCUS MODE: Top 3 best + Top 3 worst */
+              <div>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:4}}>⚡ Top & Bottom Moves{helpBtn("topBottom")}</div>
                 {helpModal("topBottom")}
                 <div style={{fontSize:10,color:C.sub,marginBottom:14}}>Focus mode — tap 📋 FULL to see all {allMoves.length} moves</div>
@@ -3148,7 +3165,8 @@ Be specific with real institution names and programs, not generic advice.`;
                 ))}
               </div>
             ):(
-              <div>{/* FULL MODE: complete history with vendor tags */}
+              /* FULL MODE: complete history with vendor tags */
+              <div>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}</div>
                 {helpModal("fullHistory")}
                 <div style={{overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
@@ -3614,9 +3632,11 @@ Be specific with real institution names and programs, not generic advice.`;
               {allW.length} weeks · {expenses.length} expenses · {docs.length} documents
             </div>
           </div>
+
         </div>
       )}
 
+      </div>
 
       {/* ── BOTTOM NAV — mobile tab switcher ── */}
       {/* ── SOCIAL MEDIA FOOTER ── */}
