@@ -453,9 +453,9 @@ function getDeviceFingerprint(){
 
 export default function ContractorIQv26(){
   const [tab,setTab]=useState("dashboard");
-  const [sD,setSD]=useState(0); // selDed — updated after allW computed
-  const [sM,setSM]=useState(0); // selMove
-  const [sH,setSH]=useState(0); // selHealth
+  const [sD,setSD]=useState(7); // selDed
+  const [sM,setSM]=useState(7); // selMove
+  const [sH,setSH]=useState(7); // selHealth
   const [sR,setSR]=useState(7); // selReport
   const [wide,setWide]=useState(window.innerWidth>700);
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
@@ -498,7 +498,6 @@ export default function ContractorIQv26(){
   const [showAbout,setShowAbout]=useState(false);
   const [showMarket,setShowMarket]=useState(false);
   const [showInsurance,setShowInsurance]=useState(false);
-  const [showQR,setShowQR]=useState(false);
   const [favStocks,setFavStocks]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_favstocks")||'["AAPL","TSLA","NVDA"]');}catch{return ["AAPL","TSLA","NVDA"];}});
   const [addingStock,setAddingStock]=useState(false);
   const [newStock,setNewStock]=useState("");
@@ -595,28 +594,14 @@ export default function ContractorIQv26(){
   useEffect(()=>{try{localStorage.setItem("ciq_docs",JSON.stringify(docs));}catch(e){};},[docs]);
   useEffect(()=>{try{localStorage.setItem("ciq_o_uses",String(oUses));}catch(e){};},[oUses]);
   useEffect(()=>{try{localStorage.setItem("ciq_ai_uses",String(aiUses));}catch(e){};},[aiUses]);
-  // Auto-select latest week whenever data changes
-  useEffect(()=>{
-    if(allW.length>0){
-      setSD(allW.length-1);setSM(allW.length-1);setSH(allW.length-1);
-    }
-  },[allW.length,demoMode]);
   useEffect(()=>{try{localStorage.setItem("ciq_dis_ads",JSON.stringify(dismissedAds));}catch(e){};},[dismissedAds]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
   // CRITICAL: Real owner data (W) only available on navy dev site
-  const [deletedBuiltinW,setDeletedBuiltinW]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_deleted_builtin")||"[]");}catch{return [];}});
-  const baseW=ownerDataAvailable?W.filter(w=>!deletedBuiltinW.includes(w.week)):[];
+  const baseW=ownerDataAvailable?W:[];
   // In demo mode: show ONLY demo weeks — never mix in owner data
   // In real mode: show owner weeks + customer uploaded weeks
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
-  // Auto-select latest week whenever weeks change
-  useEffect(()=>{
-    if(sortedW.length>0){
-      const latest=sortedW.length-1;
-      setSD(latest);setSM(latest);setSH(latest);
-    }
-  },[sortedW.length,demoMode]);
   const visibleW=allW.filter(w=>{
     const vk=detectVendor(w);
     if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;
@@ -624,13 +609,6 @@ export default function ContractorIQv26(){
     return true;
   });
   const safeW=visibleW.length>0?visibleW:(allW.length>0?allW:DEMO_W);
-  // Sort allW chronologically ONCE — used by chart AND all detail cards
-  const sortedW=[...allW].sort((a,b)=>{
-    const ay=a.from?parseInt(a.from.split('/')[2]||'2025'):2025;
-    const by=b.from?parseInt(b.from.split('/')[2]||'2025'):2025;
-    if(ay!==by)return ay-by;
-    return parseInt(a.week||'0')-parseInt(b.week||'0');
-  });
 
   // ── Vendor breakdown ──────────────────────────────────────────────────────
   const vendorKeys=Object.keys(VENDORS);
@@ -656,16 +634,16 @@ export default function ContractorIQv26(){
   const tEscReg=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="Escrow Regular")?.a||0),0);
   const tEsc290=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="2290 Escrow")?.a||0),0);
   const tRebates=allW.reduce((s,w)=>s+(w.rebate||0),0);
-  const dw=sortedW[sD]||sortedW[sortedW.length-1]; const dg=wg(dw);
+  const dw=allW[sD]||allW[allW.length-1]; const dg=wg(dw);
   const dwDeds=dw.deds||[];
   const dwGroups=grpDeds(dwDeds,dw.gross);
   const dwGroupTotal=dwGroups.reduce((s,g)=>s+g.amt,0);
-  const mwBase=sortedW[sM]||sortedW[sortedW.length-1];
+  const mwBase=allW[sM]||allW[allW.length-1];
   const mwMoves=pairRoundTrips(mergeExtraPay([...(mwBase.moves||[]),...(sM===allW.length-1?extra:[])])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0}));
   const mwMi=mwMoves.reduce((s,m)=>s+m.miles,0);
   const mwRPM=mwMi>0?(mwMoves.reduce((s,m)=>s+m.rate+m.fsc,0)/mwMi).toFixed(2):"0.00";
   const mwLd=mwMoves.length>0?Math.round(mwMoves.filter(m=>m.type==="L").length/mwMoves.length*100):0;
-  const hw=sortedW[sH]||sortedW[sortedW.length-1]; const hwg=wg(hw);
+  const hw=allW[sH]||allW[allW.length-1]; const hwg=wg(hw);
   const hwFuel=(hw.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
   const hwLd=(hw.moves||[]).length>0?Math.round((hw.moves||[]).filter(m=>m.t==="L"||m.type==="L").length/(hw.moves||[]).length*100):0;
   const hwM=(hw.net/hw.gross*100).toFixed(1);
@@ -875,7 +853,7 @@ Rules: week=number only, gross=total revenue before deductions, net=amount paid 
 
   async function runAITool(mode){
     setAiMode(mode);setAiOut("");setAiLoad(true);
-    const w=sortedW[sR]||sortedW[sortedW.length-1]||safeW[safeW.length-1];
+    const w=allW[sR]||allW[allW.length-1]||safeW[safeW.length-1];
     const fuel=w.deds.filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
     let prompt="",sys="";
 
@@ -1316,83 +1294,6 @@ Be specific with real institution names and programs, not generic advice.`;
         </div>
       )}
 
-      {/* ── QR CODE DATA TRANSFER MODAL ── PRO FEATURE ── */}
-      {showQR&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.95)",display:"flex",flexDirection:"column"}} onClick={()=>setShowQR(false)}>
-          <div style={{background:C.card,borderRadius:"0 0 24px 24px",padding:"18px 16px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div>
-                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.text}}>📱 Transfer Your Data</div>
-                <div style={{fontSize:11,color:C.sub,marginTop:2}}>Scan QR on another device to sync</div>
-              </div>
-              <button onClick={()=>setShowQR(false)} style={{padding:"8px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
-            </div>
-          </div>
-          <div style={{flex:1,overflowY:"auto",padding:"20px 16px 80px"}} onClick={e=>e.stopPropagation()}>
-
-            {/* QR Code display */}
-            <div style={{background:C.card,borderRadius:20,padding:"24px",marginBottom:16,textAlign:"center",border:`2px solid ${C.a3}44`}}>
-              <div style={{fontSize:12,fontWeight:700,color:C.a3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:16}}>Your Settlement Data QR Code</div>
-              {/* QR via Google Charts API — encodes your addedW data */}
-              <div style={{background:"#fff",borderRadius:16,padding:16,display:"inline-block",marginBottom:14}}>
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("CIQDATA:"+btoa(JSON.stringify({addedW,profile:{name:profile?.name||"",company:profile?.company||""},exported:new Date().toISOString()})).substring(0,1800))}`}
-                  alt="QR Code"
-                  style={{width:220,height:220,display:"block"}}
-                />
-              </div>
-              <div style={{fontSize:11,color:C.sub,lineHeight:1.7,marginBottom:12}}>
-                📲 Open ContractorIQ on your other device<br/>
-                Go to <strong style={{color:C.text}}>Menu → Transfer Data via QR</strong><br/>
-                Tap <strong style={{color:C.accent}}>"Scan QR to Import"</strong> and point camera here
-              </div>
-              <div style={{padding:"8px 14px",background:`${C.gold}15`,borderRadius:10,border:`1px solid ${C.gold}33`,fontSize:10,color:C.gold,lineHeight:1.6}}>
-                ⚡ Contains your last <strong>{Math.min(addedW.length,5)}</strong> uploaded weeks · Profile data<br/>
-                QR expires after scanning · Your data stays private
-              </div>
-            </div>
-
-            {/* What's included */}
-            <div style={{background:C.card,borderRadius:16,padding:"16px",marginBottom:14,border:`1px solid ${C.border}`}}>
-              <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:12}}>📦 What's Included in This QR</div>
-              {[
-                {icon:"📄",label:"Uploaded Settlements",val:`${addedW.length} weeks`,color:C.accent},
-                {icon:"👤",label:"Profile Name",val:profile?.name||"Not set",color:C.a3},
-                {icon:"🏢",label:"Company",val:profile?.company||"Not set",color:C.gold},
-              ].map(r=>(
-                <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.border}`}}>
-                  <span style={{fontSize:12,color:C.text}}>{r.icon} {r.label}</span>
-                  <span style={{fontSize:12,fontWeight:700,color:r.color}}>{r.val}</span>
-                </div>
-              ))}
-              <div style={{fontSize:10,color:C.sub,marginTop:10,fontStyle:"italic"}}>
-                Built-in weeks (W09–W15) are in your account — they sync automatically.
-              </div>
-            </div>
-
-            {/* Coming Soon features */}
-            <div style={{background:`${C.a3}10`,borderRadius:16,padding:"16px",border:`1px solid ${C.a3}33`}}>
-              <div style={{fontSize:11,fontWeight:800,color:C.a3,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.08em"}}>🚀 Coming to PRO Members</div>
-              {[
-                {icon:"📱",f:"QR Data Transfer",status:"✅ Live Now",c:C.green},
-                {icon:"📊",f:"Stock Portfolio Tracker",status:"🔜 Q3 2026",c:C.gold},
-                {icon:"📤",f:"Export to Excel/PDF",status:"🔜 Q3 2026",c:C.gold},
-                {icon:"🔔",f:"Load Alert Notifications",status:"🔜 Q4 2026",c:C.gold},
-                {icon:"🤝",f:"Fleet Multi-Truck Dashboard",status:"🔜 Q4 2026",c:C.gold},
-                {icon:"🧾",f:"IFTA Mileage Report",status:"🔜 2027",c:C.sub},
-                {icon:"💳",f:"Expense Receipt Scanner",status:"🔜 2027",c:C.sub},
-                {icon:"🗺️",f:"Route Profit Mapper",status:"🔜 2027",c:C.sub},
-              ].map(f=>(
-                <div key={f.f} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.border}33`}}>
-                  <span style={{fontSize:12,color:C.text}}>{f.icon} {f.f}</span>
-                  <span style={{fontSize:10,fontWeight:700,color:f.c}}>{f.status}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── MARKET OVERVIEW MODAL ── FULL PAGE ── */}
       {showMarket&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:"#080c16",display:"flex",flexDirection:"column"}}>
@@ -1744,12 +1645,6 @@ Be specific with real institution names and programs, not generic advice.`;
                   <button onClick={()=>{setShowMarket(true);setShowMenu(false);}}
                     style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                     <span>📈</span><span style={{fontWeight:600}}>Market Overview</span>
-                  </button>
-                  {/* QR Export — PRO feature */}
-                  <button onClick={()=>{isPro?setShowQR(true):openUpgrade("qr");setShowMenu(false);}}
-                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:isPro?`${C.a3}12`:C.raised,border:`1px solid ${isPro?C.a3:C.border}`,color:isPro?C.a3:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
-                    <span>📱</span><span style={{fontWeight:600}}>Transfer Data via QR</span>
-                    {!isPro&&<span style={{marginLeft:"auto",fontSize:9,background:C.gold,color:"#000",padding:"2px 7px",borderRadius:8,fontWeight:800}}>PRO</span>}
                   </button>
                   <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
                     style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
@@ -2118,34 +2013,43 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
             </div>
 
-            {/* Bars — sortedW matches sD index exactly */}
+            {/* Bars */}
             <div style={{display:"flex",alignItems:"flex-end",gap:3,height:120,padding:"0 2px",overflowX:"auto",overflowY:"visible"}}>
-              {sortedW.map((w,si)=>{
-                const maxNet=Math.max(...sortedW.map(x=>x.net));
+              {[...allW].sort((a,b)=>{
+                const ay=a.from?parseInt(a.from.split('/')[2]||'2025'):2025;
+                const by=b.from?parseInt(b.from.split('/')[2]||'2025'):2025;
+                if(ay!==by)return ay-by;
+                return parseInt(a.week)-parseInt(b.week);
+              }).map((w,i)=>{
+                const maxNet=Math.max(...allW.map(x=>x.net));
                 const h=Math.max(32,(w.net/maxNet)*100);
                 const vc=VENDORS[detectVendor(w)]?.color||C.accent;
-                const isSelected=sD===si;
+                const isSelected=sD===i;
                 const label=`$${(w.net/1000).toFixed(1)}k`;
                 return(
-                  <div key={w.week+w.from+si} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,minWidth:28}}
-                    onClick={()=>{setSD(si);setSM(si);setSH(si);}}>
+                  <div key={w.week+i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,minWidth:28}}
+                    onClick={()=>{setSD(i);setSM(i);setSH(i);}}>
+                    {/* Bar with label INSIDE at top — never clips */}
                     <div style={{
                       width:"80%",height:h,minWidth:8,
                       borderRadius:"5px 5px 0 0",
                       background:isSelected?vc:`${vc}88`,
                       boxShadow:isSelected?`0 0 12px ${vc}99`:"none",
                       transition:"all 0.2s",
+                      position:"relative",
                       display:"flex",flexDirection:"column",
                       alignItems:"center",justifyContent:"flex-start",
                       paddingTop:3,
                     }}>
-                      <span style={{fontSize:8,fontWeight:800,color:"#000",opacity:0.85,lineHeight:1,whiteSpace:"nowrap"}}>
+                      <span style={{fontSize:8,fontWeight:800,color:"#000",opacity:0.85,lineHeight:1,whiteSpace:"nowrap",textShadow:"none"}}>
                         {label}
                       </span>
                     </div>
+                    {/* Week label */}
                     <div style={{fontSize:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?700:400,marginTop:3,lineHeight:1,whiteSpace:"nowrap"}}>
                       W{w.week}
                     </div>
+                    {/* Vendor dot */}
                     <div style={{width:5,height:5,borderRadius:"50%",background:vc,marginTop:2}}/>
                   </div>
                 );
@@ -2153,7 +2057,7 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
 
             <div style={{fontSize:9,color:C.sub,marginTop:8,textAlign:"center"}}>
-              Tap any bar to sync all cards · W{sortedW[sD]?.week} selected
+              Tap any bar to sync all cards · W{allW[sD]?.week} selected
             </div>
           </div>
 
@@ -2164,7 +2068,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={K()}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔍 Deduction Breakdown{helpBtn("deductions")}</div>
-                <Nav i={sD} max={sortedW.length-1} prev={()=>setSD(p=>Math.max(0,p-1))} next={()=>setSD(p=>Math.min(sortedW.length-1,p+1))} label={"W"+dw.week}/>
+                <Nav i={sD} max={allW.length-1} prev={()=>setSD(p=>p-1)} next={()=>setSD(p=>p+1)} label={"W"+dw.week}/>
               </div>
               {helpModal("deductions")}
               {/* Week badge */}
@@ -2659,7 +2563,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🚛 Move Performance{helpBtn("movePerf")}</div>
             </div>{helpModal("movePerf")}
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div/><Nav i={sM} max={sortedW.length-1} prev={()=>setSM(p=>Math.max(0,p-1))} next={()=>setSM(p=>Math.min(sortedW.length-1,p+1))} label={`W${mwBase.week}`}/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div/><Nav i={sM} max={allW.length-1} prev={()=>setSM(p=>p-1)} next={()=>setSM(p=>p+1)} label={`W${mwBase.week}`}/>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:14}}>
               {[{l:"Gross",v:`$${mwBase.gross.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.accent},{l:"Net",v:`$${mwBase.net.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.green},{l:"Avg RPM",v:`$${mwRPM}`,c:C.a3},{l:"Loaded %",v:`${mwLd}%`,c:mwLd>=60?C.green:C.gold}].map(s=>(
@@ -2996,41 +2900,6 @@ Be specific with real institution names and programs, not generic advice.`;
             {scanMsg&&(
               <div style={{padding:"11px 14px",background:scanMsg.startsWith("⚠️")?`${C.red}12`:`${C.green}12`,borderRadius:9,border:`1px solid ${scanMsg.startsWith("⚠️")?C.red:C.green}44`,fontSize:12,color:scanMsg.startsWith("⚠️")?C.red:C.green,marginTop:10,display:"flex",alignItems:"center",gap:8}}>
                 {scanMsg}
-              </div>
-            )}
-
-            {/* Built-in weeks (owner only) — can delete to re-scan */}
-            {ownerDataAvailable&&baseW.length>0&&(
-              <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${C.border}`}}>
-                <div style={{fontSize:10,fontWeight:700,color:C.accent,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:9}}>📋 Built-in Weeks ({baseW.length}) <span style={{color:C.sub,fontWeight:400,fontSize:9}}>— delete to re-scan</span></div>
-                <div style={{display:"flex",flexDirection:"column",gap:7}}>
-                  {baseW.map((w,i)=>(
-                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 13px",background:C.bg,borderRadius:9,border:`1px solid ${C.accent}44`}}>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:12,fontWeight:700,color:C.text}}>{w.label} <span style={{fontSize:9,color:C.accent,background:`${C.accent}15`,padding:"2px 6px",borderRadius:8,fontWeight:700}}>Built-in</span></div>
-                        <div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from} – {w.to} · {w.moves?.length||0} moves · {w.deds?.length||0} deductions</div>
-                      </div>
-                      <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${Number(w.net).toLocaleString("en-US",{minimumFractionDigits:2})}</div>
-                          <div style={{fontSize:10,color:C.sub}}>{w.gross>0?(w.net/w.gross*100).toFixed(1):0}% margin</div>
-                        </div>
-                        <button
-                          onClick={()=>{
-                            if(window.confirm(`Delete ${w.label}? Re-scan PDF to add it back.`)){
-                              const nd=[...deletedBuiltinW,w.week];
-                              setDeletedBuiltinW(nd);
-                              try{localStorage.setItem("ciq_deleted_builtin",JSON.stringify(nd));}catch(e){}
-                              setScanMsg(`🗑️ ${w.label} removed — re-scan PDF to restore`);
-                            }
-                          }}
-                          style={{padding:"6px 10px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,color:C.red,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,flexShrink:0}}>
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
 
