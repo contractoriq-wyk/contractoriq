@@ -403,7 +403,7 @@ function pairRoundTrips(moves){
   return result;
 }
 
-functiongrpDeds(deds,gross,C){(deds,gross){
+function grpDeds(deds,gross,C){
   // FUEL: any deduction with "fuel" in the label (covers "Fuel Advance", "Fuel", "Diesel" etc)
   const fuelKw=["fuel advance","fuel","diesel"];
   const fuel=deds.filter(d=>fuelKw.some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
