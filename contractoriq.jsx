@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 
 const DARK={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#a8bdd4",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
 const LIGHT={bg:"#e8eef5",surf:"#ffffff",card:"#f5f8fc",raised:"#dce4ef",border:"#a8b8cc",accent:"#005f8a",a2:"#a02800",a3:"#4c1d95",text:"#050d1a",sub:"#1a2d45",green:"#0f4c25",red:"#8b0000",gold:"#7a4a00"};
-const C=DARK; // default — overridden by component state
+
 const _K=(C)=>(x={})=>({background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:"18px",boxShadow:"0 2px 12px rgba(0,0,0,0.15)",...x});
 const gc=g=>g==="A"?C.green:g==="B"?C.accent:g==="C"?C.gold:C.red;
-const inp={width:"100%",padding:"11px 13px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:9,color:C.text,fontSize:13,boxSizing:"border-box",fontFamily:"inherit",outline:"none"};
-const lbl={fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:5,display:"block"};
+const inp={width:"100%",padding:"11px 13px",background:C.bg,border:``,borderRadius:9,color:C.text,fontSize:13,boxSizing:"border-box",fontFamily:"inherit",outline:"none"};
+const lbl={fontSize:10,color:"#a8bdd4",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:5,display:"block"};
 
 function Bar({pct,color,h=8}){return <div style={{background:"#0a0f1a",borderRadius:4,height:h,overflow:"hidden"}}><div style={{width:`${Math.min(pct,100)}%`,background:color,height:"100%",borderRadius:4,transition:"width 0.7s"}}/></div>;}
 function Nav({i,max,prev,next,label}){return <div style={{display:"flex",gap:6,alignItems:"center"}}><button onClick={prev} disabled={i===0} style={{width:28,height:28,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:i===0?C.border:C.text,cursor:i===0?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button><span style={{fontSize:12,fontWeight:700,color:C.accent,minWidth:42,textAlign:"center"}}>{label}</span><button onClick={next} disabled={i===max} style={{width:28,height:28,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:i===max?C.border:C.text,cursor:i===max?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button></div>;}
@@ -636,7 +636,7 @@ export default function ContractorIQv26(){
   const tRebates=allW.reduce((s,w)=>s+(w.rebate||0),0);
   const dw=allW[sD]||allW[allW.length-1]; const dg=wg(dw);
   const dwDeds=dw.deds||[];
-  const dwGroups=grpDeds(dwDeds,dw.gross);
+  const dwGroups=grpDeds(dwDeds,dw.gross,C);
   const dwGroupTotal=dwGroups.reduce((s,g)=>s+g.amt,0);
   const mwBase=allW[sM]||allW[allW.length-1];
   const mwMoves=pairRoundTrips(mergeExtraPay([...(mwBase.moves||[]),...(sM===allW.length-1?extra:[])])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0}));
@@ -1009,7 +1009,7 @@ Be specific with real institution names and programs, not generic advice.`;
   }
 
   function generatePDF(w){
-    const groups=grpDeds(w.deds,w.gross);
+    const groups=grpDeds(w.deds,w.gross,C);
     const dedRows=w.deds.filter(d=>!d.l.toLowerCase().includes("escrow")).sort((a,b)=>b.a-a.a).map(d=>`<tr><td>${d.l}</td><td style="text-align:right;color:${d.a>200?"#f87171":"#f0f6ff"}">${(d.a/w.gross*100).toFixed(1)}%</td><td style="text-align:right;font-weight:700;color:${d.a>200?"#f87171":"#f0f6ff"}">$${d.a.toFixed(2)}</td></tr>`).join("");
     const moveRows=w.moves.map((m,i)=>{const s=scoreMove({miles:m.mi,rate:m.rt,fsc:m.fc,type:m.t});return`<tr style="background:${i%2===0?"transparent":"rgba(255,255,255,0.03)"}"><td><span style="padding:2px 7px;border-radius:4px;font-size:11px;background:${m.t==="L"?"#14532d":"#431407"};color:${m.t==="L"?"#86efac":"#fcd34d"}">${m.t==="L"?"LOAD":"EMPTY"}</span></td><td>${m.fr}→${m.to}</td><td style="text-align:right">${m.mi}</td><td style="text-align:right">$${m.rt}</td><td style="text-align:right;color:${m.fc>0?"#00ffcc":"#8fa3c0"}">${m.fc>0?"$"+m.fc:"—"}</td><td style="text-align:right;font-weight:700">$${(m.rt+m.fc).toFixed(2)}</td><td style="text-align:right;color:${+s.rpm>=2.5?"#4ade80":"#f87171"};font-weight:700">$${s.rpm}</td><td style="text-align:center;color:${gc(s.grade)};font-weight:700">${s.grade}</td></tr>`}).join("");
     const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>DrayageIQ — ${w.label}</title>
@@ -1543,7 +1543,7 @@ Be specific with real institution names and programs, not generic advice.`;
       {/* ── DATA MODE TOGGLE — always visible ── */}
       <div style={{background:demoMode?"linear-gradient(135deg,"+C.a3+"22,"+C.accent+"12)":C.bg,borderBottom:"1px solid "+(demoMode?C.a3+"44":C.border),padding:"9px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
         <div>
-          <div style={{fontSize:11,color:demoMode?C.a3:C.accent,fontWeight:700}}>{demoMode?"👀 Demo Mode — Sample data":"✅ My Data Mode — Your real numbers"}</div>
+          <div style={{fontSize:11,color:demoMode?C.a3:C.accent,fontWeight:700}}>{demoMode?"✅ My Data Mode — Your real numbers":"✅ My Data Mode — Your real numbers"}</div>
           <div style={{fontSize:9,color:C.sub,marginTop:1}}>{demoMode?"Tap to switch to your real settlement data":"Tap to explore with demo sample data"}</div>
         </div>
         <button onClick={()=>{
@@ -1552,7 +1552,7 @@ Be specific with real institution names and programs, not generic advice.`;
           try{localStorage.setItem("ciq_demo",String(next));}catch(e){}
           if(!next)setTab("growth");
         }} style={{padding:"6px 12px",borderRadius:7,background:demoMode?"linear-gradient(135deg,"+C.accent+","+C.a3+")":"linear-gradient(135deg,"+C.a3+"44,"+C.accent+"44)",border:"1px solid "+(demoMode?"transparent":C.a3+"66"),color:demoMode?"#000":C.a3,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:800,flexShrink:0}}>
-          {demoMode?"📤 Use My Data":"👀 View Demo"}
+          {demoMode?"👀 View Demo":"📤 Use My "}
         </button>
       </div>
 
