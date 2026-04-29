@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const DARK={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#a8bdd4",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
+const DARK={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#8fa3c0",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
 const LIGHT={bg:"#e8eef5",surf:"#ffffff",card:"#f5f8fc",raised:"#dce4ef",border:"#a8b8cc",accent:"#005f8a",a2:"#a02800",a3:"#4c1d95",text:"#050d1a",sub:"#1a2d45",green:"#0f4c25",red:"#8b0000",gold:"#7a4a00"};
-const _K=(C)=>(x={})=>({background:C.card,border:"1px solid #2c3a52",borderRadius:16,padding:"18px",boxShadow:"0 2px 12px rgba(0,0,0,0.15)",...x});
-const gc=g=>g==="A"?"#4ade80":g==="B"?"#00ffcc":g==="C"?"#fbbf24":"#f87171";
-const inp={width:"100%",padding:"11px 13px",background:"#0b0f1c",border:"1px solid #2c3a52",borderRadius:9,color:"#f0f6ff",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",outline:"none"};
-const lbl={fontSize:10,color:"#a8bdd4",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:5,display:"block"};
+const C=DARK; // default — overridden by component state
+const _K=(C)=>(x={})=>({background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:"18px",boxShadow:"0 2px 12px rgba(0,0,0,0.15)",...x});
+const gc=g=>g==="A"?C.green:g==="B"?C.accent:g==="C"?C.gold:C.red;
+const inp={width:"100%",padding:"11px 13px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:9,color:C.text,fontSize:13,boxSizing:"border-box",fontFamily:"inherit",outline:"none"};
+const lbl={fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:5,display:"block"};
 
 function Bar({pct,color,h=8}){return <div style={{background:"#0a0f1a",borderRadius:4,height:h,overflow:"hidden"}}><div style={{width:`${Math.min(pct,100)}%`,background:color,height:"100%",borderRadius:4,transition:"width 0.7s"}}/></div>;}
-function Nav({i,max,prev,next,label}){return <div style={{display:"flex",gap:6,alignItems:"center"}}><button onClick={prev} disabled={i===0} style={{width:28,height:28,borderRadius:7,background:C.raised,border:"1px solid #2c3a52",color:i===0?C.border:C.text,cursor:i===0?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button><span style={{fontSize:12,fontWeight:700,color:"#00ffcc",minWidth:42,textAlign:"center"}}>{label}</span><button onClick={next} disabled={i===max} style={{width:28,height:28,borderRadius:7,background:C.raised,border:"1px solid #2c3a52",color:i===max?"#2c3a52":"#f0f6ff",cursor:i===max?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button></div>;}
+function Nav({i,max,prev,next,label}){return <div style={{display:"flex",gap:6,alignItems:"center"}}><button onClick={prev} disabled={i===0} style={{width:28,height:28,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:i===0?C.border:C.text,cursor:i===0?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button><span style={{fontSize:12,fontWeight:700,color:C.accent,minWidth:42,textAlign:"center"}}>{label}</span><button onClick={next} disabled={i===max} style={{width:28,height:28,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:i===max?C.border:C.text,cursor:i===max?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button></div>;}
 function Tag({color,children}){return <span style={{padding:"3px 9px",borderRadius:20,fontSize:11,background:`${color}18`,border:`1px solid ${color}44`,color}}>{children}</span>;}
 
 function scoreMove(m){
@@ -405,7 +406,7 @@ function pairRoundTrips(moves){
   return result;
 }
 
-function grpDeds(deds,gross,C){
+function grpDeds(deds,gross){
   // FUEL: any deduction with "fuel" in the label (covers "Fuel Advance", "Fuel", "Diesel" etc)
   const fuelKw=["fuel advance","fuel","diesel"];
   const fuel=deds.filter(d=>fuelKw.some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
@@ -635,7 +636,7 @@ export default function ContractorIQv26(){
   const tRebates=allW.reduce((s,w)=>s+(w.rebate||0),0);
   const dw=allW[sD]||allW[allW.length-1]; const dg=wg(dw);
   const dwDeds=dw.deds||[];
-  const dwGroups=grpDeds(dwDeds,dw.gross,C);
+  const dwGroups=grpDeds(dwDeds,dw.gross);
   const dwGroupTotal=dwGroups.reduce((s,g)=>s+g.amt,0);
   const mwBase=allW[sM]||allW[allW.length-1];
   const mwMoves=pairRoundTrips(mergeExtraPay([...(mwBase.moves||[]),...(sM===allW.length-1?extra:[])])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0}));
@@ -1008,7 +1009,7 @@ Be specific with real institution names and programs, not generic advice.`;
   }
 
   function generatePDF(w){
-    const groups=grpDeds(w.deds,w.gross,C);
+    const groups=grpDeds(w.deds,w.gross);
     const dedRows=w.deds.filter(d=>!d.l.toLowerCase().includes("escrow")).sort((a,b)=>b.a-a.a).map(d=>`<tr><td>${d.l}</td><td style="text-align:right;color:${d.a>200?"#f87171":"#f0f6ff"}">${(d.a/w.gross*100).toFixed(1)}%</td><td style="text-align:right;font-weight:700;color:${d.a>200?"#f87171":"#f0f6ff"}">$${d.a.toFixed(2)}</td></tr>`).join("");
     const moveRows=w.moves.map((m,i)=>{const s=scoreMove({miles:m.mi,rate:m.rt,fsc:m.fc,type:m.t});return`<tr style="background:${i%2===0?"transparent":"rgba(255,255,255,0.03)"}"><td><span style="padding:2px 7px;border-radius:4px;font-size:11px;background:${m.t==="L"?"#14532d":"#431407"};color:${m.t==="L"?"#86efac":"#fcd34d"}">${m.t==="L"?"LOAD":"EMPTY"}</span></td><td>${m.fr}→${m.to}</td><td style="text-align:right">${m.mi}</td><td style="text-align:right">$${m.rt}</td><td style="text-align:right;color:${m.fc>0?"#00ffcc":"#8fa3c0"}">${m.fc>0?"$"+m.fc:"—"}</td><td style="text-align:right;font-weight:700">$${(m.rt+m.fc).toFixed(2)}</td><td style="text-align:right;color:${+s.rpm>=2.5?"#4ade80":"#f87171"};font-weight:700">$${s.rpm}</td><td style="text-align:center;color:${gc(s.grade)};font-weight:700">${s.grade}</td></tr>`}).join("");
     const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>DrayageIQ — ${w.label}</title>
@@ -1101,7 +1102,7 @@ Be specific with real institution names and programs, not generic advice.`;
               <div style={{fontSize:10,fontWeight:400,color:C.sub,marginTop:2}}>Everything forever · First 50 spots only · No monthly fee</div>
             </button>
           </div>
-          <div style={{padding:"10px 12px",background:"#0b0f1c",borderRadius:9,fontSize:10,color:C.sub,lineHeight:1.7,marginBottom:14}}>
+          <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,fontSize:10,color:C.sub,lineHeight:1.7,marginBottom:14}}>
             💡 One avoided bad load = $300–$800 saved. The app pays for itself the first time you use the Offer Scorer.
           </div>
           <button onClick={()=>setShowUpgrade(false)} style={{width:"100%",padding:"10px",borderRadius:9,background:"transparent",border:"1px solid "+C.border,color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>
@@ -1131,7 +1132,7 @@ Be specific with real institution names and programs, not generic advice.`;
     const h=HELP[id];
     if(!h)return null;
     return(
-      <div style={{margin:"6px 0 10px",padding:"11px 13px",background:C.a3+"12",borderRadius:9,border:"1px solid "+C.a3+"33",fontSize:12,color:C.sub,lineHeight:1.7,position:"relative"}}>
+      <div style={{margin:"6px 0 10px",padding:"11px 13px",background:C.a3+"12",borderRadius:9,border:"1px solid "+C.a3+"33",fontSize:11,color:C.sub,lineHeight:1.7,position:"relative"}}>
         <div style={{fontWeight:700,color:C.a3,marginBottom:4,fontSize:12}}>{h.t}</div>
         <div>{h.b}</div>
         <button onClick={()=>setHelpCard(null)} style={{position:"absolute",top:7,right:9,background:"none",border:"none",color:C.sub,fontSize:14,cursor:"pointer",lineHeight:1}}>×</button>
@@ -1141,7 +1142,7 @@ Be specific with real institution names and programs, not generic advice.`;
   const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:"0 0 auto",padding:"0 14px",borderRadius:9,cursor:"pointer",fontWeight:700,fontSize:10,letterSpacing:"0.04em",textTransform:"uppercase",border:"none",background:tab===t?C.accent:C.raised,color:tab===t?"#000":C.sub,transition:"all 0.2s",whiteSpace:"nowrap",height:38,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:tab===t?"0 2px 8px rgba(0,0,0,0.2)":"none"}}>{l}</button>;
 
   return(
-    <div style={{fontFamily:"'IBM Plex Mono',monospace",background:"#0b0f1c",minHeight:"100vh",color:C.text}}>
+    <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
       {upgradeModal()}
       {/* ── WELCOME SCREEN ── */}
       {/* ── INSURANCE / PROTECT YOUR INCOME MODAL ── */}
@@ -1158,7 +1159,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{textAlign:"center",marginBottom:18}}>
               <div style={{width:68,height:68,borderRadius:"50%",background:"linear-gradient(135deg,#a78bfa,#6d28d9)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:34,boxShadow:"0 0 0 6px #a78bfa20"}}>🛡️</div>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:21,fontWeight:800,color:C.text,marginBottom:6}}>Protect Your Income</div>
-              <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>You work hard for every dollar. But what happens to your family if you can't work? As a 1099 worker you have <strong style={{color:C.red}}>zero employer protection.</strong> That changes today.</div>
+              <div style={{fontSize:11,color:C.sub,lineHeight:1.7}}>You work hard for every dollar. But what happens to your family if you can't work? As a 1099 worker you have <strong style={{color:C.red}}>zero employer protection.</strong> That changes today.</div>
             </div>
 
             {/* Emotional hook with real numbers */}
@@ -1170,7 +1171,7 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
 
             {/* Why gig workers are the perfect market */}
-            <div style={{background:"#0b0f1c",borderRadius:12,padding:"13px",marginBottom:14,border:"1px solid #2c3a52"}}>
+            <div style={{background:C.bg,borderRadius:12,padding:"13px",marginBottom:14,border:`1px solid ${C.border}`}}>
               <div style={{fontSize:10,fontWeight:800,color:C.gold,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>⚡ Why Every 1099 Worker Needs This</div>
               {[
                 {i:"🚫",t:"No employer benefits",d:"No group life, no disability, no 401k. You are 100% on your own."},
@@ -1197,7 +1198,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 {name:"Whole Life / IUL",icon:"📈",color:"#a78bfa",tag:"Build Wealth",desc:"Tax-free retirement savings that grows even when the market drops. No 401k? This IS your retirement plan. Especially powerful for self-employed."},
                 {name:"Final Expense",icon:"💙",color:"#6d28d9",tag:"Easy to Qualify",desc:"Covers funeral costs and final bills. No medical exam needed. Protects your family from being left with debt on top of grief."},
               ].map(p=>(
-                <div key={p.name} style={{background:"#0b0f1c",borderRadius:10,padding:"12px 13px",marginBottom:8,border:`1px solid ${p.color}33`}}>
+                <div key={p.name} style={{background:C.bg,borderRadius:10,padding:"12px 13px",marginBottom:8,border:`1px solid ${p.color}33`}}>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
                     <span style={{fontSize:18}}>{p.icon}</span>
                     <div style={{flex:1}}>
@@ -1218,7 +1219,7 @@ Be specific with real institution names and programs, not generic advice.`;
               {["We review your real income numbers together","You learn which products fit YOUR situation","No pressure. No jargon. Just real education.","Walk away knowing exactly what you need and why."].map((s,i)=>(
                 <div key={i} style={{display:"flex",gap:8,marginBottom:5}}>
                   <span style={{color:C.gold,fontWeight:800,fontSize:11,flexShrink:0}}>{i+1}.</span>
-                  <span style={{fontSize:12,color:C.text,lineHeight:1.6}}>{s}</span>
+                  <span style={{fontSize:10,color:C.text,lineHeight:1.5}}>{s}</span>
                 </div>
               ))}
             </div>
@@ -1286,7 +1287,7 @@ Be specific with real institution names and programs, not generic advice.`;
               <div style={{fontSize:9,color:"#4a6080",marginTop:10,textAlign:"center",fontStyle:"italic"}}>Are you a licensed agent? Contact us to join our network.</div>
             </div>
 
-            <button onClick={()=>setShowInsurance(false)} style={{width:"100%",padding:"11px",borderRadius:10,background:"transparent",border:"1px solid #2c3a52",color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>
+            <button onClick={()=>setShowInsurance(false)} style={{width:"100%",padding:"11px",borderRadius:10,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>
               Maybe Later
             </button>
           </div>
@@ -1388,11 +1389,11 @@ Be specific with real institution names and programs, not generic advice.`;
             {/* ── ABOUT US MODAL ── */}
       {showAbout&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px",backdropFilter:"blur(4px)",overflowY:"auto"}}>
-          <div style={{background:C.card,borderRadius:24,padding:"28px 22px",maxWidth:420,width:"100%",border:"1px solid #2c3a52",boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}}>
+          <div style={{background:C.card,borderRadius:24,padding:"28px 22px",maxWidth:420,width:"100%",border:`1px solid ${C.border}`,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}}>
             <div style={{textAlign:"center",marginBottom:20}}>
               <div style={{width:68,height:68,borderRadius:"50%",background:"linear-gradient(135deg,#fbbf24,#f59e0b)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",fontSize:36,boxShadow:"0 0 0 6px #fbbf2420"}}>💰</div>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.text,marginBottom:8}}>About ContractorIQ</div>
-              <div style={{fontSize:12,color:C.sub,lineHeight:1.8,marginBottom:14}}>Your personal profit analyst — built for every gig worker and independent contractor who deserves to know the truth about their business.</div>
+              <div style={{fontSize:11,color:C.sub,lineHeight:1.8,marginBottom:14}}>Your personal profit analyst — built for every gig worker and independent contractor who deserves to know the truth about their business.</div>
               <div style={{padding:"10px 14px",background:`${C.gold}15`,border:`2px solid ${C.gold}55`,borderRadius:12,marginBottom:16}}>
                 <div style={{fontSize:12,fontWeight:800,color:C.gold,marginBottom:4}}>⚡ WE DON'T COMPETE WITH DAT OR TRUCKLOGICS.</div>
                 <div style={{fontSize:11,color:C.gold,lineHeight:1.6}}>We Show You Where You're Losing Money and Help You Fix It With AI Technology — for a fraction of what they charge.</div>
@@ -1406,18 +1407,18 @@ Be specific with real institution names and programs, not generic advice.`;
                 {i:"🔒",t:"Your Data Stays Private",d:"Everything lives on your device. No servers. No data selling. No third-party access. Ever."},
                 {i:"💡",t:"Built for Every 1099 Worker",d:"Owner-operators, OTR drivers, drayage, Uber, Lyft, DoorDash, delivery — if you're a contractor, this tool is for you."},
               ].map(r=>(
-                <div key={r.t} style={{display:"flex",gap:12,padding:"10px 12px",background:"#0b0f1c",borderRadius:10,border:"1px solid #2c3a52"}}>
+                <div key={r.t} style={{display:"flex",gap:12,padding:"10px 12px",background:C.bg,borderRadius:10,border:`1px solid ${C.border}`}}>
                   <span style={{fontSize:20,flexShrink:0,marginTop:2}}>{r.i}</span>
                   <div>
                     <div style={{fontSize:12,fontWeight:700,color:C.text,marginBottom:3}}>{r.t}</div>
-                    <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>{r.d}</div>
+                    <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>{r.d}</div>
                   </div>
                 </div>
               ))}
             </div>
             <div style={{padding:"12px 14px",background:`${C.accent}12`,borderRadius:10,border:`1px solid ${C.accent}33`,marginBottom:16,textAlign:"center"}}>
               <div style={{fontSize:12,fontWeight:800,color:C.accent,marginBottom:4}}>🎯 Our Mission</div>
-              <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>To help every independent contractor stop guessing and start knowing — so you can build the business and life you deserve. One avoided bad load saves $300–$800. ContractorIQ pays for itself immediately.</div>
+              <div style={{fontSize:11,color:C.sub,lineHeight:1.7}}>To help every independent contractor stop guessing and start knowing — so you can build the business and life you deserve. One avoided bad load saves $300–$800. ContractorIQ pays for itself immediately.</div>
             </div>
             <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:7,marginBottom:16}}>
               {["🚛 Owner-Op","🛣️ OTR Driver","⚓ Drayage","🚗 Rideshare","🛵 Dasher","📦 Delivery","💼 Any 1099"].map(g=>(
@@ -1480,7 +1481,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   <div style={{fontSize:18,marginBottom:4}}>🔥</div>
                   <div style={{fontSize:11,fontWeight:800,color:C.gold}}>5-Day Trial</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.gold,margin:"4px 0"}}>$1</div>
-                  <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>Full access<br/>Cancel anytime</div>
+                  <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Full access<br/>Cancel anytime</div>
                 </div>
 
                 {/* PRO — $19.99 — HERO CARD */}
@@ -1491,7 +1492,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   <div style={{fontSize:12,fontWeight:800,color:C.accent}}>Go Pro</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:26,fontWeight:800,color:C.accent,margin:"2px 0",lineHeight:1}}>$19.99</div>
                   <div style={{fontSize:9,color:C.accent,opacity:0.7,marginBottom:4}}>/month</div>
-                  <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>Unlimited AI · No ads<br/>Cancel anytime</div>
+                  <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Unlimited AI · No ads<br/>Cancel anytime</div>
                   <div style={{marginTop:6,padding:"3px 0",background:C.red+"22",borderRadius:6,border:"1px solid "+C.red+"44"}}>
                     <div style={{fontSize:8,color:C.red,fontWeight:700}}>🔺 Goes to $39.99 soon</div>
                   </div>
@@ -1502,7 +1503,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   <div style={{fontSize:18,marginBottom:4}}>💎</div>
                   <div style={{fontSize:11,fontWeight:800,color:C.a3}}>Founding Member</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.a3,margin:"4px 0"}}>$97<span style={{fontSize:9,fontWeight:400,color:C.sub}}> once</span></div>
-                  <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>Everything forever<br/>First 50 spots only</div>
+                  <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Everything forever<br/>First 50 spots only</div>
                 </div>
 
                 {/* FREE DEMO */}
@@ -1514,7 +1515,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   <div style={{fontSize:18,marginBottom:4}}>👀</div>
                   <div style={{fontSize:11,fontWeight:800,color:C.sub}}>Try Demo</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.sub,margin:"4px 0"}}>FREE</div>
-                  <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>Sample data<br/>No account needed</div>
+                  <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Sample data<br/>No account needed</div>
                 </div>
 
               </div>
@@ -1636,9 +1637,9 @@ Be specific with real institution names and programs, not generic advice.`;
                 <span>☰</span><span>Menu</span>
               </button>
               {showMenu&&(
-                <div style={{position:"fixed",top:"auto",right:8,background:C.card,border:"1px solid #2c3a52",borderRadius:12,padding:8,zIndex:9998,minWidth:190,boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
+                <div style={{position:"fixed",top:"auto",right:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:8,zIndex:9998,minWidth:190,boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
                   <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
-                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:"1px solid #2c3a52",color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                     <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
                   </button>
                   <button onClick={()=>{setShowMarket(true);setShowMenu(false);}}
@@ -1655,7 +1656,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     <span>⚙️</span><span style={{fontWeight:600}}>Display Settings</span>
                   </button>
                   <button onClick={()=>{const next=!darkMode;setDarkMode(next);try{localStorage.setItem("ciq_theme",next?"dark":"light");}catch(e){}setShowMenu(false);}}
-                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:"1px solid #2c3a52",color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
+                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
                     <span>{darkMode?"☀️":"🌙"}</span><span style={{fontWeight:600}}>{darkMode?"Light Mode":"Dark Mode"}</span>
                   </button>
                 </div>
@@ -1685,12 +1686,12 @@ Be specific with real institution names and programs, not generic advice.`;
         {!searchResult&&!searchLoading&&(
           <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
             {["⛅ Weather","⛽ Gas prices","🚛 Truck stops","🛣️ Traffic I-95","⛽ Diesel prices"].map(s=>(
-              <button key={s} onClick={()=>{setSearchQ(s.replace(/^[^\s]+\s/,""));setTimeout(()=>runSearch(s.replace(/^[^\s]+\s/,"")),50);}} style={{padding:"5px 11px",borderRadius:20,background:C.raised,border:`1px solid ${C.a3}55`,color:C.a3,fontSize:11,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",fontWeight:700}}>{s}</button>
+              <button key={s} onClick={()=>{setSearchQ(s.replace(/^[^\s]+\s/,""));setTimeout(()=>runSearch(s.replace(/^[^\s]+\s/,"")),50);}} style={{padding:"5px 11px",borderRadius:20,background:C.raised,border:`1px solid ${C.a3}55`,color:C.a3,fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",fontWeight:700}}>{s}</button>
             ))}
           </div>
         )}
         {searchResult&&(
-          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}44`,fontSize:13,color:C.text,lineHeight:1.9,whiteSpace:"pre-wrap"}}>
+          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}44`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
             {searchResult}
             <button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
           </div>
@@ -1706,7 +1707,7 @@ Be specific with real institution names and programs, not generic advice.`;
               <button onClick={()=>setShowSettings(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
             </div>
             <div style={{display:"grid",gridTemplateColumns:wide?"repeat(3,1fr)":"1fr",gap:10}}>
-              <div style={{background:C.card,borderRadius:11,padding:"12px",border:"1px solid #2c3a52"}}>
+              <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Show / Hide Vendors</div>
                 {vendorKeys.filter(vk=>allW.some(w=>detectVendor(w)===vk)).map(vk=>{
                   const v=VENDORS[vk];const hidden=hiddenVendors.includes(vk);const isOnly=activeOnlyVendor===vk;
@@ -1725,7 +1726,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 })}
                 {(hiddenVendors.length>0||activeOnlyVendor)&&<button onClick={()=>{setHiddenVendors([]);setActiveOnlyVendor(null);}} style={{width:"100%",padding:"5px",borderRadius:6,background:`${C.green}15`,border:`1px solid ${C.green}33`,color:C.green,fontSize:10,cursor:"pointer",fontFamily:"inherit",marginTop:4}}>↺ Show All</button>}
               </div>
-              <div style={{background:C.card,borderRadius:11,padding:"12px",border:"1px solid #2c3a52"}}>
+              <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Privacy</div>
                 {[{label:"Hide owner name",val:hideOwnerName,set:setHideOwnerName},{label:"Hide unit number (UNIT#)",val:hideUnitNum,set:setHideUnitNum}].map(item=>(
                   <div key={item.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
@@ -1735,15 +1736,15 @@ Be specific with real institution names and programs, not generic advice.`;
                     </button>
                   </div>
                 ))}
-                <div style={{fontSize:12,color:C.sub,lineHeight:1.7,marginTop:6}}>Use when sharing screenshots. Data stays saved — display only.</div>
+                <div style={{fontSize:11,color:C.sub,lineHeight:1.6,marginTop:6}}>Use when sharing screenshots. Data stays saved — display only.</div>
               </div>
-              <div style={{background:C.card,borderRadius:11,padding:"12px",border:"1px solid #2c3a52"}}>
+              <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Active Filters</div>
                 <div style={{fontSize:11,color:visibleW.length===allW.length?C.sub:C.gold,marginBottom:6}}>{visibleW.length===allW.length?"✓ All weeks visible":"⚠️ "+visibleW.length+" of "+allW.length+" weeks shown"}</div>
                 {activeOnlyVendor&&<div style={{fontSize:10,color:C.gold,marginBottom:4}}>👁 Only: {VENDORS[activeOnlyVendor]?.short}</div>}
                 {hiddenVendors.length>0&&<div style={{fontSize:10,color:C.red,marginBottom:4}}>🚫 Hidden: {hiddenVendors.join(", ")}</div>}
                 {hideOwnerName&&<div style={{fontSize:10,color:C.accent}}>🔒 Name hidden</div>}
-                <button onClick={()=>{setHiddenVendors([]);setActiveOnlyVendor(null);setHideOwnerName(false);setHideUnitNum(false);}} style={{width:"100%",marginTop:10,padding:"6px",borderRadius:6,background:"transparent",border:"1px solid #2c3a52",color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Reset All</button>
+                <button onClick={()=>{setHiddenVendors([]);setActiveOnlyVendor(null);setHideOwnerName(false);setHideUnitNum(false);}} style={{width:"100%",marginTop:10,padding:"6px",borderRadius:6,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Reset All</button>
               </div>
             </div>
           </div>
@@ -1757,37 +1758,37 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div>
                 <div style={{fontSize:12,fontWeight:700,color:C.text}}>👤 Your Profile</div>
-                <div style={{fontSize:11,color:C.sub,marginTop:2}}>AI uses this to personalize every analysis</div>
+                <div style={{fontSize:10,color:C.sub,marginTop:2}}>AI uses this to personalize every analysis</div>
               </div>
               <button onClick={()=>setShowProfile(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
             </div>
             <div style={{display:"grid",gridTemplateColumns:wide?"repeat(3,1fr)":"1fr",gap:10}}>
-              <div style={{background:C.card,borderRadius:11,padding:"12px",border:"1px solid #2c3a52"}}>
+              <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Who You Are</div>
                 {[{label:"Your Name",key:"name",ph:"Owner Name"},{label:"Company",key:"company",ph:"YOUR COMPANY"},{label:"Truck / Unit",key:"unit",ph:"UNIT#"}].map(f=>(
                   <div key={f.key} style={{marginBottom:9}}>
                     <div style={{fontSize:9,color:C.sub,marginBottom:3,fontWeight:600,textTransform:"uppercase"}}>{f.label}</div>
-                    <input value={profile[f.key]||""} onChange={e=>setProfile(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={{width:"100%",padding:"8px 10px",background:C.raised,border:"1px solid #2c3a52",borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
+                    <input value={profile[f.key]||""} onChange={e=>setProfile(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
                   </div>
                 ))}
               </div>
-              <div style={{background:C.card,borderRadius:11,padding:"12px",border:"1px solid #2c3a52"}}>
+              <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Your Goal</div>
                 {["Maximize weekly net","Reduce fuel costs","Add 2nd truck","Pay off loan","Build savings","Understand margins"].map(g=>(
                   <button key={g} onClick={()=>setProfile(p=>({...p,goal:p.goal===g?"":g}))} style={{width:"100%",padding:"6px 10px",borderRadius:6,background:profile.goal===g?`${C.gold}18`:"transparent",border:`1px solid ${profile.goal===g?C.gold:C.border}`,color:profile.goal===g?C.gold:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5}}>{g}</button>
                 ))}
               </div>
-              <div style={{background:C.card,borderRadius:11,padding:"12px",border:"1px solid #2c3a52"}}>
+              <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Targets</div>
                 {[{label:"Target Weekly Net ($)",key:"targetWeeklyNet",ph:"3500"},{label:"Truck Baseline MPG",key:"targetMPG",ph:"5.2"}].map(f=>(
                   <div key={f.key} style={{marginBottom:9}}>
                     <div style={{fontSize:9,color:C.sub,marginBottom:3,fontWeight:600,textTransform:"uppercase"}}>{f.label}</div>
-                    <input value={profile[f.key]||""} onChange={e=>setProfile(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={{width:"100%",padding:"8px 10px",background:C.raised,border:"1px solid #2c3a52",borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
+                    <input value={profile[f.key]||""} onChange={e=>setProfile(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
                   </div>
                 ))}
                 <div style={{marginBottom:9}}>
                   <div style={{fontSize:9,color:C.sub,marginBottom:3,fontWeight:600,textTransform:"uppercase"}}>Notes for AI</div>
-                  <textarea value={profile.notes||""} onChange={e=>setProfile(p=>({...p,notes:e.target.value}))} placeholder="e.g. I run Hagerstown to Dundalk daily..." style={{width:"100%",height:72,padding:"8px 10px",background:C.raised,border:"1px solid #2c3a52",borderRadius:7,color:C.text,fontSize:11,boxSizing:"border-box",fontFamily:"inherit",outline:"none",resize:"none",lineHeight:1.5}}/>
+                  <textarea value={profile.notes||""} onChange={e=>setProfile(p=>({...p,notes:e.target.value}))} placeholder="e.g. I run Hagerstown to Dundalk daily..." style={{width:"100%",height:72,padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:11,boxSizing:"border-box",fontFamily:"inherit",outline:"none",resize:"none",lineHeight:1.5}}/>
                 </div>
                 <button onClick={()=>{setProfile(p=>({...p,setupDone:true}));setShowProfile(false);}} style={{width:"100%",padding:"9px",borderRadius:8,background:`linear-gradient(135deg,${C.gold},${C.gold2||C.gold})`,color:"#000",fontWeight:700,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit"}}>💾 Save Profile</button>
                 {profile.setupDone&&<div style={{fontSize:9,color:C.green,textAlign:"center",marginTop:5}}>✅ Saved — AI is personalized</div>}
@@ -1876,7 +1877,7 @@ Be specific with real institution names and programs, not generic advice.`;
               <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
                 {ads.map(function(ad){
                   return(
-                    <div key={ad.id} style={{background:"#0b0f1c",borderRadius:10,padding:"12px 13px",border:"1px solid "+ad.color+"44",position:"relative"}}>
+                    <div key={ad.id} style={{background:C.bg,borderRadius:10,padding:"12px 13px",border:"1px solid "+ad.color+"44",position:"relative"}}>
                       <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
                         <div style={{width:36,height:36,borderRadius:9,background:ad.color+"18",border:"1px solid "+ad.color+"44",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>{ad.icon}</div>
                         <div style={{flex:1,minWidth:0}}>
@@ -1931,7 +1932,7 @@ Be specific with real institution names and programs, not generic advice.`;
                         {l:"Net",      val:`$${(v.net/1000).toFixed(1)}k`,   c:C.green},
                         {l:"Deducted", val:`$${(v.ded/1000).toFixed(1)}k`,   c:C.red},
                       ].map(s=>(
-                        <div key={s.l} style={{background:"#0b0f1c",borderRadius:7,padding:"7px 8px",border:"1px solid #2c3a52",textAlign:"center"}}>
+                        <div key={s.l} style={{background:C.bg,borderRadius:7,padding:"7px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}>
                           <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div>
                           <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:s.c}}>{s.val}</div>
                         </div>
@@ -1942,7 +1943,7 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
               {/* Combined total row when multiple vendors */}
               {vendorStats.length>1&&(
-                <div style={{background:C.surf,borderRadius:10,padding:"11px 14px",border:"1px solid #2c3a52",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{background:C.surf,borderRadius:10,padding:"11px 14px",border:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
                     <span style={{fontSize:16}}>🏢</span>
                     <div>
@@ -2071,7 +2072,7 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
               {helpModal("deductions")}
               {/* Week badge */}
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:"#0b0f1c",borderRadius:9,border:`1px solid ${dg.c}44`,marginBottom:14}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:C.bg,borderRadius:9,border:`1px solid ${dg.c}44`,marginBottom:14}}>
                 <div>
                   <div style={{fontSize:10,color:C.sub}}>{dw.from} – {dw.to}</div>
                   <div style={{fontSize:13,color:C.text,marginTop:3}}>Net <strong style={{color:dg.c}}>${dw.net.toLocaleString("en-US",{minimumFractionDigits:2})}</strong> · <strong style={{color:dg.c}}>{(dw.net/dw.gross*100).toFixed(1)}%</strong></div>
@@ -2087,7 +2088,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>Cost Groups</div>
                 <div style={{display:"grid",gridTemplateColumns:dwGroups.length<=3?"repeat(3,1fr)":dwGroups.length===4?"repeat(4,1fr)":"repeat(3,1fr)",gap:9,marginBottom:10}}>
                   {dwGroups.map(g=>(
-                    <div key={g.label} style={{background:"#0b0f1c",borderRadius:10,padding:"12px 8px",border:`2px solid ${g.isSavings?"#a78bfa55":g.color+"55"}`,textAlign:"center",position:"relative"}}>
+                    <div key={g.label} style={{background:C.bg,borderRadius:10,padding:"12px 8px",border:`2px solid ${g.isSavings?"#a78bfa55":g.color+"55"}`,textAlign:"center",position:"relative"}}>
                       {g.isSavings&&<div style={{position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",background:"#a78bfa",color:"#fff",fontSize:8,fontWeight:800,padding:"2px 7px",borderRadius:10,whiteSpace:"nowrap"}}>SAVINGS</div>}
                       <div style={{fontSize:20,marginBottom:5}}>{g.icon}</div>
                       <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:g.isSavings?"#a78bfa":g.color}}>${g.amt.toFixed(0)}</div>
@@ -2189,7 +2190,7 @@ Be specific with real institution names and programs, not generic advice.`;
                             {l:`At ${fuelMPG} MPG`,  v:`${gallonsAtBaseline.toFixed(0)} gal`,   sub:`Baseline cost $${costAtBaseline.toFixed(0)}`, c:C.sub},
                             {l:"Fuel Cost",           v:`$${dwFuelCost.toFixed(0)}`,             sub:`~${gallonsBought.toFixed(0)} gal est`, c:C.sub},
                           ].map(s=>(
-                            <div key={s.l} style={{background:"#0b0f1c",borderRadius:9,padding:"10px 8px",border:"1px solid #2c3a52",textAlign:"center"}}>
+                            <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}>
                               <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:4,lineHeight:1.3}}>{s.l}</div>
                               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:s.c}}>{s.v}</div>
                               <div style={{fontSize:9,color:C.sub,marginTop:3,lineHeight:1.4}}>{s.sub}</div>
@@ -2198,7 +2199,7 @@ Be specific with real institution names and programs, not generic advice.`;
                         </div>
 
                         {/* Fuel cost vs baseline — informational, grey border only */}
-                        <div style={{padding:"10px 13px",background:C.raised,borderRadius:9,border:"1px solid #2c3a52",marginBottom:12}}>
+                        <div style={{padding:"10px 13px",background:C.raised,borderRadius:9,border:`1px solid ${C.border}`,marginBottom:12}}>
                           <div style={{fontSize:11,color:C.sub}}>
                             {galDiff>5
                               ? `Bought ~${galDiff.toFixed(0)} more gallons than ${fuelMPG} MPG baseline needed — possible over-fueling ($${costDiff.toFixed(0)} extra)`
@@ -2215,7 +2216,7 @@ Be specific with real institution names and programs, not generic advice.`;
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                               <div>
                                 <div style={{fontSize:12,fontWeight:700,color:C.red}}>🚫 ~{unpaidMiles} unpaid miles — your expense</div>
-                                <div style={{fontSize:11,color:C.sub,marginTop:2}}>Drove these miles, broker paid $0. Burned ~{gallonsUnpaid.toFixed(0)} gal at your cost.</div>
+                                <div style={{fontSize:10,color:C.sub,marginTop:2}}>Drove these miles, broker paid $0. Burned ~{gallonsUnpaid.toFixed(0)} gal at your cost.</div>
                               </div>
                               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:900,color:C.red,flexShrink:0,marginLeft:10}}>-${unpaidCost.toFixed(0)}</div>
                             </div>
@@ -2228,7 +2229,7 @@ Be specific with real institution names and programs, not generic advice.`;
                           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
 
                             {/* MPG baseline — higher = more efficient = green verdict */}
-                            <div style={{background:"#0b0f1c",borderRadius:9,padding:"10px",border:"1px solid #2c3a52"}}>
+                            <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
                               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                                 <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Truck Baseline MPG</div>
                                 <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.accent}}>{fuelMPG.toFixed(1)}</span>
@@ -2244,7 +2245,7 @@ Be specific with real institution names and programs, not generic advice.`;
                             </div>
 
                             {/* Price per gallon — calibration only, affects dollar display only */}
-                            <div style={{background:"#0b0f1c",borderRadius:9,padding:"10px",border:"1px solid #2c3a52"}}>
+                            <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
                               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                                 <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Price Per Gallon</div>
                                 <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:fuelPrice>=6?C.red:C.gold}}>${fuelPrice.toFixed(2)}</span>
@@ -2297,7 +2298,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 return(
                   <div key={i} style={{marginBottom:9}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
-                      <span style={{fontSize:12,color:isEscrow?C.a3:C.text,flex:1}}>{d.l}{isEscrow&&<span style={{fontSize:9,color:C.a3,marginLeft:5,fontWeight:700}}>SAVINGS</span>}</span>
+                      <span style={{fontSize:11,color:isEscrow?C.a3:C.sub,flex:1}}>{d.l}{isEscrow&&<span style={{fontSize:9,color:C.a3,marginLeft:5,fontWeight:700}}>SAVINGS</span>}</span>
                       <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
                         <Tag color={isEscrow?C.a3:big?C.red:C.gold}>{pct}%</Tag>
                         <span style={{fontSize:12,fontWeight:700,color:isEscrow?C.a3:big?C.red:C.text,minWidth:64,textAlign:"right"}}>${d.a.toFixed(2)}</span>
@@ -2378,7 +2379,7 @@ Be specific with real institution names and programs, not generic advice.`;
                           {l:"YTD Net",v:`$${(vNet/1000).toFixed(1)}k`, c:C.green},
                           {l:"Moves",v:`${vMoves.length}`,          c:C.a3},
                         ].map(s=>(
-                          <div key={s.l} style={{background:"#0b0f1c",borderRadius:7,padding:"7px 8px",border:"1px solid #2c3a52",textAlign:"center"}}>
+                          <div key={s.l} style={{background:C.bg,borderRadius:7,padding:"7px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}>
                             <div style={{fontSize:8,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div>
                             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:s.c}}>{s.v}</div>
                           </div>
@@ -2423,7 +2424,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 {helpModal("savings")}
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
                   {[{l:"YTD Escrow",v:`$${(tEscReg+tEsc290).toFixed(0)}`,c:C.a3},{l:"YTD Rebates",v:`$${tRebates.toFixed(2)}`,c:C.green}].map(s=>(
-                    <div key={s.l} style={{background:"#0b0f1c",borderRadius:9,padding:"10px",border:"1px solid #2c3a52",textAlign:"center"}}>
+                    <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`,textAlign:"center"}}>
                       <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>{s.l}</div>
                       <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:s.c}}>{s.v}</div>
                     </div>
@@ -2465,7 +2466,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     {l:"Week "+dw.week,v:"$"+expThis.toFixed(2),c:expThis>0?C.red:C.sub},
                     {l:"True Net W"+dw.week,v:"$"+trueNet.toFixed(2),c:trueNet>0?C.green:C.red},
                   ].map(s=>(
-                    <div key={s.l} style={{background:"#0b0f1c",borderRadius:9,padding:"10px 8px",border:"1px solid #2c3a52",textAlign:"center"}}>
+                    <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}>
                       <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div>
                       <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:s.c}}>{s.v}</div>
                     </div>
@@ -2473,7 +2474,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 </div>
 
                 {showExpenseForm&&(
-                  <div style={{background:"#0b0f1c",borderRadius:10,padding:"13px",border:"1px solid #2c3a52",marginBottom:12}}>
+                  <div style={{background:C.bg,borderRadius:10,padding:"13px",border:`1px solid ${C.border}`,marginBottom:12}}>
                     <div style={{padding:"9px 12px",background:`${C.a3}10`,borderRadius:8,border:`1px dashed ${C.a3}44`,marginBottom:10,textAlign:"center",cursor:"pointer"}} onClick={()=>expRef.current&&expRef.current.click()}>
                       <input ref={expRef} type="file" accept="image/*,.pdf" style={{display:"none"}} onChange={e=>{if(e.target.files[0])readReceipt(e.target.files[0]);}}/>
                       <div style={{fontSize:12,color:C.a3,fontWeight:600}}>{expScan?"⏳ Reading...":"📷 Upload Receipt — AI reads it"}</div>
@@ -2482,11 +2483,11 @@ Be specific with real institution names and programs, not generic advice.`;
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
                       <div>
                         <div style={{fontSize:9,color:C.sub,marginBottom:3,textTransform:"uppercase",fontWeight:600}}>Date</div>
-                        <input type="date" value={expForm.date} onChange={e=>setExpForm(p=>({...p,date:e.target.value}))} style={{width:"100%",padding:"8px 10px",background:C.raised,border:"1px solid #2c3a52",borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
+                        <input type="date" value={expForm.date} onChange={e=>setExpForm(p=>({...p,date:e.target.value}))} style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
                       </div>
                       <div>
                         <div style={{fontSize:9,color:C.sub,marginBottom:3,textTransform:"uppercase",fontWeight:600}}>Amount ($)</div>
-                        <input type="number" step="0.01" value={expForm.amount} onChange={e=>setExpForm(p=>({...p,amount:e.target.value}))} placeholder="0.00" style={{width:"100%",padding:"8px 10px",background:C.raised,border:"1px solid #2c3a52",borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
+                        <input type="number" step="0.01" value={expForm.amount} onChange={e=>setExpForm(p=>({...p,amount:e.target.value}))} placeholder="0.00" style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
                       </div>
                     </div>
                     <div style={{marginBottom:8}}>
@@ -2500,11 +2501,11 @@ Be specific with real institution names and programs, not generic advice.`;
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
                       <div>
                         <div style={{fontSize:9,color:C.sub,marginBottom:3,textTransform:"uppercase",fontWeight:600}}>Description</div>
-                        <input value={expForm.desc} onChange={e=>setExpForm(p=>({...p,desc:e.target.value}))} placeholder="e.g. Brake pads" style={{width:"100%",padding:"8px 10px",background:C.raised,border:"1px solid #2c3a52",borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
+                        <input value={expForm.desc} onChange={e=>setExpForm(p=>({...p,desc:e.target.value}))} placeholder="e.g. Brake pads" style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
                       </div>
                       <div>
                         <div style={{fontSize:9,color:C.sub,marginBottom:3,textTransform:"uppercase",fontWeight:600}}>Link to Week</div>
-                        <select value={expForm.weekRef||""} onChange={e=>setExpForm(p=>({...p,weekRef:e.target.value}))} style={{width:"100%",padding:"8px 10px",background:C.raised,border:"1px solid #2c3a52",borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none",cursor:"pointer"}}>
+                        <select value={expForm.weekRef||""} onChange={e=>setExpForm(p=>({...p,weekRef:e.target.value}))} style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none",cursor:"pointer"}}>
                           <option value="">— None —</option>
                           {[...allW].reverse().map(w=><option key={w.week} value={w.week}>{w.label}</option>)}
                         </select>
@@ -2530,7 +2531,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 {expenses.length>0?(
                   <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:220,overflowY:"auto"}}>
                     {expenses.map(e=>(
-                      <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 11px",background:"#0b0f1c",borderRadius:8,border:"1px solid #2c3a52"}}>
+                      <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 11px",background:C.bg,borderRadius:8,border:`1px solid ${C.border}`}}>
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
                             <span style={{padding:"1px 6px",borderRadius:4,fontSize:9,fontWeight:700,background:`${CAT_C[e.category]||C.sub}18`,color:CAT_C[e.category]||C.sub}}>{e.category}</span>
@@ -2566,15 +2567,15 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:14}}>
               {[{l:"Gross",v:`$${mwBase.gross.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.accent},{l:"Net",v:`$${mwBase.net.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.green},{l:"Avg RPM",v:`$${mwRPM}`,c:C.a3},{l:"Loaded %",v:`${mwLd}%`,c:mwLd>=60?C.green:C.gold}].map(s=>(
-                <div key={s.l} style={{background:"#0b0f1c",borderRadius:9,padding:"10px",border:"1px solid #2c3a52",textAlign:"center"}}>
+                <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`,textAlign:"center"}}>
                   <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>{s.l}</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:700,color:s.c}}>{s.v}</div>
                 </div>
               ))}
             </div>
-            <div style={{overflowX:"auto",overflowY:"auto",maxHeight:320,borderRadius:8,border:"1px solid #2c3a52"}}>
+            <div style={{overflowX:"auto",overflowY:"auto",maxHeight:320,borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
-                <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 9px",color:"#a8bdd4",fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
+                <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 9px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>{mwMoves.map((m,i)=>{const s=scoreMove(m);return(
                   <tr key={i} style={{borderBottom:`1px solid ${C.border}`,background:i%2?"#ffffff06":"transparent"}}>
                     <td style={{padding:"9px"}}><span style={{padding:"3px 8px",borderRadius:5,fontSize:10,fontWeight:700,background:m.type==="L"?`${C.green}25`:`${C.gold}25`,color:m.type==="L"?C.green:C.gold}}>{m.type==="L"?"LOAD":"EMPTY"}</span></td>
@@ -2621,7 +2622,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div style={{display:"flex",flexDirection:"column",gap:9}}>
                   {topActions.map(function(a,idx){
                     return(
-                      <div key={idx} style={{display:"flex",gap:10,padding:"11px 12px",background:"#0b0f1c",borderRadius:9,border:"1px solid "+a.color+"44"}}>
+                      <div key={idx} style={{display:"flex",gap:10,padding:"11px 12px",background:C.bg,borderRadius:9,border:"1px solid "+a.color+"44"}}>
                         <div style={{width:32,height:32,borderRadius:8,background:a.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{a.icon}</div>
                         <div>
                           <div style={{fontSize:12,fontWeight:700,color:C.text,marginBottom:3}}>{a.title}</div>
@@ -2716,7 +2717,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   </div>
                 )}
                 {scanResult&&!scanning&&(
-                  <div style={{background:"#0b0f1c",borderRadius:10,border:`1px solid ${C.a3}44`,padding:14}}>
+                  <div style={{background:C.bg,borderRadius:10,border:`1px solid ${C.a3}44`,padding:14}}>
                     <div style={{fontSize:11,fontWeight:700,color:C.a3,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.08em"}}>✅ PDF Read — Review & Confirm</div>
                     <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8,marginBottom:12}}>
                       {[
@@ -2729,7 +2730,7 @@ Be specific with real institution names and programs, not generic advice.`;
                         {l:"Moves",v:`${scanResult.moves?.length||0} found`},
                         {l:"Ded. Lines",v:`${scanResult.deds?.length||0} items`},
                       ].map(s=>(
-                        <div key={s.l} style={{background:C.raised,borderRadius:8,padding:"9px 11px",border:"1px solid #2c3a52"}}>
+                        <div key={s.l} style={{background:C.raised,borderRadius:8,padding:"9px 11px",border:`1px solid ${C.border}`}}>
                           <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div>
                           <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.text}}>{s.v}</div>
                         </div>
@@ -2737,9 +2738,9 @@ Be specific with real institution names and programs, not generic advice.`;
                     </div>
                     <div style={{display:"flex",gap:10,marginBottom:10}}>
                       <button onClick={confirmScan} style={{flex:1,padding:"13px",borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer"}}>✅ Save Week {scanResult.week}</button>
-                      <button onClick={()=>{setScanResult(null);setScanMsg("");}} style={{padding:"13px 16px",borderRadius:9,background:"transparent",color:"#a8bdd4",fontWeight:700,border:"1px solid #2c3a52",cursor:"pointer"}}>✕</button>
+                      <button onClick={()=>{setScanResult(null);setScanMsg("");}} style={{padding:"13px 16px",borderRadius:9,background:"transparent",color:C.sub,fontWeight:700,border:`1px solid ${C.border}`,cursor:"pointer"}}>✕</button>
                     </div>
-                    <button onClick={()=>{setScanResult(null);setScanMsg("");fileRef.current?.click();}} style={{width:"100%",padding:"10px",borderRadius:9,background:C.raised,border:"1px solid #2c3a52",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>📤 Upload a Different PDF</button>
+                    <button onClick={()=>{setScanResult(null);setScanMsg("");fileRef.current?.click();}} style={{width:"100%",padding:"10px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>📤 Upload a Different PDF</button>
                   </div>
                 )}
                 {!scanning&&!scanResult&&<div style={{display:"none"}}/>}
@@ -2752,7 +2753,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div style={{padding:"10px 13px",background:`${C.a3}10`,borderRadius:8,border:`1px solid ${C.a3}33`,fontSize:11,color:C.sub,marginBottom:12,lineHeight:1.8}}>
                   <strong style={{color:C.a3}}>How:</strong> Open your settlement PDF in any app → tap <strong style={{color:C.text}}>Select All</strong> → tap <strong style={{color:C.text}}>Copy</strong> → come back here and paste below. AI reads everything instantly.
                 </div>
-                <div style={{fontSize:10,color:"#a8bdd4",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>Paste settlement text here</div>
+                <div style={{fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>Paste settlement text here</div>
                 <textarea
                   value={pasteText}
                   onChange={e=>setPasteText(e.target.value)}
@@ -2781,18 +2782,18 @@ Be specific with real institution names and programs, not generic advice.`;
                     {k:"deds",  l:"Deductions $", ph:"1870.04",    hint:"Total Deductions"},
                   ].map(f=>(
                     <div key={f.k}>
-                      <div style={{fontSize:10,color:"#a8bdd4",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>{f.l}</div>
+                      <div style={{fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>{f.l}</div>
                       <input value={scanForm[f.k]||""} onChange={e=>setScanForm(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph} style={inp}/>
                       <div style={{fontSize:9,color:C.sub,marginTop:3}}>{f.hint}</div>
                     </div>
                   ))}
                   <div style={{gridColumn:"1/-1"}}>
-                    <div style={{fontSize:10,color:"#a8bdd4",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Net Pay $</div>
+                    <div style={{fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Net Pay $</div>
                     <input value={scanForm.net||""} onChange={e=>setScanForm(p=>({...p,net:e.target.value}))} placeholder="2857.82" style={{...inp,border:`1px solid ${C.accent}55`}}/>
                     <div style={{fontSize:9,color:C.sub,marginTop:3}}>Net Check Amount — bottom of statement</div>
                   </div>
                   <div style={{gridColumn:"1/-1"}}>
-                    <div style={{fontSize:10,color:"#a8bdd4",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>Carrier / Vendor</div>
+                    <div style={{fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>Carrier / Vendor</div>
                     <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
                       {Object.entries(VENDORS).filter(([k])=>k!=="OTH").map(([k,v])=>(
                         <button key={k} onClick={()=>setVendorPick(k)}
@@ -2833,7 +2834,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   {icon:"✏️",title:"Type Numbers",color:C.accent,steps:["Open PDF side by side or on another device","Switch to 'Type Numbers' tab","Enter Week #, Gross, Net, Deductions","Tap Save — done in 30 seconds"]},
                   {icon:"🔢",title:"Key numbers to find",color:C.gold,steps:["Week # → top of statement: 'Week No: 15-2026'","Gross → bottom: 'Gross Check Amount'","Net → bottom: 'Net Check Amount'","Deductions → 'Total Deductions' or subtract net from gross"]},
                 ].map(s=>(
-                  <div key={s.title} style={{background:"#0b0f1c",borderRadius:10,padding:"13px",border:`1px solid ${s.color}44`}}>
+                  <div key={s.title} style={{background:C.bg,borderRadius:10,padding:"13px",border:`1px solid ${s.color}44`}}>
                     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:9}}>
                       <span style={{fontSize:18}}>{s.icon}</span>
                       <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,color:s.color}}>{s.title}</span>
@@ -2841,7 +2842,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     {s.steps.map((st,i)=>(
                       <div key={i} style={{display:"flex",gap:9,marginBottom:6}}>
                         <span style={{color:s.color,fontWeight:700,fontSize:12,flexShrink:0}}>{i+1}.</span>
-                        <span style={{fontSize:12,color:C.sub,lineHeight:1.7}}>{st}</span>
+                        <span style={{fontSize:11,color:C.sub,lineHeight:1.6}}>{st}</span>
                       </div>
                     ))}
                   </div>
@@ -2851,7 +2852,7 @@ Be specific with real institution names and programs, not generic advice.`;
 
             {/* Paste preview */}
             {pasteResult&&(
-              <div style={{background:"#0b0f1c",borderRadius:10,border:`1px solid ${C.a3}44`,padding:14,marginTop:10}}>
+              <div style={{background:C.bg,borderRadius:10,border:`1px solid ${C.a3}44`,padding:14,marginTop:10}}>
                 <div style={{fontSize:11,fontWeight:700,color:C.a3,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.08em"}}>📋 Extracted — Review & Confirm</div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8,marginBottom:12}}>
                   {[
@@ -2864,7 +2865,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     {l:"Moves",      v:`${pasteResult.moves?.length||0} moves`},
                     {l:"Ded. Lines", v:`${pasteResult.deds?.length||0} items`},
                   ].map(s=>(
-                    <div key={s.l} style={{background:C.raised,borderRadius:8,padding:"9px 11px",border:"1px solid #2c3a52"}}>
+                    <div key={s.l} style={{background:C.raised,borderRadius:8,padding:"9px 11px",border:`1px solid ${C.border}`}}>
                       <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div>
                       <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.text}}>{s.v}</div>
                     </div>
@@ -2890,7 +2891,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   }} style={{flex:1,padding:"13px",borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer"}}>
                     ✅ Save Week {pasteResult.week}
                   </button>
-                  <button onClick={()=>{setPasteResult(null);setScanMsg("");}} style={{padding:"13px 16px",borderRadius:9,background:"transparent",color:C.text,fontWeight:700,border:"1px solid #2c3a52",cursor:"pointer"}}>✕</button>
+                  <button onClick={()=>{setPasteResult(null);setScanMsg("");}} style={{padding:"13px 16px",borderRadius:9,background:"transparent",color:C.text,fontWeight:700,border:`1px solid ${C.border}`,cursor:"pointer"}}>✕</button>
                 </div>
               </div>
             )}
@@ -2908,29 +2909,17 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div style={{fontSize:10,fontWeight:700,color:C.a3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:9}}>✅ Saved Weeks ({addedW.length})</div>
                 <div style={{display:"flex",flexDirection:"column",gap:7}}>
                   {addedW.map((w,i)=>(
-                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 13px",background:"#0b0f1c",borderRadius:9,border:`1px solid ${C.a3}55`}}>
-                      <div style={{display:"flex",alignItems:"center",gap:10,flex:1}}>
-                        <div style={{width:8,height:8,borderRadius:"50%",background:C.a3,boxShadow:`0 0 5px ${C.a3}`,flexShrink:0}}/>
-                        <div style={{flex:1}}>
+                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 13px",background:C.bg,borderRadius:9,border:`1px solid ${C.a3}55`}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <div style={{width:8,height:8,borderRadius:"50%",background:C.a3,boxShadow:`0 0 5px ${C.a3}`}}/>
+                        <div>
                           <div style={{fontSize:12,fontWeight:700,color:C.text}}>{w.label} <Tag color={C.a3}>Added</Tag></div>
-                          <div style={{fontSize:11,color:C.sub,marginTop:2}}>{w.from}{w.to?` – ${w.to}`:""} · {w.moves?.length||0} moves · {w.deds?.length||0} deductions</div>
+                          <div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from}{w.to?` – ${w.to}`:""} · {w.moves?.length||0} moves · {w.deds?.length||0} deductions</div>
                         </div>
                       </div>
-                      <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${Number(w.net).toLocaleString("en-US",{minimumFractionDigits:2})}</div>
-                          <div style={{fontSize:10,color:C.sub}}>{w.gross>0?(w.net/w.gross*100).toFixed(1):0}% margin</div>
-                        </div>
-                        <button
-                          onClick={()=>{
-                            if(window.confirm(`Delete ${w.label}? This cannot be undone.`)){
-                              setAddedW(p=>p.filter((_,j)=>j!==i));
-                              setScanMsg(`🗑️ ${w.label} deleted`);
-                            }
-                          }}
-                          style={{padding:"6px 10px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,color:C.red,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,flexShrink:0}}>
-                          🗑️
-                        </button>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${Number(w.net).toLocaleString("en-US",{minimumFractionDigits:2})}</div>
+                        <div style={{fontSize:10,color:C.sub}}>{w.gross>0?(w.net/w.gross*100).toFixed(1):0}% margin</div>
                       </div>
                     </div>
                   ))}
@@ -2989,7 +2978,7 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
               <div style={{display:"flex",gap:10,marginTop:14}}>
                 <button onClick={()=>{setExtra(p=>[...p,{t:newMove.type,fr:newMove.from,to:newMove.to,mi:+newMove.miles,rt:+newMove.rate,fc:+newMove.fsc}]);setNewMove({type:"L",from:"",to:"",miles:"",rate:"",fsc:""});setShowAdd(false);}} style={{padding:"10px 22px",borderRadius:9,background:C.green,color:"#000",fontWeight:700,border:"none",cursor:"pointer"}}>Save Move</button>
-                <button onClick={()=>setShowAdd(false)} style={{padding:"10px 22px",borderRadius:9,background:"transparent",color:C.text,fontWeight:700,border:"1px solid #2c3a52",cursor:"pointer"}}>Cancel</button>
+                <button onClick={()=>setShowAdd(false)} style={{padding:"10px 22px",borderRadius:9,background:"transparent",color:C.text,fontWeight:700,border:`1px solid ${C.border}`,cursor:"pointer"}}>Cancel</button>
               </div>
             </div>
           )}
@@ -3014,7 +3003,7 @@ Be specific with real institution names and programs, not generic advice.`;
                         const vk=allW.find(w=>w.week===m.wk)?detectVendor(allW.find(w=>w.week===m.wk)):"CPG";
                         const vc=VENDORS[vk]?.color||C.accent;
                         return(
-                          <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 12px",background:"#0b0f1c",borderRadius:9,border:`1px solid ${group.color}33`}}>
+                          <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 12px",background:C.bg,borderRadius:9,border:`1px solid ${group.color}33`}}>
                             <div style={{display:"flex",alignItems:"center",gap:8}}>
                               <span style={{padding:"2px 6px",borderRadius:5,fontSize:9,fontWeight:700,background:`${vc}22`,color:vc,flexShrink:0}}>{vk}</span>
                               <span style={{padding:"2px 6px",borderRadius:5,fontSize:9,fontWeight:700,background:m.type==="L"?"#14532d":m.isRoundTrip?`${C.a3}30`:"#431407",color:m.type==="L"?"#86efac":m.isRoundTrip?C.a3:"#fcd34d",flexShrink:0}}>{m.isRoundTrip?"RT":m.type}</span>
@@ -3037,9 +3026,9 @@ Be specific with real institution names and programs, not generic advice.`;
               <div>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}</div>
                 {helpModal("fullHistory")}
-                <div style={{overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:"1px solid #2c3a52"}}>
+                <div style={{overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
                   <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
-                    <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Wk","Vendor","Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 6px",color:"#a8bdd4",fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
+                    <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Wk","Vendor","Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 6px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                     <tbody>{allMoves.slice().reverse().map((m,i)=>{
                       const s=scoreMove(m);
                       const vk=allW.find(w=>w.week===m.wk)?detectVendor(allW.find(w=>w.week===m.wk)):"CPG";
@@ -3091,7 +3080,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{fontSize:10,fontWeight:700,color:C.accent,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.1em"}}>📊 Snapshot</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9}}>
               {[{l:"Net Margin",v:`${margin}%`,c:+margin>=20?C.green:C.red},{l:"Avg RPM",v:`$${avgRPM}`,c:+avgRPM>=2.5?C.green:C.gold},{l:"Loaded %",v:`${ldPct}%`,c:ldPct>=60?C.green:C.gold},{l:"Fuel/Gross",v:`${(latFuel/latest.gross*100).toFixed(0)}%`,c:C.red},{l:"Total Moves",v:`${allMoves.length}`,c:C.text},{l:"YTD Net",v:`$${tNet.toLocaleString("en-US",{minimumFractionDigits:0})}`,c:C.green}].map(s=>(
-                <div key={s.l} style={{background:C.card,borderRadius:9,padding:"11px 9px",border:"1px solid #2c3a52",textAlign:"center"}}>
+                <div key={s.l} style={{background:C.card,borderRadius:9,padding:"11px 9px",border:`1px solid ${C.border}`,textAlign:"center"}}>
                   <div style={{fontSize:9,color:C.sub,marginBottom:4,textTransform:"uppercase"}}>{s.l}</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:s.c}}>{s.v}</div>
                 </div>
@@ -3143,7 +3132,7 @@ Be specific with real institution names and programs, not generic advice.`;
 
             {/* AI Output */}
             {aiOut&&(
-              <div style={{background:"#0b0f1c",borderRadius:10,border:"1px solid #2c3a52",padding:16}}>
+              <div style={{background:C.bg,borderRadius:10,border:`1px solid ${C.border}`,padding:16}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
                   <div style={{fontSize:11,fontWeight:700,color:C.accent,textTransform:"uppercase",letterSpacing:"0.08em"}}>
                     {aiMode==="report"?"📊 Weekly Report":aiMode==="bizplan"?"📄 Business Plan":aiMode==="funding"?"🏦 Funding Guide":""}
@@ -3161,7 +3150,7 @@ Be specific with real institution names and programs, not generic advice.`;
               <div style={{fontSize:10,fontWeight:700,color:C.sub,marginBottom:11,textTransform:"uppercase",letterSpacing:"0.1em"}}>⚡ Quick Questions</div>
               <div style={{display:"grid",gridTemplateColumns:wide?"repeat(2,1fr)":"1fr",gap:7}}>
                 {["Where am I losing the most money?","What's my biggest profit leak?","How can I increase my net pay?","Which routes give the best RPM?","Give me a 4-week income forecast","Should I take more Hagerstown loads?","How much are fuel advances really costing me?","What should my target weekly net be?"].map(q=>(
-                  <button key={q} onClick={()=>setChatIn(q)} style={{padding:"11px 13px",borderRadius:9,background:C.raised,border:"1px solid #2c3a52",color:C.text,fontSize:12,textAlign:"left",cursor:"pointer",fontFamily:"inherit",lineHeight:1.5}}>{q}</button>
+                  <button key={q} onClick={()=>setChatIn(q)} style={{padding:"11px 13px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,textAlign:"left",cursor:"pointer",fontFamily:"inherit",lineHeight:1.5}}>{q}</button>
                 ))}
               </div>
             </div>
@@ -3169,21 +3158,21 @@ Be specific with real institution names and programs, not generic advice.`;
 
           {/* Chat */}
           {aiMode==="chat"&&(
-            <div style={{background:C.card,border:"1px solid #2c3a52",borderRadius:14,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,display:"flex",flexDirection:"column",overflow:"hidden"}}>
               <div style={{padding:"13px 16px",background:C.surf,borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:9}}>
                 <div style={{width:9,height:9,borderRadius:"50%",background:C.green,boxShadow:`0 0 7px ${C.green}`}}/>
                 <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🧠 AI Chat</span>
                 <span style={{fontSize:10,color:C.sub,marginLeft:"auto"}}>{allMoves.length} moves · {allW.length} weeks</span>
               </div>
-              <div style={{overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:11,background:"#0b0f1c",minHeight:280,maxHeight:400}}>
+              <div style={{overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:11,background:C.bg,minHeight:280,maxHeight:400}}>
                 {chat.map((m,i)=>(
                   <div key={i} style={{display:"flex",justifyContent:m.r==="u"?"flex-end":"flex-start",gap:8,alignItems:"flex-end"}}>
-                    {m.r==="a"&&<div style={{width:26,height:26,borderRadius:7,background:C.surf,border:"1px solid #2c3a52",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>🧠</div>}
+                    {m.r==="a"&&<div style={{width:26,height:26,borderRadius:7,background:C.surf,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>🧠</div>}
                     <div style={{maxWidth:"80%",padding:"11px 14px",borderRadius:11,fontSize:13,lineHeight:1.8,background:m.r==="u"?C.accent:C.card,color:m.r==="u"?"#000":C.text,border:m.r==="a"?`1px solid ${C.border}`:"none",whiteSpace:"pre-wrap",fontWeight:m.r==="u"?600:400}}>{m.t}</div>
-                    {m.r==="u"&&<div style={{width:26,height:26,borderRadius:7,background:C.surf,border:"1px solid #2c3a52",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>👤</div>}
+                    {m.r==="u"&&<div style={{width:26,height:26,borderRadius:7,background:C.surf,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>👤</div>}
                   </div>
                 ))}
-                {chatLoad&&<div style={{display:"flex",gap:8,alignItems:"flex-end"}}><div style={{width:26,height:26,borderRadius:7,background:C.surf,border:"1px solid #2c3a52",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>🧠</div><div style={{padding:"11px 14px",background:C.card,borderRadius:11,border:"1px solid #2c3a52",color:C.accent,fontSize:13}}>⏳ Thinking...</div></div>}
+                {chatLoad&&<div style={{display:"flex",gap:8,alignItems:"flex-end"}}><div style={{width:26,height:26,borderRadius:7,background:C.surf,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>🧠</div><div style={{padding:"11px 14px",background:C.card,borderRadius:11,border:`1px solid ${C.border}`,color:C.accent,fontSize:13}}>⏳ Thinking...</div></div>}
                 <div ref={chatEnd}/>
               </div>
               <div style={{padding:"11px 13px",background:C.surf,borderTop:`1px solid ${C.border}`,display:"flex",gap:9}}>
@@ -3244,14 +3233,14 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {[...allW].reverse().map((w,i)=>{const g=wg(w);const isNew=!W.find(hw=>hw.week===w.week);const lastW=W.length>0?W[W.length-1]:null;const isLast=lastW?w.week===lastW.week&&!isNew:false;return(
-                <div key={w.week+i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 14px",background:"#0b0f1c",borderRadius:10,border:`1px solid ${isLast?C.accent+"55":isNew?C.a3+"55":C.border}`}}>
+                <div key={w.week+i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 14px",background:C.bg,borderRadius:10,border:`1px solid ${isLast?C.accent+"55":isNew?C.a3+"55":C.border}`}}>
                   <div style={{display:"flex",alignItems:"center",gap:11}}>
                     <div style={{width:9,height:9,borderRadius:"50%",background:isNew?C.a3:isLast?C.accent:g.c,boxShadow:`0 0 5px ${isNew?C.a3:isLast?C.accent:g.c}`}}/>
                     <div>
                       <div style={{fontSize:12,fontWeight:700,color:C.text,display:"flex",alignItems:"center",gap:7}}>
                         {w.label}{isLast&&<Tag color={C.accent}>Latest</Tag>}{isNew&&<Tag color={C.a3}>Added</Tag>}
                       </div>
-                      <div style={{fontSize:11,color:C.sub,marginTop:2}}>{w.from}{w.to?` – ${w.to}`:""} · {w.moves.length} moves</div>
+                      <div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from}{w.to?` – ${w.to}`:""} · {w.moves.length} moves</div>
                     </div>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -3264,7 +3253,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 </div>
               );})}
             </div>
-            <div style={{marginTop:12,padding:"10px 14px",background:"#0b0f1c",borderRadius:9,border:"1px solid #2c3a52",fontSize:12,color:C.sub,lineHeight:1.7}}>
+            <div style={{marginTop:12,padding:"10px 14px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,fontSize:11,color:C.sub,lineHeight:1.7}}>
               💡 Tap <strong style={{color:C.a3}}>⬇ PDF</strong> to download a full report. Open in browser → Share → Print → Save as PDF.
             </div>
           </div>
@@ -3275,9 +3264,9 @@ Be specific with real institution names and programs, not generic advice.`;
               <div style={{width:38,height:38,borderRadius:10,background:`${C.a3}18`,border:`1px solid ${C.a3}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19}}>🚛</div>
               <div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>Driver / Unit Comparison</div><div style={{fontSize:11,color:C.sub,marginTop:2}}>Track performance as your fleet grows</div></div>
             </div>
-            <div style={{overflowX:"auto",overflowY:"auto",maxHeight:280,borderRadius:8,border:"1px solid #2c3a52"}}>
+            <div style={{overflowX:"auto",overflowY:"auto",maxHeight:280,borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
-                <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Driver","Unit","Wks","Gross","Net","Margin","Status"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 10px",color:"#a8bdd4",fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
+                <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Driver","Unit","Wks","Gross","Net","Margin","Status"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 10px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>
                   <tr>
                     <td style={{padding:"12px 10px",color:C.text,fontWeight:600,fontFamily:"'Space Grotesk',sans-serif"}}>{(profile.name||"Your Name").toUpperCase()}</td>
@@ -3292,7 +3281,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 </tbody>
               </table>
             </div>
-            <div style={{marginTop:12,padding:"10px 14px",background:"#0b0f1c",borderRadius:9,border:"1px solid #2c3a52",fontSize:12,color:C.sub,lineHeight:1.7}}>
+            <div style={{marginTop:12,padding:"10px 14px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,fontSize:11,color:C.sub,lineHeight:1.7}}>
               💡 <strong style={{color:C.text}}>Fleet tip:</strong> At 3 trucks fixed costs drop ~40% per unit. Your {margin}% margin supports a second unit profitably.
             </div>
           </div>
@@ -3307,7 +3296,7 @@ Be specific with real institution names and programs, not generic advice.`;
             </div>
             <div style={{fontSize:10,color:C.sub,marginBottom:10}}>DOT maintenance logs · Inspection reports · Insurance · Registration · Compliance docs</div>
             {showDocForm&&(
-              <div style={{background:"#0b0f1c",borderRadius:10,padding:"13px",border:"1px solid #2c3a52",marginBottom:12}}>
+              <div style={{background:C.bg,borderRadius:10,padding:"13px",border:`1px solid ${C.border}`,marginBottom:12}}>
                 <div style={{padding:"9px 12px",background:`${C.a3}10`,borderRadius:8,border:`1px dashed ${C.a3}44`,marginBottom:10,textAlign:"center",cursor:"pointer"}} onClick={()=>docRef.current&&docRef.current.click()}>
                   <input ref={docRef} type="file" accept="image/*,.pdf" style={{display:"none"}} onChange={e=>{if(e.target.files[0])readDoc(e.target.files[0]);}}/>
                   <div style={{fontSize:12,color:C.a3,fontWeight:600}}>{docScan?"⏳ Reading...":"📷 Scan Document — AI reads and categorizes"}</div>
@@ -3316,11 +3305,11 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
                   <div>
                     <div style={{fontSize:9,color:C.sub,marginBottom:3,textTransform:"uppercase",fontWeight:600}}>Date</div>
-                    <input type="date" value={docForm.date} onChange={e=>setDocForm(p=>({...p,date:e.target.value}))} style={{width:"100%",padding:"8px 10px",background:C.raised,border:"1px solid #2c3a52",borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
+                    <input type="date" value={docForm.date} onChange={e=>setDocForm(p=>({...p,date:e.target.value}))} style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
                   </div>
                   <div>
                     <div style={{fontSize:9,color:C.sub,marginBottom:3,textTransform:"uppercase",fontWeight:600}}>Title</div>
-                    <input value={docForm.title} onChange={e=>setDocForm(p=>({...p,title:e.target.value}))} placeholder="e.g. Annual DOT Inspection" style={{width:"100%",padding:"8px 10px",background:C.raised,border:"1px solid #2c3a52",borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
+                    <input value={docForm.title} onChange={e=>setDocForm(p=>({...p,title:e.target.value}))} placeholder="e.g. Annual DOT Inspection" style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
                   </div>
                 </div>
                 <div style={{marginBottom:8}}>
@@ -3333,7 +3322,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 </div>
                 <div style={{marginBottom:10}}>
                   <div style={{fontSize:9,color:C.sub,marginBottom:3,textTransform:"uppercase",fontWeight:600}}>Notes</div>
-                  <input value={docForm.note} onChange={e=>setDocForm(p=>({...p,note:e.target.value}))} placeholder="e.g. Passed — next due 04/2027" style={{width:"100%",padding:"8px 10px",background:C.raised,border:"1px solid #2c3a52",borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
+                  <input value={docForm.note} onChange={e=>setDocForm(p=>({...p,note:e.target.value}))} placeholder="e.g. Passed — next due 04/2027" style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/>
                 </div>
                 <button onClick={()=>{
                   if(!docForm.title)return;
@@ -3348,7 +3337,7 @@ Be specific with real institution names and programs, not generic advice.`;
             {docs.length>0?(
               <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:260,overflowY:"auto"}}>
                 {docs.map(d=>(
-                  <div key={d.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 12px",background:"#0b0f1c",borderRadius:8,border:"1px solid #2c3a52"}}>
+                  <div key={d.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 12px",background:C.bg,borderRadius:8,border:`1px solid ${C.border}`}}>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
                         <span style={{padding:"1px 6px",borderRadius:4,fontSize:9,fontWeight:700,background:`${C.accent}18`,color:C.accent}}>{d.category}</span>
@@ -3395,7 +3384,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
                   {rows.map(function(row){
                     return(
-                      <div key={row.l} style={{background:"#0b0f1c",borderRadius:9,padding:"11px 12px",border:"1px solid "+C.border}}>
+                      <div key={row.l} style={{background:C.bg,borderRadius:9,padding:"11px 12px",border:"1px solid "+C.border}}>
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                           <div style={{fontSize:10,color:C.sub,textTransform:"uppercase",letterSpacing:"0.05em",fontWeight:600}}>{row.l}</div>
                           <div style={{fontSize:9,padding:"2px 8px",borderRadius:5,background:(row.ok?C.green:C.gold)+"22",color:row.ok?C.green:C.gold,fontWeight:700}}>
@@ -3423,7 +3412,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   })}
                 </div>
 
-                <div style={{background:"#0b0f1c",borderRadius:11,padding:"13px 14px",border:"1px solid "+C.border}}>
+                <div style={{background:C.bg,borderRadius:11,padding:"13px 14px",border:"1px solid "+C.border}}>
                   <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Bottom Line</div>
                   {[
                     {ok:gVsN>=90, text:"Gross earnings at "+gVsN+"% of the national average. "+(gVsN>=95?"Running strong.":(gVsN>=85?"Exclude your partial W09 and you hit the national average.":"More loaded miles will close this gap."))},
@@ -3460,13 +3449,13 @@ Be specific with real institution names and programs, not generic advice.`;
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:12}}>📊 Visitor Tracking</div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
                     {[{l:"Today",v:todayV,c:C.accent},{l:"This Week",v:week,c:C.a3},{l:"Total",v:total,c:C.gold}].map(s=>(
-                      <div key={s.l} style={{background:"#0b0f1c",borderRadius:9,padding:"10px",textAlign:"center",border:"1px solid #2c3a52"}}>
+                      <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px",textAlign:"center",border:`1px solid ${C.border}`}}>
                         <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:s.c}}>{s.v}</div>
                         <div style={{fontSize:10,color:C.sub,marginTop:3}}>{s.l}</div>
                       </div>
                     ))}
                   </div>
-                  <div style={{fontSize:10,color:"#a8bdd4",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>Traffic Sources</div>
+                  <div style={{fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>Traffic Sources</div>
                   {sources.map((s,i)=>(
                     <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:`1px solid ${C.border}`,fontSize:11}}>
                       <span style={{color:C.text}}>{s||"direct"}</span>
@@ -3496,7 +3485,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 <span style={{fontSize:9,fontWeight:400,color:C.sub}}>Opens mail app</span>
               </button>
             </div>
-            <div style={{padding:"8px 12px",background:"#0b0f1c",borderRadius:8,border:"1px solid #2c3a52",fontSize:10,color:C.sub}}>
+            <div style={{padding:"8px 12px",background:C.bg,borderRadius:8,border:`1px solid ${C.border}`,fontSize:10,color:C.sub}}>
               {allW.length} weeks · {expenses.length} expenses · {docs.length} documents
             </div>
           </div>
@@ -3521,7 +3510,7 @@ Be specific with real institution names and programs, not generic advice.`;
             {name:"X/Twitter",icon:"𝕏",color:"#f0f6ff",url:"https://x.com"},
           ].map(s=>(
             <button key={s.name} onClick={()=>window.open(s.url,"_blank")}
-              style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,padding:"10px 12px",borderRadius:12,background:C.raised,border:"1px solid #2c3a52",cursor:"pointer",fontFamily:"inherit",minWidth:56,transition:"all 0.15s"}}
+              style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,padding:"10px 12px",borderRadius:12,background:C.raised,border:`1px solid ${C.border}`,cursor:"pointer",fontFamily:"inherit",minWidth:56,transition:"all 0.15s"}}
               onMouseOver={e=>e.currentTarget.style.borderColor=s.color}
               onMouseOut={e=>e.currentTarget.style.borderColor=C.border}>
               <span style={{fontSize:22}}>{s.icon}</span>
@@ -3535,7 +3524,7 @@ Be specific with real institution names and programs, not generic advice.`;
       </div>
 
       {/* ── LEGAL DISCLAIMER FOOTER ── */}
-      <div style={{background:"#0b0f1c",borderTop:"1px solid "+C.border,padding:"14px 16px",marginBottom:0}}>
+      <div style={{background:C.bg,borderTop:"1px solid "+C.border,padding:"14px 16px",marginBottom:0}}>
         <div style={{fontSize:9,color:C.sub,lineHeight:1.8,textAlign:"center",maxWidth:600,margin:"0 auto"}}>
           <div style={{fontWeight:700,color:C.sub,marginBottom:6,fontSize:10,letterSpacing:"0.05em",textTransform:"uppercase"}}>⚖️ Legal Disclaimer</div>
           <div style={{marginBottom:6}}>
