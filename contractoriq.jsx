@@ -453,9 +453,9 @@ function getDeviceFingerprint(){
 
 export default function ContractorIQv26(){
   const [tab,setTab]=useState("dashboard");
-  const [sD,setSD]=useState(0); // selDed - clamped below
-  const [sM,setSM]=useState(0); // selMove
-  const [sH,setSH]=useState(0); // selHealth
+  const [selWeekKey,setSelWeekKey]=useState(''); // selected week key = week+from
+  const [sM,setSM]=useState(0);
+  const [sH,setSH]=useState(0);
   const [sR,setSR]=useState(7); // selReport
   const [wide,setWide]=useState(window.innerWidth>700);
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
@@ -640,7 +640,9 @@ export default function ContractorIQv26(){
   const tEscReg=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="Escrow Regular")?.a||0),0);
   const tEsc290=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="2290 Escrow")?.a||0),0);
   const tRebates=allW.reduce((s,w)=>s+(w.rebate||0),0);
-  const safeSD=Math.min(sD,sortedW.length-1);
+  // Key-based selection — immune to index shifts
+  const _dwIdx=selWeekKey?sortedW.findIndex(w=>(w.week+w.from)===selWeekKey):-1;
+  const safeSD=_dwIdx>=0?_dwIdx:sortedW.length-1;
   const safeSM=Math.min(sM,sortedW.length-1);
   const safeSH=Math.min(sH,sortedW.length-1);
   const dw=sortedW[safeSD]||sortedW[sortedW.length-1]||DEMO_W[0]; const dg=wg(dw);
@@ -2115,7 +2117,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 const label=`$${(w.net/1000).toFixed(1)}k`;
                 return(
                   <div key={w.week+w.from+si} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,minWidth:28}}
-                    onClick={()=>{setSD(si);setSM(si);setSH(si);}}>
+                    onClick={()=>{setSelWeekKey(w.week+w.from);setSM(safeIdx=>Math.min(si,sortedW.length-1));setSH(safeIdx=>Math.min(si,sortedW.length-1));}}>
                     <div style={{
                       width:"80%",height:h,minWidth:8,
                       borderRadius:"5px 5px 0 0",
@@ -2151,7 +2153,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={K()}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔍 Deduction Breakdown{helpBtn("deductions")}</div>
-                <Nav i={safeSD} max={sortedW.length-1} prev={()=>setSD(p=>Math.max(0,p-1))} next={()=>setSD(p=>Math.min(sortedW.length-1,p+1))} label={"W"+dw.week}/>
+                <Nav i={safeSD} max={sortedW.length-1} prev={()=>{const ni=Math.max(0,safeSD-1);setSelWeekKey((sortedW[ni]?.week||"")+(sortedW[ni]?.from||""));}} next={()=>{const ni=Math.min(sortedW.length-1,safeSD+1);setSelWeekKey((sortedW[ni]?.week||"")+(sortedW[ni]?.from||"")); }} label={"W"+dw.week}/>
               </div>
               {helpModal("deductions")}
               {/* Week badge */}
