@@ -407,30 +407,22 @@ function pairRoundTrips(moves){
 }
 
 function grpDeds(deds,gross){
-  // FUEL: any deduction with "fuel" in the label (covers "Fuel Advance", "Fuel", "Diesel" etc)
   const fuelKw=["fuel advance","fuel","diesel"];
   const fuel=deds.filter(d=>fuelKw.some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
-  // INSURANCE: specific insurance product names
   const insKw=["physical damage","bobtail","occ/acc","roadside assistance","liability limiter","occ acc","occupational","accident"];
   const ins=deds.filter(d=>insKw.some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
-  // OPERATIONS: admin/compliance fees
   const opsKw=["eld","event recorder","parking","license plate","highway tax","toll","2290","ifta"];
   const ops=deds.filter(d=>opsKw.some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
-  // ESCROW: savings — shown separately, NOT a true cost
   const escrow=deds.filter(d=>d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
-  // OTHER: anything not caught above
   const other=deds.filter(d=>{
     const l=d.l.toLowerCase();
-    return !fuelKw.some(k=>l.includes(k))&&
-           !insKw.some(k=>l.includes(k))&&
-           !opsKw.some(k=>l.includes(k))&&
-           !l.includes("escrow");
+    return !fuelKw.some(k=>l.includes(k))&&!insKw.some(k=>l.includes(k))&&!opsKw.some(k=>l.includes(k))&&!l.includes("escrow");
   }).reduce((s,d)=>s+d.a,0);
   const groups=[
-    {icon:"⛽",label:"Fuel",       amt:fuel,  color:C.red,  pct:(fuel/gross*100).toFixed(1)},
-    {icon:"🛡️",label:"Insurance", amt:ins,   color:C.gold, pct:(ins/gross*100).toFixed(1)},
-    {icon:"🔧",label:"Operations", amt:ops,   color:C.accent,pct:(ops/gross*100).toFixed(1)},
-    {icon:"🏦",label:"Escrow",     amt:escrow,color:C.a3,   pct:(escrow/gross*100).toFixed(1),isSavings:true},
+    {icon:"⛽",label:"Fuel",       amt:fuel,  color:"#f87171",pct:(fuel/gross*100).toFixed(1)},
+    {icon:"🛡️",label:"Insurance", amt:ins,   color:"#fbbf24",pct:(ins/gross*100).toFixed(1)},
+    {icon:"🔧",label:"Operations", amt:ops,   color:"#00ffcc",pct:(ops/gross*100).toFixed(1)},
+    {icon:"🏦",label:"Escrow",     amt:escrow,color:"#a78bfa",pct:(escrow/gross*100).toFixed(1),isSavings:true},
   ];
   if(other>0) groups.push({icon:"📋",label:"Other",amt:other,color:"#8fa3c0",pct:(other/gross*100).toFixed(1)});
   return groups.filter(g=>g.amt>0);
