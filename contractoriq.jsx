@@ -453,7 +453,7 @@ function getDeviceFingerprint(){
 
 export default function ContractorIQv26(){
   const [tab,setTab]=useState("dashboard");
-  const [selWeekKey,setSelWeekKey]=useState(''); // selected week key = week+from
+  const [selWeekKey,setSelWeekKey]=useState(()=>{const last=W[W.length-1];return last?(last.week+(last.from||'')):'';});
   const [sM,setSM]=useState(0);
   const [sH,setSH]=useState(0);
   const [sR,setSR]=useState(7); // selReport
@@ -1698,12 +1698,7 @@ Be specific with real institution names and programs, not generic advice.`;
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,fontSize:15}}>DrayageIQ</div>
               <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":demoMode?"Demo Driver":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</div>
             </div>
-            {/* QR button — top left, always visible */}
-            <button onClick={()=>isPro?setShowQR(true):openUpgrade("qr")}
-              title="Transfer Data via QR"
-              style={{padding:"5px 9px",borderRadius:8,background:isPro?"#a78bfa22":C.raised,border:`2px solid ${isPro?"#a78bfa55":"#2c3a5244"}`,color:isPro?"#a78bfa":C.sub,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
-              📱{!isPro&&<span style={{fontSize:8,color:C.gold}}>PRO</span>}
-            </button>
+
           </div>
           <div style={{textAlign:"right"}}>
             <div style={{fontSize:10,color:C.sub}}>YTD Gross</div>
@@ -1717,6 +1712,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <TB t="loads" l="📋 Docs"/>
             <TB t="growth" l="🚀 Growth"/>
             <button onClick={()=>setShowInsurance(true)} style={{padding:"0 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa55",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",gap:4}}>🛡️ Protect</button>
+            <button onClick={()=>{setShowQR(true);}} style={{padding:"0 10px",borderRadius:8,background:"#a78bfa15",border:"1px solid #a78bfa44",color:"#a78bfa",fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",gap:3}}>📱 QR</button>
             <TB t="ai" l="🧠 AI"/>
             <button onClick={()=>setFocusMode(p=>!p)}
               style={{padding:"0 12px",borderRadius:8,background:focusMode?C.gold:`linear-gradient(135deg,${C.gold}33,${C.gold}15)`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",gap:4}}>
@@ -2118,7 +2114,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 const label=`$${(w.net/1000).toFixed(1)}k`;
                 return(
                   <div key={w.week+w.from+si} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,minWidth:28}}
-                    onClick={()=>{setSelWeekKey(w.week+w.from);setSM(si);setSH(si);}}>
+                    onClick={()=>{setSelWeekKey((w.week||'')+(w.from||''));setSM(si);setSH(si);}}>
                     <div style={{
                       width:"80%",height:h,minWidth:8,
                       borderRadius:"5px 5px 0 0",
@@ -3356,6 +3352,14 @@ Be specific with real institution names and programs, not generic advice.`;
                   🗑 Clear Added
                 </button>
               )}
+              <button onClick={()=>{
+                if(window.confirm("⚠️ CLEAR ALL DATA?\n\nThis removes:\n• All uploaded weeks\n• All deleted built-in weeks\n• Profile & settings\n• Favorites & preferences\n\nBuilt-in weeks (W09-W15) will restore.\nThis cannot be undone.")){
+                  try{localStorage.clear();}catch(e){}
+                  window.location.reload();
+                }
+              }} style={{padding:"6px 12px",borderRadius:8,background:`${C.red}25`,border:`2px solid ${C.red}66`,color:C.red,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
+                🔴 Reset All
+              </button>
             </div>
             {/* Storage status */}
             <div style={{padding:"9px 13px",background:addedW.length>0?`${C.green}10`:`${C.border}30`,borderRadius:8,border:`1px solid ${addedW.length>0?C.green+"33":C.border}`,fontSize:11,color:addedW.length>0?C.green:C.sub,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
