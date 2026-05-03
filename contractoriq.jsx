@@ -3353,7 +3353,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 </button>
               )}
               <button onClick={()=>{
-                if(window.confirm("⚠️ CLEAR ALL DATA?\n\nThis removes:\n• All uploaded weeks\n• All deleted built-in weeks\n• Profile & settings\n• Favorites & preferences\n\nBuilt-in weeks (W09-W15) will restore.\nThis cannot be undone.")){
+                if(window.confirm("CLEAR ALL DATA? Removes uploaded weeks, profile and settings. Built-in weeks W09-W15 will restore. Cannot be undone.")){
                   try{localStorage.clear();}catch(e){}
                   window.location.reload();
                 }
