@@ -1698,6 +1698,12 @@ Be specific with real institution names and programs, not generic advice.`;
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,fontSize:15}}>DrayageIQ</div>
               <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":demoMode?"Demo Driver":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</div>
             </div>
+            {/* QR button — top left, always visible */}
+            <button onClick={()=>isPro?setShowQR(true):openUpgrade("qr")}
+              title="Transfer Data via QR"
+              style={{padding:"5px 9px",borderRadius:8,background:isPro?"#a78bfa22":C.raised,border:`2px solid ${isPro?"#a78bfa55":"#2c3a5244"}`,color:isPro?"#a78bfa":C.sub,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
+              📱{!isPro&&<span style={{fontSize:8,color:C.gold}}>PRO</span>}
+            </button>
           </div>
           <div style={{textAlign:"right"}}>
             <div style={{fontSize:10,color:C.sub}}>YTD Gross</div>
@@ -1734,12 +1740,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                     <span>📈</span><span style={{fontWeight:600}}>Market Overview</span>
                   </button>
-                  {/* QR Export — PRO feature */}
-                  <button onClick={()=>{isPro?setShowQR(true):openUpgrade("qr");setShowMenu(false);}}
-                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:isPro?`${C.a3}12`:C.raised,border:`1px solid ${isPro?C.a3:C.border}`,color:isPro?C.a3:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
-                    <span>📱</span><span style={{fontWeight:600}}>Transfer Data via QR</span>
-                    {!isPro&&<span style={{marginLeft:"auto",fontSize:9,background:C.gold,color:"#000",padding:"2px 7px",borderRadius:8,fontWeight:800}}>PRO</span>}
-                  </button>
+
                   <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
                     style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                     <span>👤</span><span style={{fontWeight:600}}>My Profile</span>
@@ -2107,17 +2108,17 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
             </div>
 
-            {/* Bars — sortedW matches sD index exactly */}
+            {/* Bars — key-based selection via selWeekKey */}
             <div style={{display:"flex",alignItems:"flex-end",gap:3,height:120,padding:"0 2px",overflowX:"auto",overflowY:"visible"}}>
               {sortedW.map((w,si)=>{
                 const maxNet=Math.max(...sortedW.map(x=>x.net));
                 const h=Math.max(32,(w.net/maxNet)*100);
                 const vc=VENDORS[detectVendor(w)]?.color||C.accent;
-                const isSelected=sD===si;
+                const isSelected=safeSD===si;
                 const label=`$${(w.net/1000).toFixed(1)}k`;
                 return(
                   <div key={w.week+w.from+si} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,minWidth:28}}
-                    onClick={()=>{setSelWeekKey(w.week+w.from);setSM(safeIdx=>Math.min(si,sortedW.length-1));setSH(safeIdx=>Math.min(si,sortedW.length-1));}}>
+                    onClick={()=>{setSelWeekKey(w.week+w.from);setSM(si);setSH(si);}}>
                     <div style={{
                       width:"80%",height:h,minWidth:8,
                       borderRadius:"5px 5px 0 0",
@@ -2680,7 +2681,7 @@ Be specific with real institution names and programs, not generic advice.`;
 
           {/* ── WEEKLY ACTION PLAN ── */}
           {(()=>{
-            const lw=safeW[sD]||safeW[safeW.length-1];
+            const lw=safeW[safeSD]||safeW[safeW.length-1];
             const lwGrade=wg(lw);
             const lwFuel=(lw.deds||[]).filter(function(d){return d.l.toLowerCase().includes("fuel");}).reduce(function(s,d){return s+d.a;},0);
             const lwLoaded=lw.moves&&lw.moves.length>0?Math.round(lw.moves.filter(function(m){return m.t==="L"||m.type==="L";}).length/lw.moves.length*100):0;
