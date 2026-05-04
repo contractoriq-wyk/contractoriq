@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const DARK={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#a8bdd4",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
+const DARK={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#8fa3c0",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
 const LIGHT={bg:"#e8eef5",surf:"#ffffff",card:"#f5f8fc",raised:"#dce4ef",border:"#a8b8cc",accent:"#005f8a",a2:"#a02800",a3:"#4c1d95",text:"#050d1a",sub:"#1a2d45",green:"#0f4c25",red:"#8b0000",gold:"#7a4a00"};
 const C=DARK; // default — overridden by component state
-const _K=(C)=>(x={})=>({background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:"18px",boxShadow:"0 2px 12px rgba(0,0,0,0.15)",...x});
+const _K=(C)=>(x={})=>({background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"18px",...x});
 const gc=g=>g==="A"?C.green:g==="B"?C.accent:g==="C"?C.gold:C.red;
 const inp={width:"100%",padding:"11px 13px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:9,color:C.text,fontSize:13,boxSizing:"border-box",fontFamily:"inherit",outline:"none"};
 const lbl={fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:5,display:"block"};
 
 function Bar({pct,color,h=8}){return <div style={{background:"#0a0f1a",borderRadius:4,height:h,overflow:"hidden"}}><div style={{width:`${Math.min(pct,100)}%`,background:color,height:"100%",borderRadius:4,transition:"width 0.7s"}}/></div>;}
-function Nav({i,max,prev,next,label}){return <div style={{display:"flex",gap:6,alignItems:"center"}}><button onClick={prev} disabled={i===0} style={{width:28,height:28,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:i===0?C.border:C.text,cursor:i===0?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button><span style={{fontSize:12,fontWeight:700,color:C.accent,minWidth:42,textAlign:"center"}}>{label}</span><button onClick={next} disabled={i===max} style={{width:28,height:28,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:i===max?C.border:C.text,cursor:i===max?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button></div>;}
+function Nav({i,max,prev,next,label}){return <div style={{display:"flex",gap:6,alignItems:"center"}}><button onClick={prev} disabled={i===0} style={{width:28,height:28,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:i===0?C.border:C.text,cursor:i===0?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button><span style={{fontSize:12,fontWeight:700,color:"#00ffcc",minWidth:42,textAlign:"center"}}>{label}</span><button onClick={next} disabled={i===max} style={{width:28,height:28,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:i===max?C.border:C.text,cursor:i===max?"default":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button></div>;}
 function Tag({color,children}){return <span style={{padding:"3px 9px",borderRadius:20,fontSize:11,background:`${color}18`,border:`1px solid ${color}44`,color}}>{children}</span>;}
 
 function scoreMove(m){
@@ -407,25 +407,14 @@ function pairRoundTrips(moves){
 }
 
 function grpDeds(deds,gross){
-  const fuelKw=["fuel advance","fuel","diesel"];
-  const fuel=deds.filter(d=>fuelKw.some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
-  const insKw=["physical damage","bobtail","occ/acc","roadside assistance","liability limiter","occ acc","occupational","accident"];
-  const ins=deds.filter(d=>insKw.some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
-  const opsKw=["eld","event recorder","parking","license plate","highway tax","toll","2290","ifta"];
-  const ops=deds.filter(d=>opsKw.some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
-  const escrow=deds.filter(d=>d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
-  const other=deds.filter(d=>{
-    const l=d.l.toLowerCase();
-    return !fuelKw.some(k=>l.includes(k))&&!insKw.some(k=>l.includes(k))&&!opsKw.some(k=>l.includes(k))&&!l.includes("escrow");
-  }).reduce((s,d)=>s+d.a,0);
-  const groups=[
-    {icon:"⛽",label:"Fuel",       amt:fuel,  color:"#f87171",pct:(fuel/gross*100).toFixed(1)},
-    {icon:"🛡️",label:"Insurance", amt:ins,   color:"#fbbf24",pct:(ins/gross*100).toFixed(1)},
-    {icon:"🔧",label:"Operations", amt:ops,   color:"#00ffcc",pct:(ops/gross*100).toFixed(1)},
-    {icon:"🏦",label:"Escrow",     amt:escrow,color:"#a78bfa",pct:(escrow/gross*100).toFixed(1),isSavings:true},
+  const fuel=deds.filter(d=>["fuel advance","fuel","diesel"].some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
+  const ins =deds.filter(d=>["physical damage","bobtail","occ/acc","roadside"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+  const ops =deds.filter(d=>["eld","event recorder","parking","license","highway tax"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+  return [
+    {icon:"⛽",label:"Fuel Advances",amt:fuel,color:"#f87171",  pct:(fuel/gross*100).toFixed(1)},
+    {icon:"🛡️",label:"Insurance",   amt:ins, color:"#fbbf24", pct:(ins/gross*100).toFixed(1)},
+    {icon:"🔧",label:"Operations",  amt:ops, color:"#00ffcc",pct:(ops/gross*100).toFixed(1)},
   ];
-  if(other>0) groups.push({icon:"📋",label:"Other",amt:other,color:"#8fa3c0",pct:(other/gross*100).toFixed(1)});
-  return groups.filter(g=>g.amt>0);
 }
 
 // ── APP ───────────────────────────────────────────────────────────────────────
@@ -445,9 +434,9 @@ function getDeviceFingerprint(){
 
 export default function ContractorIQv26(){
   const [tab,setTab]=useState("dashboard");
-  const [selWeekKey,setSelWeekKey]=useState(()=>{const last=W[W.length-1];return last?(last.week+(last.from||'')):'';});
-  const [sM,setSM]=useState(0);
-  const [sH,setSH]=useState(0);
+  const [sD,setSD]=useState(7); // selDed
+  const [sM,setSM]=useState(7); // selMove
+  const [sH,setSH]=useState(7); // selHealth
   const [sR,setSR]=useState(7); // selReport
   const [wide,setWide]=useState(window.innerWidth>700);
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
@@ -488,13 +477,6 @@ export default function ContractorIQv26(){
   const [showSettings,setShowSettings]=useState(false);
   const [showMenu,setShowMenu]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
-  const [showMarket,setShowMarket]=useState(false);
-  const [deletedBuiltinW,setDeletedBuiltinW]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_deleted_builtin")||"[]");}catch{return [];}});
-  const [showInsurance,setShowInsurance]=useState(false);
-  const [showQR,setShowQR]=useState(false);
-  const [favStocks,setFavStocks]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_favstocks")||'["AAPL","TSLA","NVDA"]');}catch{return ["AAPL","TSLA","NVDA"];}});
-  const [addingStock,setAddingStock]=useState(false);
-  const [newStock,setNewStock]=useState("");
   const [hiddenVendors,setHiddenVendors]=useState([]);
   const [hideOwnerName,setHideOwnerName]=useState(false);
   const [hideUnitNum,setHideUnitNum]=useState(false);
@@ -591,7 +573,10 @@ export default function ContractorIQv26(){
   useEffect(()=>{try{localStorage.setItem("ciq_dis_ads",JSON.stringify(dismissedAds));}catch(e){};},[dismissedAds]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  const baseW=ownerDataAvailable?W.filter(w=>!deletedBuiltinW.includes(w.week)):[];
+  // CRITICAL: Real owner data (W) only available on navy dev site
+  const baseW=ownerDataAvailable?W:[];
+  // In demo mode: show ONLY demo weeks — never mix in owner data
+  // In real mode: show owner weeks + customer uploaded weeks
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
   const visibleW=allW.filter(w=>{
     const vk=detectVendor(w);
@@ -600,13 +585,6 @@ export default function ContractorIQv26(){
     return true;
   });
   const safeW=visibleW.length>0?visibleW:(allW.length>0?allW:DEMO_W);
-  // Sort allW chronologically ONCE — used by chart AND all detail cards
-  const sortedW=[...allW].sort((a,b)=>{
-    const ay=a.from?parseInt(a.from.split('/')[2]||'2025'):2025;
-    const by=b.from?parseInt(b.from.split('/')[2]||'2025'):2025;
-    if(ay!==by)return ay-by;
-    return parseInt(a.week||'0')-parseInt(b.week||'0');
-  });
 
   // ── Vendor breakdown ──────────────────────────────────────────────────────
   const vendorKeys=Object.keys(VENDORS);
@@ -632,21 +610,16 @@ export default function ContractorIQv26(){
   const tEscReg=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="Escrow Regular")?.a||0),0);
   const tEsc290=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="2290 Escrow")?.a||0),0);
   const tRebates=allW.reduce((s,w)=>s+(w.rebate||0),0);
-  // Key-based selection — immune to index shifts
-  const _dwIdx=selWeekKey?sortedW.findIndex(w=>(w.week+w.from)===selWeekKey):-1;
-  const safeSD=_dwIdx>=0?_dwIdx:sortedW.length-1;
-  const safeSM=Math.min(sM,sortedW.length-1);
-  const safeSH=Math.min(sH,sortedW.length-1);
-  const dw=sortedW[safeSD]||sortedW[sortedW.length-1]||DEMO_W[0]; const dg=wg(dw);
+  const dw=allW[sD]||allW[allW.length-1]; const dg=wg(dw);
   const dwDeds=dw.deds||[];
   const dwGroups=grpDeds(dwDeds,dw.gross);
   const dwGroupTotal=dwGroups.reduce((s,g)=>s+g.amt,0);
-  const mwBase=sortedW[safeSM]||sortedW[sortedW.length-1];
+  const mwBase=allW[sM]||allW[allW.length-1];
   const mwMoves=pairRoundTrips(mergeExtraPay([...(mwBase.moves||[]),...(sM===allW.length-1?extra:[])])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0}));
   const mwMi=mwMoves.reduce((s,m)=>s+m.miles,0);
   const mwRPM=mwMi>0?(mwMoves.reduce((s,m)=>s+m.rate+m.fsc,0)/mwMi).toFixed(2):"0.00";
   const mwLd=mwMoves.length>0?Math.round(mwMoves.filter(m=>m.type==="L").length/mwMoves.length*100):0;
-  const hw=sortedW[safeSH]||sortedW[sortedW.length-1]; const hwg=wg(hw);
+  const hw=allW[sH]||allW[allW.length-1]; const hwg=wg(hw);
   const hwFuel=(hw.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
   const hwLd=(hw.moves||[]).length>0?Math.round((hw.moves||[]).filter(m=>m.t==="L"||m.type==="L").length/(hw.moves||[]).length*100):0;
   const hwM=(hw.net/hw.gross*100).toFixed(1);
@@ -706,18 +679,6 @@ export default function ContractorIQv26(){
     setSearchLoading(true);setSearchResult("");
     try{
       const apiKey=import.meta.env.VITE_ANTHROPIC_KEY||(window.__CIQ_KEY__||"");
-
-      // Get real GPS location first
-      let locationContext="";
-      try{
-        const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000,maximumAge:60000}));
-        const lat=pos.coords.latitude.toFixed(4);
-        const lng=pos.coords.longitude.toFixed(4);
-        locationContext=`The user's current GPS location is latitude ${lat}, longitude ${lng}. Use this EXACT location for any nearby searches - do NOT use Baltimore or any default city.`;
-      }catch(geoErr){
-        locationContext="Location access denied. Ask the user to share their city if they need local results.";
-      }
-
       const resp=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
         headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
@@ -725,7 +686,7 @@ export default function ContractorIQv26(){
           model:"claude-sonnet-4-5",
           max_tokens:600,
           tools:[{type:"web_search_20250305",name:"web_search"}],
-          messages:[{role:"user",content:`You are a helpful assistant for a truck driver or gig worker. ${locationContext} Answer this question concisely and practically: ${query}. Keep answer under 200 words. Use bullet points for lists. Include specific names and addresses when searching for nearby places.`}]
+          messages:[{role:"user",content:`You are a helpful assistant for a truck driver. Use the user's real GPS location for nearby searches, never default to Baltimore. Answer this question concisely and practically: ${query}. Keep answer under 150 words. Use bullet points if listing multiple items.`}]
         })
       });
       const d=await resp.json();
@@ -816,7 +777,7 @@ ${pasteText.slice(0,6000)}`;
             {type:"document",source:{type:"url",url:url}},
             {type:"text",text:`You are a data extraction expert for drayage/trucking settlement statements from any carrier. Extract ALL data and return ONLY valid JSON — no explanation, no markdown:
 {"week":"01","from":"01/06/2025","to":"01/10/2025","gross":4200.00,"net":2310.00,"totalDeductions":1890.00,"rebate":45.00,"moves":[{"t":"L","fr":"Port Terminal","to":"Distribution Center","mi":65,"rt":220,"fc":46}],"deds":[{"l":"Operations Fee","a":840.00},{"l":"Fuel Advance","a":750.00}]}
-Rules: week=number only, gross=total revenue before deductions, net=amount paid to driver, moves every row (t=L/E, fr=pickup, to=delivery, mi=miles, rt=linehaul rate, fc=fuel surcharge), deds=EVERY deduction line as positive number INCLUDING escrow, insurance, ELD, parking, fuel advances — skip only items with negative amounts (those are reimbursements/credits back to driver).`}
+Rules: week=number only, gross=total revenue before deductions, net=amount paid to driver, moves every row (t=L/E, fr=pickup, to=delivery, mi=miles, rt=linehaul rate, fc=fuel surcharge), deds=every deduction as positive number (skip credits/reimbursements).`}
           ]}]
         })
       });
@@ -856,7 +817,7 @@ Rules: week=number only, gross=total revenue before deductions, net=amount paid 
 
   async function runAITool(mode){
     setAiMode(mode);setAiOut("");setAiLoad(true);
-    const w=sortedW[sR]||sortedW[sortedW.length-1]||safeW[safeW.length-1];
+    const w=allW[sR]||allW[allW.length-1]||safeW[safeW.length-1];
     const fuel=w.deds.filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
     let prompt="",sys="";
 
@@ -1100,7 +1061,7 @@ Be specific with real institution names and programs, not generic advice.`;
               <div>⚡ Go Pro — $19.99/month</div>
               <div style={{fontSize:11,fontWeight:400,marginTop:3}}>Unlimited everything · No ads · Cancel anytime</div>
             </button>
-            <button onClick={()=>window.open("https://buy.stripe.com/3cIcN5f8d5oAeuKeCi9MY02","_blank")} style={{padding:"14px",borderRadius:12,background:C.raised,border:"1px solid "+C.gold+"55",color:C.gold,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
+            <button onClick={()=>window.open("https://buy.stripe.com/3cIcN5f8d5oAeuKeCi9MY02","_blank")} style={{padding:"14px",borderRadius:12,background:C.raised,border:"1px solid "+C.gold+"55",color:"#fbbf24",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
               <div>💎 Founding Member — $97 one-time</div>
               <div style={{fontSize:10,fontWeight:400,color:C.sub,marginTop:2}}>Everything forever · First 50 spots only · No monthly fee</div>
             </button>
@@ -1122,7 +1083,7 @@ Be specific with real institution names and programs, not generic advice.`;
   );
 
   const NoBadge=()=>(
-    <div style={{marginTop:12,padding:"10px 14px",background:C.gold+"10",borderRadius:12,border:"1px solid "+C.gold+"30",display:"flex",alignItems:"center",gap:8,boxShadow:"0 1px 6px rgba(0,0,0,0.1)"}}>
+    <div style={{marginTop:12,padding:"8px 11px",background:C.gold+"12",borderRadius:9,border:"1px solid "+C.gold+"35",display:"flex",alignItems:"flex-start",gap:7}}>
       <span style={{fontSize:13,flexShrink:0,marginTop:1}}>💰</span>
       <div style={{fontSize:9,lineHeight:1.6}}>
         <span style={{fontWeight:800,color:C.gold}}>WE DON'T COMPETE WITH DAT OR TRUCKLOGICS. </span>
@@ -1135,348 +1096,30 @@ Be specific with real institution names and programs, not generic advice.`;
     const h=HELP[id];
     if(!h)return null;
     return(
-      <div style={{margin:"6px 0 10px",padding:"11px 13px",background:C.a3+"12",borderRadius:9,border:"1px solid "+C.a3+"33",fontSize:12,color:C.sub,lineHeight:1.7,position:"relative"}}>
-        <div style={{fontWeight:700,color:C.a3,marginBottom:4,fontSize:12}}>{h.t}</div>
+      <div style={{margin:"6px 0 10px",padding:"11px 13px",background:C.a3+"12",borderRadius:9,border:"1px solid "+C.a3+"33",fontSize:11,color:C.sub,lineHeight:1.7,position:"relative"}}>
+        <div style={{fontWeight:700,color:"#a78bfa",marginBottom:4,fontSize:12}}>{h.t}</div>
         <div>{h.b}</div>
         <button onClick={()=>setHelpCard(null)} style={{position:"absolute",top:7,right:9,background:"none",border:"none",color:C.sub,fontSize:14,cursor:"pointer",lineHeight:1}}>×</button>
       </div>
     );
   };
-  const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:"0 0 auto",padding:"0 14px",borderRadius:9,cursor:"pointer",fontWeight:700,fontSize:10,letterSpacing:"0.04em",textTransform:"uppercase",border:"none",background:tab===t?C.accent:C.raised,color:tab===t?"#000":C.sub,transition:"all 0.2s",whiteSpace:"nowrap",height:38,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:tab===t?"0 2px 8px rgba(0,0,0,0.2)":"none"}}>{l}</button>;
+  const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:1,padding:"9px 4px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:11,letterSpacing:"0.04em",textTransform:"uppercase",border:"none",background:tab===t?C.accent:C.raised,color:tab===t?"#000":C.sub,transition:"all 0.15s"}}>{l}</button>;
 
   return(
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
       {upgradeModal()}
       {/* ── WELCOME SCREEN ── */}
-      {/* ── INSURANCE / PROTECT YOUR INCOME MODAL ── */}
-      {showInsurance&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"#080c16",display:"flex",flexDirection:"column"}}>
-          {/* Close header */}
-          <div style={{background:"#0d1525",borderBottom:"1px solid #2c3a52",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:"#f0f6ff"}}>🛡️ Protect Your Income</div>
-            <button onClick={()=>setShowInsurance(false)} style={{padding:"8px 14px",borderRadius:9,background:"#1a2436",border:"1px solid #2c3a52",color:"#8fa3c0",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
-          </div>
-          <div style={{background:"#080c16",flex:1,overflowY:"auto",padding:"20px 20px 80px",width:"100%"}}>
-
-            {/* Header */}
-            <div style={{textAlign:"center",marginBottom:18}}>
-              <div style={{width:68,height:68,borderRadius:"50%",background:"linear-gradient(135deg,#a78bfa,#6d28d9)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:34,boxShadow:"0 0 0 6px #a78bfa20"}}>🛡️</div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:21,fontWeight:800,color:C.text,marginBottom:6}}>Protect Your Income</div>
-              <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>You work hard for every dollar. But what happens to your family if you can't work? As a 1099 worker you have <strong style={{color:C.red}}>zero employer protection.</strong> That changes today.</div>
-            </div>
-
-            {/* Emotional hook with real numbers */}
-            <div style={{background:`linear-gradient(135deg,${C.a3}18,${C.accent}10)`,borderRadius:12,padding:"14px",marginBottom:16,border:`1px solid ${C.a3}44`}}>
-              <div style={{fontSize:11,fontWeight:800,color:C.a3,marginBottom:6}}>💡 YOUR NUMBERS TELL THE STORY</div>
-              <div style={{fontSize:11,color:C.text,lineHeight:1.8}}>
-                You earned <strong style={{color:C.accent}}>${tNet>0?tNet.toLocaleString("en-US",{minimumFractionDigits:2}):"--"}</strong> net this year working as an independent contractor. <strong>No employer. No benefits. No safety net.</strong> One accident, one illness, one bad week — and it all stops. <span style={{color:C.gold,fontWeight:700}}>Life insurance changes that.</span>
-              </div>
-            </div>
-
-            {/* Why gig workers are the perfect market */}
-            <div style={{background:C.bg,borderRadius:12,padding:"13px",marginBottom:14,border:`1px solid ${C.border}`}}>
-              <div style={{fontSize:10,fontWeight:800,color:C.gold,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>⚡ Why Every 1099 Worker Needs This</div>
-              {[
-                {i:"🚫",t:"No employer benefits",d:"No group life, no disability, no 401k. You are 100% on your own."},
-                {i:"💸",t:"Income instability",d:"Gig income fluctuates. Life insurance locks in protection when you're earning."},
-                {i:"🏦",t:"Tax advantages",d:"Certain products like IUL build tax-free wealth — perfect for self-employed."},
-                {i:"🤝",t:"Warm, trusted relationship",d:"You already use ContractorIQ. This is the same person looking out for you."},
-              ].map(r=>(
-                <div key={r.t} style={{display:"flex",gap:10,marginBottom:10}}>
-                  <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{r.i}</span>
-                  <div>
-                    <div style={{fontSize:11,fontWeight:700,color:C.text}}>{r.t}</div>
-                    <div style={{fontSize:10,color:C.sub,lineHeight:1.5,marginTop:1}}>{r.d}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Products */}
-            <div style={{marginBottom:16}}>
-              <div style={{fontSize:10,fontWeight:800,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>📋 Products We'll Discuss On Your Free Call</div>
-              {[
-                {name:"Term Life",icon:"🏠",color:"#00aa88",tag:"Most Popular",desc:"Pure income replacement. If you die, your family gets paid. Simple, affordable, powerful. Replaces the income you bring home every week."},
-                {name:"Disability / Accident",icon:"🦺",color:"#f59e0b",tag:"Critical for Drivers",desc:"You already pay for OCC/ACC through your carrier — but it's limited. A personal disability policy pays YOU directly if you're injured and can't drive."},
-                {name:"Whole Life / IUL",icon:"📈",color:"#a78bfa",tag:"Build Wealth",desc:"Tax-free retirement savings that grows even when the market drops. No 401k? This IS your retirement plan. Especially powerful for self-employed."},
-                {name:"Final Expense",icon:"💙",color:"#6d28d9",tag:"Easy to Qualify",desc:"Covers funeral costs and final bills. No medical exam needed. Protects your family from being left with debt on top of grief."},
-              ].map(p=>(
-                <div key={p.name} style={{background:C.bg,borderRadius:10,padding:"12px 13px",marginBottom:8,border:`1px solid ${p.color}33`}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
-                    <span style={{fontSize:18}}>{p.icon}</span>
-                    <div style={{flex:1}}>
-                      <div style={{display:"flex",alignItems:"center",gap:7}}>
-                        <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:800,color:p.color}}>{p.name}</span>
-                        <span style={{fontSize:8,background:p.color+"22",color:p.color,padding:"2px 7px",borderRadius:10,fontWeight:700,border:`1px solid ${p.color}44`}}>{p.tag}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{fontSize:10,color:C.sub,lineHeight:1.65,paddingLeft:26}}>{p.desc}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* What happens on the call */}
-            <div style={{background:`${C.gold}10`,borderRadius:12,padding:"12px 14px",marginBottom:16,border:`1px solid ${C.gold}33`}}>
-              <div style={{fontSize:10,fontWeight:800,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:"0.07em"}}>📞 What Happens on Your Free Call</div>
-              {["We review your real income numbers together","You learn which products fit YOUR situation","No pressure. No jargon. Just real education.","Walk away knowing exactly what you need and why."].map((s,i)=>(
-                <div key={i} style={{display:"flex",gap:8,marginBottom:5}}>
-                  <span style={{color:C.gold,fontWeight:800,fontSize:11,flexShrink:0}}>{i+1}.</span>
-                  <span style={{fontSize:12,color:C.text,lineHeight:1.6}}>{s}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Agent Section */}
-            <div style={{background:"linear-gradient(135deg,#1a1a3a,#0d1525)",borderRadius:16,padding:"18px 16px",marginBottom:14,border:"2px solid #a78bfa55"}}>
-              <div style={{fontSize:10,fontWeight:800,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>🛡️ Your Trusted Agent — Ready to Help</div>
-
-              {/* Agent Cards */}
-              <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:14}}>
-
-                {/* Nelle - West Coast */}
-                <div style={{display:"flex",gap:12,alignItems:"flex-start",background:"#ffffff08",borderRadius:12,padding:"13px"}}>
-                  <div style={{width:52,height:52,borderRadius:"50%",background:"linear-gradient(135deg,#a78bfa,#6d28d9)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0,border:"2px solid #a78bfa66"}}>👩🏾</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#f0f6ff",marginBottom:1}}>Nelle Kigembe</div>
-                    <div style={{fontSize:9,color:"#a78bfa",fontWeight:700,marginBottom:5}}>Licensed Insurance Producer</div>
-                    <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:7}}>
-                      <span style={{padding:"2px 8px",borderRadius:20,background:"#a78bfa18",border:"1px solid #a78bfa44",color:"#a78bfa",fontSize:9,fontWeight:700}}>🌊 West Coast</span>
-                      <span style={{padding:"2px 8px",borderRadius:20,background:"#00aa8818",border:"1px solid #00aa8844",color:"#00aa88",fontSize:9,fontWeight:700}}>🌎 Nationwide</span>
-                    </div>
-                    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                      <a href="tel:757-395-7841" style={{padding:"5px 9px",borderRadius:7,background:"#1a2436",border:"1px solid #2c3a52",color:"#00ffcc",fontSize:9,fontWeight:700,textDecoration:"none"}}>📞 757-395-7841</a>
-                      <button onClick={()=>window.open("https://calendly.com/nellekigembe/60min?utm_source=contractoriq&utm_medium=app&utm_campaign=protect_income&utm_content=west_coast","_blank")} style={{padding:"5px 9px",borderRadius:7,background:"linear-gradient(135deg,#a78bfa,#6d28d9)",border:"none",color:"#fff",fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📅 Book with Nelle</button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Owner - DMV */}
-                <div style={{display:"flex",gap:12,alignItems:"flex-start",background:"#ffffff08",borderRadius:12,padding:"13px"}}>
-                  <div style={{width:52,height:52,borderRadius:"50%",background:"linear-gradient(135deg,#00ffcc,#0077aa)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0,border:"2px solid #00ffcc66"}}>👨🏾</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#f0f6ff",marginBottom:1}}>Wemma Kigembe</div>
-                    <div style={{fontSize:9,color:"#00ffcc",fontWeight:700,marginBottom:5}}>Licensed Insurance Producer · ContractorIQ Founder</div>
-                    <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:7}}>
-                      <span style={{padding:"2px 8px",borderRadius:20,background:"#00ffcc18",border:"1px solid #00ffcc44",color:"#00ffcc",fontSize:9,fontWeight:700}}>🏛️ DMV Area</span>
-                      <span style={{padding:"2px 8px",borderRadius:20,background:"#00aa8818",border:"1px solid #00aa8844",color:"#00aa88",fontSize:9,fontWeight:700}}>🌎 Nationwide</span>
-                    </div>
-                    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                      <button onClick={()=>window.open("https://calendly.com/wkigembe-crvm/30min?utm_source=contractoriq&utm_medium=app&utm_campaign=protect_income&utm_content=dmv","_blank")} style={{padding:"5px 9px",borderRadius:7,background:"linear-gradient(135deg,#00ffcc,#0077aa)",border:"none",color:"#000",fontSize:9,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>📅 Book with Wemma</button>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-            {/* Multi-Agent Vision */}
-            <div style={{background:"#0d1525",borderRadius:12,padding:"14px",marginBottom:16,border:"1px solid #1e2a3a"}}>
-              <div style={{fontSize:10,fontWeight:800,color:"#4a6080",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>🗺️ Coverage Coming Nationwide</div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                {[
-                  {zone:"🌊 West Coast",status:"✅ Available",agent:"Nelle Kigembe",color:"#00aa88"},
-                  {zone:"🗽 East Coast",status:"🔜 Coming Soon",agent:"Agent Needed",color:"#4a6080"},
-                  {zone:"🌵 South",status:"🔜 Coming Soon",agent:"Agent Needed",color:"#4a6080"},
-                  {zone:"❄️ North/Midwest",status:"🔜 Coming Soon",agent:"Agent Needed",color:"#4a6080"},
-                ].map(z=>(
-                  <div key={z.zone} style={{background:"#1a2436",borderRadius:9,padding:"10px",border:`1px solid ${z.color}33`}}>
-                    <div style={{fontSize:12,marginBottom:3}}>{z.zone}</div>
-                    <div style={{fontSize:9,fontWeight:700,color:z.color,marginBottom:2}}>{z.status}</div>
-                    <div style={{fontSize:9,color:"#4a6080"}}>{z.agent}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{fontSize:9,color:"#4a6080",marginTop:10,textAlign:"center",fontStyle:"italic"}}>Are you a licensed agent? Contact us to join our network.</div>
-            </div>
-
-            <button onClick={()=>setShowInsurance(false)} style={{width:"100%",padding:"11px",borderRadius:10,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>
-              Maybe Later
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── QR CODE DATA TRANSFER MODAL ── PRO FEATURE ── */}
-      {showQR&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.95)",display:"flex",flexDirection:"column"}} onClick={()=>setShowQR(false)}>
-          <div style={{background:C.card,borderRadius:"0 0 24px 24px",padding:"18px 16px",flexShrink:0}} onClick={e=>e.stopPropagation()}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div>
-                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.text}}>📱 Transfer Your Data</div>
-                <div style={{fontSize:11,color:C.sub,marginTop:2}}>Scan QR on another device to sync</div>
-              </div>
-              <button onClick={()=>setShowQR(false)} style={{padding:"8px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
-            </div>
-          </div>
-          <div style={{flex:1,overflowY:"auto",padding:"20px 16px 80px"}} onClick={e=>e.stopPropagation()}>
-
-            {/* QR Code display */}
-            <div style={{background:C.card,borderRadius:20,padding:"24px",marginBottom:16,textAlign:"center",border:`2px solid ${C.a3}44`}}>
-              <div style={{fontSize:12,fontWeight:700,color:C.a3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:16}}>Your Settlement Data QR Code</div>
-              {/* QR via Google Charts API — encodes your addedW data */}
-              <div style={{background:"#fff",borderRadius:16,padding:16,display:"inline-block",marginBottom:14}}>
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("CIQDATA:"+btoa(JSON.stringify({addedW,profile:{name:profile?.name||"",company:profile?.company||""},exported:new Date().toISOString()})).substring(0,1800))}`}
-                  alt="QR Code"
-                  style={{width:220,height:220,display:"block"}}
-                />
-              </div>
-              <div style={{fontSize:11,color:C.sub,lineHeight:1.7,marginBottom:12}}>
-                📲 Open ContractorIQ on your other device<br/>
-                Go to <strong style={{color:C.text}}>Menu → Transfer Data via QR</strong><br/>
-                Tap <strong style={{color:C.accent}}>"Scan QR to Import"</strong> and point camera here
-              </div>
-              <div style={{padding:"8px 14px",background:`${C.gold}15`,borderRadius:10,border:`1px solid ${C.gold}33`,fontSize:10,color:C.gold,lineHeight:1.6}}>
-                ⚡ Contains your last <strong>{Math.min(addedW.length,5)}</strong> uploaded weeks · Profile data<br/>
-                QR expires after scanning · Your data stays private
-              </div>
-            </div>
-
-            {/* What's included */}
-            <div style={{background:C.card,borderRadius:16,padding:"16px",marginBottom:14,border:`1px solid ${C.border}`}}>
-              <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:12}}>📦 What's Included in This QR</div>
-              {[
-                {icon:"📄",label:"Uploaded Settlements",val:`${addedW.length} weeks`,color:C.accent},
-                {icon:"👤",label:"Profile Name",val:profile?.name||"Not set",color:C.a3},
-                {icon:"🏢",label:"Company",val:profile?.company||"Not set",color:C.gold},
-              ].map(r=>(
-                <div key={r.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.border}`}}>
-                  <span style={{fontSize:12,color:C.text}}>{r.icon} {r.label}</span>
-                  <span style={{fontSize:12,fontWeight:700,color:r.color}}>{r.val}</span>
-                </div>
-              ))}
-              <div style={{fontSize:10,color:C.sub,marginTop:10,fontStyle:"italic"}}>
-                Built-in weeks (W09–W15) are in your account — they sync automatically.
-              </div>
-            </div>
-
-            {/* Coming Soon features */}
-            <div style={{background:`${C.a3}10`,borderRadius:16,padding:"16px",border:`1px solid ${C.a3}33`}}>
-              <div style={{fontSize:11,fontWeight:800,color:C.a3,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.08em"}}>🚀 Coming to PRO Members</div>
-              {[
-                {icon:"📱",f:"QR Data Transfer",status:"✅ Live Now",c:C.green},
-                {icon:"📊",f:"Stock Portfolio Tracker",status:"🔜 Q3 2026",c:C.gold},
-                {icon:"📤",f:"Export to Excel/PDF",status:"🔜 Q3 2026",c:C.gold},
-                {icon:"🔔",f:"Load Alert Notifications",status:"🔜 Q4 2026",c:C.gold},
-                {icon:"🤝",f:"Fleet Multi-Truck Dashboard",status:"🔜 Q4 2026",c:C.gold},
-                {icon:"🧾",f:"IFTA Mileage Report",status:"🔜 2027",c:C.sub},
-                {icon:"💳",f:"Expense Receipt Scanner",status:"🔜 2027",c:C.sub},
-                {icon:"🗺️",f:"Route Profit Mapper",status:"🔜 2027",c:C.sub},
-              ].map(f=>(
-                <div key={f.f} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.border}33`}}>
-                  <span style={{fontSize:12,color:C.text}}>{f.icon} {f.f}</span>
-                  <span style={{fontSize:10,fontWeight:700,color:f.c}}>{f.status}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── MARKET OVERVIEW MODAL ── FULL PAGE ── */}
-      {showMarket&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"#080c16",display:"flex",flexDirection:"column"}}>
-          {/* Top bar */}
-          <div style={{background:"#0d1525",borderBottom:"1px solid #1e2a3a",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
-            <div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:"#f0f6ff"}}>📈 Market Overview</div>
-              <div style={{fontSize:10,color:"#4a6080",marginTop:1}}>Live data · Tap any symbol for chart</div>
-            </div>
-            <button onClick={()=>setShowMarket(false)} style={{padding:"8px 14px",borderRadius:9,background:"#1a2436",border:"1px solid #2c3a52",color:"#8fa3c0",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
-          </div>
-
-          {/* TradingView ticker tape */}
-          <div style={{background:"#0d1525",borderBottom:"1px solid #1e2a3a",flexShrink:0}}>
-            <iframe scrolling="no" allowTransparency="true" frameBorder="0"
-              src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P%20500%22%2C%22proName%22%3A%22AMEX%3ASPY%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22AMEX%3ADIA%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3AQQQ%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22AMEX%3AIWM%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22CBOE%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22COINBASE%3ABTCUSD%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22locale%22%3A%22en%22%7D"
-              style={{width:"100%",height:72,display:"block"}} title="Market Ticker"/>
-          </div>
-
-          {/* Main content scrollable */}
-          <div style={{flex:1,overflowY:"auto",padding:"14px 14px 80px"}}>
-
-            {/* TradingView Market Overview Widget */}
-            <div style={{borderRadius:14,overflow:"hidden",marginBottom:14,border:"1px solid #1e2a3a"}}>
-              <iframe scrolling="no" allowTransparency="true" frameBorder="0"
-                src="https://s.tradingview.com/embed-widget/market-overview/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%221D%22%2C%22showChart%22%3Atrue%2C%22locale%22%3A%22en%22%2C%22largeChartUrl%22%3A%22%22%2C%22isTransparent%22%3Atrue%2C%22showSymbolLogo%22%3Atrue%2C%22showFloatingTooltip%22%3Atrue%2C%22plotLineColorGrowing%22%3A%22rgba(41%2C%2098%2C%20255%2C%201)%22%2C%22plotLineColorFalling%22%3A%22rgba(41%2C%2098%2C%20255%2C%201)%22%2C%22gridLineColor%22%3A%22rgba(42%2C%2046%2C%2057%2C%200)%22%2C%22scaleFontColor%22%3A%22rgba(209%2C%20212%2C%20220%2C%201)%22%2C%22belowLineFillColorGrowing%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22belowLineFillColorFalling%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22belowLineFillColorGrowingBottom%22%3A%22rgba(41%2C%2098%2C%20255%2C%200)%22%2C%22belowLineFillColorFallingBottom%22%3A%22rgba(41%2C%2098%2C%20255%2C%200)%22%2C%22symbolActiveColor%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22tabs%22%3A%5B%7B%22title%22%3A%22US%20Indices%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22AMEX%3ASPY%22%2C%22d%22%3A%22S%26P%20500%22%7D%2C%7B%22s%22%3A%22AMEX%3ADIA%22%2C%22d%22%3A%22Dow%2030%22%7D%2C%7B%22s%22%3A%22NASDAQ%3AQQQ%22%2C%22d%22%3A%22Nasdaq%22%7D%2C%7B%22s%22%3A%22AMEX%3AIWM%22%2C%22d%22%3A%22Russell%202000%22%7D%2C%7B%22s%22%3A%22CBOE%3AVIX%22%2C%22d%22%3A%22VIX%22%7D%5D%7D%2C%7B%22title%22%3A%22Commodities%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22TVC%3AGOLD%22%2C%22d%22%3A%22Gold%22%7D%2C%7B%22s%22%3A%22TVC%3AUSOIL%22%2C%22d%22%3A%22Crude%20Oil%22%7D%2C%7B%22s%22%3A%22TVC%3ASILVER%22%2C%22d%22%3A%22Silver%22%7D%5D%7D%2C%7B%22title%22%3A%22Crypto%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22COINBASE%3ABTCUSD%22%2C%22d%22%3A%22Bitcoin%22%7D%2C%7B%22s%22%3A%22BINANCE%3AETHUSDT%22%2C%22d%22%3A%22Ethereum%22%7D%5D%7D%5D%7D"
-                style={{width:"100%",height:680,display:"block"}} title="Market Overview"/>
-            </div>
-
-            {/* Personal Favorites */}
-            <div style={{background:"#0d1525",borderRadius:14,padding:"14px",marginBottom:14,border:"1px solid #1e2a3a"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                <div style={{fontSize:11,fontWeight:700,color:"#8fa3c0",textTransform:"uppercase",letterSpacing:"0.08em"}}>⭐ My Favorite Stocks</div>
-                <button onClick={()=>setAddingStock(true)} style={{padding:"4px 10px",borderRadius:7,background:"#1a2436",border:"1px solid #2c3a52",color:"#00ffcc",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>+ Add</button>
-              </div>
-              {addingStock&&(
-                <div style={{display:"flex",gap:6,marginBottom:10}}>
-                  <input value={newStock} onChange={e=>setNewStock(e.target.value.toUpperCase())}
-                    onKeyDown={e=>{if(e.key==="Enter"&&newStock.trim()){const n=[...favStocks,newStock.trim()];setFavStocks(n);try{localStorage.setItem("ciq_favstocks",JSON.stringify(n));}catch(ex){}setNewStock("");setAddingStock(false);}}}
-                    placeholder="Type symbol e.g. AAPL" maxLength={8}
-                    style={{flex:1,padding:"8px 12px",borderRadius:8,background:"#1a2436",border:"2px solid #00ffcc",color:"#00ffcc",fontSize:12,fontFamily:"inherit",outline:"none"}}
-                    autoFocus/>
-                  <button onClick={()=>{if(newStock.trim()){const n=[...favStocks,newStock.trim()];setFavStocks(n);try{localStorage.setItem("ciq_favstocks",JSON.stringify(n));}catch(ex){}}setNewStock("");setAddingStock(false);}}
-                    style={{padding:"8px 14px",borderRadius:8,background:"#00ffcc",color:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit"}}>✓ Add</button>
-                  <button onClick={()=>{setAddingStock(false);setNewStock("");}}
-                    style={{padding:"8px 10px",borderRadius:8,background:"transparent",color:"#4a6080",fontSize:14,border:"none",cursor:"pointer"}}>✕</button>
-                </div>
-              )}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
-                {favStocks.map(sym=>(
-                  <div key={sym} style={{background:"#1a2436",borderRadius:10,padding:"10px",border:"1px solid #2c3a52",textAlign:"center",position:"relative"}}>
-                    <button onClick={()=>{const n=favStocks.filter(s=>s!==sym);setFavStocks(n);try{localStorage.setItem("ciq_favstocks",JSON.stringify(n));}catch(ex){}}}
-                      style={{position:"absolute",top:4,right:4,background:"none",border:"none",color:"#2c3a52",fontSize:11,cursor:"pointer",lineHeight:1}}>✕</button>
-                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#00ffcc",marginBottom:2}}>{sym}</div>
-                    <button onClick={()=>setSearchQ(sym+" stock price today change")}
-                      style={{padding:"4px 8px",borderRadius:6,background:"#0d1525",border:"1px solid #2c3a52",color:"#8fa3c0",fontSize:9,cursor:"pointer",fontFamily:"inherit",marginTop:4,width:"100%"}}
-                      onMouseDown={()=>setTimeout(()=>runSearch(sym+" stock price today change"),100)}>
-                      📊 Get Price
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Searches */}
-            <div style={{background:"#0d1525",borderRadius:14,padding:"14px",marginBottom:14,border:"1px solid #1e2a3a"}}>
-              <div style={{fontSize:11,fontWeight:700,color:"#8fa3c0",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>🔍 Quick Market Searches</div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                {["Market news today","S&P 500 today","Best dividend stocks 2026","Trucking stocks","IUL vs 401k","Best ETFs for 1099 workers","Fuel futures price","Bitcoin price today","Fed interest rate","Recession 2026"].map(q=>(
-                  <button key={q} onClick={()=>{setShowMarket(false);setSearchQ(q);setTimeout(()=>runSearch(q),100);}}
-                    style={{padding:"6px 12px",borderRadius:20,background:"#1a2436",border:"1px solid #00aa8844",color:"#00aa88",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
-                    {q}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* External Links */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              <button onClick={()=>window.open("https://finance.google.com","_blank")}
-                style={{padding:"13px",borderRadius:12,background:"linear-gradient(135deg,#15803d,#16a34a)",color:"#fff",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
-                📊 Google Finance
-              </button>
-              <button onClick={()=>window.open("https://finance.yahoo.com","_blank")}
-                style={{padding:"13px",borderRadius:12,background:"#1a2436",border:"1px solid #2c3a52",color:"#f0f6ff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>
-                📈 Yahoo Finance
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-            {/* ── ABOUT US MODAL ── */}
+      {/* ── ABOUT US MODAL ── */}
       {showAbout&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px",backdropFilter:"blur(4px)",overflowY:"auto"}}>
           <div style={{background:C.card,borderRadius:24,padding:"28px 22px",maxWidth:420,width:"100%",border:`1px solid ${C.border}`,boxShadow:"0 32px 80px rgba(0,0,0,0.9)",marginTop:"auto",marginBottom:"auto"}}>
             <div style={{textAlign:"center",marginBottom:20}}>
               <div style={{width:68,height:68,borderRadius:"50%",background:"linear-gradient(135deg,#fbbf24,#f59e0b)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",fontSize:36,boxShadow:"0 0 0 6px #fbbf2420"}}>💰</div>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.text,marginBottom:8}}>About ContractorIQ</div>
-              <div style={{fontSize:12,color:C.sub,lineHeight:1.8,marginBottom:14}}>Your personal profit analyst — built for every gig worker and independent contractor who deserves to know the truth about their business.</div>
+              <div style={{fontSize:11,color:C.sub,lineHeight:1.8,marginBottom:14}}>Your personal profit analyst — built for every gig worker and independent contractor who deserves to know the truth about their business.</div>
               <div style={{padding:"10px 14px",background:`${C.gold}15`,border:`2px solid ${C.gold}55`,borderRadius:12,marginBottom:16}}>
-                <div style={{fontSize:12,fontWeight:800,color:C.gold,marginBottom:4}}>⚡ WE DON'T COMPETE WITH DAT OR TRUCKLOGICS.</div>
-                <div style={{fontSize:11,color:C.gold,lineHeight:1.6}}>We Show You Where You're Losing Money and Help You Fix It With AI Technology — for a fraction of what they charge.</div>
+                <div style={{fontSize:12,fontWeight:800,color:"#fbbf24",marginBottom:4}}>⚡ WE DON'T COMPETE WITH DAT OR TRUCKLOGICS.</div>
+                <div style={{fontSize:11,color:"#fbbf24",lineHeight:1.6}}>We Show You Where You're Losing Money and Help You Fix It With AI Technology — for a fraction of what they charge.</div>
               </div>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:18}}>
@@ -1491,18 +1134,18 @@ Be specific with real institution names and programs, not generic advice.`;
                   <span style={{fontSize:20,flexShrink:0,marginTop:2}}>{r.i}</span>
                   <div>
                     <div style={{fontSize:12,fontWeight:700,color:C.text,marginBottom:3}}>{r.t}</div>
-                    <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>{r.d}</div>
+                    <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>{r.d}</div>
                   </div>
                 </div>
               ))}
             </div>
             <div style={{padding:"12px 14px",background:`${C.accent}12`,borderRadius:10,border:`1px solid ${C.accent}33`,marginBottom:16,textAlign:"center"}}>
-              <div style={{fontSize:12,fontWeight:800,color:C.accent,marginBottom:4}}>🎯 Our Mission</div>
-              <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>To help every independent contractor stop guessing and start knowing — so you can build the business and life you deserve. One avoided bad load saves $300–$800. ContractorIQ pays for itself immediately.</div>
+              <div style={{fontSize:12,fontWeight:800,color:"#00ffcc",marginBottom:4}}>🎯 Our Mission</div>
+              <div style={{fontSize:11,color:C.sub,lineHeight:1.7}}>To help every independent contractor stop guessing and start knowing — so you can build the business and life you deserve. One avoided bad load saves $300–$800. ContractorIQ pays for itself immediately.</div>
             </div>
             <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:7,marginBottom:16}}>
               {["🚛 Owner-Op","🛣️ OTR Driver","⚓ Drayage","🚗 Rideshare","🛵 Dasher","📦 Delivery","💼 Any 1099"].map(g=>(
-                <span key={g} style={{padding:"4px 10px",borderRadius:20,fontSize:10,background:`${C.accent}12`,border:`1px solid ${C.accent}25`,color:C.accent,fontWeight:600}}>{g}</span>
+                <span key={g} style={{padding:"4px 10px",borderRadius:20,fontSize:10,background:`${C.accent}12`,border:`1px solid ${C.accent}25`,color:"#00ffcc",fontWeight:600}}>{g}</span>
               ))}
             </div>
             <button onClick={()=>setShowAbout(false)} style={{width:"100%",padding:"13px",borderRadius:12,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
@@ -1520,16 +1163,16 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{textAlign:"center",marginBottom:18}}>
               <div style={{width:72,height:72,borderRadius:"50%",background:"linear-gradient(135deg,#fbbf24,#f59e0b)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",fontSize:40,boxShadow:"0 0 0 6px #fbbf2420"}}>💰</div>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.text,marginBottom:8,lineHeight:1.2}}>Stop Guessing.<br/>Start Knowing.</div>
-              <div style={{fontSize:12,color:C.sub,lineHeight:1.65,marginBottom:12}}>ContractorIQ is your personal profit analyst — built for every gig worker who wants to see <span style={{color:C.accent,fontWeight:700}}>exactly where the money goes</span> and what to do about it. In seconds. Not hours.</div>
+              <div style={{fontSize:12,color:C.sub,lineHeight:1.65,marginBottom:12}}>ContractorIQ is your personal profit analyst — built for every gig worker who wants to see <span style={{color:"#00ffcc",fontWeight:700}}>exactly where the money goes</span> and what to do about it. In seconds. Not hours.</div>
               <div style={{padding:"10px 14px",background:C.gold+"15",border:"2px solid "+C.gold+"60",borderRadius:12,textAlign:"left"}}>
-                <div style={{fontSize:11,fontWeight:800,color:C.gold,marginBottom:4,letterSpacing:"0.03em"}}>⚡ WE DON'T COMPETE WITH DAT OR TRUCKLOGICS.</div>
-                <div style={{fontSize:11,color:C.gold,lineHeight:1.6}}>We <strong>Show You Where You're Losing Money</strong> and <strong>Help You Fix It With AI Technology</strong> — for a fraction of what they charge.</div>
+                <div style={{fontSize:11,fontWeight:800,color:"#fbbf24",marginBottom:4,letterSpacing:"0.03em"}}>⚡ WE DON'T COMPETE WITH DAT OR TRUCKLOGICS.</div>
+                <div style={{fontSize:11,color:"#fbbf24",lineHeight:1.6}}>We <strong>Show You Where You're Losing Money</strong> and <strong>Help You Fix It With AI Technology</strong> — for a fraction of what they charge.</div>
               </div>
             </div>
 
             <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:7,marginBottom:18}}>
               {["🚛 Owner-Op","🛣️ OTR Driver","⚓ Drayage","🚗 Rideshare","🛵 Dasher","📦 Delivery","💼 Any 1099"].map(g=>(
-                <span key={g} style={{padding:"4px 10px",borderRadius:20,fontSize:10,background:C.accent+"10",border:"1px solid "+C.accent+"25",color:C.accent,fontWeight:600}}>{g}</span>
+                <span key={g} style={{padding:"4px 10px",borderRadius:20,fontSize:10,background:C.accent+"10",border:"1px solid "+C.accent+"25",color:"#00ffcc",fontWeight:600}}>{g}</span>
               ))}
             </div>
 
@@ -1560,8 +1203,8 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div onClick={()=>window.open("https://buy.stripe.com/aFa8wP7FLbMY4Ua0Ls9MY00","_blank")} style={{background:C.raised,border:"1px solid "+C.gold+"44",borderRadius:14,padding:"12px 10px",cursor:"pointer",textAlign:"center"}}>
                   <div style={{fontSize:18,marginBottom:4}}>🔥</div>
                   <div style={{fontSize:11,fontWeight:800,color:C.gold}}>5-Day Trial</div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.gold,margin:"4px 0"}}>$1</div>
-                  <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>Full access<br/>Cancel anytime</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:"#fbbf24",margin:"4px 0"}}>$1</div>
+                  <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>Full access<br/>Cancel anytime</div>
                 </div>
 
                 {/* PRO — $19.99 — HERO CARD */}
@@ -1570,11 +1213,11 @@ Be specific with real institution names and programs, not generic advice.`;
                   <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",borderRadius:20,padding:"3px 12px",fontSize:8,fontWeight:800,color:"#000",whiteSpace:"nowrap",boxShadow:"0 2px 8px "+C.accent+"55"}}>⭐ MOST POPULAR</div>
                   <div style={{fontSize:20,marginBottom:2}}>💰</div>
                   <div style={{fontSize:12,fontWeight:800,color:C.accent}}>Go Pro</div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:26,fontWeight:800,color:C.accent,margin:"2px 0",lineHeight:1}}>$19.99</div>
-                  <div style={{fontSize:9,color:C.accent,opacity:0.7,marginBottom:4}}>/month</div>
-                  <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>Unlimited AI · No ads<br/>Cancel anytime</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:26,fontWeight:800,color:"#00ffcc",margin:"2px 0",lineHeight:1}}>$19.99</div>
+                  <div style={{fontSize:9,color:"#00ffcc",opacity:0.7,marginBottom:4}}>/month</div>
+                  <div style={{fontSize:9,color:C.sub,lineHeight:1.6}}>Unlimited AI · No ads<br/>Cancel anytime</div>
                   <div style={{marginTop:6,padding:"3px 0",background:C.red+"22",borderRadius:6,border:"1px solid "+C.red+"44"}}>
-                    <div style={{fontSize:8,color:C.red,fontWeight:700}}>🔺 Goes to $39.99 soon</div>
+                    <div style={{fontSize:8,color:"#f87171",fontWeight:700}}>🔺 Goes to $39.99 soon</div>
                   </div>
                 </div>
 
@@ -1582,8 +1225,8 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div onClick={()=>window.open("https://buy.stripe.com/3cIcN5f8d5oAeuKeCi9MY02","_blank")} style={{background:C.raised,border:"1px solid "+C.a3+"55",borderRadius:14,padding:"12px 10px",cursor:"pointer",textAlign:"center"}}>
                   <div style={{fontSize:18,marginBottom:4}}>💎</div>
                   <div style={{fontSize:11,fontWeight:800,color:C.a3}}>Founding Member</div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.a3,margin:"4px 0"}}>$97<span style={{fontSize:9,fontWeight:400,color:C.sub}}> once</span></div>
-                  <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>Everything forever<br/>First 50 spots only</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:"#a78bfa",margin:"4px 0"}}>$97<span style={{fontSize:9,fontWeight:400,color:C.sub}}> once</span></div>
+                  <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>Everything forever<br/>First 50 spots only</div>
                 </div>
 
                 {/* FREE DEMO */}
@@ -1595,7 +1238,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   <div style={{fontSize:18,marginBottom:4}}>👀</div>
                   <div style={{fontSize:11,fontWeight:800,color:C.sub}}>Try Demo</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.sub,margin:"4px 0"}}>FREE</div>
-                  <div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>Sample data<br/>No account needed</div>
+                  <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>Sample data<br/>No account needed</div>
                 </div>
 
               </div>
@@ -1604,7 +1247,7 @@ Be specific with real institution names and programs, not generic advice.`;
             {/* Footer tip */}
             <div style={{display:"flex",alignItems:"flex-start",gap:8,padding:"10px 12px",background:C.gold+"10",borderRadius:10,border:"1px solid "+C.gold+"30"}}>
               <span style={{fontSize:14,flexShrink:0}}>⚡</span>
-              <div style={{fontSize:10,color:C.gold,lineHeight:1.6}}><strong>One avoided bad load = $300–$800 back in your pocket.</strong> ContractorIQ pays for itself the first time you use it.</div>
+              <div style={{fontSize:10,color:"#fbbf24",lineHeight:1.6}}><strong>One avoided bad load = $300–$800 back in your pocket.</strong> ContractorIQ pays for itself the first time you use it.</div>
             </div>
 
           </div>
@@ -1614,8 +1257,8 @@ Be specific with real institution names and programs, not generic advice.`;
       {/* ── DEVICE MISMATCH WARNING (sharing prevention) ── */}
       {deviceMismatch&&(
         <div style={{background:C.red+"18",borderBottom:"1px solid "+C.red+"44",padding:"10px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontSize:11,color:C.red,fontWeight:700}}>⚠️ Account detected on new device — please re-verify your subscription</div>
-          <button onClick={()=>window.open("https://buy.stripe.com/fZufZh2lr2co3Q6am29MY01","_blank")} style={{padding:"4px 10px",borderRadius:6,background:C.red+"22",border:"1px solid "+C.red+"55",color:C.red,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Verify</button>
+          <div style={{fontSize:11,color:"#f87171",fontWeight:700}}>⚠️ Account detected on new device — please re-verify your subscription</div>
+          <button onClick={()=>window.open("https://buy.stripe.com/fZufZh2lr2co3Q6am29MY01","_blank")} style={{padding:"4px 10px",borderRadius:6,background:C.red+"22",border:"1px solid "+C.red+"55",color:"#f87171",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Verify</button>
         </div>
       )}
 
@@ -1638,51 +1281,8 @@ Be specific with real institution names and programs, not generic advice.`;
 
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 
-      {/* ── MARKET TICKER BAR ── scrolling tape ── */}
-      <div style={{background:"#0a0e1a",borderBottom:"1px solid #1e2a3a",overflow:"hidden"}}>
-        {/* TradingView Ticker Tape - scrolling/spinning */}
-        <iframe
-          scrolling="no"
-          allowTransparency="true"
-          frameBorder="0"
-          src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P%20500%22%2C%22proName%22%3A%22AMEX%3ASPY%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22AMEX%3ADIA%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3AQQQ%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22AMEX%3AIWM%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22CBOE%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22COINBASE%3ABTCUSD%22%7D%2C%7B%22description%22%3A%22Apple%22%2C%22proName%22%3A%22NASDAQ%3AAAPL%22%7D%2C%7B%22description%22%3A%22Tesla%22%2C%22proName%22%3A%22NASDAQ%3ATSLA%22%7D%2C%7B%22description%22%3A%22Nvidia%22%2C%22proName%22%3A%22NASDAQ%3ANVDA%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22colorTheme%22%3A%22dark%22%2C%22locale%22%3A%22en%22%7D"
-          style={{width:"100%",height:72,display:"block"}}
-          title="Market Ticker Tape"
-        />
-        {/* Personal Favorites Row */}
-        <div style={{display:"flex",alignItems:"center",gap:6,padding:"5px 10px",overflowX:"auto",borderTop:"1px solid #1e2a3a"}}>
-          <span style={{fontSize:9,color:"#4a6080",fontWeight:700,flexShrink:0,textTransform:"uppercase",letterSpacing:"0.06em"}}>MY STOCKS</span>
-          {favStocks.map(sym=>(
-            <button key={sym} onClick={()=>{setShowMarket(true);setTimeout(()=>{setSearchQ(sym+" stock price today");runSearch(sym+" stock price today");},200);}}
-              style={{padding:"3px 9px",borderRadius:8,background:"#1a2436",border:"1px solid #2c3a52",color:"#00ffcc",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,display:"flex",alignItems:"center",gap:5}}>
-              📈 {sym}
-              <span onClick={e=>{e.stopPropagation();const n=favStocks.filter(s=>s!==sym);setFavStocks(n);try{localStorage.setItem("ciq_favstocks",JSON.stringify(n));}catch(ex){}}}
-                style={{color:"#4a6080",fontSize:12,lineHeight:1,marginLeft:2,cursor:"pointer"}}>×</span>
-            </button>
-          ))}
-          {addingStock?(
-            <div style={{display:"flex",gap:4,flexShrink:0}}>
-              <input value={newStock} onChange={e=>setNewStock(e.target.value.toUpperCase())}
-                onKeyDown={e=>{if(e.key==="Enter"&&newStock.trim()){const n=[...favStocks,newStock.trim()];setFavStocks(n);try{localStorage.setItem("ciq_favstocks",JSON.stringify(n));}catch(ex){}setNewStock("");setAddingStock(false);}}}
-                placeholder="AAPL" maxLength={6}
-                style={{width:60,padding:"3px 8px",borderRadius:7,background:"#1a2436",border:"1px solid #00ffcc",color:"#00ffcc",fontSize:11,fontFamily:"inherit",outline:"none"}}
-                autoFocus/>
-              <button onClick={()=>{if(newStock.trim()){const n=[...favStocks,newStock.trim()];setFavStocks(n);try{localStorage.setItem("ciq_favstocks",JSON.stringify(n));}catch(ex){}}setNewStock("");setAddingStock(false);}}
-                style={{padding:"3px 8px",borderRadius:7,background:"#00ffcc",color:"#000",fontSize:10,fontWeight:800,border:"none",cursor:"pointer",fontFamily:"inherit"}}>✓</button>
-              <button onClick={()=>{setAddingStock(false);setNewStock("");}}
-                style={{padding:"3px 7px",borderRadius:7,background:"transparent",color:"#4a6080",fontSize:12,border:"none",cursor:"pointer"}}>×</button>
-            </div>
-          ):(
-            <button onClick={()=>setAddingStock(true)}
-              style={{padding:"3px 9px",borderRadius:8,background:"transparent",border:"1px dashed #2c3a52",color:"#4a6080",fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
-              + Add
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* HEADER */}
-      <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"11px 14px",position:"sticky",top:0,zIndex:100,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)"}}>
+      <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"13px 16px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:11}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:32,height:32,borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🚛</div>
@@ -1690,74 +1290,71 @@ Be specific with real institution names and programs, not generic advice.`;
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,fontSize:15}}>DrayageIQ</div>
               <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":demoMode?"Demo Driver":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</div>
             </div>
-
           </div>
           <div style={{textAlign:"right"}}>
             <div style={{fontSize:10,color:C.sub}}>YTD Gross</div>
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.accent}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</div>
           </div>
         </div>
-        <div style={{display:"flex",gap:6,alignItems:"center"}}>
-          {/* Scrollable nav tabs */}
-          <div style={{display:"flex",gap:6,alignItems:"center",overflowX:"auto",flex:1,scrollbarWidth:"none",WebkitOverflowScrolling:"touch",paddingBottom:2}}>
-            <TB t="dashboard" l="📊 Dash"/>
-            <TB t="loads" l="📋 Docs"/>
-            <TB t="growth" l="🚀 Growth"/>
-            <button onClick={()=>setShowInsurance(true)} style={{padding:"0 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa55",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",gap:4}}>🛡️ Protect</button>
-            <button onClick={()=>{setShowQR(true);}} style={{padding:"0 10px",borderRadius:8,background:"#a78bfa15",border:"1px solid #a78bfa44",color:"#a78bfa",fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",gap:3}}>📱 QR</button>
-            <TB t="ai" l="🧠 AI"/>
-            <button onClick={()=>setFocusMode(p=>!p)}
-              style={{padding:"0 12px",borderRadius:8,background:focusMode?C.gold:`linear-gradient(135deg,${C.gold}33,${C.gold}15)`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",height:40,display:"flex",alignItems:"center",gap:4}}>
-              {focusMode?"⚡":"⚡ Focus"}
+        <div style={{display:"flex",gap:7,alignItems:"center"}}>
+          <TB t="dashboard" l="📊 Dash"/>
+          <TB t="loads" l="📋 Doc Analyzer"/>
+          <TB t="ai" l="🧠 AI"/>
+          <TB t="growth" l="🚀 Growth"/>
+          <button onClick={()=>setFocusMode(p=>!p)}
+            style={{padding:"9px 14px",borderRadius:8,background:focusMode?C.gold:`linear-gradient(135deg,${C.gold}33,${C.gold}15)`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,letterSpacing:"0.03em"}}>
+            {focusMode?"⚡ FOCUS":"⚡ Focus"}
+          </button>
+          {/* ── GROUPED MENU BUTTON ── */}
+          <div style={{position:"relative",flexShrink:0}}>
+            <button onClick={()=>setShowMenu(p=>!p)}
+              style={{padding:"9px 12px",borderRadius:8,background:showMenu?`${C.a3}22`:C.raised,border:`1px solid ${showMenu?C.a3:C.border}`,color:showMenu?C.a3:C.sub,fontSize:13,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5}}>
+              <span>☰</span>
+              <span style={{fontSize:10,fontWeight:700}}>Menu</span>
             </button>
-          </div>
-          {/* Menu + PRO — fixed outside scroll so dropdown never clips */}
-          <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
-            <div style={{position:"relative"}}>
-              <button onClick={()=>setShowMenu(p=>!p)}
-                style={{padding:"0 12px",borderRadius:8,background:showMenu?`${C.a3}22`:C.raised,border:`1px solid ${showMenu?C.a3:C.border}`,color:showMenu?C.a3:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5,height:40,whiteSpace:"nowrap",fontWeight:700}}>
-                <span>☰</span><span>Menu</span>
-              </button>
-              {showMenu&&(
-                <div style={{position:"fixed",top:120,right:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:8,zIndex:9998,minWidth:190,boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
-                  <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
-                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
-                    <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
-                  </button>
-                  <button onClick={()=>{setShowMarket(true);setShowMenu(false);}}
-                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
-                    <span>📈</span><span style={{fontWeight:600}}>Market Overview</span>
-                  </button>
-
-                  <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
-                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
-                    <span>👤</span><span style={{fontWeight:600}}>My Profile</span>
-                    {profile.setupDone&&<span style={{marginLeft:"auto",fontSize:10,color:C.green}}>✅</span>}
-                  </button>
-                  <button onClick={()=>{setShowSettings(p=>!p);setShowProfile(false);setShowMenu(false);}}
-                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showSettings?`${C.a3}15`:C.raised,border:`1px solid ${showSettings?C.a3:C.border}`,color:showSettings?C.a3:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
-                    <span>⚙️</span><span style={{fontWeight:600}}>Display Settings</span>
-                  </button>
-                  <button onClick={()=>{const next=!darkMode;setDarkMode(next);try{localStorage.setItem("ciq_theme",next?"dark":"light");}catch(e){}setShowMenu(false);}}
-                    style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
-                    <span>{darkMode?"☀️":"🌙"}</span><span style={{fontWeight:600}}>{darkMode?"Light Mode":"Dark Mode"}</span>
-                  </button>
-                </div>
-              )}
-            </div>
-            {isPro?(
-              <div onClick={()=>{setIsPro(false);try{localStorage.removeItem("ciq_pro");localStorage.removeItem("ciq_trial_start");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}} style={{padding:"6px 10px",borderRadius:8,background:"linear-gradient(135deg,"+C.accent+"33,"+C.a3+"22)",border:"1px solid "+C.accent+"66",fontSize:9,fontWeight:800,color:C.accent,cursor:"pointer",whiteSpace:"nowrap",boxShadow:"0 0 10px "+C.accent+"33",letterSpacing:"0.06em"}}>PRO ✓</div>
-            ):trialDaysLeft>0?(
-              <div style={{padding:"6px 9px",borderRadius:8,background:C.gold+"20",border:"1px solid "+C.gold+"55",fontSize:9,fontWeight:700,color:C.gold,flexShrink:0}}>{trialDaysLeft}d left</div>
-            ):(
-              <button onClick={()=>{const t=ownerTaps+1;setOwnerTaps(t);if(t>=5){setIsPro(true);setOwnerTaps(0);try{localStorage.setItem("ciq_pro","true");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}else{openUpgrade("header");}}} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{ownerTaps>0?`(${ownerTaps}/5)`:"Upgrade"}</button>
+            {showMenu&&(
+              <div style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:8,zIndex:999,minWidth:180,boxShadow:"0 8px 32px rgba(0,0,0,0.3)"}}>
+                {/* About Us */}
+                <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
+                </button>
+                {/* Profile */}
+                <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>👤</span><span style={{fontWeight:600}}>My Profile</span>
+                  {profile.setupDone&&<span style={{marginLeft:"auto",fontSize:10,color:C.green}}>✅</span>}
+                </button>
+                {/* Settings */}
+                <button onClick={()=>{setShowSettings(p=>!p);setShowProfile(false);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showSettings?`${C.a3}15`:C.raised,border:`1px solid ${showSettings?C.a3:C.border}`,color:showSettings?C.a3:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>⚙️</span><span style={{fontWeight:600}}>Display Settings</span>
+                </button>
+                {/* Theme toggle */}
+                <button onClick={()=>{const next=!darkMode;setDarkMode(next);try{localStorage.setItem("ciq_theme",next?"dark":"light");}catch(e){}setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>{darkMode?"☀️":"🌙"}</span><span style={{fontWeight:600}}>{darkMode?"Light Mode":"Dark Mode"}</span>
+                </button>
+                {/* About Us */}
+                <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
+                  <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
+                </button>
+              </div>
             )}
           </div>
+          {isPro?(
+            <div onClick={()=>{setIsPro(false);try{localStorage.removeItem("ciq_pro");localStorage.removeItem("ciq_trial_start");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}} style={{padding:"6px 10px",borderRadius:8,background:"linear-gradient(135deg,"+C.accent+"22,"+C.a3+"22)",border:"1px solid "+C.accent+"55",fontSize:9,fontWeight:800,color:"#00ffcc",letterSpacing:"0.05em",flexShrink:0,cursor:"pointer"}}>PRO ✓</div>
+          ):trialDaysLeft>0?(
+            <div style={{padding:"6px 9px",borderRadius:8,background:C.gold+"20",border:"1px solid "+C.gold+"55",fontSize:9,fontWeight:700,color:"#fbbf24",flexShrink:0}}>{trialDaysLeft}d left</div>
+          ):(
+            <button onClick={()=>{const t=ownerTaps+1;setOwnerTaps(t);if(t>=5){setIsPro(true);setOwnerTaps(0);try{localStorage.setItem("ciq_pro","true");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}else{openUpgrade("header");}}} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{ownerTaps>0?`(${ownerTaps}/5)`:"Upgrade"}</button>
+          )}
         </div>
       </div>
 
       {/* ── SMART SEARCH BAR ── highlighted below header ── */}
-      <div style={{background:`linear-gradient(135deg,${C.a3}15,${C.accent}08)`,borderBottom:`1px solid ${C.a3}33`,padding:"10px 14px"}}>
+      <div style={{background:`linear-gradient(135deg,${C.a3}22,${C.accent}15)`,borderBottom:`2px solid ${C.a3}55`,padding:"11px 14px"}}>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:10,padding:"0 12px",border:`2px solid ${C.a3}`,boxShadow:`0 0 14px ${C.a3}33`}}>
             <span style={{fontSize:14,flexShrink:0,color:C.a3}}>{searchLoading?"⏳":"🔍"}</span>
@@ -1769,12 +1366,49 @@ Be specific with real institution names and programs, not generic advice.`;
         {!searchResult&&!searchLoading&&(
           <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
             {["⛅ Weather","⛽ Gas prices","🚛 Truck stops","🛣️ Traffic I-95","⛽ Diesel prices"].map(s=>(
-              <button key={s} onClick={()=>{setSearchQ(s.replace(/^[^\s]+\s/,""));setTimeout(()=>runSearch(s.replace(/^[^\s]+\s/,"")),50);}} style={{padding:"5px 11px",borderRadius:20,background:C.raised,border:`1px solid ${C.a3}55`,color:C.a3,fontSize:11,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",fontWeight:700}}>{s}</button>
+              <button key={s} onClick={()=>{setSearchQ(s.replace(/^[^\s]+\s/,""));setTimeout(()=>runSearch(s.replace(/^[^\s]+\s/,"")),50);}} style={{padding:"5px 11px",borderRadius:20,background:C.raised,border:`1px solid ${C.a3}55`,color:"#a78bfa",fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",fontWeight:700}}>{s}</button>
             ))}
           </div>
         )}
         {searchResult&&(
-          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}44`,fontSize:13,color:C.text,lineHeight:1.9,whiteSpace:"pre-wrap"}}>
+          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}44`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
+            {searchResult}
+            <button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
+          </div>
+        )}
+      </div>
+      <div style={{background:`linear-gradient(135deg,${C.a3}18,${C.accent}12)`,borderBottom:`2px solid ${C.a3}55`,padding:"10px 14px",position:"sticky",top:0,zIndex:99}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:12,padding:"0 12px",border:`2px solid ${C.a3}66`,boxShadow:`0 2px 12px ${C.a3}22`}}>
+            <span style={{fontSize:15,flexShrink:0}}>{searchLoading?"⏳":"🔍"}</span>
+            <input
+              value={searchQ||""}
+              onChange={e=>setSearchQ(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}}
+              placeholder="Search weather, gas, truck stops, traffic..."
+              style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"11px 0",width:"100%",outline:"none"}}
+            />
+            {(searchQ||"").trim()&&<button onClick={()=>{setSearchQ("");setSearchResult("");}} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer",padding:"0 4px",flexShrink:0}}>×</button>}
+          </div>
+          <button
+            onClick={()=>runSearch()}
+            disabled={!(searchQ||"").trim()||searchLoading}
+            style={{padding:"11px 16px",borderRadius:12,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:!(searchQ||"").trim()||searchLoading?C.sub:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
+            {searchLoading?"⏳ ...":"Search"}
+          </button>
+        </div>
+        {!searchResult&&!searchLoading&&(
+          <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
+            {["⛅ Weather","⛽ Gas prices","🚛 Truck stops I-70","🛣️ Traffic I-95","🔧 Mechanic near me"].map(s=>(
+              <button key={s} onClick={()=>{const q=s.replace(/^[^\s]+\s/,"");setSearchQ(q);setTimeout(()=>runSearch(q),50);}}
+                style={{padding:"5px 11px",borderRadius:20,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:"#a78bfa",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+        {searchResult&&(
+          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}55`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap",boxShadow:`0 2px 12px ${C.a3}22`}}>
             {searchResult}
             <button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
           </div>
@@ -1819,13 +1453,13 @@ Be specific with real institution names and programs, not generic advice.`;
                     </button>
                   </div>
                 ))}
-                <div style={{fontSize:12,color:C.sub,lineHeight:1.7,marginTop:6}}>Use when sharing screenshots. Data stays saved — display only.</div>
+                <div style={{fontSize:9,color:C.sub,lineHeight:1.5,marginTop:6}}>Use when sharing screenshots. Data stays saved — display only.</div>
               </div>
               <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Active Filters</div>
                 <div style={{fontSize:11,color:visibleW.length===allW.length?C.sub:C.gold,marginBottom:6}}>{visibleW.length===allW.length?"✓ All weeks visible":"⚠️ "+visibleW.length+" of "+allW.length+" weeks shown"}</div>
-                {activeOnlyVendor&&<div style={{fontSize:10,color:C.gold,marginBottom:4}}>👁 Only: {VENDORS[activeOnlyVendor]?.short}</div>}
-                {hiddenVendors.length>0&&<div style={{fontSize:10,color:C.red,marginBottom:4}}>🚫 Hidden: {hiddenVendors.join(", ")}</div>}
+                {activeOnlyVendor&&<div style={{fontSize:10,color:"#fbbf24",marginBottom:4}}>👁 Only: {VENDORS[activeOnlyVendor]?.short}</div>}
+                {hiddenVendors.length>0&&<div style={{fontSize:10,color:"#f87171",marginBottom:4}}>🚫 Hidden: {hiddenVendors.join(", ")}</div>}
                 {hideOwnerName&&<div style={{fontSize:10,color:C.accent}}>🔒 Name hidden</div>}
                 <button onClick={()=>{setHiddenVendors([]);setActiveOnlyVendor(null);setHideOwnerName(false);setHideUnitNum(false);}} style={{width:"100%",marginTop:10,padding:"6px",borderRadius:6,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Reset All</button>
               </div>
@@ -1841,7 +1475,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div>
                 <div style={{fontSize:12,fontWeight:700,color:C.text}}>👤 Your Profile</div>
-                <div style={{fontSize:11,color:C.sub,marginTop:2}}>AI uses this to personalize every analysis</div>
+                <div style={{fontSize:10,color:C.sub,marginTop:2}}>AI uses this to personalize every analysis</div>
               </div>
               <button onClick={()=>setShowProfile(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
             </div>
@@ -1896,9 +1530,9 @@ Be specific with real institution names and programs, not generic advice.`;
           <p style={{color:C.sub,fontSize:11,marginTop:0,marginBottom:14}}>{visibleW.length} weeks{visibleW.length<allW.length?" of "+allW.length:""} · {vendorStats.length} vendor{vendorStats.length>1?"s":""} · tap bars to navigate</p>
 
           {!profile.setupDone&&(
-            <div style={{padding:"10px 14px",background:`${C.a3}10`,borderRadius:9,border:`1px solid ${C.a3}33`,fontSize:11,color:C.a3,marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+            <div style={{padding:"10px 14px",background:`${C.a3}10`,borderRadius:9,border:`1px solid ${C.a3}33`,fontSize:11,color:"#a78bfa",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
               <span>👋 New here? Tap <strong>👤</strong> to set your profile. Tap <strong>?</strong> on any card to learn what it does.</span>
-              <button onClick={()=>setShowProfile(true)} style={{padding:"5px 10px",borderRadius:6,background:`${C.a3}22`,border:`1px solid ${C.a3}55`,color:C.a3,fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,fontWeight:700}}>Set Up →</button>
+              <button onClick={()=>setShowProfile(true)} style={{padding:"5px 10px",borderRadius:6,background:`${C.a3}22`,border:`1px solid ${C.a3}55`,color:"#a78bfa",fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,fontWeight:700}}>Set Up →</button>
             </div>
           )}
           {profile.setupDone&&profile.goal&&(
@@ -1917,7 +1551,7 @@ Be specific with real institution names and programs, not generic advice.`;
             return(
               <div style={{padding:"10px 14px",background:"linear-gradient(135deg,"+C.a3+"12,"+C.accent+"08)",borderRadius:9,border:"1px solid "+C.a3+"33",fontSize:11,marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
                 <div>
-                  <div style={{fontWeight:700,color:C.a3,marginBottom:1}}>💡 ContractorIQ is working for you</div>
+                  <div style={{fontWeight:700,color:"#a78bfa",marginBottom:1}}>💡 ContractorIQ is working for you</div>
                   <div style={{fontSize:10,color:C.sub}}>{insightCount} data points tracked · {badLoads>0?badLoads+" low-value route"+(badLoads>1?"s":"")+" flagged":allMoves.length+" routes analyzed"}{savedEst>0?" · ~$"+savedEst.toLocaleString()+" in poor loads identified":""}</div>
                 </div>
                 {!hasAccess&&<button onClick={()=>openUpgrade("value")} style={{padding:"5px 11px",borderRadius:7,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",color:"#000",fontSize:10,fontWeight:700,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Upgrade</button>}
@@ -1935,7 +1569,7 @@ Be specific with real institution names and programs, not generic advice.`;
             const marginPct=tGross>0?(tNet/tGross*100):0;
             const ads=[
               {id:"fuel",show:latestFuel>900&&!dismissedAds.includes("fuel"),
-               icon:"⛽",color:C.gold,partner:"Comdata Fuel Card",
+               icon:"⛽",color:"#fbbf24",partner:"Comdata Fuel Card",
                headline:"Your fuel cost was $"+Math.round(latestFuel)+" last week",
                body:"Comdata cardholders save an average of $180/week on diesel. Check your savings estimate.",
                cta:"See My Savings →",url:"https://www.comdata.com/solutions/fleet-cards/"},
@@ -1945,12 +1579,12 @@ Be specific with real institution names and programs, not generic advice.`;
                body:"OTR Capital funds your invoices in 24 hours. No long-term contract. Rates from 1.5%.",
                cta:"Check Qualification →",url:"https://www.otrcapital.com/"},
               {id:"loads",show:hasDgrade&&!dismissedAds.includes("loads"),
-               icon:"📦",color:C.accent,partner:"DAT Load Board",
+               icon:"📦",color:"#00ffcc",partner:"DAT Load Board",
                headline:latestGrades.filter(function(g){return g==="D";}).length+" of your recent routes graded D",
                body:"DAT One has 183M+ loads posted monthly. Find higher-paying routes near Baltimore.",
                cta:"Browse Load Board →",url:"https://www.dat.com/"},
               {id:"tax",show:marginPct<55&&!dismissedAds.includes("tax"),
-               icon:"🧾",color:C.a3,partner:"ATBS",
+               icon:"🧾",color:"#a78bfa",partner:"ATBS",
                headline:"Most owner-operators overpay taxes by $4,200/yr",
                body:"ATBS specializes in trucking tax prep. Their average client saves more than the cost of this app.",
                cta:"Get a Free Estimate →",url:"https://www.atbs.com/"},
@@ -1977,16 +1611,16 @@ Be specific with real institution names and programs, not generic advice.`;
                     </div>
                   );
                 })}
-                <div style={{fontSize:9,color:C.sub,textAlign:"center"}}>Sponsored · <button onClick={()=>openUpgrade("ads")} style={{background:"none",border:"none",color:C.accent,fontSize:9,cursor:"pointer",fontFamily:"inherit",padding:0}}>Go Pro to remove ads</button></div>
+                <div style={{fontSize:9,color:C.sub,textAlign:"center"}}>Sponsored · <button onClick={()=>openUpgrade("ads")} style={{background:"none",border:"none",color:"#00ffcc",fontSize:9,cursor:"pointer",fontFamily:"inherit",padding:0}}>Go Pro to remove ads</button></div>
               </div>
             );
           })()}
 
           {/* Focus Mode banner */}
           {focusMode&&(
-            <div style={{padding:"10px 14px",background:`${C.gold}12`,borderRadius:9,border:`1px solid ${C.gold}33`,fontSize:11,color:C.gold,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{padding:"10px 14px",background:`${C.gold}12`,borderRadius:9,border:`1px solid ${C.gold}33`,fontSize:11,color:"#fbbf24",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <span>⚡ <strong>Focus Mode ON</strong> — Key numbers only.</span>
-              <button onClick={()=>setFocusMode(false)} style={{padding:"4px 10px",borderRadius:6,background:"transparent",border:`1px solid ${C.gold}55`,color:C.gold,fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,marginLeft:10}}>Show All</button>
+              <button onClick={()=>setFocusMode(false)} style={{padding:"4px 10px",borderRadius:6,background:"transparent",border:`1px solid ${C.gold}55`,color:"#fbbf24",fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,marginLeft:10}}>Show All</button>
             </div>
           )}
 
@@ -2056,7 +1690,7 @@ Be specific with real institution names and programs, not generic advice.`;
           {/* ── Main KPIs ── */}
           <div style={{display:"grid",gridTemplateColumns:wide?"repeat(4,1fr)":"repeat(2,1fr)",gap:12,marginBottom:8}}>
             {[{l:"YTD Gross",v:`$${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:`All ${allW.length} weeks`,c:C.accent},{l:"YTD Net",v:`$${tNet.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:`${margin}% margin`,c:C.green},{l:"Deductions",v:`$${tDed.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:"All expenses",c:C.red},{l:"Avg RPM",v:`$${avgRPM}`,s:`${tMi.toLocaleString()} mi`,c:C.a3}].map(k=>(
-              <div key={k.l} style={K({borderTop:`3px solid ${k.c}`,padding:"16px",background:C.card,boxShadow:"0 2px 8px rgba(0,0,0,0.12)"})}>
+              <div key={k.l} style={K({borderTop:`3px solid ${k.c}`,padding:"14px"})}>
                 <div style={{fontSize:10,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>{k.l}</div>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:k.c}}>{k.v}</div>
                 <div style={{fontSize:10,color:C.sub,marginTop:4}}>{k.s}</div>
@@ -2073,14 +1707,14 @@ Be specific with real institution names and programs, not generic advice.`;
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:800,color:C.text,marginBottom:2}}>Protect Your Income</div>
                 <div style={{fontSize:10,color:C.sub,lineHeight:1.6}}>You've earned <strong style={{color:C.accent}}>${tNet.toLocaleString("en-US",{maximumFractionDigits:0})}</strong> net this year. As a 1099 worker you have <strong style={{color:C.gold}}>zero employer coverage.</strong> Book a free life insurance review.</div>
               </div>
-              <button onClick={()=>setShowInsurance(true)} style={{padding:"8px 11px",borderRadius:9,background:"linear-gradient(135deg,#a78bfa,#6d28d9)",color:"#fff",fontWeight:800,fontSize:10,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
-                🛡️ Meet Nelle
+              <button onClick={()=>window.open("https://calendly.com","_blank")} style={{padding:"8px 11px",borderRadius:9,background:`linear-gradient(135deg,${C.a3},${C.accent})`,color:"#000",fontWeight:800,fontSize:10,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
+                📅 Free Review
               </button>
             </div>
           )}
 
           {/* Trend — color coded by vendor */}
-          <div style={{...K({marginBottom:16,padding:"14px 16px"}),overflow:"visible"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div style={K({marginBottom:16,padding:"14px 16px"})}>            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em"}}>📈 Weekly Net Pay Trend{helpBtn("trend")}</div>
             </div>
             {helpModal("trend")}
@@ -2096,42 +1730,43 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
             </div>
 
-            {/* Bars — key-based selection via selWeekKey */}
-            <div style={{display:"flex",alignItems:"flex-end",gap:3,height:120,padding:"0 2px",overflowX:"auto",overflowY:"visible"}}>
-              {sortedW.map((w,si)=>{
-                const maxNet=Math.max(...sortedW.map(x=>x.net));
-                const h=Math.max(32,(w.net/maxNet)*100);
+            {/* Bars */}
+            <div style={{display:"flex",alignItems:"flex-end",gap:4,height:80,padding:"0 2px"}}>
+              {allW.map((w,i)=>{
+                const maxNet=Math.max(...allW.map(x=>x.net));
+                const h=Math.max(8,(w.net/maxNet)*68);
                 const vc=VENDORS[detectVendor(w)]?.color||C.accent;
-                const isSelected=safeSD===si;
-                const label=`$${(w.net/1000).toFixed(1)}k`;
+                const isSelected=sD===i;
                 return(
-                  <div key={w.week+w.from+si} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,minWidth:28}}
-                    onClick={()=>{setSelWeekKey((w.week||'')+(w.from||''));setSM(si);setSH(si);}}>
-                    <div style={{
-                      width:"80%",height:h,minWidth:8,
-                      borderRadius:"5px 5px 0 0",
-                      background:isSelected?vc:`${vc}88`,
-                      boxShadow:isSelected?`0 0 12px ${vc}99`:"none",
-                      transition:"all 0.2s",
-                      display:"flex",flexDirection:"column",
-                      alignItems:"center",justifyContent:"flex-start",
-                      paddingTop:3,
-                    }}>
-                      <span style={{fontSize:8,fontWeight:800,color:"#000",opacity:0.85,lineHeight:1,whiteSpace:"nowrap"}}>
-                        {label}
-                      </span>
+                  <div key={w.week+i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",maxWidth:44}}
+                    onClick={()=>{setSD(i);setSM(i);setSH(i);}}>
+                    {/* Dollar label — only show if selected or has enough space */}
+                    <div style={{fontSize:8,color:isSelected?vc:C.sub,fontWeight:isSelected?800:500,lineHeight:1,marginBottom:1}}>
+                      ${(w.net/1000).toFixed(1)}k
                     </div>
-                    <div style={{fontSize:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?700:400,marginTop:3,lineHeight:1,whiteSpace:"nowrap"}}>
+                    {/* Bar */}
+                    <div style={{
+                      width:"70%",height:h,
+                      borderRadius:"3px 3px 0 0",
+                      background:vc,
+                      opacity:isSelected?1:0.7,
+                      boxShadow:isSelected?`0 0 8px ${vc}66`:"none",
+                      transition:"all 0.15s",
+                      minWidth:6,
+                    }}/>
+                    {/* Week number */}
+                    <div style={{fontSize:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?700:400,marginTop:2,lineHeight:1}}>
                       W{w.week}
                     </div>
-                    <div style={{width:5,height:5,borderRadius:"50%",background:vc,marginTop:2}}/>
+                    {/* Vendor dot */}
+                    <div style={{width:4,height:4,borderRadius:"50%",background:vc,opacity:0.8,marginTop:1}}/>
                   </div>
                 );
               })}
             </div>
 
             <div style={{fontSize:9,color:C.sub,marginTop:8,textAlign:"center"}}>
-              Tap any bar to sync all cards · W{dw?.week} selected
+              Tap any bar to sync all cards · W{allW[sD]?.week} selected
             </div>
           </div>
 
@@ -2142,7 +1777,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={K()}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔍 Deduction Breakdown{helpBtn("deductions")}</div>
-                <Nav i={safeSD} max={sortedW.length-1} prev={()=>{const ni=Math.max(0,safeSD-1);setSelWeekKey((sortedW[ni]?.week||"")+(sortedW[ni]?.from||""));}} next={()=>{const ni=Math.min(sortedW.length-1,safeSD+1);setSelWeekKey((sortedW[ni]?.week||"")+(sortedW[ni]?.from||"")); }} label={"W"+dw.week}/>
+                <Nav i={sD} max={allW.length-1} prev={()=>setSD(p=>p-1)} next={()=>setSD(p=>p+1)} label={"W"+dw.week}/>
               </div>
               {helpModal("deductions")}
               {/* Week badge */}
@@ -2160,14 +1795,13 @@ Be specific with real institution names and programs, not generic advice.`;
               {/* ── COST GROUPS ── */}
               <div style={{marginBottom:14}}>
                 <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>Cost Groups</div>
-                <div style={{display:"grid",gridTemplateColumns:dwGroups.length<=3?"repeat(3,1fr)":dwGroups.length===4?"repeat(4,1fr)":"repeat(3,1fr)",gap:9,marginBottom:10}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9,marginBottom:10}}>
                   {dwGroups.map(g=>(
-                    <div key={g.label} style={{background:C.bg,borderRadius:10,padding:"12px 8px",border:`2px solid ${g.isSavings?"#a78bfa55":g.color+"55"}`,textAlign:"center",position:"relative"}}>
-                      {g.isSavings&&<div style={{position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",background:"#a78bfa",color:"#fff",fontSize:8,fontWeight:800,padding:"2px 7px",borderRadius:10,whiteSpace:"nowrap"}}>SAVINGS</div>}
+                    <div key={g.label} style={{background:C.bg,borderRadius:10,padding:"12px 8px",border:`1px solid ${g.color}55`,textAlign:"center"}}>
                       <div style={{fontSize:20,marginBottom:5}}>{g.icon}</div>
-                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:g.isSavings?"#a78bfa":g.color}}>${g.amt.toFixed(0)}</div>
+                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:g.color}}>${g.amt.toFixed(0)}</div>
                       <div style={{fontSize:9,color:C.sub,marginTop:3,textTransform:"uppercase",letterSpacing:"0.04em"}}>{g.label}</div>
-                      <div style={{marginTop:7}}><Tag color={g.isSavings?"#a78bfa":g.color}>{g.pct}% gross</Tag></div>
+                      <div style={{marginTop:7}}><Tag color={g.color}>{g.pct}% gross</Tag></div>
                     </div>
                   ))}
                 </div>
@@ -2186,7 +1820,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   {(()=>{
                     // ══ FIXED SETTLEMENT FACTS — nothing changes these ══════════
                     const reportedMiles = (dw.moves||[]).reduce((s,m)=>s+(m.mi||m.miles||0),0);
-                    const dwFuelCost    = (dw.deds||[]).filter(d=>["fuel advance","fuel","diesel"].some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
+                    const dwFuelCost    = (dw.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel advance")).reduce((s,d)=>s+d.a,0);
 
                     // ══ ACTUAL GALLONS — from settlement data if available ═══
                     // Use dw.gallons (from rebate note) if present — this is the real number
@@ -2290,16 +1924,16 @@ Be specific with real institution names and programs, not generic advice.`;
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                               <div>
                                 <div style={{fontSize:12,fontWeight:700,color:C.red}}>🚫 ~{unpaidMiles} unpaid miles — your expense</div>
-                                <div style={{fontSize:11,color:C.sub,marginTop:2}}>Drove these miles, broker paid $0. Burned ~{gallonsUnpaid.toFixed(0)} gal at your cost.</div>
+                                <div style={{fontSize:10,color:C.sub,marginTop:2}}>Drove these miles, broker paid $0. Burned ~{gallonsUnpaid.toFixed(0)} gal at your cost.</div>
                               </div>
-                              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:900,color:C.red,flexShrink:0,marginLeft:10}}>-${unpaidCost.toFixed(0)}</div>
+                              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:900,color:"#f87171",flexShrink:0,marginLeft:10}}>-${unpaidCost.toFixed(0)}</div>
                             </div>
                           </div>
                         )}
 
                         {/* Sliders */}
                         <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12}}>
-                          <div style={{fontSize:9,color:C.gold,fontWeight:700,marginBottom:10,textTransform:"uppercase",letterSpacing:"0.07em"}}>⚙️ Calibrate — set once for your truck</div>
+                          <div style={{fontSize:9,color:"#fbbf24",fontWeight:700,marginBottom:10,textTransform:"uppercase",letterSpacing:"0.07em"}}>⚙️ Calibrate — set once for your truck</div>
                           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
 
                             {/* MPG baseline — higher = more efficient = green verdict */}
@@ -2353,7 +1987,7 @@ Be specific with real institution names and programs, not generic advice.`;
                             </div>
                             {milesBuffer===0
                               ? <div style={{fontSize:9,color:C.sub,marginTop:5}}>Slide right to show cost of miles driven but not paid for by broker.</div>
-                              : <div style={{fontSize:9,color:C.red,marginTop:5}}>Higher % = more unpaid miles = more money out of your pocket. Never rewarding.</div>}
+                              : <div style={{fontSize:9,color:"#f87171",marginTop:5}}>Higher % = more unpaid miles = more money out of your pocket. Never rewarding.</div>}
                           </div>
                         </div>
                       </div>
@@ -2366,40 +2000,26 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
 
               {/* Individual deduction bars — hidden in focus mode */}
-              {!focusMode&&[...dwDeds].sort((a,b)=>b.a-a.a).map((d,i)=>{
+              {!focusMode&&[...dwDeds].filter(d=>!d.l.toLowerCase().includes("escrow")).sort((a,b)=>b.a-a.a).map((d,i)=>{
                 const pct=(d.a/dw.gross*100).toFixed(1);const big=d.a>200;
-                const isEscrow=d.l.toLowerCase().includes("escrow");
                 return(
                   <div key={i} style={{marginBottom:9}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
-                      <span style={{fontSize:12,color:isEscrow?C.a3:C.text,flex:1}}>{d.l}{isEscrow&&<span style={{fontSize:9,color:C.a3,marginLeft:5,fontWeight:700}}>SAVINGS</span>}</span>
+                      <span style={{fontSize:11,color:C.sub,flex:1}}>{d.l}</span>
                       <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-                        <Tag color={isEscrow?C.a3:big?C.red:C.gold}>{pct}%</Tag>
-                        <span style={{fontSize:12,fontWeight:700,color:isEscrow?C.a3:big?C.red:C.text,minWidth:64,textAlign:"right"}}>${d.a.toFixed(2)}</span>
+                        <Tag color={big?C.red:C.gold}>{pct}%</Tag>
+                        <span style={{fontSize:12,fontWeight:700,color:big?C.red:C.text,minWidth:64,textAlign:"right"}}>${d.a.toFixed(2)}</span>
                       </div>
                     </div>
-                    <Bar pct={d.a/dw.totalDeductions*100} color={isEscrow?C.a3:big?C.red:d.a>50?C.gold:C.accent}/>
+                    <Bar pct={d.a/dw.totalDeductions*100} color={big?C.red:d.a>50?C.gold:C.accent}/>
                   </div>
                 );
               })}
-              <div style={{marginTop:12,paddingTop:11,borderTop:`1px solid ${C.border}`}}>
-                {/* Escrow shown separately as SAVINGS */}
-                {dwDeds.filter(d=>d.l.toLowerCase().includes("escrow")).length>0&&(
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,padding:"8px 12px",background:"#a78bfa12",borderRadius:8,border:"1px solid #a78bfa33"}}>
-                    <span style={{fontSize:11,color:"#a78bfa",fontWeight:700}}>🏦 Escrow (Your Savings)</span>
-                    <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#a78bfa"}}>
-                      +${dwDeds.filter(d=>d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0).toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{fontSize:11,color:C.sub}}>Total Costs (excl. escrow)</span>
-                  <div style={{display:"flex",gap:9,alignItems:"center"}}>
-                    <Tag color={C.red}>{((dw.totalDeductions - dwDeds.filter(d=>d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0))/dw.gross*100).toFixed(1)}% of gross</Tag>
-                    <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.red}}>
-                      ${(dw.totalDeductions - dwDeds.filter(d=>d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0)).toFixed(2)}
-                    </span>
-                  </div>
+              <div style={{marginTop:12,paddingTop:11,borderTop:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:11,color:C.sub}}>Total Deductions</span>
+                <div style={{display:"flex",gap:9,alignItems:"center"}}>
+                  <Tag color={C.red}>{(dw.totalDeductions/dw.gross*100).toFixed(1)}% of gross</Tag>
+                  <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.red}}>${dw.totalDeductions.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -2480,7 +2100,7 @@ Be specific with real institution names and programs, not generic advice.`;
                       </div>
                       <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                         {vwi.map(({w,i})=>{const g=wg(w);return(
-                          <div key={w.week} onClick={()=>setSH(i)} style={{padding:"5px 9px",borderRadius:7,background:i===safeSH?`${v.color}30`:`${v.color}12`,border:`2px solid ${i===safeSH?v.color:v.color+"33"}`,textAlign:"center",cursor:"pointer",minWidth:52}}>
+                          <div key={w.week} onClick={()=>setSH(i)} style={{padding:"5px 9px",borderRadius:7,background:i===sH?`${v.color}30`:`${v.color}12`,border:`2px solid ${i===sH?v.color:v.color+"33"}`,textAlign:"center",cursor:"pointer",minWidth:52}}>
                             <div style={{fontSize:8,color:C.sub}}>W{w.week}</div>
                             <div style={{fontSize:10,fontWeight:800,color:v.color}}>{g.i}</div>
                             <div style={{fontSize:8,color:v.color,opacity:0.8}}>{g.l}</div>
@@ -2551,7 +2171,7 @@ Be specific with real institution names and programs, not generic advice.`;
                   <div style={{background:C.bg,borderRadius:10,padding:"13px",border:`1px solid ${C.border}`,marginBottom:12}}>
                     <div style={{padding:"9px 12px",background:`${C.a3}10`,borderRadius:8,border:`1px dashed ${C.a3}44`,marginBottom:10,textAlign:"center",cursor:"pointer"}} onClick={()=>expRef.current&&expRef.current.click()}>
                       <input ref={expRef} type="file" accept="image/*,.pdf" style={{display:"none"}} onChange={e=>{if(e.target.files[0])readReceipt(e.target.files[0]);}}/>
-                      <div style={{fontSize:12,color:C.a3,fontWeight:600}}>{expScan?"⏳ Reading...":"📷 Upload Receipt — AI reads it"}</div>
+                      <div style={{fontSize:12,color:"#a78bfa",fontWeight:600}}>{expScan?"⏳ Reading...":"📷 Upload Receipt — AI reads it"}</div>
                       {expScanMsg&&<div style={{fontSize:10,color:expScanMsg.startsWith("Receipt")?C.green:C.red,marginTop:4}}>{expScanMsg}</div>}
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
@@ -2622,7 +2242,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     ))}
                     <div style={{padding:"7px 11px",background:`${C.red}10`,borderRadius:7,border:`1px solid ${C.red}22`,display:"flex",justifyContent:"space-between",fontSize:11}}>
                       <span style={{color:C.sub}}>{expenses.length} expense{expenses.length>1?"s":""}</span>
-                      <span style={{color:C.red,fontWeight:700}}>Total: -${expTotal.toFixed(2)}</span>
+                      <span style={{color:"#f87171",fontWeight:700}}>Total: -${expTotal.toFixed(2)}</span>
                     </div>
                   </div>
                 ):(
@@ -2637,7 +2257,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🚛 Move Performance{helpBtn("movePerf")}</div>
             </div>{helpModal("movePerf")}
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div/><Nav i={safeSM} max={sortedW.length-1} prev={()=>setSM(p=>Math.max(0,p-1))} next={()=>setSM(p=>Math.min(sortedW.length-1,p+1))} label={`W${mwBase.week}`}/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><div/><Nav i={sM} max={allW.length-1} prev={()=>setSM(p=>p-1)} next={()=>setSM(p=>p+1)} label={`W${mwBase.week}`}/>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:14}}>
               {[{l:"Gross",v:`$${mwBase.gross.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.accent},{l:"Net",v:`$${mwBase.net.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.green},{l:"Avg RPM",v:`$${mwRPM}`,c:C.a3},{l:"Loaded %",v:`${mwLd}%`,c:mwLd>=60?C.green:C.gold}].map(s=>(
@@ -2669,7 +2289,7 @@ Be specific with real institution names and programs, not generic advice.`;
 
           {/* ── WEEKLY ACTION PLAN ── */}
           {(()=>{
-            const lw=safeW[safeSD]||safeW[safeW.length-1];
+            const lw=safeW[sD]||safeW[safeW.length-1];
             const lwGrade=wg(lw);
             const lwFuel=(lw.deds||[]).filter(function(d){return d.l.toLowerCase().includes("fuel");}).reduce(function(s,d){return s+d.a;},0);
             const lwLoaded=lw.moves&&lw.moves.length>0?Math.round(lw.moves.filter(function(m){return m.t==="L"||m.type==="L";}).length/lw.moves.length*100):0;
@@ -2677,11 +2297,11 @@ Be specific with real institution names and programs, not generic advice.`;
             const gap=targetNet-lw.net;
             const avgRPMnum=parseFloat(avgRPM)||0;
             const actions=[];
-            if(lw.net<targetNet&&gap>0)actions.push({icon:"💰",color:C.gold,title:"Close the $"+Math.round(gap).toLocaleString()+" gap to your weekly target",detail:"W"+lw.week+" net was $"+lw.net.toFixed(0)+". "+Math.ceil(gap/250)+" additional loaded runs at your average rate would close this gap. Use the Offer Scorer before accepting any new load."});
-            if(lwLoaded<60)actions.push({icon:"📦",color:C.accent,title:"Boost your loaded percentage — currently "+lwLoaded+"%",detail:"Less than 60% loaded miles hurts your revenue per mile. Prioritize back-to-back loaded moves and use DAT or the CPG board to minimize empty legs."});
-            if(lwFuel>800)actions.push({icon:"⛽",color:C.red,title:"Fuel cost of $"+Math.round(lwFuel).toLocaleString()+" is high this week",detail:"Check if your settlement MPG is below your "+fuelMPG+" MPG baseline. High fuel advances could mean inefficient routes or over-fueling. Enroll in a fuel card program to recover 5–12% in savings."});
-            if(avgRPMnum<2.5)actions.push({icon:"📈",color:C.a3,title:"Avg RPM of $"+avgRPM+" is below the $2.50 target",detail:"Your revenue per mile is below the efficiency threshold. Review your route mix in Move Performance and decline any new D-grade offers — they cost more than they pay."});
-            if(tNet/tGross<0.5)actions.push({icon:"🔍",color:C.red,title:"Net margin of "+(tNet/tGross*100).toFixed(1)+"% needs attention",detail:"You're keeping less than 50 cents of every dollar earned. Review deduction breakdown for cost categories that can be reduced — especially operations fees and insurance options."});
+            if(lw.net<targetNet&&gap>0)actions.push({icon:"💰",color:"#fbbf24",title:"Close the $"+Math.round(gap).toLocaleString()+" gap to your weekly target",detail:"W"+lw.week+" net was $"+lw.net.toFixed(0)+". "+Math.ceil(gap/250)+" additional loaded runs at your average rate would close this gap. Use the Offer Scorer before accepting any new load."});
+            if(lwLoaded<60)actions.push({icon:"📦",color:"#00ffcc",title:"Boost your loaded percentage — currently "+lwLoaded+"%",detail:"Less than 60% loaded miles hurts your revenue per mile. Prioritize back-to-back loaded moves and use DAT or the CPG board to minimize empty legs."});
+            if(lwFuel>800)actions.push({icon:"⛽",color:"#f87171",title:"Fuel cost of $"+Math.round(lwFuel).toLocaleString()+" is high this week",detail:"Check if your settlement MPG is below your "+fuelMPG+" MPG baseline. High fuel advances could mean inefficient routes or over-fueling. Enroll in a fuel card program to recover 5–12% in savings."});
+            if(avgRPMnum<2.5)actions.push({icon:"📈",color:"#a78bfa",title:"Avg RPM of $"+avgRPM+" is below the $2.50 target",detail:"Your revenue per mile is below the efficiency threshold. Review your route mix in Move Performance and decline any new D-grade offers — they cost more than they pay."});
+            if(tNet/tGross<0.5)actions.push({icon:"🔍",color:"#f87171",title:"Net margin of "+(tNet/tGross*100).toFixed(1)+"% needs attention",detail:"You're keeping less than 50 cents of every dollar earned. Review deduction breakdown for cost categories that can be reduced — especially operations fees and insurance options."});
             if(allMoves.filter(function(m){return scoreMove(m).grade==="A";}).length<3)actions.push({icon:"🔥",color:C.green,title:"Find more Grade A routes — you have fewer than 3 this period",detail:"Grade A routes are your profit engine. Check your top earning moves in Full History and ask CPG for more volume on those specific lanes."});
             const topActions=actions.slice(0,3);
             if(topActions.length===0)return null;
@@ -2767,13 +2387,13 @@ Be specific with real institution names and programs, not generic advice.`;
                       {/* PDF from Files */}
                       <button onClick={()=>fileRef.current?.click()} style={{padding:"22px 10px",borderRadius:14,background:`linear-gradient(135deg,${C.a3}20,${C.accent}15)`,border:`2px solid ${C.a3}`,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
                         <div style={{fontSize:32,marginBottom:8}}>📂</div>
-                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.a3,marginBottom:4}}>Open PDF File</div>
+                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#a78bfa",marginBottom:4}}>Open PDF File</div>
                         <div style={{fontSize:10,color:C.sub,lineHeight:1.5}}>Browse your Downloads or Files app</div>
                       </button>
                       {/* Camera / Photo */}
                       <button onClick={()=>imgRef.current?.click()} style={{padding:"22px 10px",borderRadius:14,background:`linear-gradient(135deg,${C.gold}15,${C.a3}10)`,border:`2px solid ${C.gold}`,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
                         <div style={{fontSize:32,marginBottom:8}}>📷</div>
-                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.gold,marginBottom:4}}>Take a Photo</div>
+                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#fbbf24",marginBottom:4}}>Take a Photo</div>
                         <div style={{fontSize:10,color:C.sub,lineHeight:1.5}}>Photo of printed statement</div>
                       </button>
                     </div>
@@ -2785,14 +2405,14 @@ Be specific with real institution names and programs, not generic advice.`;
                 {scanning&&(
                   <div style={{textAlign:"center",padding:"32px 16px"}}>
                     <div style={{fontSize:42,marginBottom:12}}>⏳</div>
-                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.a3,marginBottom:6}}>AI Reading Your Settlement...</div>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:"#a78bfa",marginBottom:6}}>AI Reading Your Settlement...</div>
                     <div style={{fontSize:11,color:C.sub,marginBottom:16}}>Extracting all moves, deductions, and totals</div>
                     <div style={{height:4,background:C.raised,borderRadius:4,overflow:"hidden"}}><div style={{height:"100%",width:"70%",background:`linear-gradient(90deg,${C.a3},${C.accent})`,borderRadius:4}}/></div>
                   </div>
                 )}
                 {scanResult&&!scanning&&(
                   <div style={{background:C.bg,borderRadius:10,border:`1px solid ${C.a3}44`,padding:14}}>
-                    <div style={{fontSize:11,fontWeight:700,color:C.a3,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.08em"}}>✅ PDF Read — Review & Confirm</div>
+                    <div style={{fontSize:11,fontWeight:700,color:"#a78bfa",marginBottom:12,textTransform:"uppercase",letterSpacing:"0.08em"}}>✅ PDF Read — Review & Confirm</div>
                     <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8,marginBottom:12}}>
                       {[
                         {l:"Week",v:`Week ${scanResult.week}`},
@@ -2903,10 +2523,10 @@ Be specific with real institution names and programs, not generic advice.`;
             {scanMode==="tips"&&(
               <div style={{display:"flex",flexDirection:"column",gap:10}}>
                 {[
-                  {icon:"📤",title:"Upload PDF (Best & Easiest)",color:C.a3,steps:["Tap the 'Upload PDF' tab above","Tap the big upload button — your phone's file picker opens","Find your settlement PDF in Downloads or Files","AI reads everything — review numbers and tap Save"]},
-                  {icon:"📋",title:"Paste Text (Alternative)",color:C.accent,steps:["Open your settlement PDF in any app","Tap and hold → Select All → Copy","Switch back here → tap Paste Text tab → paste","Tap 'Read & Extract' — AI fills everything in seconds"]},
-                  {icon:"✏️",title:"Type Numbers",color:C.accent,steps:["Open PDF side by side or on another device","Switch to 'Type Numbers' tab","Enter Week #, Gross, Net, Deductions","Tap Save — done in 30 seconds"]},
-                  {icon:"🔢",title:"Key numbers to find",color:C.gold,steps:["Week # → top of statement: 'Week No: 15-2026'","Gross → bottom: 'Gross Check Amount'","Net → bottom: 'Net Check Amount'","Deductions → 'Total Deductions' or subtract net from gross"]},
+                  {icon:"📤",title:"Upload PDF (Best & Easiest)",color:"#a78bfa",steps:["Tap the 'Upload PDF' tab above","Tap the big upload button — your phone's file picker opens","Find your settlement PDF in Downloads or Files","AI reads everything — review numbers and tap Save"]},
+                  {icon:"📋",title:"Paste Text (Alternative)",color:"#00ffcc",steps:["Open your settlement PDF in any app","Tap and hold → Select All → Copy","Switch back here → tap Paste Text tab → paste","Tap 'Read & Extract' — AI fills everything in seconds"]},
+                  {icon:"✏️",title:"Type Numbers",color:"#00ffcc",steps:["Open PDF side by side or on another device","Switch to 'Type Numbers' tab","Enter Week #, Gross, Net, Deductions","Tap Save — done in 30 seconds"]},
+                  {icon:"🔢",title:"Key numbers to find",color:"#fbbf24",steps:["Week # → top of statement: 'Week No: 15-2026'","Gross → bottom: 'Gross Check Amount'","Net → bottom: 'Net Check Amount'","Deductions → 'Total Deductions' or subtract net from gross"]},
                 ].map(s=>(
                   <div key={s.title} style={{background:C.bg,borderRadius:10,padding:"13px",border:`1px solid ${s.color}44`}}>
                     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:9}}>
@@ -2916,7 +2536,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     {s.steps.map((st,i)=>(
                       <div key={i} style={{display:"flex",gap:9,marginBottom:6}}>
                         <span style={{color:s.color,fontWeight:700,fontSize:12,flexShrink:0}}>{i+1}.</span>
-                        <span style={{fontSize:12,color:C.sub,lineHeight:1.7}}>{st}</span>
+                        <span style={{fontSize:11,color:C.sub,lineHeight:1.6}}>{st}</span>
                       </div>
                     ))}
                   </div>
@@ -2927,7 +2547,7 @@ Be specific with real institution names and programs, not generic advice.`;
             {/* Paste preview */}
             {pasteResult&&(
               <div style={{background:C.bg,borderRadius:10,border:`1px solid ${C.a3}44`,padding:14,marginTop:10}}>
-                <div style={{fontSize:11,fontWeight:700,color:C.a3,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.08em"}}>📋 Extracted — Review & Confirm</div>
+                <div style={{fontSize:11,fontWeight:700,color:"#a78bfa",marginBottom:12,textTransform:"uppercase",letterSpacing:"0.08em"}}>📋 Extracted — Review & Confirm</div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8,marginBottom:12}}>
                   {[
                     {l:"Week",       v:`Week ${pasteResult.week}`},
@@ -2977,70 +2597,23 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
             )}
 
-            {/* Built-in weeks (owner only) — can delete to re-scan */}
-            {ownerDataAvailable&&baseW.length>0&&(
-              <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${C.border}`}}>
-                <div style={{fontSize:10,fontWeight:700,color:C.accent,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:9}}>📋 Built-in Weeks ({baseW.length}) <span style={{color:C.sub,fontWeight:400,fontSize:9}}>— delete to re-scan</span></div>
-                <div style={{display:"flex",flexDirection:"column",gap:7}}>
-                  {baseW.map((w,i)=>(
-                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 13px",background:C.bg,borderRadius:9,border:`1px solid ${C.accent}44`}}>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:12,fontWeight:700,color:C.text}}>{w.label} <span style={{fontSize:9,color:C.accent,background:`${C.accent}15`,padding:"2px 6px",borderRadius:8,fontWeight:700}}>Built-in</span></div>
-                        <div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from} – {w.to} · {w.moves?.length||0} moves · {w.deds?.length||0} deductions</div>
-                      </div>
-                      <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${Number(w.net).toLocaleString("en-US",{minimumFractionDigits:2})}</div>
-                          <div style={{fontSize:10,color:C.sub}}>{w.gross>0?(w.net/w.gross*100).toFixed(1):0}% margin</div>
-                        </div>
-                        <button
-                          onClick={()=>{
-                            if(window.confirm(`Delete ${w.label}? Re-scan PDF to add it back.`)){
-                              const nd=[...deletedBuiltinW,w.week];
-                              setDeletedBuiltinW(nd);
-                              try{localStorage.setItem("ciq_deleted_builtin",JSON.stringify(nd));}catch(e){}
-                              setScanMsg(`🗑️ ${w.label} removed — re-scan PDF to restore`);
-                            }
-                          }}
-                          style={{padding:"6px 10px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,color:C.red,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,flexShrink:0}}>
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Recently added weeks — show right here so user sees them immediately */}
             {addedW.length>0&&(
               <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${C.border}`}}>
-                <div style={{fontSize:10,fontWeight:700,color:C.a3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:9}}>✅ Saved Weeks ({addedW.length})</div>
+                <div style={{fontSize:10,fontWeight:700,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:9}}>✅ Saved Weeks ({addedW.length})</div>
                 <div style={{display:"flex",flexDirection:"column",gap:7}}>
                   {addedW.map((w,i)=>(
                     <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 13px",background:C.bg,borderRadius:9,border:`1px solid ${C.a3}55`}}>
-                      <div style={{display:"flex",alignItems:"center",gap:10,flex:1}}>
-                        <div style={{width:8,height:8,borderRadius:"50%",background:C.a3,boxShadow:`0 0 5px ${C.a3}`,flexShrink:0}}/>
-                        <div style={{flex:1}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <div style={{width:8,height:8,borderRadius:"50%",background:C.a3,boxShadow:`0 0 5px ${C.a3}`}}/>
+                        <div>
                           <div style={{fontSize:12,fontWeight:700,color:C.text}}>{w.label} <Tag color={C.a3}>Added</Tag></div>
-                          <div style={{fontSize:11,color:C.sub,marginTop:2}}>{w.from}{w.to?` – ${w.to}`:""} · {w.moves?.length||0} moves · {w.deds?.length||0} deductions</div>
+                          <div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from}{w.to?` – ${w.to}`:""} · {w.moves?.length||0} moves · {w.deds?.length||0} deductions</div>
                         </div>
                       </div>
-                      <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${Number(w.net).toLocaleString("en-US",{minimumFractionDigits:2})}</div>
-                          <div style={{fontSize:10,color:C.sub}}>{w.gross>0?(w.net/w.gross*100).toFixed(1):0}% margin</div>
-                        </div>
-                        <button
-                          onClick={()=>{
-                            if(window.confirm(`Delete ${w.label}? This cannot be undone.`)){
-                              setAddedW(p=>p.filter((_,j)=>j!==i));
-                              setScanMsg(`🗑️ ${w.label} deleted`);
-                            }
-                          }}
-                          style={{padding:"6px 10px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,color:C.red,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,flexShrink:0}}>
-                          🗑️
-                        </button>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${Number(w.net).toLocaleString("en-US",{minimumFractionDigits:2})}</div>
+                        <div style={{fontSize:10,color:C.sub}}>{w.gross>0?(w.net/w.gross*100).toFixed(1):0}% margin</div>
                       </div>
                     </div>
                   ))}
@@ -3107,13 +2680,14 @@ Be specific with real institution names and programs, not generic advice.`;
           {/* History */}
           <div style={K()}>
             {focusMode?(
-              <div>{/* FOCUS MODE: Top 3 best + Top 3 worst */}
+              /* FOCUS MODE: Top 3 best + Top 3 worst */
+              <div>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:4}}>⚡ Top & Bottom Moves{helpBtn("topBottom")}</div>
                 {helpModal("topBottom")}
                 <div style={{fontSize:10,color:C.sub,marginBottom:14}}>Focus mode — tap 📋 FULL to see all {allMoves.length} moves</div>
                 {[
                   {label:"🔥 Top 3 Best", color:C.green, moves:[...allMoves].sort((a,b)=>parseFloat(scoreMove(b).rpm)-parseFloat(scoreMove(a).rpm)).slice(0,3)},
-                  {label:"⚠️ Top 3 Worst", color:C.red,  moves:[...allMoves].filter(m=>m.miles>0).sort((a,b)=>parseFloat(scoreMove(a).rpm)-parseFloat(scoreMove(b).rpm)).slice(0,3)},
+                  {label:"⚠️ Top 3 Worst", color:"#f87171",  moves:[...allMoves].filter(m=>m.miles>0).sort((a,b)=>parseFloat(scoreMove(a).rpm)-parseFloat(scoreMove(b).rpm)).slice(0,3)},
                 ].map(group=>(
                   <div key={group.label} style={{marginBottom:14}}>
                     <div style={{fontSize:10,fontWeight:700,color:group.color,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>{group.label}</div>
@@ -3142,7 +2716,8 @@ Be specific with real institution names and programs, not generic advice.`;
                 ))}
               </div>
             ):(
-              <div>{/* FULL MODE: complete history with vendor tags */}
+              /* FULL MODE: complete history with vendor tags */
+              <div>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}</div>
                 {helpModal("fullHistory")}
                 <div style={{overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
@@ -3196,7 +2771,7 @@ Be specific with real institution names and programs, not generic advice.`;
 
           {/* Snapshot */}
           <div style={K({background:C.surf})}>
-            <div style={{fontSize:10,fontWeight:700,color:C.accent,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.1em"}}>📊 Snapshot</div>
+            <div style={{fontSize:10,fontWeight:700,color:"#00ffcc",marginBottom:12,textTransform:"uppercase",letterSpacing:"0.1em"}}>📊 Snapshot</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9}}>
               {[{l:"Net Margin",v:`${margin}%`,c:+margin>=20?C.green:C.red},{l:"Avg RPM",v:`$${avgRPM}`,c:+avgRPM>=2.5?C.green:C.gold},{l:"Loaded %",v:`${ldPct}%`,c:ldPct>=60?C.green:C.gold},{l:"Fuel/Gross",v:`${(latFuel/latest.gross*100).toFixed(0)}%`,c:C.red},{l:"Total Moves",v:`${allMoves.length}`,c:C.text},{l:"YTD Net",v:`$${tNet.toLocaleString("en-US",{minimumFractionDigits:0})}`,c:C.green}].map(s=>(
                 <div key={s.l} style={{background:C.card,borderRadius:9,padding:"11px 9px",border:`1px solid ${C.border}`,textAlign:"center"}}>
@@ -3253,7 +2828,7 @@ Be specific with real institution names and programs, not generic advice.`;
             {aiOut&&(
               <div style={{background:C.bg,borderRadius:10,border:`1px solid ${C.border}`,padding:16}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                  <div style={{fontSize:11,fontWeight:700,color:C.accent,textTransform:"uppercase",letterSpacing:"0.08em"}}>
+                  <div style={{fontSize:11,fontWeight:700,color:"#00ffcc",textTransform:"uppercase",letterSpacing:"0.08em"}}>
                     {aiMode==="report"?"📊 Weekly Report":aiMode==="bizplan"?"📄 Business Plan":aiMode==="funding"?"🏦 Funding Guide":""}
                   </div>
                   <button onClick={()=>copyText(aiOut)} style={{padding:"7px 14px",borderRadius:8,background:C.accent,border:"none",color:"#000",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📋 Copy</button>
@@ -3291,7 +2866,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     {m.r==="u"&&<div style={{width:26,height:26,borderRadius:7,background:C.surf,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>👤</div>}
                   </div>
                 ))}
-                {chatLoad&&<div style={{display:"flex",gap:8,alignItems:"flex-end"}}><div style={{width:26,height:26,borderRadius:7,background:C.surf,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>🧠</div><div style={{padding:"11px 14px",background:C.card,borderRadius:11,border:`1px solid ${C.border}`,color:C.accent,fontSize:13}}>⏳ Thinking...</div></div>}
+                {chatLoad&&<div style={{display:"flex",gap:8,alignItems:"flex-end"}}><div style={{width:26,height:26,borderRadius:7,background:C.surf,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>🧠</div><div style={{padding:"11px 14px",background:C.card,borderRadius:11,border:`1px solid ${C.border}`,color:"#00ffcc",fontSize:13}}>⏳ Thinking...</div></div>}
                 <div ref={chatEnd}/>
               </div>
               <div style={{padding:"11px 13px",background:C.surf,borderTop:`1px solid ${C.border}`,display:"flex",gap:9}}>
@@ -3340,18 +2915,10 @@ Be specific with real institution names and programs, not generic advice.`;
               </div>
               {addedW.length>0&&(
                 <button onClick={()=>{if(window.confirm(`Remove all ${addedW.length} added weeks?`)){setAddedW([]);}}}
-                  style={{padding:"6px 12px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,color:C.red,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
+                  style={{padding:"6px 12px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,color:"#f87171",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
                   🗑 Clear Added
                 </button>
               )}
-              <button onClick={()=>{
-                if(window.confirm("CLEAR ALL DATA? Removes uploaded weeks, profile and settings. Built-in weeks W09-W15 will restore. Cannot be undone.")){
-                  try{localStorage.clear();}catch(e){}
-                  window.location.reload();
-                }
-              }} style={{padding:"6px 12px",borderRadius:8,background:`${C.red}25`,border:`2px solid ${C.red}66`,color:C.red,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
-                🔴 Reset All
-              </button>
             </div>
             {/* Storage status */}
             <div style={{padding:"9px 13px",background:addedW.length>0?`${C.green}10`:`${C.border}30`,borderRadius:8,border:`1px solid ${addedW.length>0?C.green+"33":C.border}`,fontSize:11,color:addedW.length>0?C.green:C.sub,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
@@ -3367,7 +2934,7 @@ Be specific with real institution names and programs, not generic advice.`;
                       <div style={{fontSize:12,fontWeight:700,color:C.text,display:"flex",alignItems:"center",gap:7}}>
                         {w.label}{isLast&&<Tag color={C.accent}>Latest</Tag>}{isNew&&<Tag color={C.a3}>Added</Tag>}
                       </div>
-                      <div style={{fontSize:11,color:C.sub,marginTop:2}}>{w.from}{w.to?` – ${w.to}`:""} · {w.moves.length} moves</div>
+                      <div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from}{w.to?` – ${w.to}`:""} · {w.moves.length} moves</div>
                     </div>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -3380,7 +2947,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 </div>
               );})}
             </div>
-            <div style={{marginTop:12,padding:"10px 14px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,fontSize:12,color:C.sub,lineHeight:1.7}}>
+            <div style={{marginTop:12,padding:"10px 14px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,fontSize:11,color:C.sub,lineHeight:1.7}}>
               💡 Tap <strong style={{color:C.a3}}>⬇ PDF</strong> to download a full report. Open in browser → Share → Print → Save as PDF.
             </div>
           </div>
@@ -3399,7 +2966,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     <td style={{padding:"12px 10px",color:C.text,fontWeight:600,fontFamily:"'Space Grotesk',sans-serif"}}>{(profile.name||"Your Name").toUpperCase()}</td>
                     <td style={{padding:"12px 10px"}}><Tag color={C.accent}>UNIT#</Tag></td>
                     <td style={{padding:"12px 10px",color:C.text}}>{allW.length}</td>
-                    <td style={{padding:"12px 10px",fontFamily:"'Space Grotesk',sans-serif",color:C.accent,fontWeight:700}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
+                    <td style={{padding:"12px 10px",fontFamily:"'Space Grotesk',sans-serif",color:"#00ffcc",fontWeight:700}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
                     <td style={{padding:"12px 10px",fontFamily:"'Space Grotesk',sans-serif",color:C.green,fontWeight:700}}>${tNet.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
                     <td style={{padding:"12px 10px"}}><Tag color={C.green}>{margin}%</Tag></td>
                     <td style={{padding:"12px 10px"}}><Tag color={C.green}>● ACTIVE</Tag></td>
@@ -3408,7 +2975,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 </tbody>
               </table>
             </div>
-            <div style={{marginTop:12,padding:"10px 14px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,fontSize:12,color:C.sub,lineHeight:1.7}}>
+            <div style={{marginTop:12,padding:"10px 14px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,fontSize:11,color:C.sub,lineHeight:1.7}}>
               💡 <strong style={{color:C.text}}>Fleet tip:</strong> At 3 trucks fixed costs drop ~40% per unit. Your {margin}% margin supports a second unit profitably.
             </div>
           </div>
@@ -3426,7 +2993,7 @@ Be specific with real institution names and programs, not generic advice.`;
               <div style={{background:C.bg,borderRadius:10,padding:"13px",border:`1px solid ${C.border}`,marginBottom:12}}>
                 <div style={{padding:"9px 12px",background:`${C.a3}10`,borderRadius:8,border:`1px dashed ${C.a3}44`,marginBottom:10,textAlign:"center",cursor:"pointer"}} onClick={()=>docRef.current&&docRef.current.click()}>
                   <input ref={docRef} type="file" accept="image/*,.pdf" style={{display:"none"}} onChange={e=>{if(e.target.files[0])readDoc(e.target.files[0]);}}/>
-                  <div style={{fontSize:12,color:C.a3,fontWeight:600}}>{docScan?"⏳ Reading...":"📷 Scan Document — AI reads and categorizes"}</div>
+                  <div style={{fontSize:12,color:"#a78bfa",fontWeight:600}}>{docScan?"⏳ Reading...":"📷 Scan Document — AI reads and categorizes"}</div>
                   {docScanMsg&&<div style={{fontSize:10,color:C.green,marginTop:4}}>{docScanMsg}</div>}
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
@@ -3476,7 +3043,7 @@ Be specific with real institution names and programs, not generic advice.`;
                     <button onClick={()=>setDocs(p=>p.filter(x=>x.id!==d.id))} style={{background:"none",border:"none",color:C.sub,fontSize:14,cursor:"pointer",padding:"0 4px",marginLeft:8,flexShrink:0}}>×</button>
                   </div>
                 ))}
-                <div style={{padding:"6px 12px",background:`${C.a3}10`,borderRadius:7,border:`1px solid ${C.a3}22`,fontSize:10,color:C.a3,textAlign:"center"}}>{docs.length} document{docs.length>1?"s":""} on file</div>
+                <div style={{padding:"6px 12px",background:`${C.a3}10`,borderRadius:7,border:`1px solid ${C.a3}22`,fontSize:10,color:"#a78bfa",textAlign:"center"}}>{docs.length} document{docs.length>1?"s":""} on file</div>
               </div>
             ):(
               <div style={{textAlign:"center",padding:"16px",color:C.sub,fontSize:11}}>No documents yet. Add DOT inspection records, maintenance logs, insurance, or any compliance paperwork.</div>
@@ -3554,7 +3121,7 @@ Be specific with real institution names and programs, not generic advice.`;
                       </div>
                     );
                   })}
-                  <div style={{marginTop:8,padding:"9px 11px",background:C.a3+"12",borderRadius:8,border:"1px solid "+C.a3+"33",fontSize:11,color:C.a3,fontWeight:600,lineHeight:1.55}}>
+                  <div style={{marginTop:8,padding:"9px 11px",background:C.a3+"12",borderRadius:8,border:"1px solid "+C.a3+"33",fontSize:11,color:"#a78bfa",fontWeight:600,lineHeight:1.55}}>
                     {gVsN>=95&&nVsN>=95?"You are running above the national average.":gVsN>=85&&nVsN>=85?"You are running close to the national average.":"There is room to close the gap."} Your low weeks (W09, W12) pull the average down — floor those at $2,500+ net and you land in the top 15% nationally.
                   </div>
                 </div>
@@ -3601,12 +3168,12 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📤 Export Report</div>
             <div style={{fontSize:10,color:C.sub,marginBottom:12}}>YTD financials + expenses + documents. Print or email to your accountant, broker, or lender.</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-              <button onClick={printReport} style={{padding:"14px",borderRadius:10,background:`${C.accent}18`,border:`1px solid ${C.accent}55`,color:C.accent,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+              <button onClick={printReport} style={{padding:"14px",borderRadius:10,background:`${C.accent}18`,border:`1px solid ${C.accent}55`,color:"#00ffcc",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
                 <span style={{fontSize:22}}>🖨️</span>
                 <span>Print Report</span>
                 <span style={{fontSize:9,fontWeight:400,color:C.sub}}>Opens print dialog</span>
               </button>
-              <button onClick={emailReport} style={{padding:"14px",borderRadius:10,background:`${C.a3}18`,border:`1px solid ${C.a3}55`,color:C.a3,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+              <button onClick={emailReport} style={{padding:"14px",borderRadius:10,background:`${C.a3}18`,border:`1px solid ${C.a3}55`,color:"#a78bfa",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
                 <span style={{fontSize:22}}>📧</span>
                 <span>Email Report</span>
                 <span style={{fontSize:9,fontWeight:400,color:C.sub}}>Opens mail app</span>
@@ -3616,38 +3183,13 @@ Be specific with real institution names and programs, not generic advice.`;
               {allW.length} weeks · {expenses.length} expenses · {docs.length} documents
             </div>
           </div>
+
         </div>
       )}
 
-
-      {/* ── BOTTOM NAV — mobile tab switcher ── */}
-      {/* ── SOCIAL MEDIA FOOTER ── */}
-      <div style={{background:C.surf,borderTop:`1px solid ${C.border}`,padding:"18px 16px",textAlign:"center"}}>
-        <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14}}>Follow Us · Share · Connect</div>
-        <div style={{display:"flex",justifyContent:"center",gap:12,flexWrap:"wrap",marginBottom:12}}>
-          {[
-            {name:"Facebook",icon:"📘",color:"#1877F2",url:"https://facebook.com"},
-            {name:"Instagram",icon:"📸",color:"#E1306C",url:"https://instagram.com"},
-            {name:"TikTok",icon:"🎵",color:"#00F2EA",url:"https://tiktok.com"},
-            {name:"YouTube",icon:"▶️",color:"#FF0000",url:"https://youtube.com"},
-            {name:"WhatsApp",icon:"💬",color:"#25D366",url:"https://wa.me"},
-            {name:"LinkedIn",icon:"💼",color:"#0A66C2",url:"https://linkedin.com"},
-            {name:"X/Twitter",icon:"𝕏",color:"#f0f6ff",url:"https://x.com"},
-          ].map(s=>(
-            <button key={s.name} onClick={()=>window.open(s.url,"_blank")}
-              style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,padding:"10px 12px",borderRadius:12,background:C.raised,border:`1px solid ${C.border}`,cursor:"pointer",fontFamily:"inherit",minWidth:56,transition:"all 0.15s"}}
-              onMouseOver={e=>e.currentTarget.style.borderColor=s.color}
-              onMouseOut={e=>e.currentTarget.style.borderColor=C.border}>
-              <span style={{fontSize:22}}>{s.icon}</span>
-              <span style={{fontSize:9,fontWeight:700,color:C.sub}}>{s.name}</span>
-            </button>
-          ))}
-        </div>
-        <div style={{fontSize:10,color:C.sub,lineHeight:1.7}}>
-          Share ContractorIQ with a fellow driver 🚛 · Help them know their numbers · Tag us <strong style={{color:C.accent}}>@ContractorIQ</strong>
-        </div>
       </div>
 
+      {/* ── BOTTOM NAV — mobile tab switcher ── */}
       {/* ── LEGAL DISCLAIMER FOOTER ── */}
       <div style={{background:C.bg,borderTop:"1px solid "+C.border,padding:"14px 16px",marginBottom:0}}>
         <div style={{fontSize:9,color:C.sub,lineHeight:1.8,textAlign:"center",maxWidth:600,margin:"0 auto"}}>
@@ -3677,9 +3219,9 @@ Be specific with real institution names and programs, not generic advice.`;
       <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:C.surf,borderTop:"1px solid "+C.border,display:"flex",alignItems:"stretch",height:58,boxShadow:"0 -4px 20px rgba(0,0,0,0.4)"}}>
         {[
           {t:"dashboard", icon:"📊", label:"Dash"},
-          {t:"loads", icon:"📋", label:"Docs"},
-          {t:"growth",    icon:"🚀", label:"Growth"},
+          {t:"loads", icon:"📋", label:"Analyzer"},
           {t:"ai",        icon:"🧠", label:"AI"},
+          {t:"growth",    icon:"🚀", label:"Growth"},
         ].map(item=>(
           <button key={item.t} onClick={()=>{setTab(item.t);window.scrollTo({top:0,behavior:"smooth"});}}
             style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",padding:"6px 0",borderTop:"2px solid "+(tab===item.t?C.accent:"transparent"),transition:"border-color 0.15s"}}>
