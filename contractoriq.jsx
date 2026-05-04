@@ -477,6 +477,9 @@ export default function ContractorIQv26(){
   const [showSettings,setShowSettings]=useState(false);
   const [showMenu,setShowMenu]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
+  const [showInsurance,setShowInsurance]=useState(false);
+  const [showQR,setShowQR]=useState(false);
+  const [showMarket,setShowMarket]=useState(false);
   const [hiddenVendors,setHiddenVendors]=useState([]);
   const [hideOwnerName,setHideOwnerName]=useState(false);
   const [hideUnitNum,setHideUnitNum]=useState(false);
@@ -679,6 +682,12 @@ export default function ContractorIQv26(){
     setSearchLoading(true);setSearchResult("");
     try{
       const apiKey=import.meta.env.VITE_ANTHROPIC_KEY||(window.__CIQ_KEY__||"");
+      // Auto-get GPS before searching
+      let locationCtx="";
+      try{
+        const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000,maximumAge:60000}));
+        locationCtx=`User's exact GPS: lat ${pos.coords.latitude.toFixed(4)}, lng ${pos.coords.longitude.toFixed(4)}. Use this for ALL nearby searches.`;
+      }catch(e){locationCtx="";}
       const resp=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
         headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
@@ -686,14 +695,14 @@ export default function ContractorIQv26(){
           model:"claude-sonnet-4-5",
           max_tokens:600,
           tools:[{type:"web_search_20250305",name:"web_search"}],
-          messages:[{role:"user",content:`You are a helpful assistant for a truck driver. Use the user's real GPS location for nearby searches, never default to Baltimore. Answer this question concisely and practically: ${query}. Keep answer under 150 words. Use bullet points if listing multiple items.`}]
+          messages:[{role:"user",content:`You are a helpful assistant for a truck driver. ${locationCtx} Answer concisely: ${query}. Max 150 words. Use bullet points for lists.`}]
         })
       });
       const d=await resp.json();
       const txt=d.content?.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
-      setSearchResult(txt||"No results found. Try rephrasing your search.");
+      setSearchResult(txt||"No results found.");
     }catch(e){
-      setSearchResult("⚠️ Search unavailable. Check your connection and try again.");
+      setSearchResult("⚠️ Search unavailable. Check connection.");
     }
     setSearchLoading(false);
   }
@@ -1108,6 +1117,104 @@ Be specific with real institution names and programs, not generic advice.`;
   return(
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
       {upgradeModal()}
+
+      {/* ── INSURANCE / PROTECT YOUR INCOME MODAL ── */}
+      {showInsurance&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"#080c16",display:"flex",flexDirection:"column"}} onClick={()=>setShowInsurance(false)}>
+          <div style={{background:"#0d1525",borderBottom:"1px solid #2c3a52",padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:"#f0f6ff"}}>🛡️ Protect Your Income</div>
+            <button onClick={()=>setShowInsurance(false)} style={{padding:"7px 14px",borderRadius:9,background:"#1a2436",border:"1px solid #2c3a52",color:"#8fa3c0",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
+          </div>
+          <div style={{flex:1,overflowY:"auto",padding:"20px 16px 80px"}} onClick={e=>e.stopPropagation()}>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{width:60,height:60,borderRadius:"50%",background:"linear-gradient(135deg,#a78bfa,#6d28d9)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,margin:"0 auto 12px"}}>🛡️</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:"#f0f6ff",marginBottom:8}}>Protect Your Income</div>
+              <div style={{fontSize:12,color:"#8fa3c0",lineHeight:1.7,marginBottom:16}}>You work hard for every dollar. As a 1099 worker you have <span style={{color:"#f87171",fontWeight:700}}>zero employer protection</span>. That changes today.</div>
+            </div>
+            {[
+              {icon:"⛽",label:"Term Life",tag:"Most Popular",tagColor:"#00ffcc",desc:"Pure income replacement. If you die, your family gets paid. Simple, affordable, powerful."},
+              {icon:"🛡️",label:"Disability/Accident",tag:"Critical for Drivers",tagColor:"#f87171",desc:"You pay for OCC/ACC through your carrier — but it's limited. A personal policy pays YOU directly if injured."},
+              {icon:"💰",label:"Whole Life / IUL",tag:"Build Wealth",tagColor:"#fbbf24",desc:"Tax-free retirement savings that grows even when the market drops. No 401k? This IS your plan."},
+              {icon:"🙏",label:"Final Expense",tag:"Easy to Qualify",tagColor:"#a78bfa",desc:"Covers funeral costs and final bills. No medical exam needed."},
+            ].map(p=>(
+              <div key={p.label} style={{background:"#0d1525",borderRadius:12,padding:"14px",marginBottom:12,border:"1px solid #2c3a52"}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                  <span style={{fontSize:22}}>{p.icon}</span>
+                  <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:700,color:"#f0f6ff"}}>{p.label}</span>
+                  <span style={{padding:"2px 8px",borderRadius:20,background:p.tagColor+"22",border:`1px solid ${p.tagColor}44`,color:p.tagColor,fontSize:9,fontWeight:800}}>{p.tag}</span>
+                </div>
+                <div style={{fontSize:11,color:"#8fa3c0",lineHeight:1.6}}>{p.desc}</div>
+              </div>
+            ))}
+            <div style={{background:"linear-gradient(135deg,#1a1a3a,#0d1525)",borderRadius:16,padding:"18px 16px",marginBottom:14,border:"2px solid #a78bfa55"}}>
+              <div style={{fontSize:10,fontWeight:800,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>🛡️ Your Trusted Agents</div>
+              {[
+                {name:"Nelle Kigembe",role:"Licensed Insurance Producer",zone:"🌊 West Coast",color:"#a78bfa",phone:"757-395-7841",link:"https://calendly.com/nellekigembe/60min?utm_source=contractoriq&utm_medium=app&utm_campaign=protect_income&utm_content=west_coast"},
+                {name:"Wemma Kigembe",role:"Licensed Producer · ContractorIQ Founder",zone:"🏛️ DMV Area",color:"#00ffcc",phone:"",link:"https://calendly.com/wkigembe-crvm/30min?utm_source=contractoriq&utm_medium=app&utm_campaign=protect_income&utm_content=dmv"},
+              ].map(ag=>(
+                <div key={ag.name} style={{display:"flex",gap:12,alignItems:"flex-start",background:"#ffffff08",borderRadius:12,padding:"13px",marginBottom:10}}>
+                  <div style={{width:48,height:48,borderRadius:"50%",background:`linear-gradient(135deg,${ag.color},${ag.color}88)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>👤</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,fontWeight:800,color:"#f0f6ff",marginBottom:2}}>{ag.name}</div>
+                    <div style={{fontSize:9,color:ag.color,fontWeight:700,marginBottom:6}}>{ag.role}</div>
+                    <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:8}}>
+                      <span style={{padding:"2px 8px",borderRadius:20,background:ag.color+"18",border:`1px solid ${ag.color}44`,color:ag.color,fontSize:9,fontWeight:700}}>{ag.zone}</span>
+                      <span style={{padding:"2px 8px",borderRadius:20,background:"#00aa8818",border:"1px solid #00aa8844",color:"#00aa88",fontSize:9,fontWeight:700}}>🌎 Nationwide</span>
+                    </div>
+                    <button onClick={()=>window.open(ag.link,"_blank")} style={{padding:"7px 14px",borderRadius:9,background:`linear-gradient(135deg,${ag.color},${ag.color}88)`,color:"#000",fontSize:10,fontWeight:800,border:"none",cursor:"pointer",fontFamily:"inherit"}}>📅 Book Free Call</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={()=>setShowInsurance(false)} style={{width:"100%",padding:"11px",borderRadius:10,background:"transparent",border:"1px solid #2c3a52",color:"#8fa3c0",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Maybe Later</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── QR CODE DATA TRANSFER MODAL ── */}
+      {showQR&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.95)",display:"flex",flexDirection:"column"}} onClick={()=>setShowQR(false)}>
+          <div style={{background:C.card,borderRadius:"0 0 20px 20px",padding:"16px",flexShrink:0,display:"flex",justifyContent:"space-between",alignItems:"center"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:C.text}}>📱 Transfer Data via QR</div>
+            <button onClick={()=>setShowQR(false)} style={{padding:"7px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
+          </div>
+          <div style={{flex:1,overflowY:"auto",padding:"20px 16px"}} onClick={e=>e.stopPropagation()}>
+            <div style={{background:C.card,borderRadius:20,padding:"24px",marginBottom:16,textAlign:"center",border:`2px solid #a78bfa44`}}>
+              <div style={{fontSize:11,fontWeight:700,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:16}}>Scan on your other device</div>
+              <div style={{background:"#fff",borderRadius:16,padding:16,display:"inline-block",marginBottom:14}}>
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("CIQDATA:"+btoa(JSON.stringify({addedW,profile:{name:profile?.name||"",company:profile?.company||""},exported:new Date().toISOString()})).substring(0,1800))}`} alt="QR Code" style={{width:220,height:220,display:"block"}}/>
+              </div>
+              <div style={{fontSize:11,color:C.sub,lineHeight:1.7}}>Open ContractorIQ on your other device → Menu → Transfer Data via QR → Scan this code</div>
+            </div>
+            <div style={{background:C.card,borderRadius:12,padding:"14px",border:`1px solid ${C.border}`}}>
+              <div style={{fontSize:11,fontWeight:700,color:C.sub,marginBottom:10}}>📦 Included in this QR</div>
+              <div style={{fontSize:12,color:C.text}}>{addedW.length} uploaded weeks · Profile name</div>
+              <div style={{fontSize:10,color:C.sub,marginTop:8,fontStyle:"italic"}}>Built-in weeks (W09-W15) sync automatically on all devices.</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MARKET OVERVIEW MODAL ── */}
+      {showMarket&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:C.bg,display:"flex",flexDirection:"column"}}>
+          <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+            <div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:C.text}}>📊 Market Overview</div>
+              <div style={{fontSize:10,color:C.sub,marginTop:2}}>Live data · Tap any symbol for chart</div>
+            </div>
+            <button onClick={()=>setShowMarket(false)} style={{padding:"8px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
+          </div>
+          <div style={{flex:1,overflow:"hidden"}}>
+            <iframe scrolling="no" allowTransparency="true" frameBorder="0"
+              src="https://s.tradingview.com/embed-widget/market-overview/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%221D%22%2C%22showChart%22%3Atrue%2C%22locale%22%3A%22en%22%2C%22largeChartUrl%22%3A%22%22%2C%22isTransparent%22%3Afalse%2C%22showSymbolLogo%22%3Atrue%2C%22showFloatingTooltip%22%3Afalse%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22tabs%22%3A%5B%7B%22title%22%3A%22US%20Indices%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22FOREXCOM%3ASPXUSD%22%2C%22d%22%3A%22S%26P%20500%22%7D%2C%7B%22s%22%3A%22FOREXCOM%3ADJI30%22%2C%22d%22%3A%22Dow%2030%22%7D%2C%7B%22s%22%3A%22NASDAQ%3AQQQ%22%2C%22d%22%3A%22Nasdaq%22%7D%2C%7B%22s%22%3A%22AMEX%3AIWM%22%2C%22d%22%3A%22Russell%202000%22%7D%2C%7B%22s%22%3A%22CBOE%3AVIX%22%2C%22d%22%3A%22VIX%22%7D%5D%7D%2C%7B%22title%22%3A%22Commodities%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22TVC%3AGOLD%22%2C%22d%22%3A%22Gold%22%7D%2C%7B%22s%22%3A%22TVC%3AUSOIL%22%2C%22d%22%3A%22Crude%20Oil%22%7D%5D%7D%2C%7B%22title%22%3A%22Crypto%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22COINBASE%3ABTCUSD%22%2C%22d%22%3A%22Bitcoin%22%7D%5D%7D%5D%7D"
+              style={{width:"100%",height:"100%",display:"block"}}
+              title="Market Overview"
+            />
+          </div>
+        </div>
+      )}
+
       {/* ── WELCOME SCREEN ── */}
       {/* ── ABOUT US MODAL ── */}
       {showAbout&&(
@@ -1281,6 +1388,15 @@ Be specific with real institution names and programs, not generic advice.`;
 
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 
+      {/* ── MARKET TICKER BAR ── */}
+      <div style={{background:"#0a0e1a",borderBottom:"1px solid #1e2a3a",overflow:"hidden"}}>
+        <iframe scrolling="no" allowTransparency="true" frameBorder="0"
+          src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P%20500%22%2C%22proName%22%3A%22AMEX%3ASPY%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22AMEX%3ADIA%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3AQQQ%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22AMEX%3AIWM%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22CBOE%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22COINBASE%3ABTCUSD%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22colorTheme%22%3A%22dark%22%2C%22locale%22%3A%22en%22%7D"
+          style={{width:"100%",height:54,display:"block"}}
+          title="Market Ticker"
+        />
+      </div>
+
       {/* HEADER */}
       <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"13px 16px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:11}}>
@@ -1296,14 +1412,18 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.accent}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</div>
           </div>
         </div>
-        <div style={{display:"flex",gap:7,alignItems:"center"}}>
+        <div style={{display:"flex",gap:6,alignItems:"center",overflowX:"auto",scrollbarWidth:"none"}}>
           <TB t="dashboard" l="📊 Dash"/>
-          <TB t="loads" l="📋 Doc Analyzer"/>
+          <TB t="loads" l="📋 Docs"/>
           <TB t="ai" l="🧠 AI"/>
           <TB t="growth" l="🚀 Growth"/>
+          <button onClick={()=>setShowInsurance(true)}
+            style={{padding:"8px 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa55",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>🛡️ Protect</button>
+          <button onClick={()=>setShowQR(true)}
+            style={{padding:"8px 12px",borderRadius:8,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>📱 QR</button>
           <button onClick={()=>setFocusMode(p=>!p)}
-            style={{padding:"9px 14px",borderRadius:8,background:focusMode?C.gold:`linear-gradient(135deg,${C.gold}33,${C.gold}15)`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,letterSpacing:"0.03em"}}>
-            {focusMode?"⚡ FOCUS":"⚡ Focus"}
+            style={{padding:"8px 12px",borderRadius:8,background:focusMode?C.gold:`${C.gold}22`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
+            {focusMode?"⚡ ON":"⚡ Focus"}
           </button>
           {/* ── GROUPED MENU BUTTON ── */}
           <div style={{position:"relative",flexShrink:0}}>
@@ -1319,7 +1439,11 @@ Be specific with real institution names and programs, not generic advice.`;
                   style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                   <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
                 </button>
-                {/* Profile */}
+                {/* Market */}
+                <button onClick={()=>{setShowMarket(true);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>📈</span><span style={{fontWeight:600}}>Market Overview</span>
+                </button>
                 <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
                   style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                   <span>👤</span><span style={{fontWeight:600}}>My Profile</span>
@@ -1353,30 +1477,7 @@ Be specific with real institution names and programs, not generic advice.`;
         </div>
       </div>
 
-      {/* ── SMART SEARCH BAR ── highlighted below header ── */}
-      <div style={{background:`linear-gradient(135deg,${C.a3}22,${C.accent}15)`,borderBottom:`2px solid ${C.a3}55`,padding:"11px 14px"}}>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:10,padding:"0 12px",border:`2px solid ${C.a3}`,boxShadow:`0 0 14px ${C.a3}33`}}>
-            <span style={{fontSize:14,flexShrink:0,color:C.a3}}>{searchLoading?"⏳":"🔍"}</span>
-            <input value={searchQ||""} onChange={e=>setSearchQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}} placeholder="Search weather · gas prices · truck stops · traffic..." style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"11px 0",width:"100%",outline:"none"}}/>
-            {(searchQ||"").trim()&&<button onClick={()=>{setSearchQ("");setSearchResult("");}} style={{background:"none",border:"none",color:C.sub,fontSize:16,cursor:"pointer",padding:"0 4px",flexShrink:0}}>×</button>}
-          </div>
-          <button onClick={()=>runSearch()} disabled={!(searchQ||"").trim()||searchLoading} style={{padding:"11px 16px",borderRadius:10,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:!(searchQ||"").trim()||searchLoading?C.sub:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Go</button>
-        </div>
-        {!searchResult&&!searchLoading&&(
-          <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
-            {["⛅ Weather","⛽ Gas prices","🚛 Truck stops","🛣️ Traffic I-95","⛽ Diesel prices"].map(s=>(
-              <button key={s} onClick={()=>{setSearchQ(s.replace(/^[^\s]+\s/,""));setTimeout(()=>runSearch(s.replace(/^[^\s]+\s/,"")),50);}} style={{padding:"5px 11px",borderRadius:20,background:C.raised,border:`1px solid ${C.a3}55`,color:"#a78bfa",fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",fontWeight:700}}>{s}</button>
-            ))}
-          </div>
-        )}
-        {searchResult&&(
-          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}44`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
-            {searchResult}
-            <button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
-          </div>
-        )}
-      </div>
+
       <div style={{background:`linear-gradient(135deg,${C.a3}18,${C.accent}12)`,borderBottom:`2px solid ${C.a3}55`,padding:"10px 14px",position:"sticky",top:0,zIndex:99}}>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:12,padding:"0 12px",border:`2px solid ${C.a3}66`,boxShadow:`0 2px 12px ${C.a3}22`}}>
