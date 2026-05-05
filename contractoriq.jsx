@@ -480,6 +480,10 @@ export default function ContractorIQv26(){
   const [showInsurance,setShowInsurance]=useState(false);
   const [showQR,setShowQR]=useState(false);
   const [showMarket,setShowMarket]=useState(false);
+  const [showReviews,setShowReviews]=useState(false);
+  const [reviews,setReviews]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_reviews")||"[]");}catch{return [];}});
+  const [reviewForm,setReviewForm]=useState({name:"",role:"",stars:5,text:""});
+  const [addingReview,setAddingReview]=useState(false);
   const [hiddenVendors,setHiddenVendors]=useState([]);
   const [hideOwnerName,setHideOwnerName]=useState(false);
   const [hideUnitNum,setHideUnitNum]=useState(false);
@@ -1195,6 +1199,94 @@ Be specific with real institution names and programs, not generic advice.`;
         </div>
       )}
 
+      {/* ── CUSTOMER REVIEWS MODAL ── */}
+      {showReviews&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:C.bg,display:"flex",flexDirection:"column"}}>
+          <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+            <div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:C.text}}>⭐ Customer Reviews</div>
+              <div style={{fontSize:10,color:C.sub,marginTop:2}}>Real drivers · Real results · Real numbers</div>
+            </div>
+            <button onClick={()=>setShowReviews(false)} style={{padding:"7px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
+          </div>
+          <div style={{flex:1,overflowY:"auto",padding:"16px 16px 80px"}}>
+            {/* Add Review Button */}
+            {!addingReview&&(
+              <button onClick={()=>setAddingReview(true)}
+                style={{width:"100%",padding:"13px",borderRadius:12,background:`linear-gradient(135deg,${C.a3}22,${C.accent}15)`,border:`2px solid ${C.a3}44`,color:C.a3,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:16}}>
+                ✍️ Write a Review
+              </button>
+            )}
+            {/* Review Form */}
+            {addingReview&&(
+              <div style={{background:C.card,borderRadius:14,padding:"16px",marginBottom:16,border:`2px solid ${C.a3}44`}}>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.text,marginBottom:12}}>✍️ Share Your Experience</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                  <div>
+                    <div style={{fontSize:10,color:C.sub,fontWeight:700,marginBottom:4}}>YOUR NAME</div>
+                    <input value={reviewForm.name} onChange={e=>setReviewForm(p=>({...p,name:e.target.value}))} placeholder="e.g. Marcus D." style={{width:"100%",padding:"9px 12px",borderRadius:8,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box"}}/>
+                  </div>
+                  <div>
+                    <div style={{fontSize:10,color:C.sub,fontWeight:700,marginBottom:4}}>YOUR ROLE</div>
+                    <input value={reviewForm.role} onChange={e=>setReviewForm(p=>({...p,role:e.target.value}))} placeholder="e.g. Owner-Operator" style={{width:"100%",padding:"9px 12px",borderRadius:8,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box"}}/>
+                  </div>
+                </div>
+                <div style={{marginBottom:10}}>
+                  <div style={{fontSize:10,color:C.sub,fontWeight:700,marginBottom:6}}>RATING</div>
+                  <div style={{display:"flex",gap:6}}>
+                    {[1,2,3,4,5].map(s=>(
+                      <button key={s} onClick={()=>setReviewForm(p=>({...p,stars:s}))}
+                        style={{fontSize:24,background:"none",border:"none",cursor:"pointer",opacity:s<=reviewForm.stars?1:0.3,padding:0}}>⭐</button>
+                    ))}
+                  </div>
+                </div>
+                <div style={{marginBottom:12}}>
+                  <div style={{fontSize:10,color:C.sub,fontWeight:700,marginBottom:4}}>YOUR REVIEW</div>
+                  <textarea value={reviewForm.text} onChange={e=>setReviewForm(p=>({...p,text:e.target.value}))} placeholder="How has ContractorIQ helped your business? Share your experience..." rows={4} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",outline:"none",resize:"none",boxSizing:"border-box"}}/>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>{
+                    if(!reviewForm.name.trim()||!reviewForm.text.trim())return;
+                    const newR=[{...reviewForm,date:new Date().toLocaleDateString("en-US",{month:"short",year:"numeric"})}, ...reviews];
+                    setReviews(newR);
+                    try{localStorage.setItem("ciq_reviews",JSON.stringify(newR));}catch(e){}
+                    setReviewForm({name:"",role:"",stars:5,text:""});
+                    setAddingReview(false);
+                  }} style={{flex:1,padding:"11px",borderRadius:10,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontSize:12,fontWeight:800,border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+                    ✅ Submit Review
+                  </button>
+                  <button onClick={()=>setAddingReview(false)} style={{padding:"11px 16px",borderRadius:10,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button>
+                </div>
+              </div>
+            )}
+            {/* Seed reviews if none exist */}
+            {reviews.length===0&&!addingReview&&(
+              <div style={{textAlign:"center",padding:"32px 16px",color:C.sub}}>
+                <div style={{fontSize:40,marginBottom:12}}>⭐</div>
+                <div style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:8}}>Be the first to review!</div>
+                <div style={{fontSize:12,lineHeight:1.7}}>Share how ContractorIQ helped you understand your business numbers and make better decisions.</div>
+              </div>
+            )}
+            {/* Review Cards */}
+            {reviews.map((r,i)=>(
+              <div key={i} style={{background:C.card,borderRadius:14,padding:"16px",marginBottom:12,border:`1px solid ${C.border}`}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                  <div>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:700,color:C.text}}>{r.name}</div>
+                    {r.role&&<div style={{fontSize:10,color:C.sub,marginTop:2}}>{r.role}</div>}
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontSize:14}}>{"⭐".repeat(r.stars)}</div>
+                    <div style={{fontSize:10,color:C.sub,marginTop:2}}>{r.date}</div>
+                  </div>
+                </div>
+                <div style={{fontSize:12,color:C.text,lineHeight:1.7}}>{r.text}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── MARKET OVERVIEW MODAL ── */}
       {showMarket&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:C.bg,display:"flex",flexDirection:"column"}}>
@@ -1389,10 +1481,10 @@ Be specific with real institution names and programs, not generic advice.`;
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 
       {/* ── MARKET TICKER BAR ── */}
-      <div style={{background:"#0a0e1a",borderBottom:"1px solid #1e2a3a",overflow:"hidden"}}>
+      <div style={{background:"#0a0e1a",borderBottom:"1px solid #1e2a3a"}}>
         <iframe scrolling="no" allowTransparency="true" frameBorder="0"
           src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P%20500%22%2C%22proName%22%3A%22AMEX%3ASPY%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22AMEX%3ADIA%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3AQQQ%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22AMEX%3AIWM%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22CBOE%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22COINBASE%3ABTCUSD%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22colorTheme%22%3A%22dark%22%2C%22locale%22%3A%22en%22%7D"
-          style={{width:"100%",height:72,display:"block"}}
+          style={{width:"100%",height:76,display:"block",minHeight:54}}
           title="Market Ticker"
         />
       </div>
@@ -1447,6 +1539,12 @@ Be specific with real institution names and programs, not generic advice.`;
                   style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                   <span>📈</span><span style={{fontWeight:600}}>Market Overview</span>
                 </button>
+                {/* Reviews */}
+                <button onClick={()=>{setShowReviews(true);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>⭐</span><span style={{fontWeight:600}}>Customer Reviews</span>
+                  {reviews.length>0&&<span style={{marginLeft:"auto",fontSize:9,color:C.gold,fontWeight:700}}>{reviews.length}</span>}
+                </button>
                 <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
                   style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                   <span>👤</span><span style={{fontWeight:600}}>My Profile</span>
@@ -1461,11 +1559,6 @@ Be specific with real institution names and programs, not generic advice.`;
                 <button onClick={()=>{const next=!darkMode;setDarkMode(next);try{localStorage.setItem("ciq_theme",next?"dark":"light");}catch(e){}setShowMenu(false);}}
                   style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                   <span>{darkMode?"☀️":"🌙"}</span><span style={{fontWeight:600}}>{darkMode?"Light Mode":"Dark Mode"}</span>
-                </button>
-                {/* About Us */}
-                <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
-                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
-                  <span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span>
                 </button>
               </div>
             )}
