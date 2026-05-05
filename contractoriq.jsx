@@ -1392,7 +1392,7 @@ Be specific with real institution names and programs, not generic advice.`;
       <div style={{background:"#0a0e1a",borderBottom:"1px solid #1e2a3a",overflow:"hidden"}}>
         <iframe scrolling="no" allowTransparency="true" frameBorder="0"
           src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P%20500%22%2C%22proName%22%3A%22AMEX%3ASPY%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22AMEX%3ADIA%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3AQQQ%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22AMEX%3AIWM%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22CBOE%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22COINBASE%3ABTCUSD%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22colorTheme%22%3A%22dark%22%2C%22locale%22%3A%22en%22%7D"
-          style={{width:"100%",height:54,display:"block"}}
+          style={{width:"100%",height:72,display:"block"}}
           title="Market Ticker"
         />
       </div>
@@ -1412,28 +1412,31 @@ Be specific with real institution names and programs, not generic advice.`;
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.accent}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</div>
           </div>
         </div>
-        <div style={{display:"flex",gap:6,alignItems:"center",overflowX:"auto",scrollbarWidth:"none"}}>
-          <TB t="dashboard" l="📊 Dash"/>
-          <TB t="loads" l="📋 Docs"/>
-          <TB t="ai" l="🧠 AI"/>
-          <TB t="growth" l="🚀 Growth"/>
-          <button onClick={()=>setShowInsurance(true)}
-            style={{padding:"8px 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa55",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>🛡️ Protect</button>
-          <button onClick={()=>setShowQR(true)}
-            style={{padding:"8px 12px",borderRadius:8,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>📱 QR</button>
-          <button onClick={()=>setFocusMode(p=>!p)}
-            style={{padding:"8px 12px",borderRadius:8,background:focusMode?C.gold:`${C.gold}22`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
-            {focusMode?"⚡ ON":"⚡ Focus"}
-          </button>
-          {/* ── GROUPED MENU BUTTON ── */}
-          <div style={{position:"relative",flexShrink:0}}>
-            <button onClick={()=>setShowMenu(p=>!p)}
-              style={{padding:"9px 12px",borderRadius:8,background:showMenu?`${C.a3}22`:C.raised,border:`1px solid ${showMenu?C.a3:C.border}`,color:showMenu?C.a3:C.sub,fontSize:13,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5}}>
-              <span>☰</span>
-              <span style={{fontSize:10,fontWeight:700}}>Menu</span>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          {/* Scrollable tabs */}
+          <div style={{display:"flex",gap:6,alignItems:"center",overflowX:"auto",scrollbarWidth:"none",flex:1}}>
+            <TB t="dashboard" l="📊 Dash"/>
+            <TB t="loads" l="📋 Docs"/>
+            <TB t="ai" l="🧠 AI"/>
+            <TB t="growth" l="🚀 Growth"/>
+            <button onClick={()=>setShowInsurance(true)}
+              style={{padding:"8px 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa55",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>🛡️ Protect</button>
+            <button onClick={()=>setShowQR(true)}
+              style={{padding:"8px 12px",borderRadius:8,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>📱 QR</button>
+            <button onClick={()=>setFocusMode(p=>!p)}
+              style={{padding:"8px 12px",borderRadius:8,background:focusMode?C.gold:`${C.gold}22`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
+              {focusMode?"⚡ ON":"⚡ Focus"}
             </button>
-            {showMenu&&(
-              <div style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:8,zIndex:999,minWidth:180,boxShadow:"0 8px 32px rgba(0,0,0,0.3)"}}>
+          </div>
+          {/* Menu + PRO — fixed outside scroll so dropdown never clips */}
+          <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
+            <div style={{position:"relative"}}>
+              <button onClick={()=>setShowMenu(p=>!p)}
+                style={{padding:"8px 12px",borderRadius:8,background:showMenu?`${C.a3}22`:C.raised,border:`1px solid ${showMenu?C.a3:C.border}`,color:showMenu?C.a3:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5,fontWeight:700,whiteSpace:"nowrap"}}>
+                <span>☰</span><span>Menu</span>
+              </button>
+              {showMenu&&(
+                <div style={{position:"fixed",top:108,right:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:8,zIndex:9999,minWidth:190,boxShadow:"0 8px 32px rgba(0,0,0,0.6)"}}>
                 {/* About Us */}
                 <button onClick={()=>{setShowAbout(true);setShowMenu(false);}}
                   style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
@@ -1474,7 +1477,8 @@ Be specific with real institution names and programs, not generic advice.`;
           ):(
             <button onClick={()=>{const t=ownerTaps+1;setOwnerTaps(t);if(t>=5){setIsPro(true);setOwnerTaps(0);try{localStorage.setItem("ciq_pro","true");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}else{openUpgrade("header");}}} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{ownerTaps>0?`(${ownerTaps}/5)`:"Upgrade"}</button>
           )}
-        </div>
+          </div>{/* end Menu+PRO group */}
+        </div>{/* end outer flex */}
       </div>
 
 
