@@ -433,6 +433,29 @@ function getDeviceFingerprint(){
 }
 
 export default function ContractorIQv26(){
+
+  // Inject global CSS for premium effects
+  if(typeof document!=='undefined'&&!document.getElementById('ciq-elite-css')){
+    const s=document.createElement('style');
+    s.id='ciq-elite-css';
+    s.textContent=`
+      @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+      @keyframes pulse-glow{0%,100%{box-shadow:0 0 8px rgba(0,255,204,0.3)}50%{box-shadow:0 0 20px rgba(0,255,204,0.7)}}
+      @keyframes rotate-radial{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+      @keyframes slide-in{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+      .grad-text{background:linear-gradient(135deg,#ffffff,#a5f3fc,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+      .stat-grad{background:linear-gradient(135deg,#00ffcc,#a5f3fc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% auto;animation:shimmer 3s linear infinite}
+      .card-glow{transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.25s ease}
+      .card-glow:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 0 24px rgba(0,255,204,0.25),0 8px 32px rgba(0,0,0,0.3)}
+      .radial-shimmer{background:linear-gradient(-45deg,#0d1525,#1a2436,#0a0e1a,#1e2a3a);background-size:400% 400%;animation:rotate-radial 6s ease infinite}
+      .nav-active{animation:pulse-glow 2s ease-in-out infinite}
+      .step-slide{transition:transform 0.2s ease,color 0.2s ease}
+      .step-slide:hover{transform:translateX(6px)}
+      .dot-grad{background:linear-gradient(135deg,#00ffcc,#a78bfa);box-shadow:0 0 8px rgba(0,255,204,0.5)}
+    `;
+    document.head.appendChild(s);
+  }
+
   const [tab,setTab]=useState("dashboard");
   const [sD,setSD]=useState(7); // selDed
   const [sM,setSM]=useState(7); // selMove
@@ -1116,7 +1139,7 @@ Be specific with real institution names and programs, not generic advice.`;
       </div>
     );
   };
-  const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:1,padding:"9px 4px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:11,letterSpacing:"0.04em",textTransform:"uppercase",border:"none",background:tab===t?C.accent:C.raised,color:tab===t?"#000":C.sub,transition:"all 0.15s"}}>{l}</button>;
+  const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:1,padding:"9px 4px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:11,letterSpacing:"0.04em",textTransform:"uppercase",border:"none",background:tab===t?C.accent:C.raised,color:tab===t?"#000":C.sub,transition:"all 0.2s",boxShadow:tab===t?`0 0 14px ${C.accent}66,0 0 28px ${C.accent}22`:"none"}}>{l}</button>;
 
   return(
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
@@ -1495,7 +1518,7 @@ Be specific with real institution names and programs, not generic advice.`;
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:32,height:32,borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🚛</div>
             <div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,fontSize:15}}>DrayageIQ</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,fontSize:15,className:"grad-text"}}>DrayageIQ</div>
               <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":demoMode?"Demo Driver":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</div>
             </div>
           </div>
@@ -1512,7 +1535,7 @@ Be specific with real institution names and programs, not generic advice.`;
             <TB t="ai" l="🧠 AI"/>
             <TB t="growth" l="🚀 Growth"/>
             <button onClick={()=>setShowInsurance(true)}
-              style={{padding:"8px 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa55",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>🛡️ Protect</button>
+              style={{padding:"8px 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa",boxShadow:"0 0 12px #a78bfa33",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>🛡️ Protect</button>
             <button onClick={()=>setShowQR(true)}
               style={{padding:"8px 12px",borderRadius:8,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>📱 QR</button>
             <button onClick={()=>setFocusMode(p=>!p)}
