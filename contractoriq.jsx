@@ -2714,6 +2714,17 @@ Be specific with real institution names and programs, not generic advice.`;
       {/* ══ LOADS ════════════════════════════════════════════════════════════ */}
       {tab==="loads"&&(
         <div>
+          {/* ── RESET ALL DATA — top of Docs tab, always visible ── */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 14px",marginBottom:14,background:"#f8717110",borderRadius:12,border:"2px solid #f87171"}}>
+            <div>
+              <div style={{fontSize:12,fontWeight:800,color:"#f87171"}}>🔴 Reset All Data</div>
+              <div style={{fontSize:10,color:C.sub,marginTop:2}}>Wipes uploaded weeks, profile, settings</div>
+            </div>
+            <button onClick={()=>{if(window.confirm("RESET ALL DATA? Cannot be undone.")){try{localStorage.clear();}catch(e){}window.location.reload();}}}
+              style={{padding:"8px 18px",borderRadius:9,background:"#f87171",color:"#000",fontSize:12,fontWeight:800,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
+              Reset
+            </button>
+          </div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
             <div>
               <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,margin:0}}>📋 Document Analyzer</h1>
