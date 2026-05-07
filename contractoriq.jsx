@@ -3304,8 +3304,7 @@ Be specific with real institution names and programs, not generic advice.`;
                 }
               }} style={{padding:"6px 12px",borderRadius:8,background:"#f8717115",border:"2px solid #f87171",color:"#f87171",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
                 🔴 Reset All Data
-                </button>
-              )}
+              </button>
             </div>
             {/* Storage status */}
             <div style={{padding:"9px 13px",background:addedW.length>0?`${C.green}10`:`${C.border}30`,borderRadius:8,border:`1px solid ${addedW.length>0?C.green+"33":C.border}`,fontSize:11,color:addedW.length>0?C.green:C.sub,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
