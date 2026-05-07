@@ -3285,6 +3285,22 @@ Be specific with real institution names and programs, not generic advice.`;
             {addMsg&&<div style={{padding:"10px 14px",background:addMsg.startsWith("⚠️")?`${C.red}12`:`${C.green}12`,borderRadius:9,border:`1px solid ${addMsg.startsWith("⚠️")?C.red:C.green}44`,fontSize:12,color:addMsg.startsWith("⚠️")?C.red:C.green}}>{addMsg}</div>}
           </div>
 
+          {/* ── RESET ALL DATA — always visible ── */}
+          <div style={{marginBottom:12,padding:"12px 14px",background:"#f8717108",borderRadius:12,border:"2px solid #f8717144",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+            <div>
+              <div style={{fontSize:12,fontWeight:700,color:"#f87171",marginBottom:2}}>🔴 Reset All Data</div>
+              <div style={{fontSize:10,color:C.sub}}>Wipes all uploaded weeks, profile & settings. Built-in W09–W15 restore.</div>
+            </div>
+            <button onClick={()=>{
+              if(window.confirm("RESET ALL DATA? This cannot be undone.")){
+                try{localStorage.clear();}catch(e){}
+                window.location.reload();
+              }
+            }} style={{padding:"9px 16px",borderRadius:9,background:"#f87171",color:"#000",fontSize:11,fontWeight:800,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
+              Reset
+            </button>
+          </div>
+
           {/* All Settlements */}
           <div style={K()}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
@@ -3297,14 +3313,6 @@ Be specific with real institution names and programs, not generic advice.`;
                   🗑 Clear Added
                 </button>
               )}
-              <button onClick={()=>{
-                if(window.confirm("RESET ALL DATA? Removes all uploaded weeks, profile, settings. Built-in W09-W15 restore. Cannot be undone.")){
-                  try{localStorage.clear();}catch(e){}
-                  window.location.reload();
-                }
-              }} style={{padding:"6px 12px",borderRadius:8,background:"#f8717115",border:"2px solid #f87171",color:"#f87171",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
-                🔴 Reset All Data
-              </button>
             </div>
             {/* Storage status */}
             <div style={{padding:"9px 13px",background:addedW.length>0?`${C.green}10`:`${C.border}30`,borderRadius:8,border:`1px solid ${addedW.length>0?C.green+"33":C.border}`,fontSize:11,color:addedW.length>0?C.green:C.sub,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
