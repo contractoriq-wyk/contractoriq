@@ -442,16 +442,16 @@ export default function ContractorIQv26(){
       @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
       @keyframes pulse-glow{0%,100%{box-shadow:0 0 8px rgba(0,255,204,0.3)}50%{box-shadow:0 0 20px rgba(0,255,204,0.7)}}
       @keyframes rotate-radial{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-      @keyframes slide-in{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+      @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+      @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
       .grad-text{background:linear-gradient(135deg,#ffffff,#a5f3fc,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
       .stat-grad{background:linear-gradient(135deg,#00ffcc,#a5f3fc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% auto;animation:shimmer 3s linear infinite}
       .card-glow{transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.25s ease}
       .card-glow:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 0 24px rgba(0,255,204,0.25),0 8px 32px rgba(0,0,0,0.3)}
-      .radial-shimmer{background:linear-gradient(-45deg,#0d1525,#1a2436,#0a0e1a,#1e2a3a);background-size:400% 400%;animation:rotate-radial 6s ease infinite}
-      .nav-active{animation:pulse-glow 2s ease-in-out infinite}
-      .step-slide{transition:transform 0.2s ease,color 0.2s ease}
-      .step-slide:hover{transform:translateX(6px)}
+      .shimmer-vendor{background:linear-gradient(-45deg,#0d1525,#1a2436,#0a0e1a,#162033);background-size:400% 400%;animation:rotate-radial 8s ease infinite}
       .dot-grad{background:linear-gradient(135deg,#00ffcc,#a78bfa);box-shadow:0 0 8px rgba(0,255,204,0.5)}
+      .tab-active-glow{box-shadow:0 0 14px rgba(0,255,204,0.5)!important}
+      .page-enter{animation:fadein 0.2s ease}
     `;
     document.head.appendChild(s);
   }
@@ -1649,13 +1649,34 @@ Be specific with real institution names and programs, not generic advice.`;
 
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 
-      {/* ── MARKET TICKER BAR ── */}
-      <div style={{background:"#0a0e1a",borderBottom:"1px solid #1e2a3a"}}>
-        <iframe scrolling="no" allowTransparency="true" frameBorder="0"
-          src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22description%22%3A%22S%26P%20500%22%2C%22proName%22%3A%22AMEX%3ASPY%22%7D%2C%7B%22description%22%3A%22Dow%2030%22%2C%22proName%22%3A%22AMEX%3ADIA%22%7D%2C%7B%22description%22%3A%22Nasdaq%22%2C%22proName%22%3A%22NASDAQ%3AQQQ%22%7D%2C%7B%22description%22%3A%22Russell%202000%22%2C%22proName%22%3A%22AMEX%3AIWM%22%7D%2C%7B%22description%22%3A%22VIX%22%2C%22proName%22%3A%22CBOE%3AVIX%22%7D%2C%7B%22description%22%3A%22Gold%22%2C%22proName%22%3A%22TVC%3AGOLD%22%7D%2C%7B%22description%22%3A%22Crude%20Oil%22%2C%22proName%22%3A%22TVC%3AUSOIL%22%7D%2C%7B%22description%22%3A%22Bitcoin%22%2C%22proName%22%3A%22COINBASE%3ABTCUSD%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22colorTheme%22%3A%22dark%22%2C%22locale%22%3A%22en%22%7D"
-          style={{width:"100%",height:76,display:"block",minHeight:54}}
-          title="Market Ticker"
-        />
+      {/* ── MARKET TICKER BAR — CSS marquee, always works ── */}
+      <div style={{background:"#0a0e1a",borderBottom:"1px solid #1e2a3a",height:36,overflow:"hidden",display:"flex",alignItems:"center"}}>
+        <div style={{display:"flex",gap:0,whiteSpace:"nowrap",animation:"marquee 25s linear infinite"}}>
+          {[
+            {sym:"SPY",name:"S&P 500"},
+            {sym:"DIA",name:"Dow 30"},
+            {sym:"QQQ",name:"Nasdaq"},
+            {sym:"IWM",name:"Russell"},
+            {sym:"VIX",name:"VIX"},
+            {sym:"GOLD",name:"Gold"},
+            {sym:"OIL",name:"Crude"},
+            {sym:"BTC",name:"Bitcoin"},
+          ].concat([
+            {sym:"SPY",name:"S&P 500"},
+            {sym:"DIA",name:"Dow 30"},
+            {sym:"QQQ",name:"Nasdaq"},
+            {sym:"IWM",name:"Russell"},
+            {sym:"VIX",name:"VIX"},
+            {sym:"GOLD",name:"Gold"},
+            {sym:"OIL",name:"Crude"},
+            {sym:"BTC",name:"Bitcoin"},
+          ]).map((t,i)=>(
+            <span key={i} onClick={()=>setShowMarket(true)} style={{padding:"0 20px",fontSize:10,fontWeight:700,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6,height:36,borderRight:"1px solid #1e2a3a"}}>
+              <span style={{color:"#8fa3c0"}}>{t.sym}</span>
+              <span style={{color:"#4a6080",fontSize:8}}>{t.name}</span>
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* HEADER */}
@@ -1664,7 +1685,7 @@ Be specific with real institution names and programs, not generic advice.`;
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:32,height:32,borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🚛</div>
             <div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,fontSize:15,className:"grad-text"}}>DrayageIQ</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,fontSize:15,background:"linear-gradient(135deg,#ffffff,#a5f3fc,#c4b5fd)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>DrayageIQ</div>
               <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":demoMode?"Demo Driver":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</div>
             </div>
           </div>
@@ -2008,9 +2029,9 @@ Be specific with real institution names and programs, not generic advice.`;
               <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:9}}>📋 By Vendor / Carrier</div>
               <div style={{display:"grid",gridTemplateColumns:wide?`repeat(${Math.min(vendorStats.length,3)},1fr)`:"1fr",gap:10,marginBottom:10}}>
                 {vendorStats.map(v=>(
-                  <div key={v.key} style={{background:C.card,borderRadius:12,padding:"14px",border:`2px solid ${v.color}44`,position:"relative",overflow:"hidden"}}>
+                  <div key={v.key} style={{background:"linear-gradient(-45deg,#0d1525,#1a2436,#0a0e1a,#162033)",backgroundSize:"400% 400%",animation:"rotate-radial 8s ease infinite",borderRadius:12,padding:"14px",border:`1px solid ${v.color}33`,position:"relative",overflow:"hidden"}}>
                     {/* Color accent strip */}
-                    <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:v.color,borderRadius:"12px 12px 0 0"}}/>
+                    <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:`linear-gradient(90deg,${v.color},${v.color}44)`,borderRadius:"12px 12px 0 0"}}/>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
                         <span style={{fontSize:20}}>{v.icon}</span>
@@ -2066,12 +2087,17 @@ Be specific with real institution names and programs, not generic advice.`;
           )}
 
           {/* ── Main KPIs ── */}
-          <div style={{display:"grid",gridTemplateColumns:wide?"repeat(4,1fr)":"repeat(2,1fr)",gap:12,marginBottom:8}}>
-            {[{l:"YTD Gross",v:`$${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:`All ${allW.length} weeks`,c:C.accent},{l:"YTD Net",v:`$${tNet.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:`${margin}% margin`,c:C.green},{l:"Deductions",v:`$${tDed.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:"All expenses",c:C.red},{l:"Avg RPM",v:`$${avgRPM}`,s:`${tMi.toLocaleString()} mi`,c:C.a3}].map(k=>(
-              <div key={k.l} style={K({borderTop:`3px solid ${k.c}`,padding:"14px"})}>
-                <div style={{fontSize:10,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>{k.l}</div>
-                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:k.c}}>{k.v}</div>
-                <div style={{fontSize:10,color:C.sub,marginTop:4}}>{k.s}</div>
+          <div style={{display:"grid",gridTemplateColumns:wide?"repeat(4,1fr)":"repeat(2,1fr)",gap:12,marginBottom:14}}>
+            {[
+              {l:"YTD Gross",v:`$${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:`All ${allW.length} weeks`,c:C.accent,g:"linear-gradient(135deg,#00ffcc,#a5f3fc,#a78bfa)"},
+              {l:"YTD Net",v:`$${tNet.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:`${margin}% margin`,c:C.green,g:"linear-gradient(135deg,#00ffcc,#34d399)"},
+              {l:"Deductions",v:`$${tDed.toLocaleString("en-US",{minimumFractionDigits:2})}`,s:"All expenses",c:C.red,g:"linear-gradient(135deg,#f87171,#fca5a5)"},
+              {l:"Avg RPM",v:`$${avgRPM}`,s:`${tMi.toLocaleString()} mi`,c:C.a3,g:"linear-gradient(135deg,#a78bfa,#c4b5fd)"}
+            ].map(k=>(
+              <div key={k.l} style={{...K({borderTop:`3px solid ${k.c}`,padding:"16px"}),boxShadow:`0 2px 12px rgba(0,0,0,0.2)`}}>
+                <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>{k.l}</div>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,background:k.g,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",backgroundSize:"200% auto",animation:"shimmer 3s linear infinite"}}>{k.v}</div>
+                <div style={{fontSize:10,color:C.sub,marginTop:5}}>{k.s}</div>
               </div>
             ))}
           </div>
