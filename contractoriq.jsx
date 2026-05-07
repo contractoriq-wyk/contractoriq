@@ -504,6 +504,8 @@ export default function ContractorIQv26(){
   const [showQR,setShowQR]=useState(false);
   const [showMarket,setShowMarket]=useState(false);
   const [showReviews,setShowReviews]=useState(false);
+  const [showIconKey,setShowIconKey]=useState(false);
+  const [showFleet,setShowFleet]=useState(false);
   const [reviews,setReviews]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_reviews")||"[]");}catch{return [];}});
   const [reviewForm,setReviewForm]=useState({name:"",role:"",stars:5,text:""});
   const [addingReview,setAddingReview]=useState(false);
@@ -1222,6 +1224,150 @@ Be specific with real institution names and programs, not generic advice.`;
         </div>
       )}
 
+      {/* ── ICON KEY / GUIDE MODAL ── */}
+      {showIconKey&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:C.bg,display:"flex",flexDirection:"column"}}>
+          <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+            <div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:C.text}}>🔑 Icon Guide</div>
+              <div style={{fontSize:10,color:C.sub,marginTop:2}}>What every icon and color means</div>
+            </div>
+            <button onClick={()=>setShowIconKey(false)} style={{padding:"7px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
+          </div>
+          <div style={{flex:1,overflowY:"auto",padding:"16px 16px 80px"}}>
+            {[
+              {section:"📊 Dashboard",items:[
+                {icon:"📊",name:"Dash",desc:"Main dashboard — your weekly earnings overview"},
+                {icon:"📋",name:"Docs",desc:"Doc Analyzer — upload & scan your settlement PDFs"},
+                {icon:"🧠",name:"AI",desc:"AI chat — ask questions about your business"},
+                {icon:"🚀",name:"Growth",desc:"Growth tools — reports, expenses, all settlements"},
+                {icon:"🛡️",name:"Protect",desc:"Protect Your Income — life & disability insurance"},
+                {icon:"📱",name:"QR",desc:"Transfer your data to another device via QR code"},
+                {icon:"⚡",name:"Focus",desc:"Focus Mode — hides non-essential info for quick checks"},
+              ]},
+              {section:"📈 Bar Chart Colors",items:[
+                {icon:"🟢",name:"Teal / Green bar",desc:"CPG (ContainerPort Group) — your main broker"},
+                {icon:"🟣",name:"Purple bar",desc:"STG Drayage — secondary broker"},
+                {icon:"🔵",name:"Blue bar",desc:"Other/additional brokers"},
+                {icon:"●",name:"Glowing dot",desc:"Tap any bar to load that week in all cards below"},
+              ]},
+              {section:"💰 Deduction Groups",items:[
+                {icon:"⛽",name:"Fuel",desc:"All fuel advance charges from your carrier"},
+                {icon:"🛡️",name:"Insurance",desc:"Physical damage, bobtail, OCC/ACC, liability"},
+                {icon:"🔧",name:"Operations",desc:"ELD, event recorder, parking, license plate fees"},
+                {icon:"🏦",name:"Escrow",desc:"Your savings held by carrier — NOT a cost, shown in purple"},
+                {icon:"📋",name:"Other",desc:"Any uncategorized deductions"},
+              ]},
+              {section:"⭐ Week Grades",items:[
+                {icon:"⭐ A",name:"A Grade",desc:"Excellent week — high net pay, strong margin"},
+                {icon:"⭐ B",name:"B Grade",desc:"Good week — above average performance"},
+                {icon:"⚠️ C",name:"C Grade",desc:"Marginal week — review your fuel and deductions"},
+                {icon:"🔴 D",name:"D Grade",desc:"Poor week — investigate high deductions or low moves"},
+              ]},
+              {section:"🎨 Color Meanings",items:[
+                {icon:"🟢",name:"Teal / Green",desc:"Good — profit, net pay, positive numbers"},
+                {icon:"🔴",name:"Red",desc:"High cost or loss — fuel, deductions, poor grade"},
+                {icon:"🟡",name:"Gold / Yellow",desc:"Warning or caution — watch this number"},
+                {icon:"🟣",name:"Purple",desc:"Savings, escrow, or AI-powered feature"},
+                {icon:"⚪",name:"Gray",desc:"Neutral info or secondary data"},
+              ]},
+              {section:"🚛 Load Types",items:[
+                {icon:"L",name:"Live Load",desc:"You wait while cargo is loaded — takes time at port"},
+                {icon:"E",name:"Empty",desc:"Repositioning move — no cargo, lower or no revenue"},
+              ]},
+            ].map(section=>(
+              <div key={section.section} style={{marginBottom:20}}>
+                <div style={{fontSize:11,fontWeight:800,color:C.a3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10,paddingBottom:6,borderBottom:`1px solid ${C.border}`}}>{section.section}</div>
+                {section.items.map(item=>(
+                  <div key={item.name} style={{display:"flex",gap:12,alignItems:"flex-start",padding:"8px 0",borderBottom:`1px solid ${C.border}22`}}>
+                    <div style={{width:36,height:36,borderRadius:9,background:`${C.a3}15`,border:`1px solid ${C.a3}33`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{item.icon}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:12,fontWeight:700,color:C.text,marginBottom:2}}>{item.name}</div>
+                      <div style={{fontSize:11,color:C.sub,lineHeight:1.5}}>{item.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── FLEET PRICING MODAL ── */}
+      {showFleet&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:C.bg,display:"flex",flexDirection:"column"}}>
+          <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+            <div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:C.text}}>🚛 Fleet Pricing</div>
+              <div style={{fontSize:10,color:C.sub,marginTop:2}}>Scale your operation with ContractorIQ</div>
+            </div>
+            <button onClick={()=>setShowFleet(false)} style={{padding:"7px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
+          </div>
+          <div style={{flex:1,overflowY:"auto",padding:"16px 16px 80px"}}>
+
+            {/* Fleet value prop */}
+            <div style={{background:"linear-gradient(135deg,#1a2436,#0d1525)",borderRadius:14,padding:"16px",marginBottom:20,border:`1px solid ${C.gold}44`}}>
+              <div style={{fontSize:12,fontWeight:800,color:C.gold,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>🚛 How ContractorIQ Helps Fleet Owners</div>
+              {[
+                {icon:"📊",t:"See every truck's performance in one dashboard",d:"Compare gross, net, MPG, and margin across all units side by side."},
+                {icon:"⚠️",t:"Catch underperforming trucks instantly",d:"See which unit is dragging down your average before it costs you."},
+                {icon:"💰",t:"Track fleet-wide fuel and deduction costs",d:"Fuel advances across 10 trucks add up fast — ContractorIQ totals it all."},
+                {icon:"🧠",t:"AI advisor knows ALL your trucks' data",d:"Ask 'Which truck has the best margin this month?' and get a real answer."},
+                {icon:"📋",t:"Scan settlements for each unit separately",d:"Upload W16 for unit BAL975, W16 for unit BAL980 — tracked separately."},
+                {icon:"📈",t:"YTD gross across entire fleet",d:"Know your total fleet revenue at a glance — not just one truck."},
+              ].map(f=>(
+                <div key={f.t} style={{display:"flex",gap:10,marginBottom:12,padding:"10px",background:"#ffffff08",borderRadius:9}}>
+                  <span style={{fontSize:20,flexShrink:0}}>{f.icon}</span>
+                  <div>
+                    <div style={{fontSize:12,fontWeight:700,color:C.text,marginBottom:2}}>{f.t}</div>
+                    <div style={{fontSize:11,color:C.sub,lineHeight:1.5}}>{f.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pricing cards */}
+            <div style={{fontSize:11,fontWeight:800,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:12}}>Fleet Pricing Plans</div>
+            {[
+              {tier:"Solo Driver",trucks:"1 truck",price:"$19.99",period:"/mo",color:"#00ffcc",tag:"Current Plan",features:["Full settlement analysis","AI chat advisor","PDF scanner","Market data","Insurance booking"]},
+              {tier:"Small Fleet",trucks:"2–5 trucks",price:"$49",period:"/mo",color:"#a78bfa",tag:"Popular",features:["Everything in Solo","Multi-unit dashboard","Per-truck performance compare","Fleet-wide totals","Priority support"]},
+              {tier:"Growing Fleet",trucks:"6–9 trucks",price:"$89",period:"/mo",color:"#fbbf24",tag:"Best Value",features:["Everything in Small Fleet","Advanced fleet analytics","Quarterly business report","Custom vendor setup","Phone support"]},
+              {tier:"Enterprise",trucks:"10+ trucks",price:"$149",period:"/mo",color:"#f87171",tag:"🚀 L99",features:["Everything in Growing Fleet","Unlimited trucks","White-label option","Dedicated account manager","Custom integrations","API access"]},
+            ].map(p=>(
+              <div key={p.tier} style={{background:C.card,borderRadius:16,padding:"18px",marginBottom:14,border:`2px solid ${p.color}44`,position:"relative",overflow:"hidden"}}>
+                <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:`linear-gradient(90deg,${p.color},${p.color}44)`}}/>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
+                  <div>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.text}}>{p.tier}</div>
+                    <div style={{fontSize:11,color:C.sub,marginTop:2}}>🚛 {p.trucks}</div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{padding:"3px 10px",borderRadius:20,background:`${p.color}20`,border:`1px solid ${p.color}44`,color:p.color,fontSize:9,fontWeight:800,marginBottom:6}}>{p.tag}</div>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,background:`linear-gradient(135deg,${p.color},#ffffff)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{p.price}<span style={{fontSize:11}}>{p.period}</span></div>
+                  </div>
+                </div>
+                {p.features.map(f=>(
+                  <div key={f} style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}>
+                    <span style={{color:p.color,fontSize:11,fontWeight:800,flexShrink:0}}>✓</span>
+                    <span style={{fontSize:11,color:C.sub}}>{f}</span>
+                  </div>
+                ))}
+                {p.tier==="Enterprise"&&(
+                  <button onClick={()=>window.open("mailto:hello@getcontractoriq.com?subject=Fleet Enterprise Inquiry","_blank")} style={{width:"100%",padding:"11px",borderRadius:10,background:`linear-gradient(135deg,${p.color},${p.color}88)`,color:"#000",fontSize:12,fontWeight:800,border:"none",cursor:"pointer",fontFamily:"inherit",marginTop:10}}>
+                    📧 Contact Us for Enterprise
+                  </button>
+                )}
+              </div>
+            ))}
+
+            <div style={{textAlign:"center",fontSize:10,color:C.sub,lineHeight:1.7,padding:"10px 0"}}>
+              All plans include a 5-day $1 trial · Cancel anytime<br/>
+              Fleet plans launching Q3 2026 · Join waitlist above
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── CUSTOMER REVIEWS MODAL ── */}
       {showReviews&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:C.bg,display:"flex",flexDirection:"column"}}>
@@ -1567,6 +1713,17 @@ Be specific with real institution names and programs, not generic advice.`;
                   style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
                   <span>⭐</span><span style={{fontWeight:600}}>Customer Reviews</span>
                   {reviews.length>0&&<span style={{marginLeft:"auto",fontSize:9,color:C.gold,fontWeight:700}}>{reviews.length}</span>}
+                </button>
+                {/* Icon Key */}
+                <button onClick={()=>{setShowIconKey(true);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.a3}12`,border:`1px solid ${C.a3}33`,color:C.a3,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>🔑</span><span style={{fontWeight:600}}>Icon Guide</span>
+                </button>
+                {/* Fleet */}
+                <button onClick={()=>{setShowFleet(true);setShowMenu(false);}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                  <span>🚛</span><span style={{fontWeight:600}}>Fleet Pricing</span>
+                  <span style={{marginLeft:"auto",fontSize:9,background:C.gold,color:"#000",padding:"2px 7px",borderRadius:8,fontWeight:800}}>NEW</span>
                 </button>
                 <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}}
                   style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
@@ -3138,6 +3295,15 @@ Be specific with real institution names and programs, not generic advice.`;
                 <button onClick={()=>{if(window.confirm(`Remove all ${addedW.length} added weeks?`)){setAddedW([]);}}}
                   style={{padding:"6px 12px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,color:"#f87171",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
                   🗑 Clear Added
+                </button>
+              )}
+              <button onClick={()=>{
+                if(window.confirm("RESET ALL DATA? Removes all uploaded weeks, profile, settings. Built-in W09-W15 restore. Cannot be undone.")){
+                  try{localStorage.clear();}catch(e){}
+                  window.location.reload();
+                }
+              }} style={{padding:"6px 12px",borderRadius:8,background:"#f8717115",border:"2px solid #f87171",color:"#f87171",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
+                🔴 Reset All Data
                 </button>
               )}
             </div>
