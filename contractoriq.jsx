@@ -792,31 +792,31 @@ export default function ContractorIQv26(){
 
           {/* RIGHT PANEL — desktop only */}
           {wide&&(
-            <div style={{flex:1,background:"linear-gradient(160deg,#0f1825 0%,#0a0f1c 50%,#0d1520 100%)",borderLeft:"1px solid #192535",padding:"48px 44px",display:"flex",flexDirection:"column",justifyContent:"center",position:"relative",overflow:"hidden"}}>
+            <div style={{flex:1,background:"linear-gradient(160deg,#0f1825 0%,#0a0f1c 50%,#0d1520 100%)",borderLeft:"1px solid #192535",padding:"32px 36px",display:"flex",flexDirection:"column",justifyContent:"center",position:"relative",overflowY:"auto",overflowX:"hidden"}}>
               <div style={{position:"absolute",top:"5%",right:"0%",width:"55%",height:"50%",background:"radial-gradient(ellipse,rgba(167,139,250,0.06) 0%,transparent 70%)",pointerEvents:"none"}}/>
-              <div style={{position:"relative",zIndex:1,display:"flex",flexDirection:"column",height:"100%"}}>
+              <div style={{position:"relative",zIndex:1}}>
 
                 {/* Headline */}
-                <div style={{fontSize:11,fontWeight:700,color:"#00ffcc",textTransform:"uppercase",letterSpacing:"0.14em",marginBottom:12}}>Scan. Track. Grow.</div>
-                <h2 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:wide?34:28,fontWeight:800,color:"#f0f6ff",lineHeight:1.06,margin:"0 0 14px",letterSpacing:"-0.02em"}}>
+                <div style={{fontSize:10,fontWeight:700,color:"#00ffcc",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:10}}>Scan. Track. Grow.</div>
+                <h2 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:wide?30:24,fontWeight:800,color:"#f0f6ff",lineHeight:1.08,margin:"0 0 10px",letterSpacing:"-0.02em"}}>
                   Settlement analysis<br/>made effortless.
                 </h2>
-                <p style={{fontSize:12,color:"#5a7590",lineHeight:1.75,margin:"0 0 20px",maxWidth:420}}>
-                  Built for drayage owner-operators who deserve to know the truth about their business.
+                <p style={{fontSize:11,color:"#5a7590",lineHeight:1.65,margin:"0 0 16px"}}>
+                  Built for drayage owner-operators — simple, smart, and efficient.
                 </p>
 
-                {/* 4 Feature tiles */}
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:28}}>
+                {/* 4 Feature tiles — compact */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
                   {[
-                    {icon:"💰",label:"Income Leakage Insights",desc:"See exactly where your money disappears — week by week"},
-                    {icon:"⏱️",label:"30 seconds",desc:"Upload to full settlement analysis instantly"},
-                    {icon:"🧠",label:"AI that knows you",desc:"Trained on your real settlement numbers"},
-                    {icon:"📊",label:"5+ years of insight",desc:"Track every week, every route, every dollar"},
+                    {icon:"💰",label:"Income Leakage",desc:"See where money disappears"},
+                    {icon:"⏱️",label:"30 Seconds",desc:"Upload to full analysis"},
+                    {icon:"🧠",label:"AI Advisor",desc:"Knows your real numbers"},
+                    {icon:"📊",label:"5+ Weeks Tracked",desc:"Every route, every dollar"},
                   ].map(function(f){return(
-                    <div key={f.label} style={{background:"rgba(255,255,255,0.025)",borderRadius:14,padding:"20px 18px",border:"1px solid rgba(255,255,255,0.055)"}}>
-                      <div style={{fontSize:30,marginBottom:10}}>{f.icon}</div>
-                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:"#e0eaf8",marginBottom:5}}>{f.label}</div>
-                      <div style={{fontSize:11,color:"#3a5570",lineHeight:1.6}}>{f.desc}</div>
+                    <div key={f.label} style={{background:"rgba(255,255,255,0.03)",borderRadius:12,padding:"14px 13px",border:"1px solid rgba(255,255,255,0.07)"}}>
+                      <div style={{fontSize:24,marginBottom:6}}>{f.icon}</div>
+                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,color:"#d0daf0",marginBottom:3}}>{f.label}</div>
+                      <div style={{fontSize:10,color:"#3a5570",lineHeight:1.5}}>{f.desc}</div>
                     </div>
                   );})}
                 </div>
