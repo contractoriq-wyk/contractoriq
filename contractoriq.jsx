@@ -700,7 +700,7 @@ export default function ContractorIQv26(){
         <div style={{position:"fixed",inset:0,zIndex:9999,background:"#080c16",display:"flex",flexDirection:wide?"row":"column",overflowY:"auto"}}>
 
           {/* LEFT PANEL */}
-          <div style={{flex:wide?"0 0 44%":"1",minHeight:wide?"100vh":"auto",padding:wide?"48px 44px":"32px 22px",display:"flex",flexDirection:"column",justifyContent:wide?"center":"flex-start",position:"relative",overflowY:"auto",overflowX:"hidden"}}>
+          <div style={{flex:wide?"0 0 44%":"1",minHeight:wide?"100vh":"auto",padding:wide?"48px 44px":"32px 22px",display:"flex",flexDirection:"column",justifyContent:"flex-start",position:"relative",overflowY:"auto",overflowX:"hidden"}}>
             <div style={{position:"absolute",top:"15%",left:"-15%",width:"65%",height:"55%",background:"radial-gradient(ellipse,rgba(0,255,204,0.09) 0%,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
             <div style={{position:"absolute",bottom:"10%",right:"-10%",width:"50%",height:"45%",background:"radial-gradient(ellipse,rgba(167,139,250,0.07) 0%,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
             <div style={{position:"relative",zIndex:1}}>
