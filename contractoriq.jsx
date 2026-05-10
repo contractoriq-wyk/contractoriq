@@ -225,6 +225,10 @@ export default function ContractorIQv26(){
   const [oUses,setOUses]=useState(()=>{try{return parseInt(localStorage.getItem("ciq_o_uses")||"0");}catch{return 0;}});
   const [aiUses,setAiUses]=useState(()=>{try{return parseInt(localStorage.getItem("ciq_ai_uses")||"0");}catch{return 0;}});
   const [dismissedAds,setDismissedAds]=useState(()=>{try{const s=localStorage.getItem("ciq_dis_ads");return s?JSON.parse(s):[];}catch{return [];}});
+  const DEFAULT_TICKER=[{proName:"AMEX:SPY",title:"S&P 500"},{proName:"AMEX:DIA",title:"Dow 30"},{proName:"NASDAQ:QQQ",title:"Nasdaq"},{proName:"AMEX:IWM",title:"Russell 2000"},{proName:"CBOE:VIX",title:"VIX"},{proName:"AMEX:GLD",title:"Gold ETF"},{proName:"AMEX:USO",title:"Oil ETF"},{proName:"COINBASE:BTCUSD",title:"Bitcoin"},{proName:"NYSE:XOM",title:"Exxon"},{proName:"NASDAQ:JBHT",title:"J.B. Hunt"}];
+  const [tickerSyms,setTickerSyms]=useState(()=>{try{const s=localStorage.getItem("ciq_ticker");return s?JSON.parse(s):DEFAULT_TICKER;}catch{return DEFAULT_TICKER;}});
+  const [showTickerEdit,setShowTickerEdit]=useState(false);
+  const [tickerInput,setTickerInput]=useState("");
   const [scanMode,setScanMode]=useState("upload");
   const [pasteText,setPasteText]=useState("");
   const [pdfUrl,setPdfUrl]=useState("");
@@ -272,6 +276,7 @@ export default function ContractorIQv26(){
   useEffect(()=>{try{localStorage.setItem("ciq_o_uses",String(oUses));}catch(e){};},[oUses]);
   useEffect(()=>{try{localStorage.setItem("ciq_ai_uses",String(aiUses));}catch(e){};},[aiUses]);
   useEffect(()=>{try{localStorage.setItem("ciq_dis_ads",JSON.stringify(dismissedAds));}catch(e){};},[dismissedAds]);
+  useEffect(()=>{try{localStorage.setItem("ciq_ticker",JSON.stringify(tickerSyms));}catch(e){};},[tickerSyms]);
 
   const baseW=ownerDataAvailable?W:[];
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
@@ -695,7 +700,7 @@ export default function ContractorIQv26(){
         <div style={{position:"fixed",inset:0,zIndex:9999,background:"#080c16",display:"flex",flexDirection:wide?"row":"column",overflowY:"auto"}}>
 
           {/* LEFT PANEL */}
-          <div style={{flex:wide?"0 0 44%":"1",minHeight:wide?"100vh":"auto",padding:wide?"48px 44px":"32px 22px",display:"flex",flexDirection:"column",justifyContent:wide?"center":"flex-start",position:"relative",overflow:"hidden"}}>
+          <div style={{flex:wide?"0 0 44%":"1",minHeight:wide?"100vh":"auto",padding:wide?"48px 44px":"32px 22px",display:"flex",flexDirection:"column",justifyContent:wide?"center":"flex-start",position:"relative",overflowY:"auto",overflowX:"hidden"}}>
             <div style={{position:"absolute",top:"15%",left:"-15%",width:"65%",height:"55%",background:"radial-gradient(ellipse,rgba(0,255,204,0.09) 0%,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
             <div style={{position:"absolute",bottom:"10%",right:"-10%",width:"50%",height:"45%",background:"radial-gradient(ellipse,rgba(167,139,250,0.07) 0%,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
             <div style={{position:"relative",zIndex:1}}>
@@ -789,26 +794,71 @@ export default function ContractorIQv26(){
           {wide&&(
             <div style={{flex:1,background:"linear-gradient(160deg,#0f1825 0%,#0a0f1c 50%,#0d1520 100%)",borderLeft:"1px solid #192535",padding:"48px 44px",display:"flex",flexDirection:"column",justifyContent:"center",position:"relative",overflow:"hidden"}}>
               <div style={{position:"absolute",top:"5%",right:"0%",width:"55%",height:"50%",background:"radial-gradient(ellipse,rgba(167,139,250,0.06) 0%,transparent 70%)",pointerEvents:"none"}}/>
-              <div style={{position:"relative",zIndex:1}}>
-                <div style={{fontSize:11,fontWeight:700,color:"#00ffcc",textTransform:"uppercase",letterSpacing:"0.14em",marginBottom:16}}>Scan. Track. Grow.</div>
-                <h2 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:36,fontWeight:800,color:"#f0f6ff",lineHeight:1.06,margin:"0 0 18px",letterSpacing:"-0.02em"}}>
+              <div style={{position:"relative",zIndex:1,display:"flex",flexDirection:"column",height:"100%"}}>
+
+                {/* Headline */}
+                <div style={{fontSize:11,fontWeight:700,color:"#00ffcc",textTransform:"uppercase",letterSpacing:"0.14em",marginBottom:12}}>Scan. Track. Grow.</div>
+                <h2 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:wide?34:28,fontWeight:800,color:"#f0f6ff",lineHeight:1.06,margin:"0 0 14px",letterSpacing:"-0.02em"}}>
                   Settlement analysis<br/>made effortless.
                 </h2>
-                <p style={{fontSize:13,color:"#5a7590",lineHeight:1.82,margin:"0 0 32px",maxWidth:420}}>
-                  Built for drayage owner-operators who deserve to know the truth about their business — simple, smart, and efficient — so you can grow your income without disrupting your routes.
+                <p style={{fontSize:12,color:"#5a7590",lineHeight:1.75,margin:"0 0 20px",maxWidth:420}}>
+                  Built for drayage owner-operators who deserve to know the truth about their business.
                 </p>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:28}}>
-                  {[{icon:"💰",label:"4 income insights",desc:"Gross · Net · Deductions · RPM"},{icon:"⏱️",label:"30 seconds",desc:"Upload to full analysis instantly"},{icon:"🧠",label:"AI that knows you",desc:"Trained on your real numbers"},{icon:"📊",label:"5+ years of insight",desc:"Track every week, every route"}].map(function(f){return(
-                    <div key={f.label} style={{background:"rgba(255,255,255,0.025)",borderRadius:14,padding:"20px 18px",border:"1px solid rgba(255,255,255,0.055)"}}>
-                      <div style={{fontSize:28,marginBottom:10}}>{f.icon}</div>
-                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:700,color:"#e0eaf8",marginBottom:4}}>{f.label}</div>
-                      <div style={{fontSize:11,color:"#3a5570",lineHeight:1.6}}>{f.desc}</div>
+
+                {/* AUTO-SCROLLING TICKER TAPE — rotates markets automatically */}
+                <div style={{borderRadius:10,overflow:"hidden",border:"1px solid rgba(0,255,204,0.2)",marginBottom:16,boxShadow:"0 0 16px rgba(0,255,204,0.08)"}}>
+                  <iframe
+                    src={"https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#"+encodeURIComponent(JSON.stringify({
+                      symbols:[
+                        {proName:"AMEX:SPY",   title:"S&P 500"},
+                        {proName:"AMEX:DIA",   title:"Dow 30"},
+                        {proName:"NASDAQ:QQQ", title:"Nasdaq"},
+                        {proName:"NYSE:XOM",   title:"Exxon"},
+                        {proName:"NYSE:CVX",   title:"Chevron"},
+                        {proName:"NASDAQ:JBHT",title:"J.B. Hunt"},
+                        {proName:"NYSE:ODFL",  title:"Old Dominion"},
+                        {proName:"COINBASE:BTCUSD",title:"Bitcoin"},
+                        {proName:"AMEX:USO",   title:"Oil ETF"},
+                        {proName:"NASDAQ:NVDA",title:"NVIDIA"},
+                      ],
+                      showSymbolLogo:true,
+                      colorTheme:"dark",
+                      isTransparent:true,
+                      displayMode:"adaptive",
+                      locale:"en"
+                    }))}
+                    style={{width:"100%",height:56,border:"none",display:"block"}}
+                    title="Market Ticker"
+                  />
+                </div>
+
+                {/* 2x2 PRICE TILES — reliable symbols with prices + red/green */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,flex:1}}>
+                  {[
+                    {sym:"AMEX:SPY",    label:"S&P 500 ETF"},
+                    {sym:"NYSE:XOM",    label:"Exxon · Fuel"},
+                    {sym:"NASDAQ:JBHT", label:"J.B. Hunt · Trucking"},
+                    {sym:"COINBASE:BTCUSD",label:"Bitcoin"},
+                  ].map(function(t){return(
+                    <div key={t.sym} style={{borderRadius:12,overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)",background:"rgba(255,255,255,0.02)"}}>
+                      <iframe
+                        src={"https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#"+encodeURIComponent(JSON.stringify({
+                          symbol:t.sym,
+                          width:"100%",
+                          height:140,
+                          locale:"en",
+                          colorTheme:"dark",
+                          isTransparent:true,
+                          autosize:false,
+                          largeChartUrl:""
+                        }))}
+                        style={{width:"100%",height:140,border:"none",display:"block"}}
+                        title={t.label}
+                      />
                     </div>
                   );})}
                 </div>
-                <div style={{padding:"16px 20px",background:"rgba(0,255,204,0.04)",borderRadius:13,border:"1px solid rgba(0,255,204,0.10)",fontSize:12,color:"#6a8099",lineHeight:1.75}}>
-                  ⚡ <strong style={{color:"#00ffcc"}}>WE DON'T COMPETE WITH DAT OR TRUCKLOGICS.</strong> We Show You Where You're Losing Money and Help You Fix It With AI Technology — for a fraction of what they charge.
-                </div>
+
               </div>
             </div>
           )}
@@ -826,13 +876,122 @@ export default function ContractorIQv26(){
 
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 
-      {/* MARKET TICKER */}
-      <div style={{background:"#0a0e1a",borderBottom:"1px solid #1e2a3a",height:36,overflow:"hidden",display:"flex",alignItems:"center"}}>
-        <div style={{display:"flex",gap:0,whiteSpace:"nowrap",animation:"marquee 25s linear infinite"}}>
-          {[{sym:"SPY",name:"S&P 500"},{sym:"DIA",name:"Dow 30"},{sym:"QQQ",name:"Nasdaq"},{sym:"IWM",name:"Russell"},{sym:"VIX",name:"VIX"},{sym:"GOLD",name:"Gold"},{sym:"OIL",name:"Crude"},{sym:"BTC",name:"Bitcoin"},{sym:"SPY",name:"S&P 500"},{sym:"DIA",name:"Dow 30"},{sym:"QQQ",name:"Nasdaq"},{sym:"IWM",name:"Russell"},{sym:"VIX",name:"VIX"},{sym:"GOLD",name:"Gold"},{sym:"OIL",name:"Crude"},{sym:"BTC",name:"Bitcoin"}].map((t,i)=>(
-            <span key={i} onClick={()=>setShowMarket(true)} style={{padding:"0 20px",fontSize:10,fontWeight:700,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6,height:36,borderRight:"1px solid #1e2a3a"}}><span style={{color:"#8fa3c0"}}>{t.sym}</span><span style={{color:"#4a6080",fontSize:8}}>{t.name}</span></span>
-          ))}
+      {/* MARKET TICKER — Live prices via TradingView + user-customizable */}
+      <div style={{background:"#070b15",borderBottom:"1px solid #1a2535"}}>
+
+        {/* Ticker tape row */}
+        <div style={{display:"flex",alignItems:"stretch",height:46}}>
+          <iframe
+            key={tickerSyms.map(function(s){return s.proName;}).join(",")}
+            src={"https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#"+encodeURIComponent(JSON.stringify({
+              symbols:tickerSyms,
+              showSymbolLogo:false,
+              colorTheme:"dark",
+              isTransparent:true,
+              displayMode:"compact",
+              locale:"en"
+            }))}
+            style={{flex:1,height:46,border:"none",display:"block",minWidth:0}}
+            title="Live Market Ticker"
+          />
+          <button
+            onClick={()=>setShowTickerEdit(function(p){return !p;})}
+            title="Customize your ticker"
+            style={{width:40,background:showTickerEdit?"#0f1e14":"#070b15",border:"none",borderLeft:"1px solid #1a2535",color:showTickerEdit?"#00ffcc":"#2c4030",cursor:"pointer",fontSize:16,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",outline:"none"}}>
+            {showTickerEdit?"✓":"+"}
+          </button>
         </div>
+
+        {/* Customize panel */}
+        {showTickerEdit&&(
+          <div style={{background:"#0d1420",borderTop:"1px solid #1a2535",padding:"12px 14px"}}>
+
+            {/* Header */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <div>
+                <div style={{fontSize:10,fontWeight:700,color:"#00ffcc",letterSpacing:"0.06em"}}>📈 My Market Tracker</div>
+                <div style={{fontSize:9,color:"#2c4030",marginTop:2}}>{tickerSyms.length} symbols · prices update live</div>
+              </div>
+              <button onClick={()=>setShowTickerEdit(false)} style={{padding:"4px 10px",borderRadius:7,background:"#0f1e14",border:"1px solid #00ffcc44",color:"#00ffcc",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Done ✓</button>
+            </div>
+
+            {/* Active symbols — removable chips */}
+            <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:10}}>
+              {tickerSyms.map(function(s,i){return(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:4,padding:"4px 9px",borderRadius:20,background:"#141928",border:"1px solid #2c3a52"}}>
+                  <span style={{fontSize:10,color:"#8fa3c0",fontWeight:600,fontFamily:"'IBM Plex Mono',monospace"}}>{s.title||s.proName.split(":").pop()}</span>
+                  <button onClick={()=>setTickerSyms(function(p){return p.filter(function(_,j){return j!==i;});})} style={{background:"none",border:"none",color:"#3a5060",fontSize:13,cursor:"pointer",padding:0,lineHeight:1,display:"flex",alignItems:"center",fontFamily:"inherit"}}>×</button>
+                </div>
+              );})}
+            </div>
+
+            {/* Add symbol input */}
+            <div style={{display:"flex",gap:7,marginBottom:10}}>
+              <input
+                value={tickerInput}
+                onChange={function(e){setTickerInput(e.target.value.toUpperCase());}}
+                onKeyDown={function(e){
+                  if(e.key==="Enter"&&tickerInput.trim()){
+                    var raw=tickerInput.trim();
+                    var proName=raw.includes(":")?raw:"NASDAQ:"+raw;
+                    var title=proName.split(":").pop();
+                    if(!tickerSyms.find(function(s){return s.proName===proName;})){
+                      setTickerSyms(function(p){return [...p,{proName:proName,title:title}];});
+                    }
+                    setTickerInput("");
+                  }
+                }}
+                placeholder="Type symbol: AAPL · TSLA · NYSE:CVX · COINBASE:ETHUSD"
+                style={{flex:1,padding:"8px 12px",background:"#141928",border:"1px solid #2c3a52",borderRadius:9,color:"#f0f6ff",fontSize:11,fontFamily:"'IBM Plex Mono',monospace",outline:"none"}}
+              />
+              <button onClick={function(){
+                var raw=tickerInput.trim();
+                if(!raw)return;
+                var proName=raw.includes(":")?raw:"NASDAQ:"+raw;
+                var title=proName.split(":").pop();
+                if(!tickerSyms.find(function(s){return s.proName===proName;})){
+                  setTickerSyms(function(p){return [...p,{proName:proName,title:title}];});
+                }
+                setTickerInput("");
+              }} style={{padding:"8px 16px",borderRadius:9,background:"linear-gradient(135deg,#00ffcc,#a78bfa)",color:"#000",fontSize:11,fontWeight:800,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>+ Add</button>
+            </div>
+
+            {/* Quick-add presets */}
+            <div style={{fontSize:9,color:"#2c4030",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>Quick Add</div>
+            <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:10}}>
+              {[
+                {proName:"NASDAQ:AAPL",  title:"Apple"},
+                {proName:"NASDAQ:TSLA",  title:"Tesla"},
+                {proName:"NASDAQ:NVDA",  title:"NVIDIA"},
+                {proName:"NASDAQ:GOOGL", title:"Google"},
+                {proName:"NASDAQ:AMZN",  title:"Amazon"},
+                {proName:"NYSE:CVX",     title:"Chevron"},
+                {proName:"NYSE:ODFL",    title:"Old Dominion"},
+                {proName:"NYSE:UNP",     title:"Union Pacific"},
+                {proName:"NYSE:UPS",     title:"UPS"},
+                {proName:"COINBASE:ETHUSD",title:"Ethereum"},
+                {proName:"AMEX:TLT",     title:"Bonds ETF"},
+                {proName:"NASDAQ:META",  title:"Meta"},
+              ].map(function(p){
+                var active=!!tickerSyms.find(function(s){return s.proName===p.proName;});
+                return(
+                  <button key={p.proName} onClick={function(){
+                    if(active){setTickerSyms(function(prev){return prev.filter(function(s){return s.proName!==p.proName;});});}
+                    else{setTickerSyms(function(prev){return [...prev,p];});}
+                  }} style={{padding:"4px 10px",borderRadius:20,background:active?"#00ffcc18":"#141928",border:"1px solid "+(active?"#00ffcc44":"#2c3a52"),color:active?"#00ffcc":"#8fa3c0",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:active?700:400}}>
+                    {active?"✓ ":""}{p.title}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Format hint + reset */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:8,borderTop:"1px solid #1a2535"}}>
+              <div style={{fontSize:9,color:"#1e2a3a",lineHeight:1.6}}>Format: TICKER or EXCHANGE:TICKER<br/>e.g. AAPL · NYSE:CVX · COINBASE:BTCUSD</div>
+              <button onClick={function(){setTickerSyms(DEFAULT_TICKER);}} style={{fontSize:9,color:"#2c4030",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",padding:0,textDecoration:"underline"}}>↺ Reset defaults</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* HEADER */}
