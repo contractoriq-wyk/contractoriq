@@ -805,56 +805,18 @@ export default function ContractorIQv26(){
                   Built for drayage owner-operators who deserve to know the truth about their business.
                 </p>
 
-                {/* AUTO-SCROLLING TICKER TAPE — rotates markets automatically */}
-                <div style={{borderRadius:10,overflow:"hidden",border:"1px solid rgba(0,255,204,0.2)",marginBottom:16,boxShadow:"0 0 16px rgba(0,255,204,0.08)"}}>
-                  <iframe
-                    src={"https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#"+encodeURIComponent(JSON.stringify({
-                      symbols:[
-                        {proName:"AMEX:SPY",   title:"S&P 500"},
-                        {proName:"AMEX:DIA",   title:"Dow 30"},
-                        {proName:"NASDAQ:QQQ", title:"Nasdaq"},
-                        {proName:"NYSE:XOM",   title:"Exxon"},
-                        {proName:"NYSE:CVX",   title:"Chevron"},
-                        {proName:"NASDAQ:JBHT",title:"J.B. Hunt"},
-                        {proName:"NYSE:ODFL",  title:"Old Dominion"},
-                        {proName:"COINBASE:BTCUSD",title:"Bitcoin"},
-                        {proName:"AMEX:USO",   title:"Oil ETF"},
-                        {proName:"NASDAQ:NVDA",title:"NVIDIA"},
-                      ],
-                      showSymbolLogo:true,
-                      colorTheme:"dark",
-                      isTransparent:true,
-                      displayMode:"adaptive",
-                      locale:"en"
-                    }))}
-                    style={{width:"100%",height:56,border:"none",display:"block"}}
-                    title="Market Ticker"
-                  />
-                </div>
-
-                {/* 2x2 PRICE TILES — reliable symbols with prices + red/green */}
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,flex:1}}>
+                {/* 4 Feature tiles */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:28}}>
                   {[
-                    {sym:"AMEX:SPY",    label:"S&P 500 ETF"},
-                    {sym:"NYSE:XOM",    label:"Exxon · Fuel"},
-                    {sym:"NASDAQ:JBHT", label:"J.B. Hunt · Trucking"},
-                    {sym:"COINBASE:BTCUSD",label:"Bitcoin"},
-                  ].map(function(t){return(
-                    <div key={t.sym} style={{borderRadius:12,overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)",background:"rgba(255,255,255,0.02)"}}>
-                      <iframe
-                        src={"https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#"+encodeURIComponent(JSON.stringify({
-                          symbol:t.sym,
-                          width:"100%",
-                          height:140,
-                          locale:"en",
-                          colorTheme:"dark",
-                          isTransparent:true,
-                          autosize:false,
-                          largeChartUrl:""
-                        }))}
-                        style={{width:"100%",height:140,border:"none",display:"block"}}
-                        title={t.label}
-                      />
+                    {icon:"💰",label:"Income Leakage Insights",desc:"See exactly where your money disappears — week by week"},
+                    {icon:"⏱️",label:"30 seconds",desc:"Upload to full settlement analysis instantly"},
+                    {icon:"🧠",label:"AI that knows you",desc:"Trained on your real settlement numbers"},
+                    {icon:"📊",label:"5+ years of insight",desc:"Track every week, every route, every dollar"},
+                  ].map(function(f){return(
+                    <div key={f.label} style={{background:"rgba(255,255,255,0.025)",borderRadius:14,padding:"20px 18px",border:"1px solid rgba(255,255,255,0.055)"}}>
+                      <div style={{fontSize:30,marginBottom:10}}>{f.icon}</div>
+                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:"#e0eaf8",marginBottom:5}}>{f.label}</div>
+                      <div style={{fontSize:11,color:"#3a5570",lineHeight:1.6}}>{f.desc}</div>
                     </div>
                   );})}
                 </div>
@@ -1295,7 +1257,145 @@ export default function ContractorIQv26(){
                   {dwGroups.map(g=><div key={g.label} style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:8,height:8,borderRadius:2,background:g.color}}/><span style={{fontSize:9,color:C.sub}}>{g.label}</span></div>)}
                 </div>
               </div>
-              {!focusMode&&[...dwDeds].filter(d=>!d.l.toLowerCase().includes("escrow")).sort((a,b)=>b.a-a.a).map((d,i)=>{
+
+              {/* ⛽ FUEL VS MILES MPG CARD */}
+              {(()=>{
+                const reportedMiles=(dw.moves||[]).reduce(function(s,m){return s+(m.mi||m.miles||0);},0);
+                const dwFuelCost=(dw.deds||[]).filter(function(d){return d.l.toLowerCase().includes("fuel advance");}).reduce(function(s,d){return s+d.a;},0);
+                const hasRealGallons=dw.gallons&&dw.gallons>0;
+                const gallonsBought=hasRealGallons?dw.gallons:(fuelPrice>0?dwFuelCost/fuelPrice:0);
+                const gallonsSource=hasRealGallons?"from settlement":"estimated";
+                const settlementMPG=gallonsBought>0?reportedMiles/gallonsBought:0;
+                const truckBeatBaseline=settlementMPG>=fuelMPG;
+                const mpgDiff=Math.abs(settlementMPG-fuelMPG).toFixed(2);
+                const verdictColor=truckBeatBaseline?C.green:C.red;
+                const gallonsAtBaseline=fuelMPG>0?reportedMiles/fuelMPG:0;
+                const costAtBaseline=gallonsAtBaseline*fuelPrice;
+                const galDiff=gallonsBought-gallonsAtBaseline;
+                const unpaidMiles=Math.round(reportedMiles*milesBuffer/100);
+                const gallonsUnpaid=settlementMPG>0?unpaidMiles/settlementMPG:0;
+                const unpaidCost=gallonsUnpaid*fuelPrice;
+                return(
+                  <div style={{background:`${verdictColor}08`,borderRadius:12,border:`1px solid ${verdictColor}33`,padding:"14px",marginBottom:14}}>
+
+                    {/* Header */}
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                      <div style={{display:"flex",alignItems:"center",gap:7}}>
+                        <span style={{fontSize:16}}>⛽</span>
+                        <span style={{fontSize:12,fontWeight:700,color:C.text}}>Fuel vs Miles · W{dw.week}</span>
+                      </div>
+                      <span style={{padding:"3px 10px",borderRadius:20,background:`${verdictColor}18`,border:`1px solid ${verdictColor}44`,fontSize:11,fontWeight:700,color:verdictColor}}>
+                        {truckBeatBaseline?"✅ Efficient":"⚠️ Below Baseline"}
+                      </span>
+                    </div>
+
+                    {/* Big MPG number */}
+                    <div style={{padding:"14px",background:`${verdictColor}10`,borderRadius:10,border:`1px solid ${verdictColor}33`,display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:10,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>Settlement MPG — {gallonsSource}</div>
+                        <div style={{fontSize:11,color:C.sub,marginBottom:5}}>{reportedMiles.toLocaleString()} paid miles ÷ {gallonsBought.toFixed(1)} gallons bought</div>
+                        <div style={{fontSize:12,fontWeight:700,color:verdictColor}}>
+                          {truckBeatBaseline
+                            ?`✅ +${mpgDiff} MPG above your ${fuelMPG} baseline — running efficient`
+                            :`⚠️ ${mpgDiff} MPG below your ${fuelMPG} baseline — burning excess fuel`}
+                        </div>
+                      </div>
+                      <div style={{textAlign:"center",flexShrink:0,marginLeft:16}}>
+                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:40,fontWeight:900,color:verdictColor,lineHeight:1}}>{settlementMPG>0?settlementMPG.toFixed(2):"—"}</div>
+                        <div style={{fontSize:9,color:C.sub,marginTop:2}}>MPG this week</div>
+                        <div style={{fontSize:9,color:C.sub,marginTop:1}}>Target: {fuelMPG} MPG</div>
+                      </div>
+                    </div>
+
+                    {/* 3 stat tiles */}
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
+                      {[
+                        {l:"Miles Paid",v:`${reportedMiles.toLocaleString()} mi`,sub:"Settlement reported",c:C.accent},
+                        {l:`At ${fuelMPG} MPG`,v:`${gallonsAtBaseline.toFixed(0)} gal`,sub:`Cost $${costAtBaseline.toFixed(0)}`,c:C.sub},
+                        {l:"Fuel Advances",v:`$${dwFuelCost.toFixed(0)}`,sub:`~${gallonsBought.toFixed(0)} gal`,c:C.sub},
+                      ].map(function(s){return(
+                        <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}>
+                          <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:4,lineHeight:1.3}}>{s.l}</div>
+                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:s.c}}>{s.v}</div>
+                          <div style={{fontSize:9,color:C.sub,marginTop:3,lineHeight:1.4}}>{s.sub}</div>
+                        </div>
+                      );})}
+                    </div>
+
+                    {/* Unpaid miles warning */}
+                    {unpaidMiles>0&&(
+                      <div style={{padding:"10px 13px",background:`${C.red}10`,borderRadius:9,border:`1px solid ${C.red}44`,marginBottom:12}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div>
+                            <div style={{fontSize:12,fontWeight:700,color:C.red}}>🚫 ~{unpaidMiles} unpaid miles — out of pocket</div>
+                            <div style={{fontSize:10,color:C.sub,marginTop:2}}>Drove these miles, broker paid $0. Burned ~{gallonsUnpaid.toFixed(0)} gal at your own cost.</div>
+                          </div>
+                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:900,color:"#f87171",flexShrink:0,marginLeft:10}}>-${unpaidCost.toFixed(0)}</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Calibration sliders */}
+                    <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12}}>
+                      <div style={{fontSize:9,color:"#fbbf24",fontWeight:700,marginBottom:8,textTransform:"uppercase",letterSpacing:"0.07em"}}>⚙️ Calibrate to your truck</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+
+                        {/* MPG baseline */}
+                        <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Baseline MPG</div>
+                            <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.accent}}>{fuelMPG.toFixed(1)}</span>
+                          </div>
+                          <input type="range" min="3.5" max="9.0" step="0.1" value={fuelMPG}
+                            onChange={function(e){setFuelMPG(parseFloat(e.target.value));}}
+                            style={{width:"100%",accentColor:C.accent,cursor:"pointer",marginBottom:4}}/>
+                          <div style={{display:"flex",justifyContent:"space-between",fontSize:8}}>
+                            <span style={{color:"#f87171"}}>3.5 poor</span>
+                            <span style={{color:"#4ade80"}}>9.0 great</span>
+                          </div>
+                          <div style={{fontSize:9,color:C.sub,marginTop:5,lineHeight:1.5}}>Green when your actual MPG beats this number</div>
+                        </div>
+
+                        {/* Price per gallon */}
+                        <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Price / Gallon</div>
+                            <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:fuelPrice>=6?C.red:C.gold}}>${fuelPrice.toFixed(2)}</span>
+                          </div>
+                          <input type="range" min="3.50" max="8.00" step="0.01" value={fuelPrice}
+                            onChange={function(e){setFuelPrice(parseFloat(e.target.value));}}
+                            style={{width:"100%",accentColor:C.accent,cursor:"pointer",marginBottom:4}}/>
+                          <div style={{display:"flex",justifyContent:"space-between",fontSize:8}}>
+                            <span style={{color:"#4ade80"}}>$3.50</span>
+                            <span style={{color:"#f87171"}}>$8.00</span>
+                          </div>
+                          <div style={{fontSize:9,color:C.sub,marginTop:5,lineHeight:1.5}}>{hasRealGallons?"Real gallons from settlement":"Match your Pilot receipt for accuracy"}</div>
+                        </div>
+                      </div>
+
+                      {/* Unpaid miles buffer */}
+                      <div style={{background:unpaidMiles>0?`${C.red}08`:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${unpaidMiles>0?C.red+"33":C.border}`}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                          <div>
+                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Unreported Miles Buffer</div>
+                            <div style={{fontSize:9,color:C.sub,marginTop:1}}>Wrong turns, yard moves, short legs not on settlement</div>
+                          </div>
+                          <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:unpaidMiles>0?C.red:C.sub}}>+{milesBuffer}%</span>
+                        </div>
+                        <input type="range" min="0" max="15" step="1" value={milesBuffer}
+                          onChange={function(e){setMilesBuffer(parseInt(e.target.value));}}
+                          style={{width:"100%",accentColor:"#f87171",cursor:"pointer"}}/>
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:8,marginTop:4}}>
+                          <span style={{color:"#4ade80"}}>0% = no hidden miles</span>
+                          <span style={{color:"#f87171"}}>15% = big hidden cost</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+                            {!focusMode&&[...dwDeds].filter(d=>!d.l.toLowerCase().includes("escrow")).sort((a,b)=>b.a-a.a).map((d,i)=>{
                 const pct=(d.a/dw.gross*100).toFixed(1),big=d.a>200;
                 return(<div key={i} style={{marginBottom:9}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}><span style={{fontSize:11,color:C.sub,flex:1}}>{d.l}</span><div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}><Tag color={big?C.red:C.gold}>{pct}%</Tag><span style={{fontSize:12,fontWeight:700,color:big?C.red:C.text,minWidth:64,textAlign:"right"}}>${d.a.toFixed(2)}</span></div></div><Bar pct={d.a/dw.totalDeductions*100} color={big?C.red:d.a>50?C.gold:C.accent}/></div>);
               })}
