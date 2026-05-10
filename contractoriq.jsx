@@ -248,6 +248,7 @@ export default function ContractorIQv26(){
   const [addedW,setAddedW]=useState(()=>{try{const s=localStorage.getItem("ciq_addedWeeks");return s?JSON.parse(s):[];}catch{return [];}});
   const [addMsg,setAddMsg]=useState("");
   const [dlWk,setDlWk]=useState(null);
+  const [selWkKeys,setSelWkKeys]=useState(()=>new Set());
   const chatEnd=useRef(null);
 
   const ownerDataAvailable=typeof window!=="undefined"&&window.location.hostname.includes("navy");
@@ -1819,28 +1820,116 @@ export default function ContractorIQv26(){
             <button onClick={()=>{if(window.confirm("RESET ALL DATA? This cannot be undone.")){try{localStorage.clear();}catch(e){}window.location.reload();}}} style={{padding:"9px 16px",borderRadius:9,background:"#f87171",color:"#000",fontSize:11,fontWeight:800,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Reset</button>
           </div>
 
-          <div style={K()}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>📋 All Settlements ({allW.length} weeks · ${allW.reduce((s,w)=>s+w.gross,0).toLocaleString("en-US",{minimumFractionDigits:2})} YTD)</div>
-              {addedW.length>0&&<button onClick={()=>{if(window.confirm(`Remove all ${addedW.length} added weeks?`)){setAddedW([]);}}} style={{padding:"6px 12px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,color:"#f87171",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>🗑 Clear Added</button>}
+          {/* ── ALL SETTLEMENTS — L99 Elite with per-week checkbox delete ── */}
+          <div style={{...K(),background:"linear-gradient(135deg,"+C.card+","+C.surf+")",border:"1px solid "+C.border,borderRadius:16,overflow:"hidden"}}>
+
+            {/* Header */}
+            <div style={{padding:"14px 16px",background:"linear-gradient(135deg,"+C.a3+"14,"+C.accent+"08)",borderBottom:"1px solid "+C.border}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+                <div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 All Settlements</div>
+                  <div style={{fontSize:10,color:C.sub}}>{allW.length} weeks total · <span style={{color:C.accent,fontWeight:700}}>${allW.reduce(function(s,w){return s+w.gross;},0).toLocaleString("en-US",{minimumFractionDigits:2})}</span> YTD gross</div>
+                </div>
+                {/* Action buttons */}
+                <div style={{display:"flex",gap:7,flexShrink:0}}>
+                  {addedW.length>0&&(
+                    <button onClick={function(){
+                      if(selWkKeys.size===addedW.length){setSelWkKeys(new Set());}
+                      else{setSelWkKeys(new Set(addedW.map(function(w){return w.week+(w.from||"");})));}
+                    }} style={{padding:"6px 10px",borderRadius:8,background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
+                      {selWkKeys.size===addedW.length?"Deselect All":"Select All"}
+                    </button>
+                  )}
+                  {selWkKeys.size>0&&(
+                    <button onClick={function(){
+                      if(window.confirm("Delete "+selWkKeys.size+" selected week"+(selWkKeys.size>1?"s":"")+"? This cannot be undone.")){
+                        setAddedW(function(p){return p.filter(function(w){return !selWkKeys.has(w.week+(w.from||""));});});
+                        setSelWkKeys(new Set());
+                      }
+                    }} style={{padding:"6px 12px",borderRadius:8,background:"#f8717122",border:"2px solid #f87171",color:"#f87171",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5,boxShadow:"0 0 10px #f8717133"}}>
+                      🗑 Delete ({selWkKeys.size})
+                    </button>
+                  )}
+                  {selWkKeys.size===0&&addedW.length>0&&(
+                    <div style={{padding:"6px 10px",borderRadius:8,background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:10,fontFamily:"inherit",lineHeight:1.4,textAlign:"center"}}>
+                      <div>Check boxes</div>
+                      <div>to delete</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Status bar */}
+              <div style={{marginTop:10,padding:"8px 12px",background:addedW.length>0?"#4ade8010":"#2c3a5230",borderRadius:8,border:"1px solid "+(addedW.length>0?"#4ade8033":C.border),fontSize:11,color:addedW.length>0?C.green:C.sub,display:"flex",alignItems:"center",gap:7}}>
+                <span>{addedW.length>0?"💾":"📭"}</span>
+                <span>{addedW.length>0?addedW.length+" uploaded week"+(addedW.length>1?"s":"")+" saved · tap checkbox to select for deletion":"No uploaded weeks yet — scan or paste a settlement above"}</span>
+              </div>
             </div>
-            <div style={{padding:"9px 13px",background:addedW.length>0?`${C.green}10`:`${C.border}30`,borderRadius:8,border:`1px solid ${addedW.length>0?C.green+"33":C.border}`,fontSize:11,color:addedW.length>0?C.green:C.sub,marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
-              <span>{addedW.length>0?"💾":"📭"}</span><span>{addedW.length>0?`${addedW.length} added week${addedW.length>1?"s":""} saved to this device`:"No added weeks saved yet"}</span>
-            </div>
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {[...allW].reverse().map((w,i)=>{
-                const g=wg(w),isNew=!W.find(hw=>hw.week===w.week),lastW=W.length>0?W[W.length-1]:null,isLast=lastW?w.week===lastW.week&&!isNew:false;
-                return(<div key={w.week+i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 14px",background:C.bg,borderRadius:10,border:`1px solid ${isLast?C.accent+"55":isNew?C.a3+"55":C.border}`}}>
-                  <div style={{display:"flex",alignItems:"center",gap:11}}>
-                    <div style={{width:9,height:9,borderRadius:"50%",background:isNew?C.a3:isLast?C.accent:g.c,boxShadow:`0 0 5px ${isNew?C.a3:isLast?C.accent:g.c}`}}/>
-                    <div><div style={{fontSize:12,fontWeight:700,color:C.text,display:"flex",alignItems:"center",gap:7}}>{w.label}{isLast&&<Tag color={C.accent}>Latest</Tag>}{isNew&&<Tag color={C.a3}>Added</Tag>}</div><div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from}{w.to?` – ${w.to}`:""} · {w.moves.length} moves</div></div>
+
+            {/* Week rows */}
+            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:8}}>
+              {[...allW].reverse().map(function(w,i){
+                const g=wg(w);
+                const isNew=!W.find(function(hw){return hw.week===w.week;});
+                const lastW=W.length>0?W[W.length-1]:null;
+                const isLast=lastW?w.week===lastW.week&&!isNew:false;
+                const wKey=w.week+(w.from||"");
+                const isSelected=selWkKeys.has(wKey);
+                const borderColor=isSelected?"#f87171":isLast?C.accent+"66":isNew?C.a3+"55":C.border;
+                const bgColor=isSelected?"#f8717108":isLast?C.accent+"08":isNew?C.a3+"06":C.bg;
+                return(
+                  <div key={w.week+i} style={{display:"flex",alignItems:"center",gap:8,padding:"11px 12px",background:bgColor,borderRadius:11,border:"1px solid "+borderColor,transition:"all 0.15s",boxShadow:isSelected?"0 0 12px #f8717122":isLast?"0 0 8px "+C.accent+"22":"none"}}>
+
+                    {/* Checkbox — only on uploaded/added weeks */}
+                    {isNew?(
+                      <button onClick={function(){
+                        setSelWkKeys(function(prev){
+                          const next=new Set(prev);
+                          if(next.has(wKey))next.delete(wKey);
+                          else next.add(wKey);
+                          return next;
+                        });
+                      }} style={{width:22,height:22,borderRadius:6,border:"2px solid "+(isSelected?"#f87171":C.border),background:isSelected?"#f87171":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,transition:"all 0.15s",boxShadow:isSelected?"0 0 8px #f8717155":"none"}}>
+                        {isSelected&&<span style={{color:"#000",fontSize:12,fontWeight:900,lineHeight:1}}>✓</span>}
+                      </button>
+                    ):(
+                      <div style={{width:22,height:22,borderRadius:6,border:"1px solid "+C.border+"44",background:"transparent",flexShrink:0}}/>
+                    )}
+
+                    {/* Glowing dot */}
+                    <div style={{width:8,height:8,borderRadius:"50%",background:isNew?C.a3:isLast?C.accent:g.c,boxShadow:"0 0 6px "+(isNew?C.a3:isLast?C.accent:g.c),flexShrink:0}}/>
+
+                    {/* Week info */}
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12,fontWeight:700,color:isSelected?"#f87171":C.text,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                        {w.label}
+                        {isLast&&<Tag color={C.accent}>Latest</Tag>}
+                        {isNew&&<Tag color={isSelected?"#f87171":C.a3}>{isSelected?"Selected":"Uploaded"}</Tag>}
+                      </div>
+                      <div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from}{w.to?" – "+w.to:""} · {w.moves.length} moves</div>
+                    </div>
+
+                    {/* Net + grade */}
+                    <div style={{textAlign:"right",flexShrink:0}}>
+                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${w.net.toLocaleString("en-US",{minimumFractionDigits:2})}</div>
+                      <Tag color={g.c}>{g.i} {g.l}</Tag>
+                    </div>
+
+                    {/* PDF download — built-in weeks only */}
+                    {!isNew&&(
+                      <button onClick={function(){setDlWk(w.week);setTimeout(function(){generatePDF(w);setDlWk(null);},100);}} disabled={dlWk===w.week}
+                        style={{padding:"7px 10px",borderRadius:8,background:dlWk===w.week?C.raised:C.a3+"18",border:"1px solid "+C.a3+"44",color:dlWk===w.week?C.sub:C.a3,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
+                        {dlWk===w.week?"...":"⬇ PDF"}
+                      </button>
+                    )}
                   </div>
-                  <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <div style={{textAlign:"right"}}><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${w.net.toLocaleString("en-US",{minimumFractionDigits:2})}</div><Tag color={g.c}>{g.i} {g.l}</Tag></div>
-                    {!isNew&&<button onClick={()=>{setDlWk(w.week);setTimeout(()=>{generatePDF(w);setDlWk(null);},100);}} disabled={dlWk===w.week} style={{padding:"8px 12px",borderRadius:8,background:dlWk===w.week?C.raised:`${C.a3}18`,border:`1px solid ${C.a3}55`,color:dlWk===w.week?C.sub:C.a3,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{dlWk===w.week?"...":"⬇ PDF"}</button>}
-                  </div>
-                </div>);
+                );
               })}
+            </div>
+
+            {/* Bottom hint */}
+            <div style={{padding:"10px 16px",borderTop:"1px solid "+C.border,fontSize:10,color:C.sub,lineHeight:1.7,textAlign:"center"}}>
+              ☑ Check uploaded weeks → <span style={{color:"#f87171",fontWeight:700}}>Delete (N)</span> to remove selected &nbsp;·&nbsp; ⬇ PDF downloads the full report for built-in weeks
             </div>
           </div>
 
