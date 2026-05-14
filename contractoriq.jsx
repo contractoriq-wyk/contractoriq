@@ -26,9 +26,7 @@ function scoreMove(m){
 
 async function ai(msgs,sys){
   try{
-    const apiKey=typeof __ANTHROPIC_KEY__!=="undefined"&&__ANTHROPIC_KEY__?__ANTHROPIC_KEY__:(window.__CIQ_KEY__||"");
-    if(!apiKey)return "⚠️ AI features require setup. Contact support at getcontractoriq.com";
-    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:1500,system:sys||"You are a helpful trucking business advisor.",messages:msgs})});
+            const r=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:1500,system:sys||"You are a helpful trucking business advisor.",messages:msgs})});
     if(!r.ok){const e=await r.text();return "⚠️ API Error "+r.status+": "+e.slice(0,100);}
     const d=await r.json();
     if(d.error)return "⚠️ "+d.error.message;
@@ -313,13 +311,11 @@ export default function ContractorIQv26(){
   async function scanPDF(file,fileType){
     setScanning(true);setScanResult(null);setScanMsg("");
     try{
-      const apiKey=typeof __ANTHROPIC_KEY__!=="undefined"&&__ANTHROPIC_KEY__?__ANTHROPIC_KEY__:(window.__CIQ_KEY__||"");
-      if(!apiKey){setScanMsg("⚠️ API key not configured.");setScanning(false);return;}
-      const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+                  const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
       const isImage=fileType==="image"||file.type.startsWith("image/");
       const mediaType=isImage?(file.type||"image/jpeg"):"application/pdf";
       const contentBlock=isImage?{type:"image",source:{type:"base64",media_type:mediaType,data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
-      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:4000,messages:[{role:"user",content:[contentBlock,{type:"text",text:`This is a drayage/trucking settlement statement. Extract ALL data and return ONLY valid JSON with no other text, no markdown:\n{"week":"15","from":"04/06/2026","to":"04/12/2026","gross":0.00,"net":0.00,"totalDeductions":0.00,"rebate":0.00,"moves":[{"t":"L","fr":"BALTIMMD","to":"WILLIAMD","mi":77,"rt":195,"fc":52.36}],"deds":[{"l":"Fuel Advance (Pilot 179)","a":500.00}]}`}]}]})});
+      const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:4000,messages:[{role:"user",content:[contentBlock,{type:"text",text:`This is a drayage/trucking settlement statement. Extract ALL data and return ONLY valid JSON with no other text, no markdown:\n{"week":"15","from":"04/06/2026","to":"04/12/2026","gross":0.00,"net":0.00,"totalDeductions":0.00,"rebate":0.00,"moves":[{"t":"L","fr":"BALTIMMD","to":"WILLIAMD","mi":77,"rt":195,"fc":52.36}],"deds":[{"l":"Fuel Advance (Pilot 179)","a":500.00}]}`}]}]})});
       if(!resp.ok){const errText=await resp.text();if(resp.status===401)setScanMsg("⚠️ API key invalid.");else setScanMsg(`⚠️ API Error ${resp.status}. Try Paste Text instead.`);setScanning(false);return;}
       const d=await resp.json();
       if(d.error){setScanMsg("⚠️ AI Error: "+d.error.message);setScanning(false);return;}
@@ -339,10 +335,9 @@ export default function ContractorIQv26(){
     const query=q||searchQ;if(!query||!query.trim())return;
     setSearchLoading(true);setSearchResult("");
     try{
-      const apiKey=import.meta.env.VITE_ANTHROPIC_KEY||(window.__CIQ_KEY__||"");
-      let locationCtx="";
+            let locationCtx="";
       try{const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000,maximumAge:60000}));locationCtx=`User GPS: lat ${pos.coords.latitude.toFixed(4)}, lng ${pos.coords.longitude.toFixed(4)}.`;}catch(e){}
-      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:600,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:`You are a helpful assistant for a truck driver. ${locationCtx} Answer concisely: ${query}. Max 150 words. Use bullet points for lists.`}]})});
+      const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:600,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:`You are a helpful assistant for a truck driver. ${locationCtx} Answer concisely: ${query}. Max 150 words. Use bullet points for lists.`}]})});
       const d=await resp.json();const txt=d.content?.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
       setSearchResult(txt||"No results found.");
     }catch(e){setSearchResult("⚠️ Search unavailable.");}
@@ -361,7 +356,7 @@ export default function ContractorIQv26(){
     setPasteLoading(true);setPasteResult(null);setScanMsg("");
     const prompt=`You are a data extraction expert for drayage/trucking settlement statements. Extract ALL data and return ONLY valid JSON.\n\nRequired format:\n{"week":"01","from":"01/06/2025","to":"01/10/2025","gross":4200.00,"net":2310.00,"totalDeductions":1890.00,"rebate":45.00,"moves":[{"t":"L","fr":"Port Terminal","to":"Distribution Center","mi":65,"rt":220,"fc":46}],"deds":[{"l":"Operations Fee","a":840.00}]}\n\nSettlement text:\n${pasteText.slice(0,6000)}`;
     try{
-      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":(typeof __ANTHROPIC_KEY__!=="undefined"&&__ANTHROPIC_KEY__?__ANTHROPIC_KEY__:(window.__CIQ_KEY__||"")),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:3000,messages:[{role:"user",content:prompt}]})});
+      const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:3000,messages:[{role:"user",content:prompt}]})});
       const d=await resp.json();const txt=d.content?.map(b=>b.text||"").join("").trim();
       const s=txt.indexOf("{"),e=txt.lastIndexOf("}")+1;if(s===-1)throw new Error("no json");
       const parsed=JSON.parse(txt.slice(s,e));
@@ -412,7 +407,7 @@ export default function ContractorIQv26(){
     try{
       const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
       const isImg=file.type.startsWith("image/");const block=isImg?{type:"image",source:{type:"base64",media_type:file.type||"image/jpeg",data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
-      const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":(typeof __ANTHROPIC_KEY__!=="undefined"&&__ANTHROPIC_KEY__?__ANTHROPIC_KEY__:(window.__CIQ_KEY__||"")),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:400,messages:[{role:"user",content:[block,{type:"text",text:'Read this receipt. Return ONLY valid JSON: {"date":"MM/DD/YYYY","vendor":"store name","amount":0.00,"category":"Parts|Labor|Tires|Maintenance|Fuel|Permits|Other","desc":"what was purchased"}'}]}]})});
+      const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:400,messages:[{role:"user",content:[block,{type:"text",text:'Read this receipt. Return ONLY valid JSON: {"date":"MM/DD/YYYY","vendor":"store name","amount":0.00,"category":"Parts|Labor|Tires|Maintenance|Fuel|Permits|Other","desc":"what was purchased"}'}]}]})});
       const d=await resp.json();const raw=d.content?.map(b=>b.text||"").join("")||"{}";
       const parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());
       setExpForm(p=>({...p,date:parsed.date||p.date,category:parsed.category||"Parts",desc:parsed.desc||"",amount:parsed.amount?.toString()||"",note:"From: "+(parsed.vendor||"")}));
@@ -426,7 +421,7 @@ export default function ContractorIQv26(){
     try{
       var b64=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result.split(",")[1]);};r.onerror=rej;r.readAsDataURL(file);});
       var isImg=file.type.startsWith("image/");var block=isImg?{type:"image",source:{type:"base64",media_type:file.type||"image/jpeg",data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
-      var resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":(typeof __ANTHROPIC_KEY__!=="undefined"&&__ANTHROPIC_KEY__?__ANTHROPIC_KEY__:(window.__CIQ_KEY__||"")),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:300,messages:[{role:"user",content:[block,{type:"text",text:'Read this. Return ONLY JSON: {"date":"MM/DD/YYYY","title":"document title","category":"Maintenance|Inspection|Insurance|Registration|Medical|Permit|Other","note":"brief summary"}'}]}]})});
+      var resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:300,messages:[{role:"user",content:[block,{type:"text",text:'Read this. Return ONLY JSON: {"date":"MM/DD/YYYY","title":"document title","category":"Maintenance|Inspection|Insurance|Registration|Medical|Permit|Other","note":"brief summary"}'}]}]})});
       var d=await resp.json();var parsed=JSON.parse((d.content?d.content.map(function(b){return b.text||"";}).join(""):"{}").replace(/```json|```/g,"").trim());
       setDocForm(function(p){return {...p,date:parsed.date||p.date,title:parsed.title||"",category:parsed.category||"Maintenance",note:parsed.note||""};});setDocScanMsg("Read — review and save");
     }catch(e){setDocScanMsg("Could not read — enter manually");}
