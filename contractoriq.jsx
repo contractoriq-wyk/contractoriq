@@ -994,6 +994,20 @@ export default function ContractorIQv26(){
                   <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>👤</span><span style={{fontWeight:600}}>My Profile</span>{profile.setupDone&&<span style={{marginLeft:"auto",fontSize:10,color:C.green}}>✅</span>}</button>
                   <button onClick={()=>{setShowSettings(p=>!p);setShowProfile(false);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showSettings?`${C.a3}15`:C.raised,border:`1px solid ${showSettings?C.a3:C.border}`,color:showSettings?C.a3:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>⚙️</span><span style={{fontWeight:600}}>Display Settings</span></button>
                   <button onClick={()=>{const next=!darkMode;setDarkMode(next);try{localStorage.setItem("ciq_theme",next?"dark":"light");}catch(e){}setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}><span>{darkMode?"☀️":"🌙"}</span><span style={{fontWeight:600}}>{darkMode?"Light Mode":"Dark Mode"}</span></button>
+
+                  {/* WhatsApp Support Channel */}
+                  <div style={{marginTop:6,paddingTop:6,borderTop:`1px solid ${C.border}`}}>
+                    <a href="https://whatsapp.com/channel/0029VbDOskDBA1esSRzm6w2T" target="_blank" rel="noopener noreferrer"
+                      onClick={()=>setShowMenu(false)}
+                      style={{width:"100%",padding:"11px 12px",borderRadius:10,background:"linear-gradient(135deg,#25D36618,#128C7E18)",border:"1.5px solid #25D36655",color:"#25D366",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:9,textDecoration:"none",boxShadow:"0 0 12px #25D36618"}}>
+                      <span style={{fontSize:18}}>💬</span>
+                      <div style={{flex:1}}>
+                        <div style={{fontWeight:800,fontSize:12,color:"#25D366"}}>WhatsApp Support</div>
+                        <div style={{fontSize:9,color:"#25D36688",marginTop:1}}>Join our channel · Get help fast</div>
+                      </div>
+                      <span style={{fontSize:9,padding:"2px 7px",borderRadius:6,background:"#25D36622",color:"#25D366",fontWeight:700,flexShrink:0}}>LIVE</span>
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
@@ -1639,19 +1653,44 @@ export default function ContractorIQv26(){
               </div>
             )}
             {scanMsg&&<div style={{padding:"11px 14px",background:scanMsg.startsWith("⚠️")?`${C.red}12`:`${C.green}12`,borderRadius:9,border:`1px solid ${scanMsg.startsWith("⚠️")?C.red:C.green}44`,fontSize:12,color:scanMsg.startsWith("⚠️")?C.red:C.green,marginTop:10}}>{scanMsg}</div>}
-            {addedW.length>0&&(
-              <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${C.border}`}}>
-                <div style={{fontSize:10,fontWeight:700,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:9}}>✅ Saved Weeks ({addedW.length})</div>
-                <div style={{display:"flex",flexDirection:"column",gap:7}}>
-                  {addedW.map((w,i)=>(
-                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 13px",background:C.bg,borderRadius:9,border:`1px solid ${C.a3}55`}}>
-                      <div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:8,height:8,borderRadius:"50%",background:C.a3,boxShadow:`0 0 5px ${C.a3}`}}/><div><div style={{fontSize:12,fontWeight:700,color:C.text}}>{w.label} <Tag color={C.a3}>Added</Tag></div><div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from||""}{w.to?` – ${w.to}`:""} · {w.moves?.length||0} moves</div></div></div>
-                      <div style={{textAlign:"right"}}><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${Number(w.net).toLocaleString("en-US",{minimumFractionDigits:2})}</div></div>
-                    </div>
-                  ))}
+          </div>
+
+          {/* ══ UPLOADED DOCS MANAGER ══ */}
+          <div style={{background:"linear-gradient(135deg,"+C.card+","+C.surf+")",border:"1px solid "+C.border,borderRadius:16,overflow:"hidden",marginBottom:14}}>
+            <div style={{padding:"13px 16px",background:"linear-gradient(135deg,"+C.a3+"14,"+C.accent+"08)",borderBottom:"1px solid "+C.border}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+                <div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.text}}>📁 My Uploaded Settlements</div>
+                  <div style={{fontSize:10,color:C.sub,marginTop:2}}>{addedW.length} uploaded · check box to select · delete selected</div>
+                </div>
+                <div style={{display:"flex",gap:7,flexShrink:0}}>
+                  {addedW.length>0&&<button onClick={function(){if(selWkKeys.size===addedW.length){setSelWkKeys(new Set());}else{setSelWkKeys(new Set(addedW.map(function(w){return w.week+(w.from||"");})));} }} style={{padding:"5px 9px",borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>{selWkKeys.size===addedW.length?"Deselect":"Select All"}</button>}
+                  {selWkKeys.size>0&&<button onClick={function(){if(window.confirm("Delete "+selWkKeys.size+" week"+(selWkKeys.size>1?"s":"")+"?")){setAddedW(function(p){return p.filter(function(w){return !selWkKeys.has(w.week+(w.from||""));});});setSelWkKeys(new Set());}}} style={{padding:"5px 11px",borderRadius:7,background:"#f8717118",border:"2px solid #f87171",color:"#f87171",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>🗑 Delete ({selWkKeys.size})</button>}
                 </div>
               </div>
-            )}
+            </div>
+            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7}}>
+              {addedW.length===0?<div style={{textAlign:"center",padding:"18px",color:C.sub,fontSize:11}}><div style={{fontSize:26,marginBottom:6}}>📭</div><div>No uploads yet — scan a PDF above</div></div>:[...addedW].reverse().map(function(w,i){
+                const g=wg(w),wKey=w.week+(w.from||""),isSel=selWkKeys.has(wKey);
+                return(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 11px",background:isSel?"#f8717108":C.bg,borderRadius:10,border:"1px solid "+(isSel?"#f87171":C.a3+"44"),transition:"all 0.15s",boxShadow:isSel?"0 0 8px #f8717120":"none"}}>
+                    <button onClick={function(){setSelWkKeys(function(prev){const next=new Set(prev);if(next.has(wKey))next.delete(wKey);else next.add(wKey);return next;});}} style={{width:20,height:20,borderRadius:5,border:"2px solid "+(isSel?"#f87171":C.border),background:isSel?"#f87171":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+                      {isSel&&<span style={{color:"#000",fontSize:10,fontWeight:900}}>✓</span>}
+                    </button>
+                    <div style={{width:7,height:7,borderRadius:"50%",background:C.a3,boxShadow:"0 0 5px "+C.a3,flexShrink:0}}/>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12,fontWeight:700,color:isSel?"#f87171":C.text,display:"flex",alignItems:"center",gap:5}}>{w.label}<Tag color={isSel?"#f87171":C.a3}>{isSel?"✓ Selected":"Uploaded"}</Tag></div>
+                      <div style={{fontSize:10,color:C.sub,marginTop:1}}>{w.from}{w.to?" – "+w.to:""} · {w.moves?.length||0} moves</div>
+                    </div>
+                    <div style={{textAlign:"right",flexShrink:0}}>
+                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,color:C.green}}>${Number(w.net).toLocaleString("en-US",{minimumFractionDigits:2})}</div>
+                      <Tag color={g.c}>{g.i} {g.l}</Tag>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {addedW.length>0&&<div style={{padding:"8px 14px",borderTop:"1px solid "+C.border,fontSize:10,color:C.sub,textAlign:"center"}}>☑ Select → <span style={{color:"#f87171",fontWeight:700}}>Delete</span> to remove · rescan PDF to update data</div>}
           </div>
 
           {/* OFFER SCORER */}
@@ -1714,6 +1753,98 @@ export default function ContractorIQv26(){
               </table>
             </div>
           </div>
+
+          {/* ── SAVED WEEKS MANAGER — L99 Elite ── */}
+          <div style={{marginTop:16,background:"linear-gradient(135deg,"+C.card+","+C.surf+")",border:"1px solid "+C.border,borderRadius:16,overflow:"hidden"}}>
+
+            {/* Header */}
+            <div style={{padding:"13px 16px",background:"linear-gradient(135deg,"+C.a3+"14,"+C.accent+"08)",borderBottom:"1px solid "+C.border}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+                <div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 Manage Saved Weeks</div>
+                  <div style={{fontSize:10,color:C.sub}}>{addedW.length} uploaded · {allW.length} total · tap ☑ to select then delete</div>
+                </div>
+                <div style={{display:"flex",gap:7,flexShrink:0}}>
+                  {addedW.length>0&&(
+                    <button onClick={function(){
+                      if(selWkKeys.size===addedW.length){setSelWkKeys(new Set());}
+                      else{setSelWkKeys(new Set(addedW.map(function(w){return w.week+(w.from||"");})));}
+                    }} style={{padding:"5px 9px",borderRadius:8,background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
+                      {selWkKeys.size===addedW.length?"Deselect":"Select All"}
+                    </button>
+                  )}
+                  {selWkKeys.size>0&&(
+                    <button onClick={function(){
+                      if(window.confirm("Delete "+selWkKeys.size+" selected week"+(selWkKeys.size>1?"s":"")+"?")){
+                        setAddedW(function(p){return p.filter(function(w){return !selWkKeys.has(w.week+(w.from||""));});});
+                        setSelWkKeys(new Set());
+                      }
+                    }} style={{padding:"5px 12px",borderRadius:8,background:"#f8717122",border:"2px solid #f87171",color:"#f87171",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 0 8px #f8717133"}}>
+                      🗑 Delete ({selWkKeys.size})
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Week list */}
+            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7,maxHeight:320,overflowY:"auto"}}>
+              {addedW.length===0?(
+                <div style={{textAlign:"center",padding:"20px",color:C.sub,fontSize:11}}>
+                  <div style={{fontSize:28,marginBottom:8}}>📭</div>
+                  No uploaded weeks yet — scan a PDF above to add your first settlement
+                </div>
+              ):(
+                [...addedW].reverse().map(function(w,i){
+                  const g=wg(w);
+                  const wKey=w.week+(w.from||"");
+                  const isSelected=selWkKeys.has(wKey);
+                  return(
+                    <div key={w.week+i} style={{display:"flex",alignItems:"center",gap:9,padding:"10px 12px",background:isSelected?"#f8717108":C.bg,borderRadius:10,border:"1px solid "+(isSelected?"#f87171":"#a78bfa55"),transition:"all 0.15s",boxShadow:isSelected?"0 0 10px #f8717118":"none"}}>
+
+                      {/* Checkbox */}
+                      <button onClick={function(){
+                        setSelWkKeys(function(prev){
+                          const next=new Set(prev);
+                          if(next.has(wKey))next.delete(wKey);
+                          else next.add(wKey);
+                          return next;
+                        });
+                      }} style={{width:22,height:22,borderRadius:6,border:"2px solid "+(isSelected?"#f87171":C.border),background:isSelected?"#f87171":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,transition:"all 0.15s"}}>
+                        {isSelected&&<span style={{color:"#000",fontSize:11,fontWeight:900}}>✓</span>}
+                      </button>
+
+                      {/* Dot */}
+                      <div style={{width:8,height:8,borderRadius:"50%",background:"#a78bfa",boxShadow:"0 0 5px #a78bfa",flexShrink:0}}/>
+
+                      {/* Info */}
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:12,fontWeight:700,color:isSelected?"#f87171":C.text,display:"flex",alignItems:"center",gap:6}}>
+                          {w.label}
+                          <span style={{padding:"1px 6px",borderRadius:5,fontSize:9,fontWeight:700,background:"#a78bfa22",color:"#a78bfa"}}>Uploaded</span>
+                        </div>
+                        <div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from}{w.to?" – "+w.to:""} · {w.moves?.length||0} moves</div>
+                      </div>
+
+                      {/* Net + grade */}
+                      <div style={{textAlign:"right",flexShrink:0}}>
+                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${Number(w.net).toLocaleString("en-US",{minimumFractionDigits:2})}</div>
+                        <span style={{padding:"2px 7px",borderRadius:5,fontSize:9,fontWeight:700,background:g.c+"22",color:g.c}}>{g.i} {g.l}</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer hint */}
+            {addedW.length>0&&(
+              <div style={{padding:"9px 16px",borderTop:"1px solid "+C.border,fontSize:10,color:C.sub,textAlign:"center"}}>
+                ☑ Check weeks → <span style={{color:"#f87171",fontWeight:700}}>Delete (N)</span> removes selected &nbsp;·&nbsp; Rescan PDF to refresh data
+              </div>
+            )}
+          </div>
+
         </div>
       )}
 
