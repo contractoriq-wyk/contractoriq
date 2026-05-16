@@ -292,8 +292,13 @@ export default function ContractorIQv26(){
   const latest=allW[allW.length-1];
   const avgM=allW.reduce((s,w)=>s+w.net/w.gross*100,0)/allW.length;
   const wg=w=>{const m=w.net/w.gross*100;return m>=avgM*1.2?{l:"HIGH",c:C.green,i:"🔥"}:m>=avgM*0.8?{l:"NORMAL",c:C.accent,i:"✅"}:{l:"LOW",c:C.red,i:"⚠️"};};
-  const tEscReg=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="Escrow Regular")?.a||0),0);
-  const tEsc290=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="2290 Escrow")?.a||0),0);
+  // Use actual balance from most recent week that has it, else sum weekly deductions
+  const latestEscRegBal=allW.slice().reverse().find(w=>w.escrow_regular_balance>0)?.escrow_regular_balance||0;
+  const latestEsc290Bal=allW.slice().reverse().find(w=>w.escrow_290_balance>0)?.escrow_290_balance||0;
+  const calcEscReg=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="Escrow Regular")?.a||0),0);
+  const calcEsc290=allW.reduce((s,w)=>s+((w.deds||[]).find(d=>d.l==="2290 Escrow")?.a||0),0);
+  const tEscReg=latestEscRegBal||calcEscReg;
+  const tEsc290=latestEsc290Bal||calcEsc290;
   const tRebates=allW.reduce((s,w)=>s+(w.rebate||0),0);
   const dw=allW[sD]||allW[allW.length-1];const dg=wg(dw);
   const dwDeds=dw.deds||[];
@@ -315,7 +320,7 @@ export default function ContractorIQv26(){
       const isImage=fileType==="image"||file.type.startsWith("image/");
       const mediaType=isImage?(file.type||"image/jpeg"):"application/pdf";
       const contentBlock=isImage?{type:"image",source:{type:"base64",media_type:mediaType,data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
-      const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:4000,betas:["pdfs-2024-09-25"],messages:[{role:"user",content:[contentBlock,{type:"text",text:`This is a drayage/trucking settlement statement. Extract ALL data and return ONLY valid JSON with no other text, no markdown:\n{"week":"15","from":"04/06/2026","to":"04/12/2026","gross":0.00,"net":0.00,"totalDeductions":0.00,"rebate":0.00,"moves":[{"t":"L","fr":"BALTIMMD","to":"WILLIAMD","mi":77,"rt":195,"fc":52.36}],"deds":[{"l":"Fuel Advance (Pilot 179)","a":500.00}]}`}]}]})});
+      const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:4000,betas:["pdfs-2024-09-25"],messages:[{role:"user",content:[contentBlock,{type:"text",text:`This is a drayage/trucking settlement statement. Extract ALL data and return ONLY valid JSON with no other text, no markdown.\nCRITICAL: For escrow, read the ACTUAL BALANCE column from the Deductions Statement, not the weekly deduction amount.\nCRITICAL: Extract gallons from fuel advance notes (e.g. "Gallons: 170.49"), price per gallon, and reimbursements.\n{"week":"19","from":"05/04/2026","to":"05/10/2026","gross":5179.29,"net":3026.83,"totalDeductions":2537.59,"rebate":385.13,"gross_ytd":52558.80,"escrow_regular_balance":1100.00,"escrow_290_balance":110.00,"gallons":170.49,"price_per_gallon":5.759,"moves":[{"t":"L","fr":"BALTIMMD","to":"WILLIAMD","mi":77,"rt":195,"fc":52.36}],"deds":[{"l":"Fuel Advance (01927)","a":981.83},{"l":"Escrow Regular","a":100.00},{"l":"2290 Escrow","a":10.00}]}`}]}]})});
       if(!resp.ok){const errText=await resp.text();if(resp.status===401)setScanMsg("⚠️ API key invalid.");else setScanMsg(`⚠️ API Error ${resp.status}. Try Paste Text instead.`);setScanning(false);return;}
       const d=await resp.json();
       if(d.error){setScanMsg("⚠️ AI Error: "+d.error.message);setScanning(false);return;}
@@ -1259,7 +1264,8 @@ export default function ContractorIQv26(){
                 const reportedMiles=(dw.moves||[]).reduce(function(s,m){return s+(m.mi||m.miles||0);},0);
                 const dwFuelCost=(dw.deds||[]).filter(function(d){return d.l.toLowerCase().includes("fuel advance");}).reduce(function(s,d){return s+d.a;},0);
                 const hasRealGallons=dw.gallons&&dw.gallons>0;
-                const gallonsBought=hasRealGallons?dw.gallons:(fuelPrice>0?dwFuelCost/fuelPrice:0);
+                const realPricePerGallon=dw.price_per_gallon&&dw.price_per_gallon>0?dw.price_per_gallon:fuelPrice;
+                const gallonsBought=hasRealGallons?dw.gallons:(realPricePerGallon>0?dwFuelCost/realPricePerGallon:0);
                 const gallonsSource=hasRealGallons?"from settlement":"estimated";
                 const settlementMPG=gallonsBought>0?reportedMiles/gallonsBought:0;
                 const truckBeatBaseline=settlementMPG>=fuelMPG;
@@ -1446,8 +1452,8 @@ export default function ContractorIQv26(){
                 <div style={{fontSize:11,fontWeight:700,color:C.green,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:6}}>💰 Savings & Escrow{helpBtn("savings")}</div>
                 {helpModal("savings")}
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
-                  {[{l:"YTD Escrow",v:`$${(tEscReg+tEsc290).toFixed(0)}`,c:C.a3},{l:"YTD Rebates",v:`$${tRebates.toFixed(2)}`,c:C.green}].map(s=>(
-                    <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`,textAlign:"center"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:s.c}}>{s.v}</div></div>
+                  {[{l:"Escrow Balance",v:`$${(tEscReg+tEsc290).toFixed(0)}`,c:C.a3,sub:latestEscRegBal>0?"actual from settlement":"calculated"},{l:"YTD Rebates",v:`$${tRebates.toFixed(2)}`,c:C.green,sub:"reimbursements"}].map(s=>(
+                    <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`,textAlign:"center"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:s.c}}>{s.v}</div>{s.sub&&<div style={{fontSize:8,color:C.sub,marginTop:3}}>{s.sub}</div>}</div>
                   ))}
                 </div>
                 <div style={{marginBottom:5}}>
