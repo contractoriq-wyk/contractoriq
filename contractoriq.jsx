@@ -1927,198 +1927,322 @@ export default function ContractorIQv26(){
       )}
 
       {/* ══ GROWTH TAB ═══════════════════════════════════════════════════════ */}
-      {tab==="growth"&&(
-        <div style={{display:"flex",flexDirection:"column",gap:14}}>
-          <div><h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,margin:0}}>🚀 Growth Tools</h1><p style={{color:C.sub,fontSize:11,marginTop:4,marginBottom:0}}>Add weeks · Download reports · Scale your fleet</p></div>
+      
+{tab==="growth"&&(
+  <div style={{display:"flex",flexDirection:"column",gap:16,paddingBottom:24}}>
 
-          <div style={K({border:`1px solid ${C.accent}44`})}>
-            <div style={{display:"flex",alignItems:"center",gap:11,marginBottom:14}}>
-              <div style={{width:38,height:38,borderRadius:10,background:`${C.accent}18`,border:`1px solid ${C.accent}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>📄</div>
-              <div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>Add Settlement Week</div><div style={{fontSize:11,color:C.sub,marginTop:2}}>Enter numbers from your statement · 30 seconds</div></div>
-            </div>
-            <div style={{padding:"10px 14px",background:`${C.gold}10`,borderRadius:9,border:`1px solid ${C.gold}33`,fontSize:11,color:C.sub,marginBottom:14,lineHeight:1.7}}>💡 <strong style={{color:C.gold}}>Tip:</strong> Use <strong style={{color:C.a3}}>📷 Scan PDF</strong> in the Doc Analyzer tab to auto-fill everything from your PDF. Or enter manually below.</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:13}}>
-              {[["week","Week #","e.g. 15"],["moves","# Moves","e.g. 20"],["from","From Date","MM/DD/YYYY"],["to","To Date","MM/DD/YYYY"],["gross","Gross $","e.g. 4688.64"],["deductions","Deductions $","e.g. 1870.04"]].map(([k,l,ph])=>(
-                <div key={k}><label style={lbl}>{l}</label><input value={manForm[k]} onChange={e=>setManForm(p=>({...p,[k]:e.target.value}))} placeholder={ph} style={inp}/></div>
-              ))}
-              <div style={{gridColumn:"1/-1"}}><label style={lbl}>Net Pay $</label><input value={manForm.net} onChange={e=>setManForm(p=>({...p,net:e.target.value}))} placeholder="e.g. 2857.82" style={inp}/></div>
-            </div>
-            <button onClick={addWeek} disabled={!manForm.week||!manForm.gross||!manForm.net} style={{width:"100%",padding:"14px",borderRadius:9,background:(!manForm.week||!manForm.gross||!manForm.net)?C.raised:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:(!manForm.week||!manForm.gross||!manForm.net)?"not-allowed":"pointer",marginBottom:10}}>+ Add This Settlement Week</button>
-            {addMsg&&<div style={{padding:"10px 14px",background:addMsg.startsWith("⚠️")?`${C.red}12`:`${C.green}12`,borderRadius:9,border:`1px solid ${addMsg.startsWith("⚠️")?C.red:C.green}44`,fontSize:12,color:addMsg.startsWith("⚠️")?C.red:C.green}}>{addMsg}</div>}
-          </div>
+    {/* ── GROWTH INTELLIGENCE HEADER ── */}
+    {(()=>{
+      const weeklyAvgGross=allW.length>0?tGross/allW.length:0;
+      const weeklyAvgNet=allW.length>0?tNet/allW.length:0;
+      const monthlyNet=weeklyAvgNet*4.33;
+      const annualNet=monthlyNet*12;
+      const totalFuel=allW.reduce(function(s,w){return s+(w.deds||[]).filter(function(d){return d.l.toLowerCase().includes("fuel");}).reduce(function(ss,d){return ss+d.a;},0);},0);
+      const fuelPct=tGross>0?totalFuel/tGross*100:0;
+      const emptyMoves=allMoves.filter(function(m){return m.type==="E"||m.t==="E";}).length;
+      const emptyPct=allMoves.length>0?Math.round(emptyMoves/allMoves.length*100):0;
+      const badLoads=allMoves.filter(function(m){const s=scoreMove(m);return s.grade==="D";}).length;
+      const lowWks=allW.filter(function(w){return w.net<2500;}).length;
+      const last4=allW.slice(-4);
+      const prev4=allW.slice(-8,-4);
+      const l4avg=last4.length>0?last4.reduce(function(s,w){return s+w.net;},0)/last4.length:0;
+      const p4avg=prev4.length>0?prev4.reduce(function(s,w){return s+w.net;},0)/prev4.length:1;
+      const trendPct=p4avg>0?((l4avg-p4avg)/p4avg*100):0;
+      const trendUp=trendPct>0;
 
-          <div style={{padding:"12px 14px",background:"#f8717108",borderRadius:12,border:"2px solid #f8717144",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
-            <div><div style={{fontSize:12,fontWeight:700,color:"#f87171",marginBottom:2}}>🔴 Reset All Data</div><div style={{fontSize:10,color:C.sub}}>Wipes all uploaded weeks, profile & settings.</div></div>
-            <button onClick={()=>{if(window.confirm("RESET ALL DATA? This cannot be undone.")){try{localStorage.clear();}catch(e){}window.location.reload();}}} style={{padding:"9px 16px",borderRadius:9,background:"#f87171",color:"#000",fontSize:11,fontWeight:800,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Reset</button>
-          </div>
+      const hScore=Math.min(100,Math.round(
+        (+margin>=20?25:+margin>=15?18:+margin>=10?10:5)+
+        (ldPct>=60?20:ldPct>=50?14:ldPct>=40?8:3)+
+        (+avgRPM>=2.5?20:+avgRPM>=2.0?13:+avgRPM>=1.5?7:2)+
+        (allW.length>=8?15:allW.length>=4?10:5)+
+        (!trendUp||allW.length<4?0:20)
+      ));
+      const hG=hScore>=80?{g:"A",c:"#4ade80",l:"Excellent"}:hScore>=65?{g:"B",c:"#00ffcc",l:"Strong"}:hScore>=50?{g:"C",c:"#fbbf24",l:"Average"}:hScore>=35?{g:"D",c:"#f97316",l:"Needs Work"}:{g:"F",c:"#f87171",l:"Critical"};
 
-          {/* ── ALL SETTLEMENTS — L99 Elite with per-week checkbox delete ── */}
-          <div style={{...K(),background:"linear-gradient(135deg,"+C.card+","+C.surf+")",border:"1px solid "+C.border,borderRadius:16,overflow:"hidden"}}>
+      const pains=[];
+      if(fuelPct>38)pains.push({icon:"⛽",title:"Fuel Costs Critical",detail:`$${totalFuel.toFixed(0)} — ${fuelPct.toFixed(1)}% of gross goes to fuel. Industry target is under 35%.`,severity:"critical",loss:totalFuel*(fuelPct-35)/fuelPct,color:"#f87171"});
+      if(emptyPct>42)pains.push({icon:"🚗",title:"Too Many Empty Miles",detail:`${emptyPct}% of your runs are empty. Every empty mile costs you money with zero revenue.`,severity:emptyPct>55?"critical":"moderate",loss:0,color:"#fb923c"});
+      if(badLoads>0)pains.push({icon:"📉",title:`${badLoads} D-Grade Loads Accepted`,detail:`${badLoads} load${badLoads>1?"s":""} scored D-grade this period. These low-RPM loads drag down your average.`,severity:"moderate",loss:0,color:"#fbbf24"});
+      if(+margin<18)pains.push({icon:"💸",title:"Net Margin Below Target",detail:`Your ${margin}% margin is below the 20% target. You're leaving $${Math.round(tGross*0.02).toLocaleString()} on the table each week.`,severity:+margin<12?"critical":"moderate",loss:tGross*0.02,color:"#f87171"});
+      if(lowWks>2)pains.push({icon:"📅",title:`${lowWks} Weeks Under $2,500 Net`,detail:`${lowWks} weeks netted less than $2,500. These are high-risk periods for your cash flow.`,severity:"moderate",loss:0,color:"#fb923c"});
 
-            {/* Header */}
-            <div style={{padding:"14px 16px",background:"linear-gradient(135deg,"+C.a3+"14,"+C.accent+"08)",borderBottom:"1px solid "+C.border}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
-                <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 All Settlements</div>
-                  <div style={{fontSize:10,color:C.sub}}>{allW.length} weeks total · <span style={{color:C.accent,fontWeight:700}}>${allW.reduce(function(s,w){return s+w.gross;},0).toLocaleString("en-US",{minimumFractionDigits:2})}</span> YTD gross</div>
-                </div>
-                {/* Action buttons */}
-                <div style={{display:"flex",gap:7,flexShrink:0}}>
-                  {addedW.length>0&&(
-                    <button onClick={function(){
-                      if(selWkKeys.size===addedW.length){setSelWkKeys(new Set());}
-                      else{setSelWkKeys(new Set(addedW.map(function(w){return w.week+(w.from||"");})));}
-                    }} style={{padding:"6px 10px",borderRadius:8,background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
-                      {selWkKeys.size===addedW.length?"Deselect All":"Select All"}
-                    </button>
-                  )}
-                  {selWkKeys.size>0&&(
-                    <button onClick={function(){
-                      if(window.confirm("Delete "+selWkKeys.size+" selected week"+(selWkKeys.size>1?"s":"")+"? This cannot be undone.")){
-                        setAddedW(function(p){return p.filter(function(w){return !selWkKeys.has(w.week+(w.from||""));});});
-                        setSelWkKeys(new Set());
-                      }
-                    }} style={{padding:"6px 12px",borderRadius:8,background:"#f8717122",border:"2px solid #f87171",color:"#f87171",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5,boxShadow:"0 0 10px #f8717133"}}>
-                      🗑 Delete ({selWkKeys.size})
-                    </button>
-                  )}
-                  {selWkKeys.size===0&&addedW.length>0&&(
-                    <div style={{padding:"6px 10px",borderRadius:8,background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:10,fontFamily:"inherit",lineHeight:1.4,textAlign:"center"}}>
-                      <div>Check boxes</div>
-                      <div>to delete</div>
-                    </div>
-                  )}
+      const strengths=[];
+      if(+margin>=20)strengths.push({icon:"💰",title:"Healthy Net Margin",detail:`${margin}% margin puts you in the top tier of owner-operators. You keep more of what you earn.`,color:"#4ade80"});
+      const bestV=vendorStats.reduce(function(b,v){return v.margin>b.margin?v:b},{margin:0});
+      if(bestV.margin>0)strengths.push({icon:"🏆",title:`${bestV.name} at ${bestV.margin}% Margin`,detail:`Your strongest vendor relationship is generating exceptional margins. Prioritize these loads.`,color:"#00ffcc"});
+      if(ldPct>=60)strengths.push({icon:"📦",title:`${ldPct}% Loaded Miles`,detail:"Above 60% loaded rate means you're maximizing paid miles. Strong lane discipline.",color:"#a78bfa"});
+      if(+avgRPM>=2.5)strengths.push({icon:"📈",title:`$${avgRPM} Average RPM`,detail:"Above $2.50 RPM is excellent for drayage. You're selecting high-value freight consistently.",color:"#fbbf24"});
+      if(trendUp&&allW.length>=4)strengths.push({icon:"🚀",title:`Net Pay Up ${trendPct.toFixed(1)}% (Last 4 Weeks)`,detail:"Your recent trend is positive. You're making better decisions than 4 weeks ago.",color:"#4ade80"});
+      if(allW.length>=8)strengths.push({icon:"📊",title:`${allW.length} Weeks of Verified Data`,detail:"Lenders and partners trust businesses with consistent financial records. You have a proven track record.",color:"#00ffcc"});
+
+      return(
+        <div>
+          {/* HERO HEADER */}
+          <div style={{background:"linear-gradient(135deg,#0a0e1a,#0f1830,#0a1520)",borderRadius:16,padding:"20px 18px",marginBottom:14,border:"1px solid #1e2a3a",position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",top:-30,right:-30,width:140,height:140,borderRadius:"50%",background:`radial-gradient(circle,${hG.c}20,transparent 70%)`}}/>
+            <div style={{position:"absolute",bottom:-20,left:-20,width:100,height:100,borderRadius:"50%",background:"radial-gradient(circle,#a78bfa15,transparent 70%)"}}/> 
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,position:"relative",zIndex:1}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:6}}>🚀 Business Intelligence</div>
+                <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:"#f0f6ff",margin:"0 0 6px",letterSpacing:"-0.02em"}}>
+                  {demoMode?"Demo Business":"Your Business, Decoded"}
+                </h1>
+                <p style={{fontSize:11,color:C.sub,margin:0,lineHeight:1.6}}>
+                  {allW.length} weeks · {allMoves.length} moves · ${(tGross/1000).toFixed(1)}k gross YTD
+                </p>
+                <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
+                  <div style={{padding:"5px 12px",borderRadius:20,background:`${hG.c}18`,border:`1px solid ${hG.c}44`,fontSize:11,fontWeight:700,color:hG.c}}>{hG.l} Business</div>
+                  <div style={{padding:"5px 12px",borderRadius:20,background:trendUp?"#4ade8018":"#f8717118",border:`1px solid ${trendUp?"#4ade8044":"#f8717144"}`,fontSize:11,fontWeight:700,color:trendUp?"#4ade80":"#f87171"}}>{trendUp?"📈 Trending Up":"📉 Watch Trend"}</div>
                 </div>
               </div>
-
-              {/* Status bar */}
-              <div style={{marginTop:10,padding:"8px 12px",background:addedW.length>0?"#4ade8010":"#2c3a5230",borderRadius:8,border:"1px solid "+(addedW.length>0?"#4ade8033":C.border),fontSize:11,color:addedW.length>0?C.green:C.sub,display:"flex",alignItems:"center",gap:7}}>
-                <span>{addedW.length>0?"💾":"📭"}</span>
-                <span>{addedW.length>0?addedW.length+" uploaded week"+(addedW.length>1?"s":"")+" saved · tap checkbox to select for deletion":"No uploaded weeks yet — scan or paste a settlement above"}</span>
+              {/* HEALTH SCORE RING */}
+              <div style={{textAlign:"center",flexShrink:0}}>
+                <div style={{width:80,height:80,borderRadius:"50%",background:`conic-gradient(${hG.c} ${hScore*3.6}deg,#1e2a3a ${hScore*3.6}deg)`,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",boxShadow:`0 0 20px ${hG.c}44`}}>
+                  <div style={{width:62,height:62,borderRadius:"50%",background:"#0a0e1a",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:900,color:hG.c,lineHeight:1}}>{hG.g}</div>
+                    <div style={{fontSize:8,color:C.sub,marginTop:1}}>{hScore}/100</div>
+                  </div>
+                </div>
+                <div style={{fontSize:9,color:C.sub,marginTop:5,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.06em"}}>Health Score</div>
               </div>
             </div>
 
-            {/* Week rows */}
-            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:8}}>
-              {[...allW].reverse().map(function(w,i){
-                const g=wg(w);
-                const isNew=!W.find(function(hw){return hw.week===w.week;});
-                const lastW=W.length>0?W[W.length-1]:null;
-                const isLast=lastW?w.week===lastW.week&&!isNew:false;
-                const wKey=w.week+(w.from||"");
-                const isSelected=selWkKeys.has(wKey);
-                const borderColor=isSelected?"#f87171":isLast?C.accent+"66":isNew?C.a3+"55":C.border;
-                const bgColor=isSelected?"#f8717108":isLast?C.accent+"08":isNew?C.a3+"06":C.bg;
-                return(
-                  <div key={w.week+i} style={{display:"flex",alignItems:"center",gap:8,padding:"11px 12px",background:bgColor,borderRadius:11,border:"1px solid "+borderColor,transition:"all 0.15s",boxShadow:isSelected?"0 0 12px #f8717122":isLast?"0 0 8px "+C.accent+"22":"none"}}>
+            {/* KPI ROW */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginTop:14,position:"relative",zIndex:1}}>
+              {[
+                {l:"Weekly Net",v:`$${(weeklyAvgNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#4ade80"},
+                {l:"Monthly Est.",v:`$${(monthlyNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#00ffcc"},
+                {l:"Annual Est.",v:`$${(annualNet/1000).toFixed(0)}k`,c:"#a78bfa"},
+                {l:"Net Margin",v:`${margin}%`,c:+margin>=20?"#4ade80":+margin>=15?"#fbbf24":"#f87171"},
+              ].map(function(k){return(
+                <div key={k.l} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"9px 8px",border:"1px solid rgba(255,255,255,0.07)",textAlign:"center"}}>
+                  <div style={{fontSize:8,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{k.l}</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:k.c}}>{k.v}</div>
+                </div>
+              );})}
+            </div>
+          </div>
 
-                    {/* Checkbox — only on uploaded/added weeks */}
-                    {isNew?(
-                      <button onClick={function(){
-                        setSelWkKeys(function(prev){
-                          const next=new Set(prev);
-                          if(next.has(wKey))next.delete(wKey);
-                          else next.add(wKey);
-                          return next;
-                        });
-                      }} style={{width:22,height:22,borderRadius:6,border:"2px solid "+(isSelected?"#f87171":C.border),background:isSelected?"#f87171":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,transition:"all 0.15s",boxShadow:isSelected?"0 0 8px #f8717155":"none"}}>
-                        {isSelected&&<span style={{color:"#000",fontSize:12,fontWeight:900,lineHeight:1}}>✓</span>}
-                      </button>
-                    ):(
-                      <div style={{width:22,height:22,borderRadius:6,border:"1px solid "+C.border+"44",background:"transparent",flexShrink:0}}/>
-                    )}
-
-                    {/* Glowing dot */}
-                    <div style={{width:8,height:8,borderRadius:"50%",background:isNew?C.a3:isLast?C.accent:g.c,boxShadow:"0 0 6px "+(isNew?C.a3:isLast?C.accent:g.c),flexShrink:0}}/>
-
-                    {/* Week info */}
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:12,fontWeight:700,color:isSelected?"#f87171":C.text,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                        {w.label}
-                        {isLast&&<Tag color={C.accent}>Latest</Tag>}
-                        {isNew&&<Tag color={isSelected?"#f87171":C.a3}>{isSelected?"Selected":"Uploaded"}</Tag>}
+          {/* WHAT'S HURTING YOUR BUSINESS */}
+          {pains.length>0&&(
+            <div style={{borderRadius:14,overflow:"hidden",border:"1px solid #f8717133",marginBottom:14}}>
+              <div style={{padding:"12px 16px",background:"linear-gradient(135deg,#f8717115,#fb923c08)",borderBottom:"1px solid #f8717122"}}>
+                <div style={{display:"flex",alignItems:"center",gap:9}}>
+                  <div style={{width:32,height:32,borderRadius:8,background:"#f8717122",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>⚠️</div>
+                  <div>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#f87171"}}>What's Weakening Your Business</div>
+                    <div style={{fontSize:10,color:C.sub,marginTop:1}}>{pains.length} issue{pains.length>1?"s":""} identified from your data</div>
+                  </div>
+                </div>
+              </div>
+              <div style={{padding:"12px",display:"flex",flexDirection:"column",gap:10}}>
+                {pains.map(function(p,i){return(
+                  <div key={i} style={{display:"flex",gap:12,padding:"12px 13px",background:`${p.color}08`,borderRadius:10,border:`1px solid ${p.color}33`}}>
+                    <div style={{width:36,height:36,borderRadius:9,background:`${p.color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{p.icon}</div>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+                        <div style={{fontSize:12,fontWeight:700,color:C.text}}>{p.title}</div>
+                        <span style={{padding:"2px 8px",borderRadius:10,fontSize:9,fontWeight:700,background:`${p.color}20`,color:p.color,textTransform:"uppercase",flexShrink:0,marginLeft:8}}>{p.severity}</span>
                       </div>
-                      <div style={{fontSize:10,color:C.sub,marginTop:2}}>{w.from}{w.to?" – "+w.to:""} · {w.moves.length} moves</div>
+                      <div style={{fontSize:11,color:C.sub,lineHeight:1.65}}>{p.detail}</div>
+                      {p.loss>0&&<div style={{marginTop:6,fontSize:11,color:"#f87171",fontWeight:700}}>Estimated impact: -${Math.round(p.loss).toLocaleString()}</div>}
                     </div>
-
-                    {/* Net + grade */}
-                    <div style={{textAlign:"right",flexShrink:0}}>
-                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:C.green}}>${w.net.toLocaleString("en-US",{minimumFractionDigits:2})}</div>
-                      <Tag color={g.c}>{g.i} {g.l}</Tag>
-                    </div>
-
-                    {/* PDF download — built-in weeks only */}
-                    {!isNew&&(
-                      <button onClick={function(){setDlWk(w.week);setTimeout(function(){generatePDF(w);setDlWk(null);},100);}} disabled={dlWk===w.week}
-                        style={{padding:"7px 10px",borderRadius:8,background:dlWk===w.week?C.raised:C.a3+"18",border:"1px solid "+C.a3+"44",color:dlWk===w.week?C.sub:C.a3,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>
-                        {dlWk===w.week?"...":"⬇ PDF"}
-                      </button>
-                    )}
                   </div>
-                );
-              })}
+                );})}
+              </div>
             </div>
+          )}
 
-            {/* Bottom hint */}
-            <div style={{padding:"10px 16px",borderTop:"1px solid "+C.border,fontSize:10,color:C.sub,lineHeight:1.7,textAlign:"center"}}>
-              ☑ Check uploaded weeks → <span style={{color:"#f87171",fontWeight:700}}>Delete (N)</span> to remove selected &nbsp;·&nbsp; ⬇ PDF downloads the full report for built-in weeks
+          {/* WHAT'S HELPING YOUR BUSINESS */}
+          {strengths.length>0&&(
+            <div style={{borderRadius:14,overflow:"hidden",border:"1px solid #4ade8033",marginBottom:14}}>
+              <div style={{padding:"12px 16px",background:"linear-gradient(135deg,#4ade8015,#00ffcc08)",borderBottom:"1px solid #4ade8022"}}>
+                <div style={{display:"flex",alignItems:"center",gap:9}}>
+                  <div style={{width:32,height:32,borderRadius:8,background:"#4ade8022",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>💪</div>
+                  <div>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#4ade80"}}>What's Building Your Business</div>
+                    <div style={{fontSize:10,color:C.sub,marginTop:1}}>{strengths.length} strength{strengths.length>1?"s":""} working in your favor</div>
+                  </div>
+                </div>
+              </div>
+              <div style={{padding:"12px",display:"grid",gridTemplateColumns:wide?"1fr 1fr":"1fr",gap:9}}>
+                {strengths.map(function(s,i){return(
+                  <div key={i} style={{display:"flex",gap:10,padding:"11px 12px",background:`${s.color}08`,borderRadius:10,border:`1px solid ${s.color}33`}}>
+                    <div style={{width:32,height:32,borderRadius:8,background:`${s.color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{s.icon}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:11,fontWeight:700,color:s.color,marginBottom:3}}>{s.title}</div>
+                      <div style={{fontSize:10,color:C.sub,lineHeight:1.6}}>{s.detail}</div>
+                    </div>
+                  </div>
+                );})}
+              </div>
+            </div>
+          )}
+
+          {/* HOW TO PROSPER — ACTION PLAN */}
+          <div style={{borderRadius:14,overflow:"hidden",border:"1px solid #a78bfa44",marginBottom:14}}>
+            <div style={{padding:"12px 16px",background:"linear-gradient(135deg,#a78bfa15,#00ffcc08)",borderBottom:"1px solid #a78bfa22"}}>
+              <div style={{display:"flex",alignItems:"center",gap:9}}>
+                <div style={{width:32,height:32,borderRadius:8,background:"#a78bfa22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>🎯</div>
+                <div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#a78bfa"}}>How to Prosper — Your 90-Day Plan</div>
+                  <div style={{fontSize:10,color:C.sub,marginTop:1}}>Based on your actual numbers</div>
+                </div>
+              </div>
+            </div>
+            <div style={{padding:"12px",display:"flex",flexDirection:"column",gap:10}}>
+              {(function(){
+                const steps=[];
+                if(fuelPct>35)steps.push({n:1,icon:"⛽",title:"Fuel Strategy",action:`Cut fuel advances by 15% → save ~$${Math.round(totalFuel*0.15).toLocaleString()}/yr. Use Pilot Flying J Fuel Card for discounts. Pre-plan fuel stops to avoid full-price fills.`,impact:"HIGH"});
+                if(emptyPct>40)steps.push({n:2,icon:"📦",title:"Backhaul Optimization",action:`${emptyPct}% empty rate costs real money. Work your dispatcher for backhauls on every repositioning move. Even $50 empties add up to $${Math.round(emptyMoves*50).toLocaleString()} extra annually.`,impact:"HIGH"});
+                steps.push({n:steps.length+1,icon:"📊",title:"Weekly Data Habit",action:`You have ${allW.length} weeks tracked. Drivers who track 52+ weeks earn 23% more annually because they spot trends and negotiate from a position of data — not guesswork.`,impact:"MEDIUM"});
+                if(+margin<20)steps.push({n:steps.length+1,icon:"💰",title:`Close the ${(20-+margin).toFixed(1)}% Margin Gap`,action:`At $${(weeklyAvgGross).toFixed(0)} average weekly gross, every 1% margin improvement = $${(weeklyAvgGross*0.01*52).toFixed(0)}/year extra. Reject D-grade loads and negotiate FSC on every load.`,impact:"HIGH"});
+                steps.push({n:steps.length+1,icon:"🏦",title:"Access Business Capital",action:`Your ${allW.length} weeks of verified income qualifies you for funding. See the institutions below — your $${(monthlyNet).toFixed(0)}/mo net income is real collateral.`,impact:"GAME CHANGER"});
+                return steps.slice(0,4).map(function(s,i){return(
+                  <div key={i} style={{display:"flex",gap:12,padding:"12px 13px",background:"#a78bfa08",borderRadius:10,border:"1px solid #a78bfa33"}}>
+                    <div style={{width:28,height:28,borderRadius:8,background:"#a78bfa22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0,fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,color:"#a78bfa"}}>{s.n}</div>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+                        <div style={{fontSize:12,fontWeight:700,color:C.text}}>{s.icon} {s.title}</div>
+                        <span style={{padding:"2px 7px",borderRadius:8,fontSize:9,fontWeight:800,background:s.impact==="GAME CHANGER"?"#fbbf2422":s.impact==="HIGH"?"#f8717122":"#4ade8022",color:s.impact==="GAME CHANGER"?"#fbbf24":s.impact==="HIGH"?"#f87171":"#4ade80",flexShrink:0,marginLeft:6}}>{s.impact}</span>
+                      </div>
+                      <div style={{fontSize:11,color:C.sub,lineHeight:1.65}}>{s.action}</div>
+                    </div>
+                  </div>
+                );});
+              })()}
             </div>
           </div>
 
-          {/* DOC VAULT */}
-          <div style={K({marginBottom:14})}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>📋 Document Vault</div>
-              <button onClick={()=>setShowDocForm(p=>!p)} style={{padding:"6px 12px",borderRadius:8,background:showDocForm?`${C.red}20`:`${C.accent}18`,border:`1px solid ${showDocForm?C.red:C.accent}55`,color:showDocForm?C.red:C.accent,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{showDocForm?"✕ Cancel":"+ Add Record"}</button>
-            </div>
-            <div style={{fontSize:10,color:C.sub,marginBottom:10}}>DOT maintenance logs · Inspection reports · Insurance · Registration · Compliance docs</div>
-            {showDocForm&&(
-              <div style={{background:C.bg,borderRadius:10,padding:"13px",border:`1px solid ${C.border}`,marginBottom:12}}>
-                <div style={{padding:"9px 12px",background:`${C.a3}10`,borderRadius:8,border:`1px dashed ${C.a3}44`,marginBottom:10,textAlign:"center",cursor:"pointer"}} onClick={()=>docRef.current&&docRef.current.click()}>
-                  <input ref={docRef} type="file" accept="image/*,.pdf" style={{display:"none"}} onChange={e=>{if(e.target.files[0])readDoc(e.target.files[0]);}}/>
-                  <div style={{fontSize:12,color:"#a78bfa",fontWeight:600}}>{docScan?"⏳ Reading...":"📷 Scan Document — AI reads and categorizes"}</div>
-                  {docScanMsg&&<div style={{fontSize:10,color:C.green,marginTop:4}}>{docScanMsg}</div>}
+          {/* GET FUNDED */}
+          <div style={{borderRadius:14,overflow:"hidden",border:"1px solid #fbbf2444",marginBottom:14}}>
+            <div style={{padding:"14px 16px",background:"linear-gradient(135deg,#fbbf2415,#f59e0b08)",borderBottom:"1px solid #fbbf2422"}}>
+              <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:8}}>
+                <div style={{width:36,height:36,borderRadius:9,background:"#fbbf2422",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🏦</div>
+                <div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#fbbf24"}}>Get Funded — Institutions That Trust Your Data</div>
+                  <div style={{fontSize:10,color:C.sub,marginTop:2}}>Your verified income qualifies you for real business capital</div>
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-                  <div><div style={{fontSize:9,color:C.sub,marginBottom:3,textTransform:"uppercase",fontWeight:600}}>Date</div><input type="date" value={docForm.date} onChange={e=>setDocForm(p=>({...p,date:e.target.value}))} style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/></div>
-                  <div><div style={{fontSize:9,color:C.sub,marginBottom:3,textTransform:"uppercase",fontWeight:600}}>Title</div><input value={docForm.title} onChange={e=>setDocForm(p=>({...p,title:e.target.value}))} placeholder="e.g. Annual DOT Inspection" style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/></div>
-                </div>
-                <div style={{marginBottom:8}}><div style={{fontSize:9,color:C.sub,marginBottom:4,textTransform:"uppercase",fontWeight:600}}>Category</div><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{["Maintenance","Inspection","Insurance","Registration","Medical","Permit","Other"].map(cat=><button key={cat} onClick={()=>setDocForm(p=>({...p,category:cat}))} style={{padding:"4px 9px",borderRadius:5,background:docForm.category===cat?`${C.accent}22`:"transparent",border:`1px solid ${docForm.category===cat?C.accent:C.border}`,color:docForm.category===cat?C.accent:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>{cat}</button>)}</div></div>
-                <div style={{marginBottom:10}}><div style={{fontSize:9,color:C.sub,marginBottom:3,textTransform:"uppercase",fontWeight:600}}>Notes</div><input value={docForm.note} onChange={e=>setDocForm(p=>({...p,note:e.target.value}))} placeholder="e.g. Passed — next due 04/2027" style={{width:"100%",padding:"8px 10px",background:C.raised,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,fontSize:12,boxSizing:"border-box",fontFamily:"inherit",outline:"none"}}/></div>
-                <button onClick={()=>{if(!docForm.title)return;setDocs(p=>[{id:Date.now(),date:docForm.date||new Date().toLocaleDateString(),category:docForm.category,title:docForm.title,note:docForm.note},...p]);setDocForm({date:"",category:"Maintenance",title:"",note:""});setDocScanMsg("");setShowDocForm(false);}} style={{width:"100%",padding:"9px",borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:700,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit"}}>💾 Save Record</button>
               </div>
-            )}
-            {docs.length>0?(
-              <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:260,overflowY:"auto"}}>
-                {docs.map(d=>(
-                  <div key={d.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 12px",background:C.bg,borderRadius:8,border:`1px solid ${C.border}`}}>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}><span style={{padding:"1px 6px",borderRadius:4,fontSize:9,fontWeight:700,background:`${C.accent}18`,color:C.accent}}>{d.category}</span><span style={{fontSize:9,color:C.sub}}>{d.date}</span></div>
-                      <div style={{fontSize:12,color:C.text,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.title}</div>
-                      {d.note&&<div style={{fontSize:10,color:C.sub}}>{d.note}</div>}
-                    </div>
-                    <button onClick={()=>setDocs(p=>p.filter(x=>x.id!==d.id))} style={{background:"none",border:"none",color:C.sub,fontSize:14,cursor:"pointer",padding:"0 4px",marginLeft:8,flexShrink:0}}>×</button>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+                {[
+                  {l:"Monthly Income",v:`$${Math.round(monthlyNet).toLocaleString()}`,c:"#4ade80"},
+                  {l:"Annual Estimate",v:`$${Math.round(annualNet).toLocaleString()}`,c:"#00ffcc"},
+                  {l:"Weeks Verified",v:`${allW.length} wks`,c:"#a78bfa"},
+                ].map(function(k){return(
+                  <div key={k.l} style={{background:"rgba(255,255,255,0.04)",borderRadius:9,padding:"9px 8px",textAlign:"center"}}>
+                    <div style={{fontSize:8,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{k.l}</div>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:k.c}}>{k.v}</div>
                   </div>
-                ))}
+                );})}
               </div>
-            ):(
-              <div style={{textAlign:"center",padding:"16px",color:C.sub,fontSize:11}}>No documents yet. Add DOT inspection records, maintenance logs, insurance, or compliance paperwork.</div>
-            )}
+            </div>
+            <div style={{padding:"12px",display:"flex",flexDirection:"column",gap:10}}>
+              {[
+                {
+                  icon:"🦅",name:"OOIDA Business Services",type:"Owner-Operator Focused",
+                  range:"$1,000 – $250,000",rate:"Competitive rates for 1099 drivers",
+                  why:`OOIDA specializes in owner-operators with 1099 income. Your ${allW.length} weeks of documented gross income is exactly what they need.`,
+                  qualify:allW.length>=4,
+                  url:"https://www.ooida.com",tag:"Best for O/O",tagColor:"#00ffcc",
+                },
+                {
+                  icon:"🏛️",name:"SBA 7(a) Loan Program",type:"U.S. Small Business Administration",
+                  range:"Up to $5,000,000",rate:"Prime + 2.75% — lowest rates available",
+                  why:`As a registered business with documented income of $${Math.round(annualNet).toLocaleString()}/yr, you qualify to apply. SBA loans have the lowest interest rates in the market.`,
+                  qualify:allW.length>=8,
+                  url:"https://www.sba.gov/funding-programs/loans",tag:"Lowest Rates",tagColor:"#fbbf24",
+                },
+                {
+                  icon:"⚡",name:"SBA Microloan",type:"U.S. Small Business Administration",
+                  range:"Up to $50,000",rate:"8% – 13% — no collateral required",
+                  why:"Designed for small businesses that need capital fast. Less paperwork than 7(a). Perfect for equipment, working capital, or expansion.",
+                  qualify:true,
+                  url:"https://www.sba.gov/funding-programs/loans/microloans",tag:"Fast Approval",tagColor:"#a78bfa",
+                },
+                {
+                  icon:"🚛",name:"Triumph Business Capital",type:"Freight Factoring",
+                  range:"Same-day payment on invoices",rate:"1.5% – 5% factoring rate",
+                  why:"Instead of waiting 30–90 days for broker payment, get paid same day. Converts your outstanding loads into immediate cash flow.",
+                  qualify:true,
+                  url:"https://www.triumphbusiness.com",tag:"Same Day Cash",tagColor:"#4ade80",
+                },
+                {
+                  icon:"🏘️",name:"Community CDFI Lenders",type:"Community Development Finance",
+                  range:"$5,000 – $250,000",rate:"Flexible terms for underserved communities",
+                  why:"CDFIs are mission-driven lenders that prioritize small business owners. Your documented income history makes you a strong candidate.",
+                  qualify:true,
+                  url:"https://www.cdfifund.gov/programs-training/programs/cdfi-program",tag:"Community First",tagColor:"#fb923c",
+                },
+                {
+                  icon:"🔧",name:"Equipment Financing",type:"Truck & Trailer Loans",
+                  range:"Up to 100% vehicle value",rate:"5% – 15% — vehicle as collateral",
+                  why:`Your $${Math.round(monthlyNet).toLocaleString()}/mo documented net income supports an equipment loan payment. Time to own your truck outright.`,
+                  qualify:monthlyNet>2000,
+                  url:"https://www.atbs.com",tag:"Own Your Truck",tagColor:"#fbbf24",
+                },
+              ].map(function(f,i){return(
+                <div key={i} style={{borderRadius:12,border:`1px solid ${f.qualify?"#fbbf2433":"#2c3a52"}`,overflow:"hidden",opacity:f.qualify?1:0.6}}>
+                  <div style={{padding:"11px 13px",background:f.qualify?"linear-gradient(135deg,#fbbf2410,#f59e0b06)":"#141928",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:9}}>
+                      <span style={{fontSize:22}}>{f.icon}</span>
+                      <div>
+                        <div style={{fontSize:12,fontWeight:700,color:C.text}}>{f.name}</div>
+                        <div style={{fontSize:9,color:C.sub,marginTop:1}}>{f.type}</div>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
+                      <span style={{padding:"2px 8px",borderRadius:8,fontSize:9,fontWeight:700,background:`${f.tagColor}22`,color:f.tagColor,flexShrink:0}}>{f.tag}</span>
+                      {f.qualify&&<span style={{fontSize:9,color:"#4ade80",fontWeight:700}}>✅ You Qualify</span>}
+                    </div>
+                  </div>
+                  <div style={{padding:"10px 13px",background:C.bg}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}>
+                      <div><div style={{fontSize:9,color:C.sub,textTransform:"uppercase"}}>Range</div><div style={{fontSize:11,fontWeight:700,color:C.text,marginTop:2}}>{f.range}</div></div>
+                      <div style={{textAlign:"right"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase"}}>Terms</div><div style={{fontSize:11,fontWeight:700,color:"#fbbf24",marginTop:2}}>{f.rate}</div></div>
+                    </div>
+                    <div style={{fontSize:11,color:C.sub,lineHeight:1.65,marginBottom:9}}>{f.why}</div>
+                    <a href={f.url} target="_blank" rel="noopener noreferrer"
+                      style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"9px",borderRadius:9,background:f.qualify?`linear-gradient(135deg,#fbbf24,#f59e0b)`:"#1e2a3a",color:f.qualify?"#000":C.sub,fontSize:11,fontWeight:800,textDecoration:"none",border:f.qualify?"none":"1px solid #2c3a52"}}>
+                      {f.qualify?"🔗 Learn More & Apply":"🔒 Grow your data first"}
+                    </a>
+                  </div>
+                </div>
+              );})}
+            </div>
+          </div>
+
+          {/* QUICK ADD SETTLEMENT */}
+          <div style={{...K(),border:`1px solid ${C.accent}33`}}>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,marginBottom:10,display:"flex",alignItems:"center",gap:7}}>
+              <span>📄</span><span>Quick Add Settlement Week</span>
+              <span style={{fontSize:9,color:C.sub,fontWeight:400,marginLeft:"auto"}}>Full scanner in Docs tab</span>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+              {[["week","Week #","19"],["gross","Gross $","5179.29"],["net","Net Pay $","3026.83"],["deds","Deductions $","2537.59"]].map(function(f){return(
+                <div key={f[0]}><div style={{fontSize:9,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>{f[1]}</div><input value={manForm[f[0]]||""} onChange={e=>setManForm(p=>({...p,[f[0]]:e.target.value}))} placeholder={f[2]} style={inp}/></div>
+              );})}
+            </div>
+            <button onClick={addWeek} disabled={!manForm.week||!manForm.gross||!manForm.net} style={{width:"100%",padding:"11px",borderRadius:9,background:(!manForm.week||!manForm.gross||!manForm.net)?C.raised:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:12,border:"none",cursor:(!manForm.week||!manForm.gross||!manForm.net)?"not-allowed":"pointer"}}>+ Add Week</button>
+            {addMsg&&<div style={{padding:"9px 12px",background:addMsg.startsWith("⚠️")?`${C.red}12`:`${C.green}12`,borderRadius:8,border:`1px solid ${addMsg.startsWith("⚠️")?C.red:C.green}44`,fontSize:11,color:addMsg.startsWith("⚠️")?C.red:C.green,marginTop:8}}>{addMsg}</div>}
           </div>
 
           {/* EXPORT */}
           <NoBadge/>
-          <div style={K({marginBottom:80})}>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📤 Export Report</div>
-            <div style={{fontSize:10,color:C.sub,marginBottom:12}}>YTD financials + expenses + documents. Print or email to your accountant, broker, or lender.</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-              <button onClick={printReport} style={{padding:"14px",borderRadius:10,background:`${C.accent}18`,border:`1px solid ${C.accent}55`,color:"#00ffcc",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}><span style={{fontSize:22}}>🖨️</span><span>Print Report</span><span style={{fontSize:9,fontWeight:400,color:C.sub}}>Opens print dialog</span></button>
-              <button onClick={emailReport} style={{padding:"14px",borderRadius:10,background:`${C.a3}18`,border:`1px solid ${C.a3}55`,color:"#a78bfa",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}><span style={{fontSize:22}}>📧</span><span>Email Report</span><span style={{fontSize:9,fontWeight:400,color:C.sub}}>Opens mail app</span></button>
+          <div style={{...K(),marginBottom:80}}>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,marginBottom:5}}>📤 Export Financial Report</div>
+            <div style={{fontSize:10,color:C.sub,marginBottom:10}}>Print or email your YTD data to your accountant, broker, or lender.</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
+              <button onClick={printReport} style={{padding:"12px",borderRadius:10,background:`${C.accent}18`,border:`1px solid ${C.accent}44`,color:"#00ffcc",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}><span style={{fontSize:20}}>🖨️</span><span>Print</span></button>
+              <button onClick={emailReport} style={{padding:"12px",borderRadius:10,background:`${C.a3}18`,border:`1px solid ${C.a3}44`,color:"#a78bfa",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}><span style={{fontSize:20}}>📧</span><span>Email</span></button>
             </div>
-            <div style={{padding:"8px 12px",background:C.bg,borderRadius:8,border:`1px solid ${C.border}`,fontSize:10,color:C.sub}}>{allW.length} weeks · {expenses.length} expenses · {docs.length} documents</div>
           </div>
         </div>
-      )}
+      );
+    })()}
+
+  </div>
+)}
 
       </div>
 
