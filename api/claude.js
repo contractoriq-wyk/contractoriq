@@ -17,7 +17,7 @@ const ALLOWED_ORIGINS = [
   "https://unyamwezinibakery.com",
 ];
 
-const MAX_TOKENS_CAP = 4000;
+const MAX_TOKENS_CAP = 8000;
 const OPENAI_MODEL = "gpt-4o-mini";          // cheap, for chat/text
 const OPENAI_MODEL_DOC = "gpt-4o";           // stronger reader for PDFs/images (accuracy matters)
 const GEMINI_MODEL = "gemini-2.0-flash";     // fallback, handles PDFs well
