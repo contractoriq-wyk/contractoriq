@@ -405,12 +405,36 @@ export default function ContractorIQv26(){
   async function scanPDF(file,fileType){
     setScanning(true);setScanResult(null);setScanMsg("");
     try{
-                  const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
       const isImage=fileType==="image"||file.type.startsWith("image/");
-      const mediaType=isImage?(file.type||"image/jpeg"):"application/pdf";
-      const contentBlock=isImage?{type:"image",source:{type:"base64",media_type:mediaType,data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
-      const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:4000,betas:["pdfs-2024-09-25"],messages:[{role:"user",content:[contentBlock,{type:"text",text:`You are extracting data from a drayage/trucking settlement statement that MAY SPAN MULTIPLE PAGES. Read EVERY page completely. Return ONLY valid JSON — no markdown, no commentary.\n\nRULES (follow exactly):\n1. The JSON below is a FORMAT TEMPLATE. Every value must come from THIS document. NEVER copy the example numbers — they are zeros on purpose.\n2. "moves": include ONE entry for EVERY load/trip row in the settlement detail. Do not skip, merge, or summarize rows. If there are 14 loads, the array has 14 entries.\n3. "deds": include ONE entry for EVERY deduction line item. Do not skip any.\n4. For escrow, read the ACTUAL BALANCE column from the Deductions Statement, NOT the weekly deduction amount.\n5. Extract gallons from fuel advance notes (e.g. "Gallons: 170.49"), price per gallon, and any reimbursements.\n6. If a field is genuinely not in the document, use 0 (for numbers) or "" (for text). NEVER invent or estimate a value.\n7. All numbers must be plain (no $ signs, no commas).\n8. Verify before returning: the sum of "deds" amounts should be close to "totalDeductions", and gross minus totalDeductions should be close to net. If they don't reconcile, re-read the document.\n\nFORMAT TEMPLATE (replace every value with the REAL value from this document):\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0}],"deds":[{"l":"line label","a":0}]}`}]}]})});
-      if(!resp.ok){const errText=await resp.text();if(resp.status===401)setScanMsg("⚠️ API key invalid.");else setScanMsg(`⚠️ API Error ${resp.status}. Try Paste Text instead.`);setScanning(false);return;}
+      const EXTRACT_PROMPT=`You are extracting data from a drayage/trucking settlement statement. Return ONLY valid JSON — no markdown, no commentary.\n\nRULES (follow exactly):\n1. The JSON below is a FORMAT TEMPLATE. Every value must come from THIS document. NEVER copy the example numbers — they are zeros on purpose.\n2. "moves": include ONE entry for EVERY load/trip row in the settlement detail. Each row that begins with an order number (e.g. IBP...) is a separate move — INCLUDING multiple legs of the same order (leg 1, leg 2, leg 3 are each their own entry). Statements often have 20-40+ rows. Do not skip, merge, summarize, or stop early. List every single row.\n3. "deds": include ONE entry for EVERY deduction line item. Do not skip any.\n4. For escrow, read the ACTUAL BALANCE column from the Deductions Statement, NOT the weekly deduction amount.\n5. Extract gallons from fuel advance notes (e.g. "Gallons: 170.49"), price per gallon, and any reimbursements.\n6. If a field is genuinely not in the document, use 0 (for numbers) or "" (for text). NEVER invent or estimate.\n7. All numbers must be plain (no $ signs, no commas). For move fields: t=L or E (loaded/empty), fr=From, to=To, mi=Miles, rt=Rate, fc=FSC.\n8. Before returning: count the order rows and confirm "moves" has exactly that many entries. Gross minus totalDeductions plus reimbursements should be close to net.\n\nFORMAT TEMPLATE (replace every value with the REAL value):\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0}],"deds":[{"l":"line label","a":0}]}`;
+
+      // For text-based PDFs, extract the actual text first (far more accurate than vision on dense tables)
+      let pdfText="";
+      if(!isImage && window.pdfjsLib){
+        try{
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+          const buf=await file.arrayBuffer();
+          const pdf=await window.pdfjsLib.getDocument({data:buf}).promise;
+          let t="";
+          for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p);const c=await page.getTextContent();t+=c.items.map(i=>i.str).join(" ")+"\n";}
+          pdfText=t.trim();
+        }catch(ex){pdfText="";}
+      }
+
+      let reqBody;
+      if(pdfText && pdfText.length>200){
+        // TEXT PATH — reliable for real (text-based) settlement PDFs
+        reqBody={model:"claude-sonnet-4-5",max_tokens:8000,messages:[{role:"user",content:`${EXTRACT_PROMPT}\n\nSETTLEMENT STATEMENT TEXT (read all of it):\n${pdfText.slice(0,24000)}`}]};
+      } else {
+        // VISION PATH — scanned image PDFs or photos
+        const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+        const mediaType=isImage?(file.type||"image/jpeg"):"application/pdf";
+        const contentBlock=isImage?{type:"image",source:{type:"base64",media_type:mediaType,data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
+        reqBody={model:"claude-sonnet-4-5",max_tokens:8000,betas:["pdfs-2024-09-25"],messages:[{role:"user",content:[contentBlock,{type:"text",text:EXTRACT_PROMPT}]}]};
+      }
+
+      const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(reqBody)});
+      if(!resp.ok){if(resp.status===401)setScanMsg("⚠️ API key invalid.");else setScanMsg(`⚠️ API Error ${resp.status}. Try Paste Text instead.`);setScanning(false);return;}
       const d=await resp.json();
       if(d.error){setScanMsg("⚠️ AI Error: "+d.error.message);setScanning(false);return;}
       const txt=d.content?.map(b=>b.text||"").join("").trim();
