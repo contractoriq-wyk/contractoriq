@@ -18,8 +18,9 @@ const ALLOWED_ORIGINS = [
 ];
 
 const MAX_TOKENS_CAP = 4000;
-const OPENAI_MODEL = "gpt-4o-mini";          // cheap, vision-capable
-const GEMINI_MODEL = "gemini-2.0-flash";     // free-tier fallback, handles PDFs well
+const OPENAI_MODEL = "gpt-4o-mini";          // cheap, for chat/text
+const OPENAI_MODEL_DOC = "gpt-4o";           // stronger reader for PDFs/images (accuracy matters)
+const GEMINI_MODEL = "gemini-2.0-flash";     // fallback, handles PDFs well
 
 // ---- best-effort per-IP rate limit (guards against the "looks like abuse" pattern) ----
 const RL = globalThis.__ciq_rl || (globalThis.__ciq_rl = new Map());
@@ -81,11 +82,11 @@ function anthropicShaped(text) {
 }
 
 // ---- provider callers (each returns a string, or throws) ----
-async function callOpenAI(body, cap) {
+async function callOpenAI(body, cap, model) {
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.OPENAI_KEY}` },
-    body: JSON.stringify({ model: OPENAI_MODEL, max_tokens: cap, messages: toOpenAIMessages(body) }),
+    body: JSON.stringify({ model: model || OPENAI_MODEL, max_tokens: cap, messages: toOpenAIMessages(body) }),
   });
   const d = await r.json();
   if (!r.ok) throw new Error("OpenAI " + r.status + ": " + (d.error?.message || "error"));
@@ -135,17 +136,19 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Invalid request: messages required" });
   }
   const cap = Math.min(body.max_tokens || 1500, MAX_TOKENS_CAP);
+  const isDoc = hasPDF(body) || body.messages.some(m=>Array.isArray(m.content)&&m.content.some(b=>b&&b.type==="image"));
 
-  // PDFs are most reliably read by Gemini, so for document requests try Gemini first.
-  const order = hasPDF(body) ? ["gemini", "openai"] : ["openai", "gemini"];
+  // For documents/images, use the stronger reader (gpt-4o) first for accuracy; Gemini as fallback.
+  const order = ["openai", "gemini"];
+  const openaiModel = isDoc ? OPENAI_MODEL_DOC : OPENAI_MODEL;
 
   const errors = [];
   for (const provider of order) {
     try {
       if (!process.env.OPENAI_KEY && provider === "openai") { errors.push("OPENAI_KEY not set"); continue; }
       if (!process.env.GEMINI_KEY && provider === "gemini") { errors.push("GEMINI_KEY not set"); continue; }
-      const text = provider === "openai" ? await callOpenAI(body, cap) : await callGemini(body, cap);
-      console.log(`[proxy] served by ${provider}`);
+      const text = provider === "openai" ? await callOpenAI(body, cap, openaiModel) : await callGemini(body, cap);
+      console.log(`[proxy] served by ${provider}${isDoc ? " (doc)" : ""}`);
       return res.status(200).json(anthropicShaped(text));
     } catch (err) {
       console.error(`[proxy] ${provider} failed:`, err.message);
