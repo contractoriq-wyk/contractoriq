@@ -164,49 +164,62 @@ let _sb=null;
 function getSB(){ if(!_sb && typeof window!=="undefined" && window.supabase){ _sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON); } return _sb; }
 
 
-// ═══ TRADINGVIEW WEB COMPONENT TICKER TAPE ═══
-// Uses TradingView's new Web Component (not iframe) — injects directly into DOM,
-// scrolls automatically with real live prices, free, no API key needed.
+// ═══ DESKTOP TICKER — Pure CSS marquee with live prices from /api/ticker ═══
 function TVTickerTape({symbols}){
-  const ref=useRef(null);
+  const [prices,setPrices]=useState({});
   useEffect(()=>{
-    if(!ref.current)return;
-    // Clear any previous instance
-    ref.current.innerHTML="";
-    // Build the config JSON
-    const cfg={
-      symbols:symbols,
-      showSymbolLogo:true,
-      isTransparent:true,
-      displayMode:"adaptive",
-      colorTheme:"dark",
-      locale:"en"
-    };
-    // Inject the TradingView script + widget div
-    const wrapper=document.createElement("div");
-    wrapper.className="tradingview-widget-container";
-    wrapper.style.cssText="width:100%;height:46px;overflow:hidden;";
-    const inner=document.createElement("div");
-    inner.className="tradingview-widget-container__widget";
-    wrapper.appendChild(inner);
-    const script=document.createElement("script");
-    script.type="text/javascript";
-    script.src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js";
-    script.async=true;
-    script.innerHTML=JSON.stringify(cfg);
-    wrapper.appendChild(script);
-    ref.current.appendChild(wrapper);
-    return()=>{if(ref.current)ref.current.innerHTML="";};
+    async function load(){
+      try{
+        // Map TradingView proNames to Yahoo Finance symbols
+        const ymap={"AMEX:SPY":"SPY","AMEX:DIA":"DIA","NASDAQ:QQQ":"QQQ","AMEX:IWM":"IWM","CBOE:VIX":"%5EVIX","AMEX:GLD":"GLD","AMEX:USO":"USO","COINBASE:BTCUSD":"BTC-USD","NYSE:XOM":"XOM","NASDAQ:JBHT":"JBHT","NASDAQ:AAPL":"AAPL","NASDAQ:TSLA":"TSLA","NASDAQ:NVDA":"NVDA","NASDAQ:GOOGL":"GOOGL","NASDAQ:AMZN":"AMZN","NYSE:CVX":"CVX","NYSE:ODFL":"ODFL","COINBASE:ETHUSD":"ETH-USD","AMEX:TLT":"TLT","NASDAQ:META":"META"};
+        const syms=symbols.map(s=>ymap[s.proName]||s.proName.split(":").pop());
+        const r=await fetch("/api/ticker?symbols="+syms.join(","));
+        if(!r.ok)return;
+        const d=await r.json();
+        // remap yahoo key -> proName key
+        const out={};
+        symbols.forEach(s=>{
+          const ys=ymap[s.proName]||s.proName.split(":").pop();
+          if(d[ys])out[s.proName]=d[ys];
+        });
+        setPrices(out);
+      }catch(e){}
+    }
+    load();
+    const t=setInterval(load,90000);
+    return()=>clearInterval(t);
   },[symbols.map(s=>s.proName).join(",")]);
+
+  const items=[...symbols,...symbols,...symbols];
   return(
-    <div ref={ref} style={{flex:1,overflow:"hidden",minWidth:0,height:46,position:"relative"}}>
-      {/* Left fade mask */}
-      <div style={{position:"absolute",left:0,top:0,bottom:0,width:32,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
-      {/* Right fade mask */}
-      <div style={{position:"absolute",right:0,top:0,bottom:0,width:32,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+    <div style={{flex:1,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",background:"#070b15",height:46}}>
+      {/* Fade masks */}
+      <div style={{position:"absolute",left:0,top:0,bottom:0,width:48,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+      <div style={{position:"absolute",right:0,top:0,bottom:0,width:48,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+      {/* Scrolling track */}
+      <div style={{display:"flex",animation:"ticker-scroll 40s linear infinite",whiteSpace:"nowrap",willChange:"transform"}}>
+        {items.map((s,i)=>{
+          const sym=s.title||s.proName.split(":").pop();
+          const p=prices[s.proName];
+          const price=p?.price;
+          const pct=p?.pct;
+          const up=pct==null?null:pct>=0;
+          const col=price==null?"#8fa3c0":up?"#4ade80":"#f87171";
+          const priceStr=price==null?"···":price>=1000?price.toFixed(0):price>=10?price.toFixed(2):price.toFixed(4);
+          const pctStr=pct==null?"":( up?"+":"")+pct.toFixed(2)+"%";
+          return(
+            <div key={i} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"0 20px",borderRight:"1px solid #1a2535",height:46,flexShrink:0}}>
+              <span style={{fontSize:10,fontWeight:800,color:"#8fa3c0",letterSpacing:"0.07em",fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
+              <span style={{fontSize:11,fontWeight:800,color:col,fontFamily:"'IBM Plex Mono',monospace"}}>{priceStr}</span>
+              {pctStr&&<span style={{fontSize:9,fontWeight:700,color:col,fontFamily:"'IBM Plex Mono',monospace",padding:"1px 4px",borderRadius:3,background:col+"22"}}>{pctStr}</span>}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
 
 export default function ContractorIQv26(){
 
@@ -217,6 +230,7 @@ export default function ContractorIQv26(){
       @keyframes rotate-radial{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
       @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
       @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-33.333%)}}
       .stat-grad{background:linear-gradient(135deg,#00ffcc,#a5f3fc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% auto;animation:shimmer 3s linear infinite}
       .shimmer-vendor{background:linear-gradient(-45deg,#0d1525,#1a2436,#0a0e1a,#162033);background-size:400% 400%;animation:rotate-radial 8s ease infinite}
       .tab-active-glow{box-shadow:0 0 14px rgba(0,255,204,0.5)!important}
