@@ -453,12 +453,12 @@ export default function ContractorIQv26(){
     const query=q||searchQ;if(!query||!query.trim())return;
     setSearchLoading(true);setSearchResult("");
     try{
-            let locationCtx="";
-      try{const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000,maximumAge:60000}));locationCtx=`User GPS: lat ${pos.coords.latitude.toFixed(4)}, lng ${pos.coords.longitude.toFixed(4)}.`;}catch(e){}
-      const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:600,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:`You are a helpful assistant for a truck driver. ${locationCtx} Answer concisely: ${query}. Max 150 words. Use bullet points for lists.`}]})});
+      let locationCtx="";
+      try{const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000,maximumAge:60000}));locationCtx=`User approximate area: lat ${pos.coords.latitude.toFixed(2)}, lng ${pos.coords.longitude.toFixed(2)}.`;}catch(e){}
+      const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:600,messages:[{role:"user",content:`You are a knowledgeable assistant for a commercial truck driver. ${locationCtx} Answer the following question using your general knowledge. Be honest if something requires real-time data (like live weather or current gas prices) — give useful guidance anyway. Answer concisely in 150 words or fewer. Use bullet points for lists.\n\nQuestion: ${query}`}]})});
       const d=await resp.json();const txt=d.content?.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
-      setSearchResult(txt||"No results found.");
-    }catch(e){setSearchResult("⚠️ Search unavailable.");}
+      setSearchResult(txt||"No answer found — try rephrasing your question.");
+    }catch(e){setSearchResult("⚠️ Advisor unavailable. Please try again.");}
     setSearchLoading(false);
   }
 
@@ -1176,21 +1176,21 @@ export default function ContractorIQv26(){
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:12,padding:"0 12px",border:`2px solid ${C.a3}66`}}>
             <span style={{fontSize:15,flexShrink:0}}>{searchLoading?"⏳":"🔍"}</span>
-            <input value={searchQ||""} onChange={e=>setSearchQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}} placeholder="Search weather, gas, truck stops, traffic..." style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"11px 0",width:"100%",outline:"none"}}/>
+            <input value={searchQ||""} onChange={e=>setSearchQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}} placeholder="Ask anything: routes, HOS rules, fuel tips, regs..." style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"11px 0",width:"100%",outline:"none"}}/>
             {(searchQ||"").trim()&&<button onClick={()=>{setSearchQ("");setSearchResult("");}} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer",padding:"0 4px",flexShrink:0}}>×</button>}
           </div>
           <button onClick={()=>runSearch()} disabled={!(searchQ||"").trim()||searchLoading} style={{padding:"11px 16px",borderRadius:12,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:!(searchQ||"").trim()||searchLoading?C.sub:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{searchLoading?"⏳ ...":"Search"}</button>
         </div>
         {!searchResult&&!searchLoading&&(
           <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
-            {["⛅ Weather","⛽ Gas prices","🚛 Truck stops I-70","🛣️ Traffic I-95","🔧 Mechanic near me"].map(s=>(
+            {["⛽ MPG tips","📋 HOS rules","🚛 Load planning","💰 Fuel surcharge math","🔧 Tire blowout tips"].map(s=>(
               <button key={s} onClick={()=>{const q=s.replace(/^[^\s]+\s/,"");setSearchQ(q);setTimeout(()=>runSearch(q),50);}} style={{padding:"5px 11px",borderRadius:20,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:"#a78bfa",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{s}</button>
             ))}
           </div>
         )}
         {searchResult&&(
           <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}55`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
-            {searchResult}<button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
+            {searchResult}<div style={{marginTop:8,padding:"7px 10px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,fontSize:10,color:C.sub,lineHeight:1.5}}>💡 Based on general knowledge — not live data. For current prices or weather, check a real-time source.</div><button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
           </div>
         )}
       </div>
