@@ -249,6 +249,7 @@ export default function ContractorIQv26(){
   const [tickerSyms,setTickerSyms]=useState(()=>{try{const s=localStorage.getItem("ciq_ticker");return s?JSON.parse(s):DEFAULT_TICKER;}catch{return DEFAULT_TICKER;}});
   const [showTickerEdit,setShowTickerEdit]=useState(false);
   const [tickerInput,setTickerInput]=useState("");
+  const [tickerPrices,setTickerPrices]=useState({});
   const [scanMode,setScanMode]=useState("upload");
   const [pasteText,setPasteText]=useState("");
   const [pdfUrl,setPdfUrl]=useState("");
@@ -298,6 +299,33 @@ export default function ContractorIQv26(){
   useEffect(()=>{try{localStorage.setItem("ciq_ai_uses",String(aiUses));}catch(e){};},[aiUses]);
   useEffect(()=>{try{localStorage.setItem("ciq_dis_ads",JSON.stringify(dismissedAds));}catch(e){};},[dismissedAds]);
   useEffect(()=>{try{localStorage.setItem("ciq_ticker",JSON.stringify(tickerSyms));}catch(e){};},[tickerSyms]);
+
+  // Fetch live prices for desktop ticker banner
+  useEffect(()=>{
+    async function fetchPrices(){
+      try{
+        // Map TradingView proNames to Yahoo Finance symbols
+        const ymap={"AMEX:SPY":"SPY","AMEX:DIA":"DIA","NASDAQ:QQQ":"QQQ","AMEX:IWM":"IWM","CBOE:VIX":"^VIX","AMEX:GLD":"GLD","AMEX:USO":"USO","COINBASE:BTCUSD":"BTC-USD","NYSE:XOM":"XOM","NASDAQ:JBHT":"JBHT","NASDAQ:AAPL":"AAPL","NASDAQ:TSLA":"TSLA","NASDAQ:NVDA":"NVDA","NASDAQ:GOOGL":"GOOGL","NASDAQ:AMZN":"AMZN","NYSE:CVX":"CVX","NYSE:ODFL":"ODFL","NYSE:UNP":"UNP","NYSE:UPS":"UPS","COINBASE:ETHUSD":"ETH-USD","AMEX:TLT":"TLT","NASDAQ:META":"META"};
+        const syms=tickerSyms.map(s=>ymap[s.proName]||s.proName.split(":").pop()).filter(Boolean);
+        const url="https://query1.finance.yahoo.com/v7/finance/quote?symbols="+syms.join(",")+"&fields=regularMarketPrice,regularMarketChangePercent";
+        const r=await fetch(url,{headers:{"Accept":"application/json"}});
+        if(!r.ok)return;
+        const d=await r.json();
+        const quotes=d?.quoteResponse?.result||[];
+        const map={};
+        quotes.forEach(q=>{map[q.symbol]={price:q.regularMarketPrice,pct:q.regularMarketChangePercent};});
+        // Remap back to proName keys
+        tickerSyms.forEach(s=>{
+          const ys=ymap[s.proName]||s.proName.split(":").pop();
+          if(map[ys])map[s.proName]=map[ys];
+        });
+        setTickerPrices(map);
+      }catch(e){}
+    }
+    fetchPrices();
+    const t=setInterval(fetchPrices,60000);// refresh every 60s
+    return()=>clearInterval(t);
+  },[tickerSyms]);
 
   // ═══ AUTH + CLOUD SYNC ═══
   const [user,setUser]=useState(null);
@@ -1000,17 +1028,22 @@ export default function ContractorIQv26(){
                 <div style={{width:6,height:6,borderRadius:"50%",background:"#00ffcc",boxShadow:"0 0 6px #00ffcc",animation:"pulse-live 1.5s ease-in-out infinite"}}/>
                 <span style={{fontSize:8,fontWeight:800,color:"#00ffcc",letterSpacing:"0.1em",fontFamily:"'IBM Plex Mono',monospace"}}>LIVE</span>
               </div>
-              {/* Scrolling track — duplicated for seamless loop */}
-              <div style={{display:"flex",animation:"marquee 32s linear infinite",whiteSpace:"nowrap",willChange:"transform",paddingLeft:64}}>
+              {/* Scrolling track — tripled for seamless infinite loop */}
+              <div style={{display:"flex",animation:"marquee 36s linear infinite",whiteSpace:"nowrap",willChange:"transform",paddingLeft:64}}>
                 {[...tickerSyms,...tickerSyms,...tickerSyms].map(function(s,i){
-                  const colors=["#00ffcc","#a78bfa","#fbbf24","#4ade80","#f87171","#60a5fa"];
-                  const c=colors[i%colors.length];
                   const sym=s.title||s.proName.split(":").pop();
+                  const p=tickerPrices[s.proName];
+                  const price=p?.price;
+                  const pct=p?.pct;
+                  const up=pct>=0;
+                  const priceColor=price==null?"#8fa3c0":up?"#4ade80":"#f87171";
+                  const pctLabel=price==null?"—":(up?"+":"")+pct.toFixed(2)+"%";
+                  const priceLabel=price==null?"···":price>=1000?price.toFixed(0):price>=10?price.toFixed(2):price.toFixed(4);
                   return(
-                    <div key={i} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"0 20px",borderRight:"1px solid #1a2535",height:46}}>
+                    <div key={i} style={{display:"inline-flex",alignItems:"center",gap:10,padding:"0 22px",borderRight:"1px solid #1a2535",height:46}}>
                       <span style={{fontSize:10,fontWeight:800,color:"#8fa3c0",letterSpacing:"0.07em",fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
-                      <span style={{fontSize:10,fontWeight:700,color:c,fontFamily:"'IBM Plex Mono',monospace"}}>━━</span>
-                      <span style={{fontSize:9,color:c,fontWeight:600,fontFamily:"'IBM Plex Mono',monospace"}}>LIVE</span>
+                      <span style={{fontSize:11,fontWeight:800,color:priceColor,fontFamily:"'IBM Plex Mono',monospace"}}>{priceLabel}</span>
+                      <span style={{fontSize:9,fontWeight:700,color:priceColor,fontFamily:"'IBM Plex Mono',monospace",padding:"1px 5px",borderRadius:4,background:priceColor+"18"}}>{pctLabel}</span>
                     </div>
                   );
                 })}
