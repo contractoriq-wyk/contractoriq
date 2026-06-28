@@ -987,19 +987,27 @@ export default function ContractorIQv26(){
 
         {/* Ticker tape row */}
         <div style={{display:"flex",alignItems:"stretch",height:46}}>
-          <iframe
-            key={tickerSyms.map(function(s){return s.proName;}).join(",")}
-            src={"https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#"+encodeURIComponent(JSON.stringify({
-              symbols:tickerSyms,
-              showSymbolLogo:false,
-              colorTheme:"dark",
-              isTransparent:true,
-              displayMode:"compact",
-              locale:"en"
-            }))}
-            style={{flex:1,height:46,border:"none",display:"block",minWidth:0}}
-            title="Live Market Ticker"
-          />
+          {/* TradingView ticker-tape — scrolls automatically on both desktop & mobile */}
+          {/* On desktop: "regular" mode shows price + % change, wider pills, auto-scrolling */}
+          {/* On mobile: "compact" mode, smaller */}
+          <div style={{flex:1,overflow:"hidden",position:"relative",minWidth:0}}>
+            {/* Fade masks for clean edge bleed */}
+            <div style={{position:"absolute",left:0,top:0,bottom:0,width:32,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+            <div style={{position:"absolute",right:0,top:0,bottom:0,width:32,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+            <iframe
+              key={tickerSyms.map(function(s){return s.proName;}).join(",")+String(wide)}
+              src={"https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#"+encodeURIComponent(JSON.stringify({
+                symbols:tickerSyms,
+                showSymbolLogo:true,
+                colorTheme:"dark",
+                isTransparent:true,
+                displayMode:wide?"regular":"compact",
+                locale:"en"
+              }))}
+              style={{width:"100%",height:46,border:"none",display:"block"}}
+              title="Live Market Ticker"
+            />
+          </div>
           <button
             onClick={()=>setShowTickerEdit(function(p){return !p;})}
             title="Customize your ticker"
