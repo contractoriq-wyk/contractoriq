@@ -172,6 +172,7 @@ export default function ContractorIQv26(){
       @keyframes rotate-radial{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
       @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
       @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes pulse-live{0%,100%{opacity:1;box-shadow:0 0 6px #00ffcc}50%{opacity:0.4;box-shadow:0 0 2px #00ffcc}}
       .stat-grad{background:linear-gradient(135deg,#00ffcc,#a5f3fc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% auto;animation:shimmer 3s linear infinite}
       .shimmer-vendor{background:linear-gradient(-45deg,#0d1525,#1a2436,#0a0e1a,#162033);background-size:400% 400%;animation:rotate-radial 8s ease infinite}
       .tab-active-glow{box-shadow:0 0 14px rgba(0,255,204,0.5)!important}
@@ -987,27 +988,54 @@ export default function ContractorIQv26(){
 
         {/* Ticker tape row */}
         <div style={{display:"flex",alignItems:"stretch",height:46}}>
-          {/* TradingView ticker-tape — scrolls automatically on both desktop & mobile */}
-          {/* On desktop: "regular" mode shows price + % change, wider pills, auto-scrolling */}
-          {/* On mobile: "compact" mode, smaller */}
-          <div style={{flex:1,overflow:"hidden",position:"relative",minWidth:0}}>
-            {/* Fade masks for clean edge bleed */}
-            <div style={{position:"absolute",left:0,top:0,bottom:0,width:32,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
-            <div style={{position:"absolute",right:0,top:0,bottom:0,width:32,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
-            <iframe
-              key={tickerSyms.map(function(s){return s.proName;}).join(",")+String(wide)}
-              src={"https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#"+encodeURIComponent(JSON.stringify({
-                symbols:tickerSyms,
-                showSymbolLogo:true,
-                colorTheme:"dark",
-                isTransparent:true,
-                displayMode:wide?"regular":"compact",
-                locale:"en"
-              }))}
-              style={{width:"100%",height:46,border:"none",display:"block"}}
-              title="Live Market Ticker"
-            />
-          </div>
+          {wide?(
+            /* DESKTOP: Pure CSS Wall Street scrolling banner — always spinning */
+            <div style={{flex:1,overflow:"hidden",position:"relative",minWidth:0,display:"flex",alignItems:"center",background:"#070b15"}}>
+              {/* Left fade */}
+              <div style={{position:"absolute",left:0,top:0,bottom:0,width:48,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+              {/* Right fade */}
+              <div style={{position:"absolute",right:40,top:0,bottom:0,width:48,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+              {/* LIVE dot label */}
+              <div style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",zIndex:4,display:"flex",alignItems:"center",gap:4,pointerEvents:"none"}}>
+                <div style={{width:6,height:6,borderRadius:"50%",background:"#00ffcc",boxShadow:"0 0 6px #00ffcc",animation:"pulse-live 1.5s ease-in-out infinite"}}/>
+                <span style={{fontSize:8,fontWeight:800,color:"#00ffcc",letterSpacing:"0.1em",fontFamily:"'IBM Plex Mono',monospace"}}>LIVE</span>
+              </div>
+              {/* Scrolling track — duplicated for seamless loop */}
+              <div style={{display:"flex",animation:"marquee 32s linear infinite",whiteSpace:"nowrap",willChange:"transform",paddingLeft:64}}>
+                {[...tickerSyms,...tickerSyms,...tickerSyms].map(function(s,i){
+                  const colors=["#00ffcc","#a78bfa","#fbbf24","#4ade80","#f87171","#60a5fa"];
+                  const c=colors[i%colors.length];
+                  const sym=s.title||s.proName.split(":").pop();
+                  return(
+                    <div key={i} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"0 20px",borderRight:"1px solid #1a2535",height:46}}>
+                      <span style={{fontSize:10,fontWeight:800,color:"#8fa3c0",letterSpacing:"0.07em",fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
+                      <span style={{fontSize:10,fontWeight:700,color:c,fontFamily:"'IBM Plex Mono',monospace"}}>━━</span>
+                      <span style={{fontSize:9,color:c,fontWeight:600,fontFamily:"'IBM Plex Mono',monospace"}}>LIVE</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ):(
+            /* MOBILE: TradingView iframe (compact) */
+            <div style={{flex:1,overflow:"hidden",position:"relative",minWidth:0}}>
+              <div style={{position:"absolute",left:0,top:0,bottom:0,width:24,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+              <div style={{position:"absolute",right:0,top:0,bottom:0,width:24,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+              <iframe
+                key={tickerSyms.map(function(s){return s.proName;}).join(",")}
+                src={"https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#"+encodeURIComponent(JSON.stringify({
+                  symbols:tickerSyms,
+                  showSymbolLogo:false,
+                  colorTheme:"dark",
+                  isTransparent:true,
+                  displayMode:"compact",
+                  locale:"en"
+                }))}
+                style={{width:"100%",height:46,border:"none",display:"block"}}
+                title="Live Market Ticker"
+              />
+            </div>
+          )}
           <button
             onClick={()=>setShowTickerEdit(function(p){return !p;})}
             title="Customize your ticker"
