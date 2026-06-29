@@ -1104,7 +1104,14 @@ ${pdfText.slice(0,24000)}`}]};
             <button onClick={()=>setShowFleet(false)} style={{padding:"7px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
           </div>
           <div style={{flex:1,overflowY:"auto",padding:"16px 16px 80px"}}>
-            {[{tier:"Solo Driver",trucks:"1 truck",price:"$19.99",period:"/mo",color:"#00ffcc",tag:"Current Plan",features:["Full settlement analysis","AI chat advisor","PDF scanner","Insurance booking"]},{tier:"Small Fleet",trucks:"2–5 trucks",price:"$49",period:"/mo",color:"#a78bfa",tag:"Popular",features:["Everything in Solo","Multi-unit dashboard","Per-truck performance","Fleet-wide totals"]},{tier:"Growing Fleet",trucks:"6–9 trucks",price:"$89",period:"/mo",color:"#fbbf24",tag:"Best Value",features:["Everything in Small Fleet","Advanced analytics","Quarterly report","Phone support"]},{tier:"Enterprise L99",trucks:"10+ trucks",price:"$149",period:"/mo",color:"#f87171",tag:"🚀 L99",features:["Everything above","Unlimited trucks","White-label option","Dedicated manager"]}].map(p=>(
+            {[
+              {tier:"Standard",trucks:"1 truck",price:"$14.99",period:"/mo",color:"#a78bfa",tag:"Tier 1",url:"https://buy.stripe.com/14A9ATbW1aIU2M2gKq9MY03",features:["Unlimited PDF scans","Load & mile tracking","Earnings dashboard","AI trucking guidance"]},
+              {tier:"Pro Smart",trucks:"1 truck",price:"$24.99",period:"/mo",color:"#00ffcc",tag:"⭐ Most Popular",url:"https://buy.stripe.com/fZu5kDe498AM2M2am29MY04",features:["Everything in Standard","Live diesel prices","Live weather on routes","Smart AI with your real numbers","Load profitability math"]},
+              {tier:"Pro Smart Annual",trucks:"1 truck",price:"$249",period:"/yr",color:"#fbbf24",tag:"Best Value",url:"https://buy.stripe.com/7sY3cvd05dV6fyOcua9MY05",features:["Everything in Pro Smart","Save $51 vs monthly","2 months free","Priority support"]},
+              {tier:"Small Fleet",trucks:"2–5 trucks",price:"$49",period:"/mo",color:"#4ade80",tag:"Fleet",url:"https://wa.me/14438564727?text=Hi%2C+I%27m+interested+in+DrayageIQ+Fleet+pricing+for+2-5+trucks",features:["Everything in Pro Smart","Multi-unit dashboard","Per-truck performance","Fleet-wide totals","Contact for setup"]},
+              {tier:"Growing Fleet",trucks:"6–10 trucks",price:"$89",period:"/mo",color:"#f87171",tag:"Fleet",url:"https://wa.me/14438564727?text=Hi%2C+I%27m+interested+in+DrayageIQ+Fleet+pricing+for+6-10+trucks",features:["Everything in Small Fleet","Advanced fleet analytics","Quarterly performance report","Phone support"]},
+              {tier:"Enterprise",trucks:"11+ trucks",price:"Custom",period:"",color:"#e879f9",tag:"🚀 Enterprise",url:"https://wa.me/14438564727?text=Hi%2C+I%27m+interested+in+DrayageIQ+Enterprise+pricing+for+11%2B+trucks",features:["Everything above","Unlimited trucks","White-label option","Dedicated account manager","Custom integrations"]},
+            ].map(p=>(
               <div key={p.tier} style={{background:C.card,borderRadius:16,padding:"18px",marginBottom:14,border:`2px solid ${p.color}44`,position:"relative",overflow:"hidden"}}>
                 <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:`linear-gradient(90deg,${p.color},${p.color}44)`}}/>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
@@ -1112,6 +1119,9 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{textAlign:"right"}}><div style={{padding:"3px 10px",borderRadius:20,background:`${p.color}20`,border:`1px solid ${p.color}44`,color:p.color,fontSize:9,fontWeight:800,marginBottom:6}}>{p.tag}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:p.color}}>{p.price}<span style={{fontSize:11}}>{p.period}</span></div></div>
                 </div>
                 {p.features.map(feat=><div key={feat} style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}><span style={{color:p.color,fontSize:11,fontWeight:800,flexShrink:0}}>✓</span><span style={{fontSize:11,color:C.sub}}>{feat}</span></div>)}
+                <button onClick={()=>window.open(p.url,"_blank")} style={{width:"100%",marginTop:14,padding:"12px",borderRadius:10,background:`linear-gradient(135deg,${p.color}22,${p.color}11)`,border:`2px solid ${p.color}55`,color:p.color,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.04em"}}>
+                  {p.price==="Custom"?"Contact Us →":`Get ${p.tier} →`}
+                </button>
               </div>
             ))}
           </div>
@@ -1757,8 +1767,8 @@ ${pdfText.slice(0,24000)}`}]};
                         {isSelected&&<div style={{position:"absolute",top:-5,left:"50%",transform:"translateX(-50%)",width:8,height:8,borderRadius:"50%",background:g.c,border:"2px solid "+C.bg,boxShadow:`0 0 6px ${g.c}`}}/>}
                       </div>
                     </div>
-                    {/* Week label */}
-                    <div style={{fontSize:isSelected?8:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?800:400,marginTop:3,lineHeight:1,transition:"all 0.15s"}}>W{w.week}</div>
+                    {/* Week label — hide on mobile when too many weeks */}
+                    {(wide||allW.length<=10||isSelected)&&<div style={{fontSize:isSelected?8:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?800:400,marginTop:3,lineHeight:1,transition:"all 0.15s"}}>{isSelected?"W"+w.week:allW.length>14?""+"W"+w.week.slice(-2):"W"+w.week}</div>}
                     {/* Selected indicator dot */}
                     {isSelected&&<div style={{width:4,height:4,borderRadius:"50%",background:vc,marginTop:2,boxShadow:`0 0 4px ${vc}`}}/>}
                     <div style={{width:4,height:4,borderRadius:"50%",background:vc,opacity:0.8,marginTop:1}}/>
@@ -2064,7 +2074,7 @@ ${pdfText.slice(0,24000)}`}]};
           {/* MOVE PERFORMANCE */}
           {!focusMode&&<div style={K()}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>🚛 Move Performance{helpBtn("movePerf")}<button onClick={e=>{e.stopPropagation();toggleCard("movePerf");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("movePerf")?"▶":"▼"}</button></div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>🚛 Move Performance{helpBtn("movePerf")}<button onClick={e=>{e.stopPropagation();toggleCard("movePerf");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("movePerf")?"▶":"▼"}</button><button onClick={e=>{e.stopPropagation();toggleCard("movePerf");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("movePerf")?"▶":"▼"}</button></div>
               <Nav i={sM} max={allW.length-1} prev={()=>setSM(p=>p-1)} next={()=>setSM(p=>p+1)} label={`W${mwBase.week}`}/>
             </div>
             {helpModal("movePerf")}
@@ -2108,7 +2118,7 @@ ${pdfText.slice(0,24000)}`}]};
             return(
               <div style={K({marginBottom:16})}>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🎯 Weekly Action Plan{helpBtn("actionPlan")}</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🎯 Weekly Action Plan<button onClick={e=>{e.stopPropagation();toggleCard("actionPlan");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("actionPlan")?"▶":"▼"}</button>{helpBtn("actionPlan")}</div>
                   <div style={{fontSize:9,padding:"2px 7px",borderRadius:5,background:C.green+"20",color:C.green,fontWeight:700,marginLeft:"auto"}}>W{lw.week} · {topActions.length} actions</div>
                 </div>
                 {helpModal("actionPlan")}
@@ -2371,7 +2381,7 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{padding:"13px 16px",background:"linear-gradient(135deg,"+C.a3+"14,"+C.accent+"08)",borderBottom:"1px solid "+C.border}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
                 <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 Manage Saved Weeks</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 Manage Saved Weeks<button onClick={e=>{e.stopPropagation();toggleCard("savedWeeks");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("savedWeeks")?"▶":"▼"}</button></div>
                   <div style={{fontSize:10,color:C.sub}}>{addedW.length} uploaded · {allW.length} total · tap ☑ to select then delete</div>
                 </div>
                 <div style={{display:"flex",gap:7,flexShrink:0}}>
@@ -2500,8 +2510,8 @@ ${pdfText.slice(0,24000)}`}]};
           </div>
           {aiMode==="chat"&&(
             <div style={K()}>
-              <div style={{fontSize:10,fontWeight:700,color:C.sub,marginBottom:11,textTransform:"uppercase",letterSpacing:"0.1em"}}>⚡ Quick Questions</div>
-              <div style={{display:"grid",gridTemplateColumns:wide?"repeat(2,1fr)":"1fr",gap:7}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.sub,marginBottom:11,textTransform:"uppercase",letterSpacing:"0.1em"}}>⚡ Quick Questions<button onClick={e=>{e.stopPropagation();toggleCard("quickQ");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("quickQ")?"▶":"▼"}</button></div>
+              <div style={{display:isCollapsed("quickQ")?"none":"grid",gridTemplateColumns:wide?"repeat(2,1fr)":"1fr",gap:7}}>
                 {["Where am I losing the most money?","What's my biggest profit leak?","How can I increase my net pay?","Which routes give the best RPM?","Give me a 4-week income forecast","Should I take more Hagerstown loads?","How much are fuel advances really costing me?","What should my target weekly net be?"].map(q=>(
                   <button key={q} onClick={()=>setChatIn(q)} style={{padding:"11px 13px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,textAlign:"left",cursor:"pointer",fontFamily:"inherit",lineHeight:1.5}}>{q}</button>
                 ))}
@@ -2730,7 +2740,7 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:8}}>
                 <div style={{width:36,height:36,borderRadius:9,background:"#fbbf2422",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🏦</div>
                 <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#fbbf24"}}>Get Funded — Institutions That Trust Your Data</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#fbbf24"}}>Get Funded — Institutions That Trust Your Data<button onClick={e=>{e.stopPropagation();toggleCard("funded");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("funded")?"▶":"▼"}</button></div>
                   <div style={{fontSize:10,color:C.sub,marginTop:2}}>Your verified income qualifies you for real business capital</div>
                 </div>
               </div>
