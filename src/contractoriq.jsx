@@ -522,6 +522,21 @@ export default function ContractorIQv26(){
   const latFuel=(latest.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
   const SYS=`Expert drayage business advisor for YOUR COMPANY, CDL owner-operator, Baltimore MD. Real settlement data: ${allW.map(function(w){return "W"+w.week+": Gross $"+w.gross+", Net $"+w.net+", Margin "+(w.net/w.gross*100).toFixed(1)+"%, "+(w.moves||[]).length+" moves";}).join(" | ")}. YTD: Gross $${tGross.toFixed(0)}, Net $${tNet.toFixed(0)}, Margin ${margin}%, Avg RPM $${avgRPM}, Loaded ${ldPct}%. Be specific, practical, use real numbers. Under 300 words.`;
 
+  function confirmScan(){
+    if(!scanResult)return;
+    const wNum=String(scanResult.week).padStart(2,"0");
+    // If week already exists — replace it
+    const exists=addedW.find(w=>w.week===wNum);
+    if(exists){
+      setAddedW(p=>p.map(w=>w.week===wNum?{...scanResult,vendor:vendorPick,week:wNum,label:`Week ${wNum}`}:w));
+      setScanMsg(`✅ Week ${wNum} updated`);
+    }else{
+      setAddedW(p=>[...p,{...scanResult,vendor:vendorPick,week:wNum,label:`Week ${wNum}`}]);
+      setScanMsg(`✅ Week ${wNum} saved`);
+    }
+    setScanResult(null);
+  }
+
   async function scanPDF(file,fileType){
     setScanning(true);setScanResult(null);setScanMsg("");
     try{
