@@ -148,15 +148,15 @@ function pairRoundTrips(moves){
 
 function grpDeds(deds,gross){
   // FUEL: any deduction labeled "FUEL ADVANCE" or containing "fuel"/"diesel" (not escrow/rebate)
-  const fuel=deds.filter(d=>["fuel advance","fuel","diesel"].some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")&&!d.l.toLowerCase().includes("rebate")).reduce((s,d)=>s+d.a,0);
+  const fuel=deds.filter(d=>d&&d.l&&["fuel advance","fuel","diesel"].some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")&&!d.l.toLowerCase().includes("rebate")).reduce((s,d)=>s+d.a,0);
   // INSURANCE: physical damage, bobtail, occ/acc, occacc, roadside, liability
-  const ins=deds.filter(d=>["physical damage","bobtail","occ/acc","occacc","roadside","liability limiter"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+  const ins=deds.filter(d=>d&&d.l&&["physical damage","bobtail","occ/acc","occacc","roadside","liability limiter"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
   // OPERATIONS: eld, event recorder, parking, license, highway tax, fuel highway
-  const ops=deds.filter(d=>["eld","event recorder","parking","license","highway tax","fuel-highway"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+  const ops=deds.filter(d=>d&&d.l&&["eld","event recorder","parking","license","highway tax","fuel-highway"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
   // ESCROW: regular and 2290
-  const escrowDeds=deds.filter(d=>d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
+  const escrowDeds=deds.filter(d=>d&&d.l&&d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
   // FUEL ADVANCE details for tooltip/breakdown
-  const fuelAdvances=deds.filter(d=>d.l.toLowerCase().includes("fuel advance"));
+  const fuelAdvances=deds.filter(d=>d&&d.l&&d.l.toLowerCase().includes("fuel advance"));
   return [
     {icon:"⛽",label:"Fuel Advances",amt:fuel,color:"#f87171",pct:(fuel/gross*100).toFixed(1)},
     {icon:"🛡️",label:"Insurance",amt:ins,color:"#fbbf24",pct:(ins/gross*100).toFixed(1)},
@@ -1719,7 +1719,7 @@ ${pdfText.slice(0,24000)}`}]};
               </div>
               {helpModal("deductions")}
               {selWeeks.map(w=>{
-                const deds=w.deds||[];
+                const deds=(w.deds||[]).filter(d=>d&&d.l);
                 const fuelA=deds.filter(d=>d.l.toLowerCase().includes("fuel advance"));
                 const fixedD=deds.filter(d=>!d.l.toLowerCase().includes("fuel advance"));
                 const fuelTotal=fuelA.reduce((s,d)=>s+d.a,0);
