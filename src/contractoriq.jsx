@@ -406,7 +406,12 @@ export default function ContractorIQv26(){
   const [authMsg,setAuthMsg]=useState("");
   const [cloudLoaded,setCloudLoaded]=useState(false);
 
-  // Show welcome/landing page whenever user is not logged in (skip for dev mode)
+  // Show welcome/landing page whenever user is not logged in
+  useEffect(()=>{
+    if(!user) setShowWelcome(true);
+  },[user]);
+
+  // Show welcome when not logged in (skip for dev/owner mode)
   useEffect(()=>{
     if(!user&&!isOwnerMode) setShowWelcome(true);
   },[user,isOwnerMode]);
@@ -459,12 +464,10 @@ export default function ContractorIQv26(){
         // Set tier from Supabase plan column
         const plan=data?.plan||"free";
         if(plan==="tier2"){
-          setIsPro(true);setIsSmart(true);
-          setDarkMode(true);// Tier 2 = dark mode (cinematic)
+          setIsPro(true);setIsSmart(true);setDarkMode(true);
           try{localStorage.setItem("ciq_pro","true");localStorage.setItem("ciq_smart","true");localStorage.setItem("ciq_theme","dark");}catch(e){}
         }else if(plan==="tier1"){
-          setIsPro(true);setIsSmart(false);
-          setDarkMode(false);// Tier 1 = light mode (clean)
+          setIsPro(true);setIsSmart(false);setDarkMode(false);
           try{localStorage.setItem("ciq_pro","true");localStorage.setItem("ciq_smart","false");localStorage.setItem("ciq_theme","light");}catch(e){}
         }else{
           setIsPro(false);setIsSmart(false);
@@ -797,40 +800,18 @@ export default function ContractorIQv26(){
 
   const upgradeModal=()=>{
     if(!showUpgrade)return null;
-    const msg=upgradeSrc==="ai"?"You've used your "+FREE_AI+" free AI messages.":upgradeSrc==="scorer"?"You've used your "+FREE_OS+" free offer scores.":"Unlock the full power of DrayageIQ.";
     return(
-      <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.82)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setShowUpgrade(false)}>
-        <div style={{background:C.card,borderRadius:20,padding:"26px 22px",maxWidth:380,width:"100%",border:"1px solid "+C.border,boxShadow:"0 24px 60px rgba(0,0,0,0.7)"}} onClick={e=>e.stopPropagation()}>
-          {/* Header */}
-          <div style={{textAlign:"center",marginBottom:18}}>
-            <div style={{fontSize:32,marginBottom:8}}>🚛</div>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:19,fontWeight:800,color:C.text,marginBottom:5}}>Choose Your Plan</div>
-            <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>{msg}</div>
+      <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+        <div style={{background:C.card,borderRadius:20,padding:"28px 22px",maxWidth:360,width:"100%",border:"1px solid "+C.border,boxShadow:"0 24px 60px rgba(0,0,0,0.6)"}}>
+          <div style={{textAlign:"center",marginBottom:20}}>
+            <div style={{fontSize:36,marginBottom:8}}>🚛</div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:C.text,marginBottom:6}}>Unlock ContractorIQ</div>
+            <div style={{fontSize:12,color:C.sub,lineHeight:1.6}}>{upgradeSrc==="ai"?"You've used your "+FREE_AI+" free AI messages.":upgradeSrc==="scorer"?"You've used your "+FREE_OS+" free offer scores.":"Upgrade to access the full decision engine."}</div>
           </div>
-          {/* Tier 1 */}
-          <div onClick={()=>window.open(PRICING.tier1Url,"_blank")} style={{padding:"14px 16px",borderRadius:12,background:"rgba(167,139,250,0.07)",border:"1px solid rgba(167,139,250,0.25)",marginBottom:9,cursor:"pointer"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#d0daf0"}}>Standard</div>
-              <div style={{fontSize:15,fontWeight:800,color:"#a78bfa"}}>{PRICING.tier1Price}<span style={{fontSize:9,fontWeight:400,color:C.sub}}>/mo</span></div>
-            </div>
-            <div style={{fontSize:10,color:C.sub,lineHeight:1.55}}>Unlimited PDF scans · Load tracking · Earnings dashboard · AI guidance</div>
-          </div>
-          {/* Tier 2 Monthly — hero */}
-          <div onClick={()=>window.open(PRICING.tier2Url,"_blank")} style={{padding:"14px 16px",borderRadius:12,background:"linear-gradient(135deg,rgba(0,255,204,0.08),rgba(167,139,250,0.06))",border:"2px solid #00ffcc55",marginBottom:9,cursor:"pointer",position:"relative",boxShadow:"0 0 18px rgba(0,255,204,0.12)"}}>
-            <div style={{position:"absolute",top:-9,right:12,background:"linear-gradient(135deg,#00ffcc,#00d4aa)",borderRadius:20,padding:"2px 10px",fontSize:8,fontWeight:800,color:"#080c16",letterSpacing:"0.08em"}}>⭐ MOST POPULAR</div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#d0daf0"}}>Pro Smart</div>
-              <div style={{fontSize:15,fontWeight:800,color:"#00ffcc"}}>{PRICING.tier2Price}<span style={{fontSize:9,fontWeight:400,color:C.sub}}>/mo</span></div>
-            </div>
-            <div style={{fontSize:10,color:C.sub,lineHeight:1.55}}>Everything in Standard + Live diesel · Live weather · Smart AI with your real numbers · Load profitability math</div>
-          </div>
-          {/* Annual */}
-          <div onClick={()=>window.open(PRICING.annualUrl,"_blank")} style={{padding:"12px 16px",borderRadius:12,background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.22)",marginBottom:16,cursor:"pointer"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:800,color:"#d0daf0"}}>Pro Smart Annual</div>
-              <div style={{fontSize:14,fontWeight:800,color:"#fbbf24"}}>{PRICING.annualPrice}<span style={{fontSize:9,fontWeight:400,color:C.sub}}>/yr</span></div>
-            </div>
-            <div style={{fontSize:10,color:C.sub}}>{PRICING.annualNote}</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
+            <button onClick={()=>window.open("https://buy.stripe.com/aFa8wP7FLbMY4Ua0Ls9MY00","_blank")} style={{padding:"16px",borderRadius:12,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}><div>🔥 Start 5-Day Test Drive</div><div style={{fontSize:11,fontWeight:400,marginTop:3}}>Just $1 — full access, cancel anytime</div></button>
+            <button onClick={()=>window.open(PRICING.monthlyUrl,"_blank")} style={{padding:"16px",borderRadius:12,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}><div>⚡ Go Monthly — {PRICING.monthlyPrice}/month</div><div style={{fontSize:11,fontWeight:400,marginTop:3}}>Unlimited everything · No ads · Cancel anytime</div></button>
+            <button onClick={()=>window.open(PRICING.annualUrl,"_blank")} style={{padding:"14px",borderRadius:12,background:C.raised,border:"1px solid "+C.a3+"55",color:"#a78bfa",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}><div>📅 Go Annual — {PRICING.annualPrice}/year</div><div style={{fontSize:10,fontWeight:400,color:C.sub,marginTop:2}}>{PRICING.annualNote} · Cancel anytime</div></button>
           </div>
           <button onClick={()=>setShowUpgrade(false)} style={{width:"100%",padding:"10px",borderRadius:9,background:"transparent",border:"1px solid "+C.border,color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Maybe later</button>
         </div>
@@ -857,7 +838,9 @@ export default function ContractorIQv26(){
   if(!authChecked&&!isOwnerMode){
     return(<div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.sub,display:"flex",alignItems:"center",justifyContent:"center"}}>Loading…</div>);
   }
-  if(!user&&!showWelcome&&!isOwnerMode){
+  if(!user&&!isOwnerMode){
+    // Not logged in — show welcome/landing page (setShowWelcome handled by useEffect below)
+  if(!user&&!showWelcome){
     return(
       <div style={{background:"#080c16",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{color:"#00ffcc",fontFamily:"'IBM Plex Mono',monospace",fontSize:12}}>Loading...</div>
@@ -1094,13 +1077,13 @@ export default function ContractorIQv26(){
                 </div>
 
                 {/* Pro — hero card */}
-                <div onClick={()=>window.open(PRICING.tier2Url,"_blank")} style={{background:"linear-gradient(145deg,rgba(0,255,204,0.07),rgba(167,139,250,0.07))",border:"2px solid #00ffcc",borderRadius:13,padding:"15px 12px",cursor:"pointer",textAlign:"center",position:"relative",boxShadow:"0 0 22px rgba(0,255,204,0.18)"}}>
+                <div onClick={()=>window.open(PRICING.monthlyUrl,"_blank")} style={{background:"linear-gradient(145deg,rgba(0,255,204,0.07),rgba(167,139,250,0.07))",border:"2px solid #00ffcc",borderRadius:13,padding:"15px 12px",cursor:"pointer",textAlign:"center",position:"relative",boxShadow:"0 0 22px rgba(0,255,204,0.18)"}}>
                   <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#00ffcc,#a78bfa)",borderRadius:20,padding:"2px 11px",fontSize:8,fontWeight:800,color:"#000",whiteSpace:"nowrap"}}>⭐ POPULAR</div>
-                  <div style={{fontSize:22,marginBottom:4}}>⚡</div>
-                  <div style={{fontSize:11,fontWeight:800,color:"#00ffcc",marginBottom:2}}>Pro Smart</div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:800,color:"#00ffcc",margin:"2px 0"}}>{PRICING.tier2Price}</div>
+                  <div style={{fontSize:22,marginBottom:4}}>💰</div>
+                  <div style={{fontSize:11,fontWeight:800,color:"#00ffcc",marginBottom:2}}>Monthly</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:800,color:"#00ffcc",margin:"2px 0"}}>{PRICING.monthlyPrice}</div>
                   <div style={{fontSize:9,color:"#00ffcc",opacity:0.6,marginBottom:4}}>/month</div>
-                  <div style={{fontSize:9,color:"#4a6080",lineHeight:1.55}}>Live data<br/>Smart AI</div>
+                  <div style={{fontSize:9,color:"#4a6080",lineHeight:1.55}}>Unlimited AI<br/>No ads</div>
                 </div>
 
                 {/* Annual */}
@@ -1353,88 +1336,124 @@ export default function ContractorIQv26(){
                 <div style={{position:"fixed",top:108,right:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"8px 6px",zIndex:9999,minWidth:210,boxShadow:"0 8px 40px rgba(0,0,0,0.7)",maxHeight:"85vh",overflowY:"auto"}}>
 
                   {/* Account header */}
-                  <div style={{padding:"10px 12px",marginBottom:6,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
+                  <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
                     <div style={{fontSize:8,color:C.sub,letterSpacing:"0.08em",marginBottom:3}}>SIGNED IN</div>
-                    <div style={{fontSize:11,color:C.text,fontWeight:700,wordBreak:"break-all",marginBottom:2}}>{user?.email||"Dev Mode"}</div>
-                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <div style={{fontSize:11,color:C.text,fontWeight:700,wordBreak:"break-all",marginBottom:4}}>{user?.email||"Dev Mode"}</div>
+                    <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                       <span style={{fontSize:9,color:C.accent}}>☁️ Synced to cloud</span>
-                      {isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#00ffcc",background:"#00ffcc18",border:"1px solid #00ffcc33",borderRadius:20,padding:"1px 7px",letterSpacing:"0.06em"}}>★ PRO SMART</span>}
-                      {isPro&&!isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#a78bfa",background:"#a78bfa18",border:"1px solid #a78bfa33",borderRadius:20,padding:"1px 7px",letterSpacing:"0.06em"}}>STANDARD</span>}
+                      {isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#00ffcc",background:"#00ffcc18",border:"1px solid #00ffcc33",borderRadius:20,padding:"1px 7px"}}>★ PRO SMART</span>}
+                      {isPro&&!isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#a78bfa",background:"#a78bfa18",border:"1px solid #a78bfa33",borderRadius:20,padding:"1px 7px"}}>★ STANDARD</span>}
                     </div>
                   </div>
 
                   {/* ── ACCOUNT ── */}
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Account</div>
-
-                  <button onClick={()=>{setShowProfile(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
-                    <span>👤</span><span>My Profile</span>
-                  </button>
-
-                  <button onClick={()=>{setShowWelcome(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(0,255,204,0.08)",border:"1px solid rgba(0,255,204,0.25)",color:"#00ffcc",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700}}>
-                    <span>💎</span><span>View Plans & Pricing</span>
-                  </button>
-
-                  <button onClick={()=>{doLogout();setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.red}12`,border:`1px solid ${C.red}33`,color:C.red,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
-                    <span>🚪</span><span>Sign Out</span>
-                  </button>
+                  <button onClick={()=>{setShowProfile(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>👤</span><span>My Profile</span></button>
+                  <button onClick={()=>{setShowWelcome(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(0,255,204,0.08)",border:"1px solid rgba(0,255,204,0.25)",color:"#00ffcc",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700}}><span>💎</span><span>View Plans & Pricing</span></button>
+                  <button onClick={()=>{doLogout();setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.red}12`,border:`1px solid ${C.red}33`,color:C.red,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🚪</span><span>Sign Out</span></button>
 
                   {/* Divider */}
                   <div style={{height:1,background:C.border,margin:"8px 6px"}}/>
 
                   {/* ── APP ── */}
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>App</div>
-
-                  <button onClick={()=>{setDarkMode(p=>!p);try{localStorage.setItem("ciq_theme",darkMode?"light":"dark");}catch(e){}}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
-                    <span>{darkMode?"☀️":"🌙"}</span><span>{darkMode?"Light Mode":"Dark Mode"}</span>
-                  </button>
-
-                  <button onClick={()=>{setShowSettings(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
-                    <span>⚙️</span><span>Display Settings</span>
-                  </button>
+                  <button onClick={()=>{setDarkMode(p=>!p);try{localStorage.setItem("ciq_theme",darkMode?"light":"dark");}catch(e){}}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>{darkMode?"☀️":"🌙"}</span><span>{darkMode?"Light Mode":"Dark Mode"}</span></button>
+                  <button onClick={()=>{setShowSettings(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⚙️</span><span>Display Settings</span></button>
 
                   {/* Divider */}
                   <div style={{height:1,background:C.border,margin:"8px 6px"}}/>
 
                   {/* ── DISCOVER ── */}
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Discover</div>
-
-                  <button onClick={()=>{setShowAbout(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
-                    <span>🚛</span><span>About DrayageIQ</span>
-                  </button>
-
-                  <button onClick={()=>{setShowMarket(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
-                    <span>📊</span><span>Market Overview</span>
-                  </button>
-
-                  <button onClick={()=>{setShowReviews(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
-                    <span>⭐</span><span>Customer Reviews</span>{reviews.length>0&&<span style={{marginLeft:"auto",fontSize:9,color:C.gold,fontWeight:700}}>{reviews.length}</span>}
-                  </button>
-
-                  <button onClick={()=>{setShowIconKey(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.a3}12`,border:`1px solid ${C.a3}33`,color:C.a3,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
-                    <span>🔑</span><span>Icon Guide</span>
-                  </button>
-
-                  <button onClick={()=>{setShowFleet(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
-                    <span>🚛</span><span>Fleet Pricing</span><span style={{marginLeft:"auto",fontSize:8,fontWeight:800,color:"#080c16",background:C.gold,borderRadius:20,padding:"2px 7px"}}>NEW</span>
-                  </button>
+                  <button onClick={()=>{setShowAbout(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🚛</span><span>About DrayageIQ</span></button>
+                  <button onClick={()=>{setShowMarket(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>📊</span><span>Market Overview</span></button>
+                  <button onClick={()=>{setShowReviews(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⭐</span><span>Customer Reviews</span>{reviews.length>0&&<span style={{marginLeft:"auto",fontSize:9,color:C.gold,fontWeight:700}}>{reviews.length}</span>}</button>
+                  <button onClick={()=>{setShowIconKey(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.a3}12`,border:`1px solid ${C.a3}33`,color:C.a3,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🔑</span><span>Icon Guide</span></button>
+                  <button onClick={()=>{setShowFleet(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🚛</span><span>Fleet Pricing</span><span style={{marginLeft:"auto",fontSize:8,fontWeight:800,color:"#080c16",background:C.gold,borderRadius:20,padding:"2px 7px"}}>NEW</span></button>
 
                   {/* Divider */}
                   <div style={{height:1,background:C.border,margin:"8px 6px"}}/>
 
                   {/* ── SUPPORT ── */}
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Support</div>
-
-                  <a href="https://whatsapp.com/channel/0029VazNGCd0bIdZvxjLIB2L" target="_blank" rel="noreferrer" style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700,textDecoration:"none",boxSizing:"border-box"}}>
-                    <span>💬</span>
-                    <div style={{flex:1}}>
-                      <div>WhatsApp Support</div>
-                      <div style={{fontSize:9,fontWeight:400,color:C.sub,marginTop:1}}>Join our channel · Get help fast</div>
-                    </div>
-                    <span style={{fontSize:8,fontWeight:800,color:"#080c16",background:"#25D366",borderRadius:20,padding:"2px 7px"}}>LIVE</span>
-                  </a>
+                  <a href="https://whatsapp.com/channel/0029VazNGCd0bIdZvxjLIB2L" target="_blank" rel="noreferrer" style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700,textDecoration:"none",boxSizing:"border-box"}}><span>💬</span><div style={{flex:1}}><div>WhatsApp Support</div><div style={{fontSize:9,fontWeight:400,color:C.sub,marginTop:1}}>Join our channel · Get help fast</div></div><span style={{fontSize:8,fontWeight:800,color:"#080c16",background:"#25D366",borderRadius:20,padding:"2px 7px"}}>LIVE</span></a>
 
                 </div>
               )}
+            </div>
+            {isPro?(
+              <div onClick={()=>{setIsPro(false);try{localStorage.removeItem("ciq_pro");localStorage.removeItem("ciq_trial_start");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}} style={{padding:"6px 10px",borderRadius:8,background:"linear-gradient(135deg,"+C.accent+"22,"+C.a3+"22)",border:"1px solid "+C.accent+"55",fontSize:9,fontWeight:800,color:"#00ffcc",letterSpacing:"0.05em",flexShrink:0,cursor:"pointer"}}>PRO ✓</div>
+            ):trialDaysLeft>0?(
+              <div style={{padding:"6px 9px",borderRadius:8,background:C.gold+"20",border:"1px solid "+C.gold+"55",fontSize:9,fontWeight:700,color:"#fbbf24",flexShrink:0}}>{trialDaysLeft}d left</div>
+            ):(
+              <button onClick={()=>openUpgrade("header")} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Upgrade</button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* SEARCH BAR */}
+      <div style={{background:`linear-gradient(135deg,${C.a3}18,${C.accent}12)`,borderBottom:`2px solid ${C.a3}55`,padding:"10px 14px"}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:12,padding:"0 12px",border:`2px solid ${C.a3}66`}}>
+            <span style={{fontSize:15,flexShrink:0}}>{searchLoading?"⏳":"🔍"}</span>
+            <input value={searchQ||""} onChange={e=>setSearchQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}} placeholder={isSmart?"Ask anything — I know your numbers, live diesel & weather...":"Ask anything: routes, HOS rules, fuel tips, regs..."} style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"11px 0",width:"100%",outline:"none"}}/>
+            {(searchQ||"").trim()&&<button onClick={()=>{setSearchQ("");setSearchResult("");}} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer",padding:"0 4px",flexShrink:0}}>×</button>}
+          </div>
+          <button onClick={()=>runSearch()} disabled={!(searchQ||"").trim()||searchLoading} style={{padding:"11px 16px",borderRadius:12,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:!(searchQ||"").trim()||searchLoading?C.sub:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{searchLoading?"⏳ ...":"Search"}</button>
+        </div>
+        {!searchResult&&!searchLoading&&(
+          <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
+            {(isSmart?["📊 Analyze my RPM trend","⛽ Cost of next load","🌤️ Weather on my route","💰 Should I take this load?","📈 How to improve my net"]:["⛽ MPG tips","📋 HOS rules","🚛 Load planning","💰 Fuel surcharge math","🔧 Tire blowout tips"]).map(s=>(
+              <button key={s} onClick={()=>{const q=s.replace(/^[^\s]+\s/,"");setSearchQ(q);setTimeout(()=>runSearch(q),50);}} style={{padding:"5px 11px",borderRadius:20,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:"#a78bfa",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{s}</button>
+            ))}
+          </div>
+        )}
+        {searchResult&&(
+          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}55`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
+            {searchResult}<div style={{marginTop:8,padding:"7px 10px",borderRadius:8,background:isSmart?`${C.accent}12`:`${C.gold}12`,border:`1px solid ${isSmart?C.accent:C.gold}33`,fontSize:10,color:C.sub,lineHeight:1.5}}>{isSmart?"⚡ Smart AI — answered using your live settlement data, real diesel prices & weather.":"💡 Based on general knowledge — not live data. Upgrade to Pro Smart for live data & deeper answers."}</div><button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
+          </div>
+        )}
+      </div>
+
+      {/* SETTINGS PANEL */}
+      {showSettings&&(
+        <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div style={{fontSize:12,fontWeight:700,color:C.text}}>⚙️ Display Settings</div>
+            <button onClick={()=>setShowSettings(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:wide?"repeat(3,1fr)":"1fr",gap:10}}>
+            <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Show / Hide Vendors</div>
+              {vendorKeys.filter(vk=>allW.some(w=>detectVendor(w)===vk)).map(vk=>{
+                const v=VENDORS[vk],hidden=hiddenVendors.includes(vk),isOnly=activeOnlyVendor===vk;
+                return(<div key={vk} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                  <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:8,height:8,borderRadius:"50%",background:v.color,opacity:hidden?0.3:1}}/><span style={{fontSize:11,color:hidden?C.sub:C.text}}>{v.short}</span></div>
+                  <div style={{display:"flex",gap:5}}>
+                    <button onClick={()=>{setActiveOnlyVendor(isOnly?null:vk);setHiddenVendors([]);}} style={{padding:"3px 8px",borderRadius:5,background:isOnly?`${v.color}22`:"transparent",border:`1px solid ${isOnly?v.color:C.border}`,color:isOnly?v.color:C.sub,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{isOnly?"Only ✓":"Only"}</button>
+                    <button onClick={()=>setHiddenVendors(p=>hidden?p.filter(x=>x!==vk):[...p,vk])} style={{padding:"3px 8px",borderRadius:5,background:hidden?`${C.red}22`:"transparent",border:`1px solid ${hidden?C.red:C.border}`,color:hidden?C.red:C.sub,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{hidden?"Show":"Hide"}</button>
+                  </div>
+                </div>);
+              })}
+            </div>
+            <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Privacy</div>
+              {[{label:"Hide owner name",val:hideOwnerName,set:setHideOwnerName},{label:"Hide unit number",val:hideUnitNum,set:setHideUnitNum}].map(item=>(
+                <div key={item.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                  <span style={{fontSize:11,color:C.text}}>{item.label}</span>
+                  <button onClick={()=>item.set(p=>!p)} style={{width:40,height:20,borderRadius:10,background:item.val?C.accent:C.border,border:"none",cursor:"pointer",position:"relative",flexShrink:0}}><div style={{width:14,height:14,borderRadius:"50%",background:"white",position:"absolute",top:3,left:item.val?23:3,transition:"left 0.15s"}}/></button>
+                </div>
+              ))}
+            </div>
+            <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Active Filters</div>
+              <div style={{fontSize:11,color:visibleW.length===allW.length?C.sub:C.gold,marginBottom:6}}>{visibleW.length===allW.length?"✓ All weeks visible":"⚠️ "+visibleW.length+" of "+allW.length+" weeks shown"}</div>
+              <button onClick={()=>{setHiddenVendors([]);setActiveOnlyVendor(null);setHideOwnerName(false);setHideUnitNum(false);}} style={{width:"100%",marginTop:10,padding:"6px",borderRadius:6,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Reset All</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* PROFILE PANEL */}
       {showProfile&&(
