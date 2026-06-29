@@ -181,76 +181,53 @@ function getSB(){ if(!_sb && typeof window!=="undefined" && window.supabase){ _s
 
 
 // ═══ DESKTOP TICKER — Pure CSS marquee with live prices from /api/ticker ═══
-// ═══ DESKTOP TICKER — Finnhub live prices, color-coded, Wall Street marquee ═══
 function TVTickerTape({symbols}){
   const [prices,setPrices]=useState({});
-  const [loaded,setLoaded]=useState(false);
-  const [error,setError]=useState(false);
-
   useEffect(()=>{
     async function load(){
       try{
-        const tvSyms=symbols.map(s=>s.proName).join(",");
-        const r=await fetch("/api/ticker?symbols="+encodeURIComponent(tvSyms));
-        if(!r.ok){setError(true);return;}
+        // Map TradingView proNames to Yahoo Finance symbols
+        const ymap={"AMEX:SPY":"SPY","AMEX:DIA":"DIA","NASDAQ:QQQ":"QQQ","AMEX:IWM":"IWM","CBOE:VIX":"%5EVIX","AMEX:GLD":"GLD","AMEX:USO":"USO","COINBASE:BTCUSD":"BTC-USD","NYSE:XOM":"XOM","NASDAQ:JBHT":"JBHT","NASDAQ:AAPL":"AAPL","NASDAQ:TSLA":"TSLA","NASDAQ:NVDA":"NVDA","NASDAQ:GOOGL":"GOOGL","NASDAQ:AMZN":"AMZN","NYSE:CVX":"CVX","NYSE:ODFL":"ODFL","COINBASE:ETHUSD":"ETH-USD","AMEX:TLT":"TLT","NASDAQ:META":"META"};
+        const syms=symbols.map(s=>ymap[s.proName]||s.proName.split(":").pop());
+        const r=await fetch("/api/ticker?symbols="+syms.join(","));
+        if(!r.ok)return;
         const d=await r.json();
-        if(d.error){setError(true);return;}
-        setPrices(d);
-        setLoaded(true);
-        setError(false);
-      }catch(e){setError(true);}
+        // remap yahoo key -> proName key
+        const out={};
+        symbols.forEach(s=>{
+          const ys=ymap[s.proName]||s.proName.split(":").pop();
+          if(d[ys])out[s.proName]=d[ys];
+        });
+        setPrices(out);
+      }catch(e){}
     }
     load();
-    const t=setInterval(load,30000);// refresh every 30s
+    const t=setInterval(load,90000);
     return()=>clearInterval(t);
   },[symbols.map(s=>s.proName).join(",")]);
 
   const items=[...symbols,...symbols,...symbols];
-
   return(
     <div style={{flex:1,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",background:"#070b15",height:46}}>
-      {/* Left fade */}
+      {/* Fade masks */}
       <div style={{position:"absolute",left:0,top:0,bottom:0,width:48,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
-      {/* Right fade */}
       <div style={{position:"absolute",right:0,top:0,bottom:0,width:48,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
-      {/* LIVE indicator */}
-      <div style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",zIndex:4,display:"flex",alignItems:"center",gap:4,pointerEvents:"none"}}>
-        <div style={{width:6,height:6,borderRadius:"50%",background:error?"#f87171":loaded?"#00ffcc":"#fbbf24",boxShadow:`0 0 6px ${error?"#f87171":loaded?"#00ffcc":"#fbbf24"}`,animation:"pulse-dot 2s ease-in-out infinite"}}/>
-        <span style={{fontSize:7,fontWeight:800,color:error?"#f87171":loaded?"#00ffcc":"#fbbf24",letterSpacing:"0.1em",fontFamily:"'IBM Plex Mono',monospace"}}>{error?"ERR":loaded?"LIVE":"..."}</span>
-      </div>
       {/* Scrolling track */}
-      <div style={{display:"flex",animation:"ticker-scroll 42s linear infinite",whiteSpace:"nowrap",willChange:"transform",paddingLeft:60}}>
+      <div style={{display:"flex",animation:"ticker-scroll 40s linear infinite",whiteSpace:"nowrap",willChange:"transform"}}>
         {items.map((s,i)=>{
           const sym=s.title||s.proName.split(":").pop();
           const p=prices[s.proName];
           const price=p?.price;
           const pct=p?.pct;
-          const change=p?.change;
           const up=pct==null?null:pct>=0;
-          // Color: green if up, red if down, neutral gray if no data
-          const col=price==null?"#4a6080":up?"#4ade80":"#f87171";
-          const priceStr=price==null?"···":price>=10000?price.toFixed(0):price>=100?price.toFixed(2):price>=1?price.toFixed(2):price.toFixed(4);
+          const col=price==null?"#8fa3c0":up?"#4ade80":"#f87171";
+          const priceStr=price==null?"···":price>=1000?price.toFixed(0):price>=10?price.toFixed(2):price.toFixed(4);
           const pctStr=pct==null?"":( up?"+":"")+pct.toFixed(2)+"%";
-          const changeStr=change==null?"":(up?"+":"")+change.toFixed(2);
           return(
-            <div key={i} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"0 18px",borderRight:"1px solid #1a2535",height:46,flexShrink:0}}>
-              {/* Symbol name */}
-              <span style={{fontSize:9,fontWeight:800,color:"#6a8099",letterSpacing:"0.07em",fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
-              {/* Price */}
-              <span style={{fontSize:11,fontWeight:800,color:col,fontFamily:"'IBM Plex Mono',monospace",transition:"color 0.3s"}}>{priceStr}</span>
-              {/* Pct change badge */}
-              {pctStr&&(
-                <span style={{
-                  fontSize:8,fontWeight:700,color:col,
-                  fontFamily:"'IBM Plex Mono',monospace",
-                  padding:"1px 5px",borderRadius:3,
-                  background:col+"18",
-                  border:`1px solid ${col}33`,
-                  transition:"all 0.3s"
-                }}>{pctStr}</span>
-              )}
-              {/* Change arrow */}
-              {pct!=null&&<span style={{fontSize:10,color:col,lineHeight:1}}>{up?"▲":"▼"}</span>}
+            <div key={i} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"0 20px",borderRight:"1px solid #1a2535",height:46,flexShrink:0}}>
+              <span style={{fontSize:10,fontWeight:800,color:"#8fa3c0",letterSpacing:"0.07em",fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
+              <span style={{fontSize:11,fontWeight:800,color:col,fontFamily:"'IBM Plex Mono',monospace"}}>{priceStr}</span>
+              {pctStr&&<span style={{fontSize:9,fontWeight:700,color:col,fontFamily:"'IBM Plex Mono',monospace",padding:"1px 4px",borderRadius:3,background:col+"22"}}>{pctStr}</span>}
             </div>
           );
         })}
@@ -270,8 +247,6 @@ export default function ContractorIQv26(){
       @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
       @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
       @keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-33.333%)}}
-      @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
-      @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.7)}}
       .stat-grad{background:linear-gradient(135deg,#00ffcc,#a5f3fc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% auto;animation:shimmer 3s linear infinite}
       .shimmer-vendor{background:linear-gradient(-45deg,#0d1525,#1a2436,#0a0e1a,#162033);background-size:400% 400%;animation:rotate-radial 8s ease infinite}
       .tab-active-glow{box-shadow:0 0 14px rgba(0,255,204,0.5)!important}
@@ -306,15 +281,7 @@ export default function ContractorIQv26(){
   const [scanMsg,setScanMsg]=useState("");
   const [scanForm,setScanForm]=useState({week:"",from:"",to:"",gross:"",net:"",deds:"",moves:""});
   const [vendorPick,setVendorPick]=useState("CPG");
-  const [fuelMPG,setFuelMPG]=useState(()=>{
-    try{
-      // Profile targetMPG takes priority
-      const prof=localStorage.getItem("ciq_profile");
-      if(prof){const p=JSON.parse(prof);if(p.targetMPG&&parseFloat(p.targetMPG)>0)return parseFloat(p.targetMPG);}
-      const v=localStorage.getItem("ciq_mpg");
-      return v?parseFloat(v):5.2;
-    }catch{return 5.2;}
-  });
+  const [fuelMPG,setFuelMPG]=useState(()=>{try{const v=localStorage.getItem("ciq_mpg");return v?parseFloat(v):5.2;}catch{return 5.2;}});
   const [fuelPrice,setFuelPrice]=useState(6.22);
   const [milesBuffer,setMilesBuffer]=useState(5);
   const [focusMode,setFocusMode]=useState(false);
@@ -352,14 +319,14 @@ export default function ContractorIQv26(){
   const [docScanMsg,setDocScanMsg]=useState("");
   const [isPro,setIsPro]=useState(()=>{if(typeof window!=="undefined"&&window.location.hostname.includes("navy"))return true;try{return localStorage.getItem("ciq_pro")==="true";}catch{return false;}});
   const [trialStart,setTrialStart]=useState(()=>{try{const t=localStorage.getItem("ciq_trial_start");return t?parseInt(t):null;}catch{return null;}});
-  const [isSmart,setIsSmart]=useState(()=>{if(typeof window!=="undefined"&&(window.location.hostname.includes("navy")||window.location.search.includes("owner=true")))return true;try{return localStorage.getItem("ciq_smart")==="true";}catch{return false;}});
+  const [isSmart,setIsSmart]=useState(()=>{try{return localStorage.getItem("ciq_smart")==="true";}catch{return false;}});
   const [liveData,setLiveData]=useState({diesel:null,weather:null,dieselPeriod:null});
   const [showUpgrade,setShowUpgrade]=useState(false);
   const [upgradeSrc,setUpgradeSrc]=useState("");
   const [oUses,setOUses]=useState(()=>{try{return parseInt(localStorage.getItem("ciq_o_uses")||"0");}catch{return 0;}});
   const [aiUses,setAiUses]=useState(()=>{try{return parseInt(localStorage.getItem("ciq_ai_uses")||"0");}catch{return 0;}});
   const [dismissedAds,setDismissedAds]=useState(()=>{try{const s=localStorage.getItem("ciq_dis_ads");return s?JSON.parse(s):[];}catch{return [];}});
-  const DEFAULT_TICKER=[{proName:"AMEX:SPY",title:"S&P 500"},{proName:"AMEX:DIA",title:"Dow 30"},{proName:"NASDAQ:QQQ",title:"Nasdaq"},{proName:"AMEX:IWM",title:"Russell 2000"},{proName:"AMEX:GLD",title:"Gold ETF"},{proName:"AMEX:USO",title:"Oil ETF"},{proName:"COINBASE:BTCUSD",title:"Bitcoin"},{proName:"NYSE:XOM",title:"Exxon"},{proName:"NASDAQ:NVDA",title:"Nvidia"},{proName:"NASDAQ:JBHT",title:"J.B. Hunt"}];
+  const DEFAULT_TICKER=[{proName:"AMEX:SPY",title:"S&P 500"},{proName:"AMEX:DIA",title:"Dow 30"},{proName:"NASDAQ:QQQ",title:"Nasdaq"},{proName:"AMEX:IWM",title:"Russell 2000"},{proName:"NASDAQ:NVDA",title:"Nvidia"},{proName:"AMEX:GLD",title:"Gold ETF"},{proName:"AMEX:USO",title:"Oil ETF"},{proName:"COINBASE:BTCUSD",title:"Bitcoin"},{proName:"NYSE:XOM",title:"Exxon"},{proName:"NASDAQ:JBHT",title:"J.B. Hunt"}];
   const [tickerSyms,setTickerSyms]=useState(()=>{try{const s=localStorage.getItem("ciq_ticker");return s?JSON.parse(s):DEFAULT_TICKER;}catch{return DEFAULT_TICKER;}});
   const [showTickerEdit,setShowTickerEdit]=useState(false);
   const [tickerInput,setTickerInput]=useState("");
@@ -406,16 +373,7 @@ export default function ContractorIQv26(){
   useEffect(()=>{const h=()=>setWide(window.innerWidth>700);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[]);
   useEffect(()=>{chatEnd.current?.scrollIntoView({behavior:"smooth"});},[chat]);
   useEffect(()=>{try{localStorage.setItem("ciq_addedWeeks",JSON.stringify(addedW));}catch(e){}},[addedW]);
-  useEffect(()=>{
-    try{
-      localStorage.setItem("ciq_profile",JSON.stringify(profile));
-      // Sync targetMPG to fuelMPG
-      if(profile.targetMPG&&parseFloat(profile.targetMPG)>0){
-        setFuelMPG(parseFloat(profile.targetMPG));
-        localStorage.setItem("ciq_mpg",profile.targetMPG);
-      }
-    }catch(e){}
-  },[profile]);
+  useEffect(()=>{try{localStorage.setItem("ciq_profile",JSON.stringify(profile));}catch(e){};},[profile]);
   useEffect(()=>{try{localStorage.setItem("ciq_expenses",JSON.stringify(expenses));}catch(e){};},[expenses]);
   useEffect(()=>{try{localStorage.setItem("ciq_docs",JSON.stringify(docs));}catch(e){};},[docs]);
   useEffect(()=>{try{localStorage.setItem("ciq_o_uses",String(oUses));}catch(e){};},[oUses]);
@@ -726,17 +684,7 @@ ${pdfText.slice(0,24000)}`}]};
         const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000,maximumAge:60000}));
         userLat=pos.coords.latitude.toFixed(4);
         userLon=pos.coords.longitude.toFixed(4);
-        // Reverse geocode for accurate city name
-        try{
-          const geo=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json`);
-          const gd=await geo.json();
-          const city=gd?.address?.city||gd?.address?.town||gd?.address?.village||gd?.address?.county||"";
-          const state=gd?.address?.state||"";
-          const zip=gd?.address?.postcode||"";
-          locationCtx=`User location: ${city}${state?", "+state:""} ${zip} (lat ${userLat}, lon ${userLon}).`;
-        }catch(e){
-          locationCtx=`User location: lat ${userLat}, lon ${userLon}.`;
-        }
+        locationCtx=`User location: lat ${userLat}, lon ${userLon}.`;
       }catch(e){}
 
       // Build intelligence briefing for Smart (Tier 2) users
@@ -745,8 +693,8 @@ ${pdfText.slice(0,24000)}`}]};
         const fetches=[];
         // 1. Live diesel price
         fetches.push(fetch("/api/diesel").then(r=>r.json()).catch(()=>null));
-        // 2. Live weather — use GPS coordinates for exact location accuracy
-        const weatherQ=userLat?`/api/weather?lat=${userLat}&lon=${userLon}`:`/api/weather?city=Columbia,MD`;
+        // 2. Live weather — use GPS if available, else Baltimore (home market)
+        const weatherQ=userLat?`/api/weather?lat=${userLat}&lon=${userLon}`:`/api/weather?city=Baltimore`;
         fetches.push(fetch(weatherQ).then(r=>r.json()).catch(()=>null));
         const [dp,wp]=await Promise.all(fetches);
 
@@ -988,7 +936,7 @@ ${pdfText.slice(0,24000)}`}]};
     if(helpCard!==id)return null;const h=HELP[id];if(!h)return null;
     return(<div style={{margin:"6px 0 10px",padding:"11px 13px",background:C.a3+"12",borderRadius:9,border:"1px solid "+C.a3+"33",fontSize:11,color:C.sub,lineHeight:1.7,position:"relative"}}><div style={{fontWeight:700,color:"#a78bfa",marginBottom:4,fontSize:12}}>{h.t}</div><div>{h.b}</div><button onClick={()=>setHelpCard(null)} style={{position:"absolute",top:7,right:9,background:"none",border:"none",color:C.sub,fontSize:14,cursor:"pointer",lineHeight:1}}>×</button></div>);
   };
-  const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:1,padding:"9px 4px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:11,letterSpacing:"0.04em",textTransform:"uppercase",border:"none",background:tab===t?`linear-gradient(135deg,${C.accent},${C.a3})`:`${C.raised}`,color:tab===t?"#000":C.sub,transition:"all 0.2s ease",boxShadow:tab===t?`0 0 16px ${C.accent}55,0 2px 8px rgba(0,0,0,0.4)`:"none",transform:tab===t?"translateY(-1px)":"none"}}>{l}</button>;
+  const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:1,padding:"9px 4px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:11,letterSpacing:"0.04em",textTransform:"uppercase",border:"none",background:tab===t?C.accent:C.raised,color:tab===t?"#000":C.sub,transition:"all 0.2s",boxShadow:tab===t?`0 0 14px ${C.accent}66,0 0 28px ${C.accent}22`:"none"}}>{l}</button>;
 
   // ═══ AUTH GATE (login required) ═══
   if(!authChecked&&!isOwnerMode){
@@ -1121,14 +1069,7 @@ ${pdfText.slice(0,24000)}`}]};
             <button onClick={()=>setShowFleet(false)} style={{padding:"7px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
           </div>
           <div style={{flex:1,overflowY:"auto",padding:"16px 16px 80px"}}>
-            {[
-              {tier:"Standard",trucks:"1 truck",price:"$14.99",period:"/mo",color:"#a78bfa",tag:"Tier 1",url:"https://buy.stripe.com/14A9ATbW1aIU2M2gKq9MY03",features:["Unlimited PDF scans","Load & mile tracking","Earnings dashboard","AI trucking guidance"]},
-              {tier:"Pro Smart",trucks:"1 truck",price:"$24.99",period:"/mo",color:"#00ffcc",tag:"⭐ Most Popular",url:"https://buy.stripe.com/fZu5kDe498AM2M2am29MY04",features:["Everything in Standard","Live diesel prices","Live weather on routes","Smart AI with your real numbers","Load profitability math"]},
-              {tier:"Pro Smart Annual",trucks:"1 truck",price:"$249",period:"/yr",color:"#fbbf24",tag:"Best Value",url:"https://buy.stripe.com/7sY3cvd05dV6fyOcua9MY05",features:["Everything in Pro Smart","Save $51 vs monthly","2 months free","Priority support"]},
-              {tier:"Small Fleet",trucks:"2–5 trucks",price:"$49",period:"/mo",color:"#4ade80",tag:"Fleet",url:"https://wa.me/14438564727?text=Hi%2C+I%27m+interested+in+DrayageIQ+Fleet+pricing+for+2-5+trucks",features:["Everything in Pro Smart","Multi-unit dashboard","Per-truck performance","Fleet-wide totals","Contact for setup"]},
-              {tier:"Growing Fleet",trucks:"6–10 trucks",price:"$89",period:"/mo",color:"#f87171",tag:"Fleet",url:"https://wa.me/14438564727?text=Hi%2C+I%27m+interested+in+DrayageIQ+Fleet+pricing+for+6-10+trucks",features:["Everything in Small Fleet","Advanced fleet analytics","Quarterly performance report","Phone support"]},
-              {tier:"Enterprise",trucks:"11+ trucks",price:"Custom",period:"",color:"#e879f9",tag:"🚀 Enterprise",url:"https://wa.me/14438564727?text=Hi%2C+I%27m+interested+in+DrayageIQ+Enterprise+pricing+for+11%2B+trucks",features:["Everything above","Unlimited trucks","White-label option","Dedicated account manager","Custom integrations"]},
-            ].map(p=>(
+            {[{tier:"Solo Driver",trucks:"1 truck",price:"$19.99",period:"/mo",color:"#00ffcc",tag:"Current Plan",features:["Full settlement analysis","AI chat advisor","PDF scanner","Insurance booking"]},{tier:"Small Fleet",trucks:"2–5 trucks",price:"$49",period:"/mo",color:"#a78bfa",tag:"Popular",features:["Everything in Solo","Multi-unit dashboard","Per-truck performance","Fleet-wide totals"]},{tier:"Growing Fleet",trucks:"6–9 trucks",price:"$89",period:"/mo",color:"#fbbf24",tag:"Best Value",features:["Everything in Small Fleet","Advanced analytics","Quarterly report","Phone support"]},{tier:"Enterprise L99",trucks:"10+ trucks",price:"$149",period:"/mo",color:"#f87171",tag:"🚀 L99",features:["Everything above","Unlimited trucks","White-label option","Dedicated manager"]}].map(p=>(
               <div key={p.tier} style={{background:C.card,borderRadius:16,padding:"18px",marginBottom:14,border:`2px solid ${p.color}44`,position:"relative",overflow:"hidden"}}>
                 <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:`linear-gradient(90deg,${p.color},${p.color}44)`}}/>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
@@ -1136,9 +1077,6 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{textAlign:"right"}}><div style={{padding:"3px 10px",borderRadius:20,background:`${p.color}20`,border:`1px solid ${p.color}44`,color:p.color,fontSize:9,fontWeight:800,marginBottom:6}}>{p.tag}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:p.color}}>{p.price}<span style={{fontSize:11}}>{p.period}</span></div></div>
                 </div>
                 {p.features.map(feat=><div key={feat} style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}><span style={{color:p.color,fontSize:11,fontWeight:800,flexShrink:0}}>✓</span><span style={{fontSize:11,color:C.sub}}>{feat}</span></div>)}
-                <button onClick={()=>window.open(p.url,"_blank")} style={{width:"100%",marginTop:14,padding:"12px",borderRadius:10,background:`linear-gradient(135deg,${p.color}22,${p.color}11)`,border:`2px solid ${p.color}55`,color:p.color,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.04em"}}>
-                  {p.price==="Custom"?"Contact Us →":`Get ${p.tier} →`}
-                </button>
               </div>
             ))}
           </div>
@@ -1410,17 +1348,13 @@ ${pdfText.slice(0,24000)}`}]};
                     var raw=tickerInput.trim();
                     var proName=raw.includes(":")?raw:"NASDAQ:"+raw;
                     var title=proName.split(":").pop();
-                    // Only allow US stocks/ETFs (AMEX, NASDAQ, NYSE) - Polygon free tier
-                    var exchange=proName.split(":")[0];
-                    var allowed=["AMEX","NASDAQ","NYSE",""];
-                    if(!allowed.includes(exchange)){alert("Only US stocks/ETFs supported (NASDAQ, NYSE, AMEX). Crypto and indices not available on this plan.");return;}
                     if(!tickerSyms.find(function(s){return s.proName===proName;})){
                       setTickerSyms(function(p){return [...p,{proName:proName,title:title}];});
                     }
                     setTickerInput("");
                   }
                 }}
-                placeholder="US stocks only: AAPL · TSLA · CVX · ODFL · UNP"
+                placeholder="Type symbol: AAPL · TSLA · NYSE:CVX · COINBASE:ETHUSD"
                 style={{flex:1,padding:"8px 12px",background:"#141928",border:"1px solid #2c3a52",borderRadius:9,color:"#f0f6ff",fontSize:11,fontFamily:"'IBM Plex Mono',monospace",outline:"none"}}
               />
               <button onClick={function(){
@@ -1428,9 +1362,6 @@ ${pdfText.slice(0,24000)}`}]};
                 if(!raw)return;
                 var proName=raw.includes(":")?raw:"NASDAQ:"+raw;
                 var title=proName.split(":").pop();
-                var exchange=proName.split(":")[0];
-                var allowed=["AMEX","NASDAQ","NYSE",""];
-                if(!allowed.includes(exchange)){alert("Only US stocks/ETFs supported (NASDAQ, NYSE, AMEX).");return;}
                 if(!tickerSyms.find(function(s){return s.proName===proName;})){
                   setTickerSyms(function(p){return [...p,{proName:proName,title:title}];});
                 }
@@ -1447,13 +1378,13 @@ ${pdfText.slice(0,24000)}`}]};
                 {proName:"NASDAQ:NVDA",  title:"NVIDIA"},
                 {proName:"NASDAQ:GOOGL", title:"Google"},
                 {proName:"NASDAQ:AMZN",  title:"Amazon"},
-                {proName:"NASDAQ:META",  title:"Meta"},
                 {proName:"NYSE:CVX",     title:"Chevron"},
                 {proName:"NYSE:ODFL",    title:"Old Dominion"},
                 {proName:"NYSE:UNP",     title:"Union Pacific"},
                 {proName:"NYSE:UPS",     title:"UPS"},
+                {proName:"COINBASE:ETHUSD",title:"Ethereum"},
                 {proName:"AMEX:TLT",     title:"Bonds ETF"},
-                {proName:"NASDAQ:JBHT",  title:"J.B. Hunt"},
+                {proName:"NASDAQ:META",  title:"Meta"},
               ].map(function(p){
                 var active=!!tickerSyms.find(function(s){return s.proName===p.proName;});
                 return(
@@ -1477,7 +1408,7 @@ ${pdfText.slice(0,24000)}`}]};
       </div>
 
       {/* HEADER */}
-      <div style={{background:darkMode?"rgba(14,20,38,0.97)":"rgba(255,255,255,0.97)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderBottom:`1px solid ${C.border}`,padding:"13px 16px",position:"sticky",top:0,zIndex:100,boxShadow:"0 1px 24px rgba(0,0,0,0.4)"}}>
+      <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"13px 16px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:11}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <img src={LOGO_ICON} alt="DrayageIQ" style={{width:34,height:34,borderRadius:9,flexShrink:0,boxShadow:"0 0 12px rgba(0,255,204,0.25)"}}/>
@@ -1486,7 +1417,7 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":demoMode?"Demo Driver":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</div>
             </div>
           </div>
-          <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:8,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:1,fontWeight:600}}>YTD Gross</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:900,fontSize:18,background:"linear-gradient(135deg,#00ffcc,#a78bfa)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</div>{allW.length>0&&<div style={{fontSize:8,color:C.sub,marginTop:2}}>{allW.length} wks · ${(tGross/allW.length).toFixed(0)}/wk avg</div>}</div>
+          <div style={{textAlign:"right"}}><div style={{fontSize:10,color:C.sub}}>YTD Gross</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.accent}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div>
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
           <div style={{display:"flex",gap:6,alignItems:"center",overflowX:"auto",scrollbarWidth:"none",flex:1}}>
@@ -1495,8 +1426,8 @@ ${pdfText.slice(0,24000)}`}]};
             <TB t="ai" l="🧠 AI"/>
             <TB t="growth" l="🚀 Growth"/>
             <button onClick={()=>setShowInsurance(true)} style={{padding:"8px 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa",boxShadow:"0 0 12px #a78bfa33",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>🛡️ Protect</button>
-            
-            <button onClick={()=>setFocusMode(p=>!p)} style={{padding:"8px 12px",borderRadius:8,background:focusMode?`linear-gradient(135deg,${C.gold},#f59e0b)`:`${C.gold}15`,border:`2px solid ${focusMode?C.gold:C.gold+"88"}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",boxShadow:focusMode?`0 0 14px ${C.gold}66`:"none",transition:"all 0.2s ease"}}>{focusMode?"⚡ ON":"⚡ Focus"}</button>
+            <button onClick={()=>setShowQR(true)} style={{padding:"8px 12px",borderRadius:8,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>📱 QR</button>
+            <button onClick={()=>setFocusMode(p=>!p)} style={{padding:"8px 12px",borderRadius:8,background:focusMode?C.gold:`${C.gold}22`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{focusMode?"⚡ ON":"⚡ Focus"}</button>
           </div>
           <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
             <div style={{position:"relative"}}>
@@ -1755,7 +1686,7 @@ ${pdfText.slice(0,24000)}`}]};
           {/* TREND CHART — key-based bar selection (W15 fix) */}
           <div style={K({marginBottom:16,padding:"14px 16px"})}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em"}}>📈 Weekly Net Pay Trend{helpBtn("trend")}</div>
+              <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:wide?"300px":"110px"}}>📈 {wide?"Weekly Net Pay Trend":"Net Trend"}{helpBtn("trend")}</div>
               <div style={{display:"flex",gap:10}}>{vendorStats.map(v=><div key={v.key} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:8,height:8,borderRadius:"50%",background:v.color}}/><span style={{fontSize:9,color:C.sub}}>{v.short}</span></div>)}</div>
             </div>
             {helpModal("trend")}
@@ -1791,12 +1722,8 @@ ${pdfText.slice(0,24000)}`}]};
                         {isSelected&&<div style={{position:"absolute",top:-5,left:"50%",transform:"translateX(-50%)",width:8,height:8,borderRadius:"50%",background:g.c,border:"2px solid "+C.bg,boxShadow:`0 0 6px ${g.c}`}}/>}
                       </div>
                     </div>
-                    {/* Week label — smart display based on screen/count */}
-                    {(isSelected||(wide&&allW.length<=20)||(allW.length<=8))&&(
-                      <div style={{fontSize:isSelected?8:6,color:isSelected?C.text:C.sub,fontWeight:isSelected?800:400,marginTop:2,lineHeight:1,transition:"all 0.15s",whiteSpace:"nowrap"}}>
-                        W{w.week?.toString().replace("-2026","").replace("-","")}
-                      </div>
-                    )}
+                    {/* Week label */}
+                    <div style={{fontSize:isSelected?8:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?800:400,marginTop:3,lineHeight:1,transition:"all 0.15s"}}>W{w.week}</div>
                     {/* Selected indicator dot */}
                     {isSelected&&<div style={{width:4,height:4,borderRadius:"50%",background:vc,marginTop:2,boxShadow:`0 0 4px ${vc}`}}/>}
                     <div style={{width:4,height:4,borderRadius:"50%",background:vc,opacity:0.8,marginTop:1}}/>
@@ -2026,7 +1953,7 @@ ${pdfText.slice(0,24000)}`}]};
                             <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.accent}}>{fuelMPG.toFixed(1)}</span>
                           </div>
                           <input type="range" min="3.5" max="9.0" step="0.1" value={fuelMPG}
-                            onChange={function(e){const v=parseFloat(e.target.value);setFuelMPG(v);setProfile(p=>({...p,targetMPG:String(v)}));try{localStorage.setItem("ciq_mpg",v);}catch(ex){}}}
+                            onChange={function(e){const v=parseFloat(e.target.value);setFuelMPG(v);setProfile(p=>({...p,targetMPG:String(v)}));try{localStorage.setItem("ciq_mpg",String(v));}catch(ex){}}}
                             style={{width:"100%",accentColor:C.accent,cursor:"pointer",marginBottom:4}}/>
                           <div style={{display:"flex",justifyContent:"space-between",fontSize:8}}>
                             <span style={{color:"#f87171"}}>3.5 poor</span>
@@ -2102,7 +2029,7 @@ ${pdfText.slice(0,24000)}`}]};
           {/* MOVE PERFORMANCE */}
           {!focusMode&&<div style={K()}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>🚛 Move Performance{helpBtn("movePerf")}<button onClick={e=>{e.stopPropagation();toggleCard("movePerf");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("movePerf")?"▶":"▼"}</button><button onClick={e=>{e.stopPropagation();toggleCard("movePerf");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("movePerf")?"▶":"▼"}</button></div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>🚛 Move Performance{helpBtn("movePerf")}<button onClick={e=>{e.stopPropagation();toggleCard("movePerf");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("movePerf")?"▶":"▼"}</button></div>
               <Nav i={sM} max={allW.length-1} prev={()=>setSM(p=>p-1)} next={()=>setSM(p=>p+1)} label={`W${mwBase.week}`}/>
             </div>
             {helpModal("movePerf")}
@@ -2111,7 +2038,7 @@ ${pdfText.slice(0,24000)}`}]};
                 <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`,textAlign:"center"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:700,color:s.c}}>{s.v}</div></div>
               ))}
             </div>
-            <div style={{overflowX:"auto",overflowY:"auto",maxHeight:320,borderRadius:8,border:`1px solid ${C.border}`}}>
+            <div style={{display:isCollapsed("movePerf")?"none":"block",overflowX:"auto",overflowY:"auto",maxHeight:320,borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
                 <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 9px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>{mwMoves.map((m,i)=>{const s=scoreMove(m);return(
@@ -2380,7 +2307,7 @@ ${pdfText.slice(0,24000)}`}]};
           <div style={K()}>
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}<button onClick={e=>{e.stopPropagation();toggleCard("fullHist");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("fullHist")?"▶":"▼"}</button></div>
             {helpModal("fullHistory")}
-            <div style={{display:isCollapsed("fullHist")?"none":"block",overflowX:"auto",overflowY:"auto",maxHeight:420,display:isCollapsed("uploads")?"none":"block",borderRadius:8,border:`1px solid ${C.border}`}}>
+            <div style={{display:isCollapsed("fullHist")?"none":"block",overflowX:"auto",display:isCollapsed("uploads")?"none":"block",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
                 <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Wk","Vendor","Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 6px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>{allMoves.slice().reverse().map((m,i)=>{
@@ -2785,7 +2712,7 @@ ${pdfText.slice(0,24000)}`}]};
                 );})}
               </div>
             </div>
-            <div style={{padding:"12px",display:"flex",flexDirection:"column",gap:10}}>
+            <div style={{padding:"12px",display:isCollapsed("funded")?"none":"flex",flexDirection:"column",gap:10}}>
               {[
                 {
                   icon:"🦅",name:"OOIDA Business Services",type:"Owner-Operator Focused",
@@ -2935,7 +2862,7 @@ ${pdfText.slice(0,24000)}`}]};
         <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
         </svg>
-        <span>Get Support</span>
+        <span>📹 Video Tips</span>
       </a>
 
       {/* BOTTOM NAV */}
