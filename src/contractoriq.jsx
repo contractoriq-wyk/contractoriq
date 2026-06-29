@@ -1350,112 +1350,91 @@ export default function ContractorIQv26(){
                 <span>☰</span><span>Menu</span>
               </button>
               {showMenu&&(
-                <div style={{position:"fixed",top:108,right:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:8,zIndex:9999,minWidth:190,boxShadow:"0 8px 32px rgba(0,0,0,0.6)",maxHeight:"80vh",overflowY:"auto"}}>
-                  <div style={{padding:"8px 12px",marginBottom:6,background:`${C.accent}10`,border:`1px solid ${C.accent}30`,borderRadius:8}}>
-                    <div style={{fontSize:9,color:C.sub,marginBottom:2}}>SIGNED IN</div>
-                    <div style={{fontSize:11,color:C.text,fontWeight:600,wordBreak:"break-all"}}>{user?.email||""}</div>
-                    <div style={{fontSize:9,color:C.accent,marginTop:3}}>☁️ Synced to cloud</div>
-                  </div>
-                  <button onClick={()=>{setShowWelcome(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(0,255,204,0.08)",border:"1px solid rgba(0,255,204,0.2)",color:"#00ffcc",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,fontWeight:700}}>💎 View Plans & Pricing</button>
-                  <button onClick={()=>{doLogout();setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>🚪</span><span style={{fontWeight:600}}>Sign Out</span></button>
-                  <button onClick={()=>{setShowAbout(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span></button>
-                  <button onClick={()=>{setShowMarket(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>📈</span><span style={{fontWeight:600}}>Market Overview</span></button>
-                  <button onClick={()=>{setShowReviews(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>⭐</span><span style={{fontWeight:600}}>Customer Reviews</span>{reviews.length>0&&<span style={{marginLeft:"auto",fontSize:9,color:C.gold,fontWeight:700}}>{reviews.length}</span>}</button>
-                  <button onClick={()=>{setShowIconKey(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.a3}12`,border:`1px solid ${C.a3}33`,color:C.a3,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>🔑</span><span style={{fontWeight:600}}>Icon Guide</span></button>
-                  <button onClick={()=>{setShowFleet(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>🚛</span><span style={{fontWeight:600}}>Fleet Pricing</span><span style={{marginLeft:"auto",fontSize:9,background:C.gold,color:"#000",padding:"2px 7px",borderRadius:8,fontWeight:800}}>NEW</span></button>
-                  <button onClick={()=>{setShowProfile(p=>!p);setShowSettings(false);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showProfile?`${C.gold}15`:C.raised,border:`1px solid ${showProfile?C.gold:C.border}`,color:showProfile?C.gold:(profile.setupDone?C.green:C.text),fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>👤</span><span style={{fontWeight:600}}>My Profile</span>{profile.setupDone&&<span style={{marginLeft:"auto",fontSize:10,color:C.green}}>✅</span>}</button>
-                  <button onClick={()=>{setShowSettings(p=>!p);setShowProfile(false);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:showSettings?`${C.a3}15`:C.raised,border:`1px solid ${showSettings?C.a3:C.border}`,color:showSettings?C.a3:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>⚙️</span><span style={{fontWeight:600}}>Display Settings</span></button>
-                  <button onClick={()=>{const next=!darkMode;setDarkMode(next);try{localStorage.setItem("ciq_theme",next?"dark":"light");}catch(e){}setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}><span>{darkMode?"☀️":"🌙"}</span><span style={{fontWeight:600}}>{darkMode?"Light Mode":"Dark Mode"}</span></button>
+                <div style={{position:"fixed",top:108,right:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"8px 6px",zIndex:9999,minWidth:210,boxShadow:"0 8px 40px rgba(0,0,0,0.7)",maxHeight:"85vh",overflowY:"auto"}}>
 
-                  {/* WhatsApp Support Channel */}
-                  <div style={{marginTop:6,paddingTop:6,borderTop:`1px solid ${C.border}`}}>
-                    <a href="https://whatsapp.com/channel/0029VbDOskDBA1esSRzm6w2T" target="_blank" rel="noopener noreferrer"
-                      onClick={()=>setShowMenu(false)}
-                      style={{width:"100%",padding:"11px 12px",borderRadius:10,background:"linear-gradient(135deg,#25D36618,#128C7E18)",border:"1.5px solid #25D36655",color:"#25D366",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:9,textDecoration:"none",boxShadow:"0 0 12px #25D36618"}}>
-                      <span style={{fontSize:18}}>💬</span>
-                      <div style={{flex:1}}>
-                        <div style={{fontWeight:800,fontSize:12,color:"#25D366"}}>WhatsApp Support</div>
-                        <div style={{fontSize:9,color:"#25D36688",marginTop:1}}>Join our channel · Get help fast</div>
-                      </div>
-                      <span style={{fontSize:9,padding:"2px 7px",borderRadius:6,background:"#25D36622",color:"#25D366",fontWeight:700,flexShrink:0}}>LIVE</span>
-                    </a>
+                  {/* Account header */}
+                  <div style={{padding:"10px 12px",marginBottom:6,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
+                    <div style={{fontSize:8,color:C.sub,letterSpacing:"0.08em",marginBottom:3}}>SIGNED IN</div>
+                    <div style={{fontSize:11,color:C.text,fontWeight:700,wordBreak:"break-all",marginBottom:2}}>{user?.email||"Dev Mode"}</div>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <span style={{fontSize:9,color:C.accent}}>☁️ Synced to cloud</span>
+                      {isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#00ffcc",background:"#00ffcc18",border:"1px solid #00ffcc33",borderRadius:20,padding:"1px 7px",letterSpacing:"0.06em"}}>⚡ PRO SMART</span>}
+                      {isPro&&!isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#a78bfa",background:"#a78bfa18",border:"1px solid #a78bfa33",borderRadius:20,padding:"1px 7px",letterSpacing:"0.06em"}}>STANDARD</span>}
+                    </div>
                   </div>
+
+                  {/* ── ACCOUNT ── */}
+                  <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Account</div>
+
+                  <button onClick={()=>{setShowProfile(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
+                    <span>👤</span><span>My Profile</span>
+                  </button>
+
+                  <button onClick={()=>{setShowWelcome(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(0,255,204,0.08)",border:"1px solid rgba(0,255,204,0.25)",color:"#00ffcc",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700}}>
+                    <span>💎</span><span>View Plans & Pricing</span>
+                  </button>
+
+                  <button onClick={()=>{doLogout();setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.red}12`,border:`1px solid ${C.red}33`,color:C.red,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
+                    <span>🚪</span><span>Sign Out</span>
+                  </button>
+
+                  {/* Divider */}
+                  <div style={{height:1,background:C.border,margin:"8px 6px"}}/>
+
+                  {/* ── APP ── */}
+                  <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>App</div>
+
+                  <button onClick={()=>{setDarkMode(p=>!p);try{localStorage.setItem("ciq_theme",darkMode?"light":"dark");}catch(e){}}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
+                    <span>{darkMode?"☀️":"🌙"}</span><span>{darkMode?"Light Mode":"Dark Mode"}</span>
+                  </button>
+
+                  <button onClick={()=>{setShowSettings(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
+                    <span>⚙️</span><span>Display Settings</span>
+                  </button>
+
+                  {/* Divider */}
+                  <div style={{height:1,background:C.border,margin:"8px 6px"}}/>
+
+                  {/* ── DISCOVER ── */}
+                  <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Discover</div>
+
+                  <button onClick={()=>{setShowAbout(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
+                    <span>🚛</span><span>About DrayageIQ</span>
+                  </button>
+
+                  <button onClick={()=>{setShowMarket(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
+                    <span>📊</span><span>Market Overview</span>
+                  </button>
+
+                  <button onClick={()=>{setShowReviews(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
+                    <span>⭐</span><span>Customer Reviews</span>{reviews.length>0&&<span style={{marginLeft:"auto",fontSize:9,color:C.gold,fontWeight:700}}>{reviews.length}</span>}
+                  </button>
+
+                  <button onClick={()=>{setShowIconKey(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.a3}12`,border:`1px solid ${C.a3}33`,color:C.a3,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
+                    <span>🔑</span><span>Icon Guide</span>
+                  </button>
+
+                  <button onClick={()=>{setShowFleet(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
+                    <span>🚛</span><span>Fleet Pricing</span><span style={{marginLeft:"auto",fontSize:8,fontWeight:800,color:"#080c16",background:C.gold,borderRadius:20,padding:"2px 7px"}}>NEW</span>
+                  </button>
+
+                  {/* Divider */}
+                  <div style={{height:1,background:C.border,margin:"8px 6px"}}/>
+
+                  {/* ── SUPPORT ── */}
+                  <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Support</div>
+
+                  <a href="https://whatsapp.com/channel/0029VazNGCd0bIdZvxjLIB2L" target="_blank" rel="noreferrer" style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700,textDecoration:"none",boxSizing:"border-box"}}>
+                    <span>💬</span>
+                    <div style={{flex:1}}>
+                      <div>WhatsApp Support</div>
+                      <div style={{fontSize:9,fontWeight:400,color:C.sub,marginTop:1}}>Join our channel · Get help fast</div>
+                    </div>
+                    <span style={{fontSize:8,fontWeight:800,color:"#080c16",background:"#25D366",borderRadius:20,padding:"2px 7px"}}>LIVE</span>
+                  </a>
+
                 </div>
               )}
-            </div>
-            {isPro?(
-              <div onClick={()=>{setIsPro(false);try{localStorage.removeItem("ciq_pro");localStorage.removeItem("ciq_trial_start");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}} style={{padding:"6px 10px",borderRadius:8,background:"linear-gradient(135deg,"+C.accent+"22,"+C.a3+"22)",border:"1px solid "+C.accent+"55",fontSize:9,fontWeight:800,color:"#00ffcc",letterSpacing:"0.05em",flexShrink:0,cursor:"pointer"}}>PRO ✓</div>
-            ):trialDaysLeft>0?(
-              <div style={{padding:"6px 9px",borderRadius:8,background:C.gold+"20",border:"1px solid "+C.gold+"55",fontSize:9,fontWeight:700,color:"#fbbf24",flexShrink:0}}>{trialDaysLeft}d left</div>
-            ):(
-              <button onClick={()=>openUpgrade("header")} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Upgrade</button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* SEARCH BAR */}
-      <div style={{background:`linear-gradient(135deg,${C.a3}18,${C.accent}12)`,borderBottom:`2px solid ${C.a3}55`,padding:"10px 14px"}}>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:12,padding:"0 12px",border:`2px solid ${C.a3}66`}}>
-            <span style={{fontSize:15,flexShrink:0}}>{searchLoading?"⏳":"🔍"}</span>
-            <input value={searchQ||""} onChange={e=>setSearchQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}} placeholder={isSmart?"Ask anything — I know your numbers, live diesel & weather...":"Ask anything: routes, HOS rules, fuel tips, regs..."} style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"11px 0",width:"100%",outline:"none"}}/>
-            {(searchQ||"").trim()&&<button onClick={()=>{setSearchQ("");setSearchResult("");}} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer",padding:"0 4px",flexShrink:0}}>×</button>}
-          </div>
-          <button onClick={()=>runSearch()} disabled={!(searchQ||"").trim()||searchLoading} style={{padding:"11px 16px",borderRadius:12,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:!(searchQ||"").trim()||searchLoading?C.sub:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{searchLoading?"⏳ ...":"Search"}</button>
-        </div>
-        {!searchResult&&!searchLoading&&(
-          <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
-            {(isSmart?["📊 Analyze my RPM trend","⛽ Cost of next load","🌤️ Weather on my route","💰 Should I take this load?","📈 How to improve my net"]:["⛽ MPG tips","📋 HOS rules","🚛 Load planning","💰 Fuel surcharge math","🔧 Tire blowout tips"]).map(s=>(
-              <button key={s} onClick={()=>{const q=s.replace(/^[^\s]+\s/,"");setSearchQ(q);setTimeout(()=>runSearch(q),50);}} style={{padding:"5px 11px",borderRadius:20,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:"#a78bfa",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{s}</button>
-            ))}
-          </div>
-        )}
-        {searchResult&&(
-          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}55`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
-            {searchResult}<div style={{marginTop:8,padding:"7px 10px",borderRadius:8,background:isSmart?`${C.accent}12`:`${C.gold}12`,border:`1px solid ${isSmart?C.accent:C.gold}33`,fontSize:10,color:C.sub,lineHeight:1.5}}>{isSmart?"⚡ Smart AI — answered using your live settlement data, real diesel prices & weather.":"💡 Based on general knowledge — not live data. Upgrade to Pro Smart for live data & deeper answers."}</div><button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
-          </div>
-        )}
-      </div>
-
-      {/* SETTINGS PANEL */}
-      {showSettings&&(
-        <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-            <div style={{fontSize:12,fontWeight:700,color:C.text}}>⚙️ Display Settings</div>
-            <button onClick={()=>setShowSettings(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:wide?"repeat(3,1fr)":"1fr",gap:10}}>
-            <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
-              <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Show / Hide Vendors</div>
-              {vendorKeys.filter(vk=>allW.some(w=>detectVendor(w)===vk)).map(vk=>{
-                const v=VENDORS[vk],hidden=hiddenVendors.includes(vk),isOnly=activeOnlyVendor===vk;
-                return(<div key={vk} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                  <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:8,height:8,borderRadius:"50%",background:v.color,opacity:hidden?0.3:1}}/><span style={{fontSize:11,color:hidden?C.sub:C.text}}>{v.short}</span></div>
-                  <div style={{display:"flex",gap:5}}>
-                    <button onClick={()=>{setActiveOnlyVendor(isOnly?null:vk);setHiddenVendors([]);}} style={{padding:"3px 8px",borderRadius:5,background:isOnly?`${v.color}22`:"transparent",border:`1px solid ${isOnly?v.color:C.border}`,color:isOnly?v.color:C.sub,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{isOnly?"Only ✓":"Only"}</button>
-                    <button onClick={()=>setHiddenVendors(p=>hidden?p.filter(x=>x!==vk):[...p,vk])} style={{padding:"3px 8px",borderRadius:5,background:hidden?`${C.red}22`:"transparent",border:`1px solid ${hidden?C.red:C.border}`,color:hidden?C.red:C.sub,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{hidden?"Show":"Hide"}</button>
-                  </div>
-                </div>);
-              })}
-            </div>
-            <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
-              <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Privacy</div>
-              {[{label:"Hide owner name",val:hideOwnerName,set:setHideOwnerName},{label:"Hide unit number",val:hideUnitNum,set:setHideUnitNum}].map(item=>(
-                <div key={item.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                  <span style={{fontSize:11,color:C.text}}>{item.label}</span>
-                  <button onClick={()=>item.set(p=>!p)} style={{width:40,height:20,borderRadius:10,background:item.val?C.accent:C.border,border:"none",cursor:"pointer",position:"relative",flexShrink:0}}><div style={{width:14,height:14,borderRadius:"50%",background:"white",position:"absolute",top:3,left:item.val?23:3,transition:"left 0.15s"}}/></button>
-                </div>
-              ))}
-            </div>
-            <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
-              <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Active Filters</div>
-              <div style={{fontSize:11,color:visibleW.length===allW.length?C.sub:C.gold,marginBottom:6}}>{visibleW.length===allW.length?"✓ All weeks visible":"⚠️ "+visibleW.length+" of "+allW.length+" weeks shown"}</div>
-              <button onClick={()=>{setHiddenVendors([]);setActiveOnlyVendor(null);setHideOwnerName(false);setHideUnitNum(false);}} style={{width:"100%",marginTop:10,padding:"6px",borderRadius:6,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Reset All</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* PROFILE PANEL */}
       {showProfile&&(
