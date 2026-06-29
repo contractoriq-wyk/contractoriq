@@ -868,7 +868,11 @@ ${pdfText.slice(0,24000)}`}]};
 
   const HELP={
     trend:{t:"Net Pay by Week",b:"Each bar shows what you took home in a given week. Tap any bar to sync all cards below."},
-    deductions:{t:"Where Your Money Goes",b:"Every deduction grouped into three categories. Use arrows to compare different weeks."},
+    deductions:{t:"Deduction Breakdown — How to Read This Card",b:"This card splits every dollar deducted from your gross into 4 clear buckets. Use the arrows to navigate between weeks. Tap each bucket to expand and see exactly what was deducted line by line."},
+    ded_fuel:{t:"⛽ Fuel Spending",b:"Every fuel advance taken that week. A fuel advance is money pulled from your paycheck to cover diesel purchased on your fuel card. The amount changes every week based on how many gallons you bought and the price per gallon. If this number is unusually high, check your gallons vs miles driven."},
+    ded_insurance:{t:"🛡️ Insurance Deductions",b:"These are your recurring insurance premiums deducted weekly: Physical Damage, Bobtail, Occupational Accident, Liability Limiter, and Roadside Assistance. These amounts should be the same every single week. If you see a different number, it may be a billing error — contact your carrier."},
+    ded_ops:{t:"⚙️ Operations & Fees",b:"Recurring weekly operational fees: ELD device, Event Recorder, License Plate Program, Parking/Security, and Fuel Highway Taxes. These are mostly fixed costs of running your truck. Monitor these to catch any new fees your carrier adds."},
+    ded_escrow:{t:"🏦 Escrow & Savings",b:"Money being held in escrow accounts. ESCROW-REGULAR builds toward your $2,500 target and is returned when you leave the carrier. 2290 ESCROW builds toward your Heavy Highway Vehicle Use Tax. These are YOUR money — they are saved, not spent."},
     health:{t:"Performance by Carrier",b:"Green is strong, gold is worth watching, red needs attention."},
     grades:{t:"Weekly Performance Grades",b:"Each week evaluated against your own history. Look for your best weeks and understand what made them different."},
     savings:{t:"Funds Being Held",b:"Funds held for future use — track these so you know what is being set aside."},
@@ -1710,66 +1714,144 @@ ${pdfText.slice(0,24000)}`}]};
           {/* DEDUCTIONS + HEALTH */}
           <div style={{display:"grid",gridTemplateColumns:wide?"1.35fr 1fr":"1fr",gap:14,marginBottom:16}}>
             <div style={K()}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔍 Deduction Breakdown{helpBtn("deductions")}</div>
+              {/* Card header */}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>🔍 Deduction Breakdown {helpBtn("deductions")}</div>
                 <Nav i={sD} max={allW.length-1} prev={()=>setSD(p=>p-1)} next={()=>setSD(p=>p+1)} label={"W"+dw.week}/>
               </div>
               {helpModal("deductions")}
-              {[dw].map(w=>{
-                const deds=(w.deds||[]).filter(d=>d&&d.l);
+
+              {(()=>{
+                const deds=(dw.deds||[]).filter(d=>d&&d.l);
                 const fuelA=deds.filter(d=>d.l.toLowerCase().includes("fuel advance"));
-                const fixedD=deds.filter(d=>!d.l.toLowerCase().includes("fuel advance"));
+                const insD=deds.filter(d=>d&&d.l&&["physical damage","bobtail","occacc","occ/acc","roadside","liability limiter"].some(k=>d.l.toLowerCase().includes(k)));
+                const opsD=deds.filter(d=>d&&d.l&&["eld","event recorder","parking","license","highway tax","fuel-highway"].some(k=>d.l.toLowerCase().includes(k)));
+                const escD=deds.filter(d=>d&&d.l&&d.l.toLowerCase().includes("escrow"));
                 const fuelTotal=fuelA.reduce((s,d)=>s+d.a,0);
-                const fixedTotal=fixedD.reduce((s,d)=>s+d.a,0);
+                const insTotal=insD.reduce((s,d)=>s+d.a,0);
+                const opsTotal=opsD.reduce((s,d)=>s+d.a,0);
+                const escTotal=escD.reduce((s,d)=>s+d.a,0);
                 const dedSum=deds.reduce((s,d)=>s+d.a,0);
-                const docTotal=w.totalDeductions||0;
+                const docTotal=dw.totalDeductions||0;
                 const mismatch=docTotal>0&&Math.abs(dedSum-docTotal)>1.50;
+
+                const buckets=[
+                  {id:"ded_fuel",icon:"⛽",label:"Fuel",sublabel:"Variable",total:fuelTotal,color:"#f87171",items:fuelA,pct:dw.gross>0?(fuelTotal/dw.gross*100).toFixed(1):0,
+                   render:(d,i)=>(
+                     <div key={i} style={{padding:"8px 10px",borderBottom:i<fuelA.length-1?`1px solid #f8717122`:"none"}}>
+                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                         <div style={{flex:1}}>
+                           <div style={{fontSize:11,fontWeight:700,color:"#f0f6ff"}}>Fuel Advance {fuelA.length>1?`#${i+1}`:""}</div>
+                           {d.gal>0&&<div style={{fontSize:9,color:"#8fa3c0",marginTop:2}}>{d.gal} gal @ ${(d.ppg||0).toFixed(3)}/gal{d.inv?` · INV #${d.inv}`:""}</div>}
+                         </div>
+                         <div style={{fontSize:12,fontWeight:800,color:"#f87171",flexShrink:0}}>-${d.a.toFixed(2)}</div>
+                       </div>
+                     </div>
+                   )},
+                  {id:"ded_insurance",icon:"🛡️",label:"Insurance",sublabel:"Fixed weekly",total:insTotal,color:"#a78bfa",items:insD,pct:dw.gross>0?(insTotal/dw.gross*100).toFixed(1):0,
+                   render:(d,i)=>(
+                     <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 10px",borderBottom:i<insD.length-1?`1px solid #a78bfa22`:"none"}}>
+                       <div style={{fontSize:10,color:"#c4b5fd",flex:1,marginRight:8,lineHeight:1.4}}>{d.l}</div>
+                       <div style={{fontSize:11,fontWeight:700,color:"#a78bfa",flexShrink:0}}>${d.a.toFixed(2)}</div>
+                     </div>
+                   )},
+                  {id:"ded_ops",icon:"⚙️",label:"Operations",sublabel:"Fees & taxes",total:opsTotal,color:"#fbbf24",items:opsD,pct:dw.gross>0?(opsTotal/dw.gross*100).toFixed(1):0,
+                   render:(d,i)=>(
+                     <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 10px",borderBottom:i<opsD.length-1?`1px solid #fbbf2422`:"none"}}>
+                       <div style={{fontSize:10,color:"#fde68a",flex:1,marginRight:8,lineHeight:1.4}}>{d.l}</div>
+                       <div style={{fontSize:11,fontWeight:700,color:"#fbbf24",flexShrink:0}}>${d.a.toFixed(2)}</div>
+                     </div>
+                   )},
+                  {id:"ded_escrow",icon:"🏦",label:"Escrow",sublabel:"Your savings",total:escTotal,color:"#34d399",items:escD,pct:dw.gross>0?(escTotal/dw.gross*100).toFixed(1):0,
+                   render:(d,i)=>(
+                     <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 10px",borderBottom:i<escD.length-1?`1px solid #34d39922`:"none"}}>
+                       <div style={{fontSize:10,color:"#6ee7b7",flex:1,marginRight:8,lineHeight:1.4}}>{d.l}</div>
+                       <div style={{fontSize:11,fontWeight:700,color:"#34d399",flexShrink:0}}>${d.a.toFixed(2)}</div>
+                     </div>
+                   )},
+                ];
+
                 return(
-                  <div key={w.week} style={{marginBottom:16}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                      <div style={{fontSize:11,fontWeight:700,color:C.text}}>{w.from} – {w.to}</div>
-                      <div style={{fontSize:11,fontWeight:800,color:w.net/w.gross>0.65?C.green:w.net/w.gross>0.55?C.gold:C.red}}>Net ${w.net?.toFixed(2)} · {w.net&&w.gross?(w.net/w.gross*100).toFixed(1):0}%</div>
+                  <div>
+                    {/* Date + net header */}
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,marginBottom:12}}>
+                      <div style={{fontSize:10,color:C.sub}}>{dw.from} – {dw.to}</div>
+                      <div style={{fontSize:12,fontWeight:800,color:dw.net/dw.gross>0.65?C.green:dw.net/dw.gross>0.55?C.gold:C.red}}>Net ${(dw.net||0).toFixed(2)} · {dw.gross>0?((dw.net||0)/(dw.gross)*100).toFixed(1):0}%</div>
                     </div>
+
                     {/* Mismatch warning */}
-                    {mismatch&&<div style={{padding:"6px 10px",borderRadius:7,background:`${C.red}15`,border:`1px solid ${C.red}44`,fontSize:10,color:C.red,marginBottom:8}}>⚠️ Deduction total mismatch — document shows ${docTotal.toFixed(2)} but extracted ${dedSum.toFixed(2)}. Re-scan this week for accuracy.</div>}
-                    {/* Fuel Advances — variable */}
-                    <div style={{marginBottom:8}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#f87171",letterSpacing:"0.07em",textTransform:"uppercase",marginBottom:5}}>⛽ Fuel Advances — Variable</div>
-                      {fuelA.length===0&&<div style={{fontSize:10,color:C.sub,padding:"6px 10px",background:C.raised,borderRadius:7}}>No fuel advances this week</div>}
-                      {fuelA.map((d,i)=>(
-                        <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 10px",background:`${C.red}10`,border:`1px solid ${C.red}25`,borderRadius:7,marginBottom:4}}>
-                          <div>
-                            <div style={{fontSize:11,fontWeight:700,color:C.text}}>Fuel Advance {fuelA.length>1?`#${i+1}`:""}</div>
-                            {d.gal>0&&<div style={{fontSize:9,color:C.sub,marginTop:1}}>{d.gal} gal @ ${d.ppg?.toFixed(3)||"?"}/gal{d.inv?` · INV#${d.inv}`:""}</div>}
+                    {mismatch&&<div style={{padding:"7px 11px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,fontSize:10,color:C.red,marginBottom:10}}>⚠️ Totals don't match — document shows ${docTotal.toFixed(2)} but we extracted ${dedSum.toFixed(2)}. Re-scan for accuracy.</div>}
+
+                    {/* 4 Summary Blocks */}
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+                      {buckets.map(b=>(
+                        <div key={b.id} onClick={()=>setHelpCard(helpCard===b.id+"_open"?null:b.id+"_open")}
+                          style={{background:`${b.color}10`,border:`1px solid ${b.color}33`,borderRadius:11,padding:"11px 12px",cursor:"pointer",transition:"all 0.15s",position:"relative"}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+                            <div style={{display:"flex",alignItems:"center",gap:5}}>
+                              <span style={{fontSize:15}}>{b.icon}</span>
+                              <div>
+                                <div style={{fontSize:11,fontWeight:800,color:"#f0f6ff"}}>{b.label}</div>
+                                <div style={{fontSize:8,color:b.color,fontWeight:600}}>{b.sublabel}</div>
+                              </div>
+                            </div>
+                            {helpBtn(b.id)}
                           </div>
-                          <div style={{fontSize:13,fontWeight:800,color:"#f87171"}}>-${d.a.toFixed(2)}</div>
+                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:900,color:b.color,marginBottom:2}}>
+                            ${b.total.toFixed(0)}
+                          </div>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                            <div style={{fontSize:9,color:"#8fa3c0"}}>{b.pct}% of gross</div>
+                            <div style={{fontSize:9,color:b.color,fontWeight:700}}>{b.items.length} item{b.items.length!==1?"s":""} {helpCard===b.id+"_open"?"▲":"▼"}</div>
+                          </div>
+                          {/* Mini bar */}
+                          <div style={{height:3,background:`${b.color}25`,borderRadius:2,marginTop:7,overflow:"hidden"}}>
+                            <div style={{height:"100%",width:`${Math.min(b.pct*3,100)}%`,background:b.color,borderRadius:2}}/>
+                          </div>
                         </div>
                       ))}
-                      {fuelA.length>0&&<div style={{textAlign:"right",fontSize:10,color:"#f87171",fontWeight:700,marginTop:2}}>Total: -${fuelTotal.toFixed(2)}</div>}
                     </div>
-                    {/* Fixed Deductions */}
-                    <div>
-                      <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.07em",textTransform:"uppercase",marginBottom:5}}>📋 Fixed & Recurring</div>
-                      {fixedD.sort((a,b)=>b.a-a.a).map((d,i)=>{
-                        // Flag anything that looks suspiciously high (>200) for a non-fuel item
-                        const suspicious=d.a>200&&!d.l.toLowerCase().includes("escrow");
-                        return(
-                          <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:suspicious?`${C.red}12`:C.raised,border:`1px solid ${suspicious?C.red:C.border}`,borderRadius:6,marginBottom:3}}>
-                            <div style={{fontSize:10,color:suspicious?C.red:C.text,flex:1,marginRight:8}}>{d.l}{suspicious?" ⚠️":""}</div>
-                            <div style={{fontSize:10,fontWeight:700,color:suspicious?C.red:C.sub,flexShrink:0}}>-${d.a.toFixed(2)}</div>
+
+                    {/* Dropdowns for each bucket */}
+                    {buckets.map(b=>(
+                      <div key={b.id+"_dd"}>
+                        {/* Help modal */}
+                        {helpModal(b.id)}
+                        {/* Dropdown */}
+                        {helpCard===b.id+"_open"&&(
+                          <div style={{background:C.bg,border:`1px solid ${b.color}33`,borderRadius:10,marginBottom:10,overflow:"hidden",animation:"fadein 0.15s ease"}}>
+                            <div style={{padding:"8px 12px",background:`${b.color}12`,borderBottom:`1px solid ${b.color}22`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                              <div style={{fontSize:10,fontWeight:800,color:b.color,letterSpacing:"0.06em",textTransform:"uppercase"}}>{b.icon} {b.label} Detail</div>
+                              <button onClick={e=>{e.stopPropagation();setHelpCard(null);}} style={{background:"none",border:"none",color:"#8fa3c0",fontSize:14,cursor:"pointer",lineHeight:1,padding:0}}>×</button>
+                            </div>
+                            {b.items.length===0?(
+                              <div style={{padding:"12px",fontSize:10,color:"#8fa3c0",textAlign:"center"}}>No {b.label.toLowerCase()} deductions this week</div>
+                            ):(
+                              <div>
+                                {b.items.map((d,i)=>b.render(d,i))}
+                                <div style={{padding:"8px 12px",background:`${b.color}08`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                                  <div style={{fontSize:9,color:"#8fa3c0",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em"}}>{b.label} Total</div>
+                                  <div style={{fontSize:13,fontWeight:800,color:b.color}}>{b.id==="ded_escrow"?"+":" -"}${b.total.toFixed(2)}</div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        );
-                      })}
-                      <div style={{textAlign:"right",fontSize:10,color:C.sub,fontWeight:700,marginTop:4}}>Fixed total: -${fixedTotal.toFixed(2)}</div>
-                    </div>
-                    {/* Grand total row */}
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:C.bg,borderRadius:8,border:`1px solid ${C.border}`,marginTop:8}}>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Grand total bar */}
+                    <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
                       <div style={{fontSize:11,fontWeight:700,color:C.text}}>Total Deductions</div>
-                      <div style={{fontSize:13,fontWeight:800,color:C.red}}>-${dedSum.toFixed(2)}</div>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <div style={{fontSize:9,color:C.sub}}>{dw.gross>0?(dedSum/dw.gross*100).toFixed(1):0}% of gross</div>
+                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:"#f87171"}}>-${dedSum.toFixed(2)}</div>
+                      </div>
                     </div>
                   </div>
                 );
-              })}
+              })()}
+            </div>
 
               {/* ⛽ FUEL VS MILES MPG CARD */}
               {(()=>{
@@ -1921,7 +2003,6 @@ ${pdfText.slice(0,24000)}`}]};
                   <Bar pct={(tEscReg+tEsc290)/2500*100} color={C.a3}/>
                 </div>
               </div>
-            </div>
 
           {/* MOVE PERFORMANCE */}
           {!focusMode&&<div style={K()}>
