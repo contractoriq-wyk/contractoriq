@@ -788,18 +788,40 @@ export default function ContractorIQv26(){
 
   const upgradeModal=()=>{
     if(!showUpgrade)return null;
+    const msg=upgradeSrc==="ai"?"You've used your "+FREE_AI+" free AI messages.":upgradeSrc==="scorer"?"You've used your "+FREE_OS+" free offer scores.":"Unlock the full power of DrayageIQ.";
     return(
-      <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
-        <div style={{background:C.card,borderRadius:20,padding:"28px 22px",maxWidth:360,width:"100%",border:"1px solid "+C.border,boxShadow:"0 24px 60px rgba(0,0,0,0.6)"}}>
-          <div style={{textAlign:"center",marginBottom:20}}>
-            <div style={{fontSize:36,marginBottom:8}}>🚛</div>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:C.text,marginBottom:6}}>Unlock ContractorIQ</div>
-            <div style={{fontSize:12,color:C.sub,lineHeight:1.6}}>{upgradeSrc==="ai"?"You've used your "+FREE_AI+" free AI messages.":upgradeSrc==="scorer"?"You've used your "+FREE_OS+" free offer scores.":"Upgrade to access the full decision engine."}</div>
+      <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.82)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setShowUpgrade(false)}>
+        <div style={{background:C.card,borderRadius:20,padding:"26px 22px",maxWidth:380,width:"100%",border:"1px solid "+C.border,boxShadow:"0 24px 60px rgba(0,0,0,0.7)"}} onClick={e=>e.stopPropagation()}>
+          {/* Header */}
+          <div style={{textAlign:"center",marginBottom:18}}>
+            <div style={{fontSize:32,marginBottom:8}}>🚛</div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:19,fontWeight:800,color:C.text,marginBottom:5}}>Choose Your Plan</div>
+            <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>{msg}</div>
           </div>
-          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
-            <button onClick={()=>window.open("https://buy.stripe.com/aFa8wP7FLbMY4Ua0Ls9MY00","_blank")} style={{padding:"16px",borderRadius:12,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}><div>🔥 Start 5-Day Test Drive</div><div style={{fontSize:11,fontWeight:400,marginTop:3}}>Just $1 — full access, cancel anytime</div></button>
-            <button onClick={()=>window.open(PRICING.monthlyUrl,"_blank")} style={{padding:"16px",borderRadius:12,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}><div>⚡ Go Monthly — {PRICING.monthlyPrice}/month</div><div style={{fontSize:11,fontWeight:400,marginTop:3}}>Unlimited everything · No ads · Cancel anytime</div></button>
-            <button onClick={()=>window.open(PRICING.annualUrl,"_blank")} style={{padding:"14px",borderRadius:12,background:C.raised,border:"1px solid "+C.a3+"55",color:"#a78bfa",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}><div>📅 Go Annual — {PRICING.annualPrice}/year</div><div style={{fontSize:10,fontWeight:400,color:C.sub,marginTop:2}}>{PRICING.annualNote} · Cancel anytime</div></button>
+          {/* Tier 1 */}
+          <div onClick={()=>window.open(PRICING.tier1Url,"_blank")} style={{padding:"14px 16px",borderRadius:12,background:"rgba(167,139,250,0.07)",border:"1px solid rgba(167,139,250,0.25)",marginBottom:9,cursor:"pointer"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#d0daf0"}}>Standard</div>
+              <div style={{fontSize:15,fontWeight:800,color:"#a78bfa"}}>{PRICING.tier1Price}<span style={{fontSize:9,fontWeight:400,color:C.sub}}>/mo</span></div>
+            </div>
+            <div style={{fontSize:10,color:C.sub,lineHeight:1.55}}>Unlimited PDF scans · Load tracking · Earnings dashboard · AI guidance</div>
+          </div>
+          {/* Tier 2 Monthly — hero */}
+          <div onClick={()=>window.open(PRICING.tier2Url,"_blank")} style={{padding:"14px 16px",borderRadius:12,background:"linear-gradient(135deg,rgba(0,255,204,0.08),rgba(167,139,250,0.06))",border:"2px solid #00ffcc55",marginBottom:9,cursor:"pointer",position:"relative",boxShadow:"0 0 18px rgba(0,255,204,0.12)"}}>
+            <div style={{position:"absolute",top:-9,right:12,background:"linear-gradient(135deg,#00ffcc,#00d4aa)",borderRadius:20,padding:"2px 10px",fontSize:8,fontWeight:800,color:"#080c16",letterSpacing:"0.08em"}}>⭐ MOST POPULAR</div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#d0daf0"}}>Pro Smart</div>
+              <div style={{fontSize:15,fontWeight:800,color:"#00ffcc"}}>{PRICING.tier2Price}<span style={{fontSize:9,fontWeight:400,color:C.sub}}>/mo</span></div>
+            </div>
+            <div style={{fontSize:10,color:C.sub,lineHeight:1.55}}>Everything in Standard + Live diesel · Live weather · Smart AI with your real numbers · Load profitability math</div>
+          </div>
+          {/* Annual */}
+          <div onClick={()=>window.open(PRICING.annualUrl,"_blank")} style={{padding:"12px 16px",borderRadius:12,background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.22)",marginBottom:16,cursor:"pointer"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:800,color:"#d0daf0"}}>Pro Smart Annual</div>
+              <div style={{fontSize:14,fontWeight:800,color:"#fbbf24"}}>{PRICING.annualPrice}<span style={{fontSize:9,fontWeight:400,color:C.sub}}>/yr</span></div>
+            </div>
+            <div style={{fontSize:10,color:C.sub}}>{PRICING.annualNote}</div>
           </div>
           <button onClick={()=>setShowUpgrade(false)} style={{width:"100%",padding:"10px",borderRadius:9,background:"transparent",border:"1px solid "+C.border,color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Maybe later</button>
         </div>
@@ -1063,13 +1085,13 @@ export default function ContractorIQv26(){
                 </div>
 
                 {/* Pro — hero card */}
-                <div onClick={()=>window.open(PRICING.monthlyUrl,"_blank")} style={{background:"linear-gradient(145deg,rgba(0,255,204,0.07),rgba(167,139,250,0.07))",border:"2px solid #00ffcc",borderRadius:13,padding:"15px 12px",cursor:"pointer",textAlign:"center",position:"relative",boxShadow:"0 0 22px rgba(0,255,204,0.18)"}}>
+                <div onClick={()=>window.open(PRICING.tier2Url,"_blank")} style={{background:"linear-gradient(145deg,rgba(0,255,204,0.07),rgba(167,139,250,0.07))",border:"2px solid #00ffcc",borderRadius:13,padding:"15px 12px",cursor:"pointer",textAlign:"center",position:"relative",boxShadow:"0 0 22px rgba(0,255,204,0.18)"}}>
                   <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#00ffcc,#a78bfa)",borderRadius:20,padding:"2px 11px",fontSize:8,fontWeight:800,color:"#000",whiteSpace:"nowrap"}}>⭐ POPULAR</div>
-                  <div style={{fontSize:22,marginBottom:4}}>💰</div>
-                  <div style={{fontSize:11,fontWeight:800,color:"#00ffcc",marginBottom:2}}>Monthly</div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:800,color:"#00ffcc",margin:"2px 0"}}>{PRICING.monthlyPrice}</div>
+                  <div style={{fontSize:22,marginBottom:4}}>⚡</div>
+                  <div style={{fontSize:11,fontWeight:800,color:"#00ffcc",marginBottom:2}}>Pro Smart</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:800,color:"#00ffcc",margin:"2px 0"}}>{PRICING.tier2Price}</div>
                   <div style={{fontSize:9,color:"#00ffcc",opacity:0.6,marginBottom:4}}>/month</div>
-                  <div style={{fontSize:9,color:"#4a6080",lineHeight:1.55}}>Unlimited AI<br/>No ads</div>
+                  <div style={{fontSize:9,color:"#4a6080",lineHeight:1.55}}>Live data<br/>Smart AI</div>
                 </div>
 
                 {/* Annual */}
