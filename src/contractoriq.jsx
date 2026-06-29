@@ -181,53 +181,76 @@ function getSB(){ if(!_sb && typeof window!=="undefined" && window.supabase){ _s
 
 
 // ═══ DESKTOP TICKER — Pure CSS marquee with live prices from /api/ticker ═══
+// ═══ DESKTOP TICKER — Finnhub live prices, color-coded, Wall Street marquee ═══
 function TVTickerTape({symbols}){
   const [prices,setPrices]=useState({});
+  const [loaded,setLoaded]=useState(false);
+  const [error,setError]=useState(false);
+
   useEffect(()=>{
     async function load(){
       try{
-        // Map TradingView proNames to Yahoo Finance symbols
-        const ymap={"AMEX:SPY":"SPY","AMEX:DIA":"DIA","NASDAQ:QQQ":"QQQ","AMEX:IWM":"IWM","CBOE:VIX":"%5EVIX","AMEX:GLD":"GLD","AMEX:USO":"USO","COINBASE:BTCUSD":"BTC-USD","NYSE:XOM":"XOM","NASDAQ:JBHT":"JBHT","NASDAQ:AAPL":"AAPL","NASDAQ:TSLA":"TSLA","NASDAQ:NVDA":"NVDA","NASDAQ:GOOGL":"GOOGL","NASDAQ:AMZN":"AMZN","NYSE:CVX":"CVX","NYSE:ODFL":"ODFL","COINBASE:ETHUSD":"ETH-USD","AMEX:TLT":"TLT","NASDAQ:META":"META"};
-        const syms=symbols.map(s=>ymap[s.proName]||s.proName.split(":").pop());
-        const r=await fetch("/api/ticker?symbols="+syms.join(","));
-        if(!r.ok)return;
+        const tvSyms=symbols.map(s=>s.proName).join(",");
+        const r=await fetch("/api/ticker?symbols="+encodeURIComponent(tvSyms));
+        if(!r.ok){setError(true);return;}
         const d=await r.json();
-        // remap yahoo key -> proName key
-        const out={};
-        symbols.forEach(s=>{
-          const ys=ymap[s.proName]||s.proName.split(":").pop();
-          if(d[ys])out[s.proName]=d[ys];
-        });
-        setPrices(out);
-      }catch(e){}
+        if(d.error){setError(true);return;}
+        setPrices(d);
+        setLoaded(true);
+        setError(false);
+      }catch(e){setError(true);}
     }
     load();
-    const t=setInterval(load,90000);
+    const t=setInterval(load,30000);// refresh every 30s
     return()=>clearInterval(t);
   },[symbols.map(s=>s.proName).join(",")]);
 
   const items=[...symbols,...symbols,...symbols];
+
   return(
     <div style={{flex:1,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",background:"#070b15",height:46}}>
-      {/* Fade masks */}
+      {/* Left fade */}
       <div style={{position:"absolute",left:0,top:0,bottom:0,width:48,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+      {/* Right fade */}
       <div style={{position:"absolute",right:0,top:0,bottom:0,width:48,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+      {/* LIVE indicator */}
+      <div style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",zIndex:4,display:"flex",alignItems:"center",gap:4,pointerEvents:"none"}}>
+        <div style={{width:6,height:6,borderRadius:"50%",background:error?"#f87171":loaded?"#00ffcc":"#fbbf24",boxShadow:`0 0 6px ${error?"#f87171":loaded?"#00ffcc":"#fbbf24"}`,animation:"pulse-dot 2s ease-in-out infinite"}}/>
+        <span style={{fontSize:7,fontWeight:800,color:error?"#f87171":loaded?"#00ffcc":"#fbbf24",letterSpacing:"0.1em",fontFamily:"'IBM Plex Mono',monospace"}}>{error?"ERR":loaded?"LIVE":"..."}</span>
+      </div>
       {/* Scrolling track */}
-      <div style={{display:"flex",animation:"ticker-scroll 40s linear infinite",whiteSpace:"nowrap",willChange:"transform"}}>
+      <div style={{display:"flex",animation:"ticker-scroll 42s linear infinite",whiteSpace:"nowrap",willChange:"transform",paddingLeft:60}}>
         {items.map((s,i)=>{
           const sym=s.title||s.proName.split(":").pop();
           const p=prices[s.proName];
           const price=p?.price;
           const pct=p?.pct;
+          const change=p?.change;
           const up=pct==null?null:pct>=0;
-          const col=price==null?"#8fa3c0":up?"#4ade80":"#f87171";
-          const priceStr=price==null?"···":price>=1000?price.toFixed(0):price>=10?price.toFixed(2):price.toFixed(4);
+          // Color: green if up, red if down, neutral gray if no data
+          const col=price==null?"#4a6080":up?"#4ade80":"#f87171";
+          const priceStr=price==null?"···":price>=10000?price.toFixed(0):price>=100?price.toFixed(2):price>=1?price.toFixed(2):price.toFixed(4);
           const pctStr=pct==null?"":( up?"+":"")+pct.toFixed(2)+"%";
+          const changeStr=change==null?"":(up?"+":"")+change.toFixed(2);
           return(
-            <div key={i} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"0 20px",borderRight:"1px solid #1a2535",height:46,flexShrink:0}}>
-              <span style={{fontSize:10,fontWeight:800,color:"#8fa3c0",letterSpacing:"0.07em",fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
-              <span style={{fontSize:11,fontWeight:800,color:col,fontFamily:"'IBM Plex Mono',monospace"}}>{priceStr}</span>
-              {pctStr&&<span style={{fontSize:9,fontWeight:700,color:col,fontFamily:"'IBM Plex Mono',monospace",padding:"1px 4px",borderRadius:3,background:col+"22"}}>{pctStr}</span>}
+            <div key={i} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"0 18px",borderRight:"1px solid #1a2535",height:46,flexShrink:0}}>
+              {/* Symbol name */}
+              <span style={{fontSize:9,fontWeight:800,color:"#6a8099",letterSpacing:"0.07em",fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
+              {/* Price */}
+              <span style={{fontSize:11,fontWeight:800,color:col,fontFamily:"'IBM Plex Mono',monospace",transition:"color 0.3s"}}>{priceStr}</span>
+              {/* Pct change badge */}
+              {pctStr&&(
+                <span style={{
+                  fontSize:8,fontWeight:700,color:col,
+                  fontFamily:"'IBM Plex Mono',monospace",
+                  padding:"1px 5px",borderRadius:3,
+                  background:col+"18",
+                  border:`1px solid ${col}33`,
+                  transition:"all 0.3s"
+                }}>{pctStr}</span>
+              )}
+              {/* Change arrow */}
+              {pct!=null&&<span style={{fontSize:10,color:col,lineHeight:1}}>{up?"▲":"▼"}</span>}
             </div>
           );
         })}
@@ -247,6 +270,8 @@ export default function ContractorIQv26(){
       @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
       @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
       @keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-33.333%)}}
+      @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
+      @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.7)}}
       .stat-grad{background:linear-gradient(135deg,#00ffcc,#a5f3fc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% auto;animation:shimmer 3s linear infinite}
       .shimmer-vendor{background:linear-gradient(-45deg,#0d1525,#1a2436,#0a0e1a,#162033);background-size:400% 400%;animation:rotate-radial 8s ease infinite}
       .tab-active-glow{box-shadow:0 0 14px rgba(0,255,204,0.5)!important}
@@ -936,7 +961,7 @@ ${pdfText.slice(0,24000)}`}]};
     if(helpCard!==id)return null;const h=HELP[id];if(!h)return null;
     return(<div style={{margin:"6px 0 10px",padding:"11px 13px",background:C.a3+"12",borderRadius:9,border:"1px solid "+C.a3+"33",fontSize:11,color:C.sub,lineHeight:1.7,position:"relative"}}><div style={{fontWeight:700,color:"#a78bfa",marginBottom:4,fontSize:12}}>{h.t}</div><div>{h.b}</div><button onClick={()=>setHelpCard(null)} style={{position:"absolute",top:7,right:9,background:"none",border:"none",color:C.sub,fontSize:14,cursor:"pointer",lineHeight:1}}>×</button></div>);
   };
-  const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:1,padding:"9px 4px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:11,letterSpacing:"0.04em",textTransform:"uppercase",border:"none",background:tab===t?C.accent:C.raised,color:tab===t?"#000":C.sub,transition:"all 0.2s",boxShadow:tab===t?`0 0 14px ${C.accent}66,0 0 28px ${C.accent}22`:"none"}}>{l}</button>;
+  const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:1,padding:"9px 4px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:11,letterSpacing:"0.04em",textTransform:"uppercase",border:"none",background:tab===t?`linear-gradient(135deg,${C.accent},${C.a3})`:`${C.raised}`,color:tab===t?"#000":C.sub,transition:"all 0.2s ease",boxShadow:tab===t?`0 0 16px ${C.accent}55,0 2px 8px rgba(0,0,0,0.4)`:"none",transform:tab===t?"translateY(-1px)":"none"}}>{l}</button>;
 
   // ═══ AUTH GATE (login required) ═══
   if(!authChecked&&!isOwnerMode){
@@ -1408,7 +1433,7 @@ ${pdfText.slice(0,24000)}`}]};
       </div>
 
       {/* HEADER */}
-      <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"13px 16px",position:"sticky",top:0,zIndex:100}}>
+      <div style={{background:darkMode?"rgba(14,20,38,0.97)":"rgba(255,255,255,0.97)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderBottom:`1px solid ${C.border}`,padding:"13px 16px",position:"sticky",top:0,zIndex:100,boxShadow:"0 1px 24px rgba(0,0,0,0.4)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:11}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <img src={LOGO_ICON} alt="DrayageIQ" style={{width:34,height:34,borderRadius:9,flexShrink:0,boxShadow:"0 0 12px rgba(0,255,204,0.25)"}}/>
@@ -1417,7 +1442,7 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":demoMode?"Demo Driver":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</div>
             </div>
           </div>
-          <div style={{textAlign:"right"}}><div style={{fontSize:10,color:C.sub}}>YTD Gross</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.accent}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div>
+          <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:8,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:1,fontWeight:600}}>YTD Gross</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:900,fontSize:18,background:"linear-gradient(135deg,#00ffcc,#a78bfa)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</div>{allW.length>0&&<div style={{fontSize:8,color:C.sub,marginTop:2}}>{allW.length} wks · ${(tGross/allW.length).toFixed(0)}/wk avg</div>}</div>
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
           <div style={{display:"flex",gap:6,alignItems:"center",overflowX:"auto",scrollbarWidth:"none",flex:1}}>
@@ -1426,8 +1451,8 @@ ${pdfText.slice(0,24000)}`}]};
             <TB t="ai" l="🧠 AI"/>
             <TB t="growth" l="🚀 Growth"/>
             <button onClick={()=>setShowInsurance(true)} style={{padding:"8px 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa",boxShadow:"0 0 12px #a78bfa33",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>🛡️ Protect</button>
-            <button onClick={()=>setShowQR(true)} style={{padding:"8px 12px",borderRadius:8,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>📱 QR</button>
-            <button onClick={()=>setFocusMode(p=>!p)} style={{padding:"8px 12px",borderRadius:8,background:focusMode?C.gold:`${C.gold}22`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{focusMode?"⚡ ON":"⚡ Focus"}</button>
+            
+            <button onClick={()=>setFocusMode(p=>!p)} style={{padding:"8px 12px",borderRadius:8,background:focusMode?`linear-gradient(135deg,${C.gold},#f59e0b)`:`${C.gold}15`,border:`2px solid ${focusMode?C.gold:C.gold+"88"}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap",boxShadow:focusMode?`0 0 14px ${C.gold}66`:"none",transition:"all 0.2s ease"}}>{focusMode?"⚡ ON":"⚡ Focus"}</button>
           </div>
           <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
             <div style={{position:"relative"}}>
