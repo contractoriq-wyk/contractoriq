@@ -550,21 +550,95 @@ export default function ContractorIQv26(){
     const query=q||searchQ;if(!query||!query.trim())return;
     setSearchLoading(true);setSearchResult("");
     try{
+      // Get user location
       let locationCtx="";
-      try{const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000,maximumAge:60000}));locationCtx=`User approximate area: lat ${pos.coords.latitude.toFixed(2)}, lng ${pos.coords.longitude.toFixed(2)}.`;}catch(e){}
-      const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:600,messages:[{role:"user",content:`You are a knowledgeable assistant for a commercial truck driver. ${locationCtx} Answer the following question using your general knowledge. Be honest if something requires real-time data (like live weather or current gas prices) — give useful guidance anyway. Answer concisely in 150 words or fewer. Use bullet points for lists.\n\nQuestion: ${query}`}]})});
-      const d=await resp.json();const txt=d.content?.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
+      let userLat=null,userLon=null;
+      try{
+        const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000,maximumAge:60000}));
+        userLat=pos.coords.latitude.toFixed(4);
+        userLon=pos.coords.longitude.toFixed(4);
+        locationCtx=`User location: lat ${userLat}, lon ${userLon}.`;
+      }catch(e){}
+
+      // Build intelligence briefing for Smart (Tier 2) users
+      let briefing="";
+      if(isSmart){
+        const fetches=[];
+        // 1. Live diesel price
+        fetches.push(fetch("/api/diesel").then(r=>r.json()).catch(()=>null));
+        // 2. Live weather — use GPS if available, else Baltimore (home market)
+        const weatherQ=userLat?`/api/weather?lat=${userLat}&lon=${userLon}`:`/api/weather?city=Baltimore`;
+        fetches.push(fetch(weatherQ).then(r=>r.json()).catch(()=>null));
+        const [dp,wp]=await Promise.all(fetches);
+
+        // Build settlement intelligence from user's own data
+        const weeks=allW.filter(w=>w.gross>0);
+        let settlementCtx="";
+        if(weeks.length>0){
+          const recent=weeks.slice(-8);// last 8 weeks
+          const avgGross=recent.reduce((s,w)=>s+(w.gross||0),0)/recent.length;
+          const avgNet=recent.reduce((s,w)=>s+(w.net||0),0)/recent.length;
+          const avgMiles=recent.reduce((s,w)=>s+(w.miles||0),0)/recent.length;
+          const avgRPM=avgMiles>0?(avgGross/avgMiles):0;
+          const totalLoads=recent.reduce((s,w)=>s+(w.moves?.length||0),0);
+          const avgLoadsPerWeek=totalLoads/recent.length;
+          const lastWeek=weeks[weeks.length-1];
+          settlementCtx=`
+DRIVER SETTLEMENT DATA (last ${recent.length} weeks):
+- Avg weekly gross: $${avgGross.toFixed(0)}
+- Avg weekly net: $${avgNet.toFixed(0)}
+- Avg miles/week: ${avgMiles.toFixed(0)}
+- Avg revenue per mile: $${avgRPM.toFixed(3)}/mi
+- Avg loads/week: ${avgLoadsPerWeek.toFixed(1)}
+- Truck MPG setting: ${fuelMPG} MPG
+- Last week: Week ${lastWeek.week||"?"}, Gross $${lastWeek.gross||0}, Net $${lastWeek.net||0}, Miles ${lastWeek.miles||0}`;
+        }
+
+        // Build live data context
+        const livePts=[];
+        if(dp?.price) livePts.push(`🛢️ Diesel (national avg): $${dp.price}/gal (EIA, as of ${dp.period})`);
+        if(wp?.temp!=null) livePts.push(`🌤️ Weather at your location: ${wp.temp}°F, ${wp.description||wp.condition}, wind ${wp.wind_mph}mph, visibility ${wp.visibility_miles}mi`);
+        if(dp?.price&&fuelMPG>0) livePts.push(`⛽ Your fuel cost estimate: $${(dp.price/fuelMPG).toFixed(3)}/mile at ${fuelMPG}MPG`);
+
+        briefing=`
+═══ SMART ADVISOR INTELLIGENCE BRIEFING ═══
+${livePts.join("
+")}
+${settlementCtx}
+═══════════════════════════════════════════`;
+      }
+
+      // Build system prompt — Tier 1 vs Tier 2
+      const isTier2=isSmart;
+      const systemPrompt=isTier2
+        ?`You are an elite AI business advisor for a professional commercial drayage truck driver and owner-operator. You have access to their real settlement data, live diesel prices, and live weather. Your job is to give sharp, data-driven answers that help them make more money, cut costs, and run a smarter operation.
+
+RULES:
+- Always use the driver's actual numbers from their settlement data when answering
+- When fuel cost matters, calculate using their actual MPG and today's live diesel price
+- For load profitability questions, show the math: gross rate, fuel cost, net, RPM
+- Be direct and specific — no generic advice. They are a professional, not a beginner
+- Flag if a load rate is below their historical average RPM
+- For weather questions, use the live reading above
+- Format answers clearly with numbers. Max 200 words unless math requires more.
+${briefing}
+${locationCtx}`
+        :`You are a knowledgeable assistant for a commercial truck driver. Answer using general knowledge. Be honest when real-time data would help — suggest they upgrade to Pro Smart for live data. Answer concisely in 150 words or fewer. Use bullet points for lists. ${locationCtx}`;
+
+      const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        model:"claude-sonnet-4-5",
+        max_tokens:isTier2?800:600,
+        messages:[{role:"user",content:`${systemPrompt}
+
+Question: ${query}`}]
+      })});
+      const d=await resp.json();
+      const txt=d.content?.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
       setSearchResult(txt||"No answer found — try rephrasing your question.");
     }catch(e){setSearchResult("⚠️ Advisor unavailable. Please try again.");}
     setSearchLoading(false);
   }
 
-  function confirmScan(){
-    if(!scanResult)return;
-    if(allW.find(w=>w.week===scanResult.week)){setScanMsg("⚠️ Week "+scanResult.week+" already exists.");return;}
-    setAddedW(p=>[...p,{...scanResult,vendor:detectVendor(scanResult),moves:scanResult.moves||[],deds:scanResult.deds||[]}]);
-    setScanMsg(`✅ Week ${scanResult.week} added!`);setScanResult(null);
-  }
 
   async function parsePasteText(){
     if(!pasteText.trim())return;
@@ -589,7 +663,28 @@ export default function ContractorIQv26(){
     const m={r:"u",t:chatIn};const h=[...chat,m];
     setChat(h);setChatIn("");setChatLoad(true);
     if(!hasAccess)setAiUses(function(p){return p+1;});
-    try{const r=await ai(h.map(x=>({role:x.r==="a"?"assistant":"user",content:x.t})),SYS);setChat(p=>[...p,{r:"a",t:r}]);}
+    try{
+      // For Pro users: fetch live diesel + weather and inject into prompt
+      let liveCtx="";
+      if(isPro){
+        try{
+          const [dieselRes,wxRes]=await Promise.allSettled([
+            fetch("/api/diesel").then(r=>r.json()),
+            fetch("/api/weather?city=Baltimore").then(r=>r.json())
+          ]);
+          const d=dieselRes.status==="fulfilled"?dieselRes.value:null;
+          const w=wxRes.status==="fulfilled"?wxRes.value:null;
+          const parts=[];
+          if(d?.price) parts.push(`LIVE DIESEL: $${d.price}/gal (EIA ${d.period})`);
+          if(w?.temp!=null) parts.push(`LIVE WEATHER Baltimore: ${w.temp}°F, ${w.description}, wind ${w.wind_mph}mph, visibility ${w.visibility_miles}mi`);
+          if(parts.length) liveCtx="\n\nLIVE DATA (use these real numbers in your answer):\n"+parts.join("\n");
+        }catch(e){}
+      }
+      const proTag=isPro?"PRO MEMBER — provide deeper analysis, use all live data provided.":"FREE USER — helpful but brief.";
+      const enhancedSYS=SYS+"\n\n"+proTag+liveCtx;
+      const r=await ai(h.map(x=>({role:x.r==="a"?"assistant":"user",content:x.t})),enhancedSYS);
+      setChat(p=>[...p,{r:"a",t:r}]);
+    }
     catch{setChat(p=>[...p,{r:"a",t:"⚠️ Error. Try again."}]);}
     setChatLoad(false);
   }
@@ -1262,21 +1357,21 @@ export default function ContractorIQv26(){
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:12,padding:"0 12px",border:`2px solid ${C.a3}66`}}>
             <span style={{fontSize:15,flexShrink:0}}>{searchLoading?"⏳":"🔍"}</span>
-            <input value={searchQ||""} onChange={e=>setSearchQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}} placeholder="Ask anything: routes, HOS rules, fuel tips, regs..." style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"11px 0",width:"100%",outline:"none"}}/>
+            <input value={searchQ||""} onChange={e=>setSearchQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}} placeholder={isSmart?"Ask anything — I know your numbers, live diesel & weather...":"Ask anything: routes, HOS rules, fuel tips, regs..."} style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"11px 0",width:"100%",outline:"none"}}/>
             {(searchQ||"").trim()&&<button onClick={()=>{setSearchQ("");setSearchResult("");}} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer",padding:"0 4px",flexShrink:0}}>×</button>}
           </div>
           <button onClick={()=>runSearch()} disabled={!(searchQ||"").trim()||searchLoading} style={{padding:"11px 16px",borderRadius:12,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:!(searchQ||"").trim()||searchLoading?C.sub:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{searchLoading?"⏳ ...":"Search"}</button>
         </div>
         {!searchResult&&!searchLoading&&(
           <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
-            {["⛽ MPG tips","📋 HOS rules","🚛 Load planning","💰 Fuel surcharge math","🔧 Tire blowout tips"].map(s=>(
+            {(isSmart?["📊 Analyze my RPM trend","⛽ Cost of next load","🌤️ Weather on my route","💰 Should I take this load?","📈 How to improve my net"]:["⛽ MPG tips","📋 HOS rules","🚛 Load planning","💰 Fuel surcharge math","🔧 Tire blowout tips"]).map(s=>(
               <button key={s} onClick={()=>{const q=s.replace(/^[^\s]+\s/,"");setSearchQ(q);setTimeout(()=>runSearch(q),50);}} style={{padding:"5px 11px",borderRadius:20,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:"#a78bfa",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{s}</button>
             ))}
           </div>
         )}
         {searchResult&&(
           <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}55`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
-            {searchResult}<div style={{marginTop:8,padding:"7px 10px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,fontSize:10,color:C.sub,lineHeight:1.5}}>💡 Based on general knowledge — not live data. For current prices or weather, check a real-time source.</div><button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
+            {searchResult}<div style={{marginTop:8,padding:"7px 10px",borderRadius:8,background:isSmart?`${C.accent}12`:`${C.gold}12`,border:`1px solid ${isSmart?C.accent:C.gold}33`,fontSize:10,color:C.sub,lineHeight:1.5}}>{isSmart?"⚡ Smart AI — answered using your live settlement data, real diesel prices & weather.":"💡 Based on general knowledge — not live data. Upgrade to Pro Smart for live data & deeper answers."}</div><button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
           </div>
         )}
       </div>
