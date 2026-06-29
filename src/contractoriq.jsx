@@ -407,10 +407,6 @@ export default function ContractorIQv26(){
   const [cloudLoaded,setCloudLoaded]=useState(false);
 
   // Show welcome/landing page whenever user is not logged in
-  useEffect(()=>{
-    if(!user) setShowWelcome(true);
-  },[user]);
-
   // Show welcome when not logged in (skip for dev/owner mode)
   useEffect(()=>{
     if(!user&&!isOwnerMode) setShowWelcome(true);
@@ -838,9 +834,7 @@ export default function ContractorIQv26(){
   if(!authChecked&&!isOwnerMode){
     return(<div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.sub,display:"flex",alignItems:"center",justifyContent:"center"}}>Loading…</div>);
   }
-  if(!user&&!isOwnerMode){
-    // Not logged in — show welcome/landing page (setShowWelcome handled by useEffect below)
-  if(!user&&!showWelcome){
+  if(!user&&!showWelcome&&!isOwnerMode){
     return(
       <div style={{background:"#080c16",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{color:"#00ffcc",fontFamily:"'IBM Plex Mono',monospace",fontSize:12}}>Loading...</div>
