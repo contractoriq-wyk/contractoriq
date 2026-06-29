@@ -1690,7 +1690,7 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{display:"flex",gap:10}}>{vendorStats.map(v=><div key={v.key} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:8,height:8,borderRadius:"50%",background:v.color}}/><span style={{fontSize:9,color:C.sub}}>{v.short}</span></div>)}</div>
             </div>
             {helpModal("trend")}
-            <div style={{display:"flex",alignItems:"flex-end",gap:4,height:80,padding:"0 2px"}}>
+            <div style={{display:"flex",alignItems:"flex-end",gap:wide?6:3,height:108,padding:"18px 2px 0",overflowX:wide?"visible":"auto"}}>
               {allW.map((w,i)=>{
                 const maxNet=Math.max(...allW.map(x=>x.net));
                 const h=Math.max(8,(w.net/maxNet)*68);
@@ -2244,7 +2244,7 @@ ${pdfText.slice(0,24000)}`}]};
                 </div>
               </div>
             </div>
-            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7}}>
+            <div style={{padding:"10px 12px",display:isCollapsed("uploads")?"none":"flex",flexDirection:"column",gap:7}}>
               {addedW.length===0?<div style={{textAlign:"center",padding:"18px",color:C.sub,fontSize:11}}><div style={{fontSize:26,marginBottom:6}}>📭</div><div>No uploads yet — scan a PDF above</div></div>:[...addedW].reverse().map(function(w,i){
                 const g=wg(w),wKey=w.week+(w.from||""),isSel=selWkKeys.has(wKey);
                 return(
@@ -2307,7 +2307,7 @@ ${pdfText.slice(0,24000)}`}]};
           <div style={K()}>
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}<button onClick={e=>{e.stopPropagation();toggleCard("fullHist");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("fullHist")?"▶":"▼"}</button></div>
             {helpModal("fullHistory")}
-            <div style={{display:isCollapsed("fullHist")?"none":"block",overflowX:"auto",display:isCollapsed("uploads")?"none":"block",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
+            <div style={{display:isCollapsed("fullHist")?"none":"block",overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
                 <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Wk","Vendor","Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 6px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>{allMoves.slice().reverse().map((m,i)=>{
