@@ -430,6 +430,9 @@ export default function ContractorIQv26(){
   const doLogout=async()=>{
     const c=getSB(); if(c){ await c.auth.signOut(); }
     setUser(null); setCloudLoaded(false); setAuthSent(false); setAuthEmail("");
+    // Clear welcome flag so pricing/welcome shows on next login
+    try{localStorage.removeItem("ciq_welcome_done");}catch(e){}
+    setShowWelcome(true);
   };
 
   // Pull cloud data after login
@@ -1127,20 +1130,37 @@ export default function ContractorIQv26(){
                   Built for drayage owner-operators — simple, smart, and efficient.
                 </p>
 
-                {/* 4 Feature tiles — compact */}
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
-                  {[
-                    {icon:"💰",label:"Income Leakage",desc:"See where money disappears"},
-                    {icon:"⏱️",label:"30 Seconds",desc:"Upload to full analysis"},
-                    {icon:"🧠",label:"AI Advisor",desc:"Knows your real numbers"},
-                    {icon:"📊",label:"5+ Weeks Tracked",desc:"Every route, every dollar"},
-                  ].map(function(f){return(
-                    <div key={f.label} style={{background:"rgba(255,255,255,0.03)",borderRadius:12,padding:"14px 13px",border:"1px solid rgba(255,255,255,0.07)"}}>
-                      <div style={{fontSize:24,marginBottom:6}}>{f.icon}</div>
-                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,color:"#d0daf0",marginBottom:3}}>{f.label}</div>
-                      <div style={{fontSize:10,color:"#3a5570",lineHeight:1.5}}>{f.desc}</div>
+                {/* PRICING TIERS */}
+                <div style={{fontSize:10,fontWeight:700,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12}}>Choose Your Plan</div>
+                <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
+                  {/* Tier 1 */}
+                  <div style={{background:"rgba(167,139,250,0.06)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:12,padding:"14px 16px"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#d0daf0"}}>Standard</div>
+                      <div style={{fontSize:14,fontWeight:800,color:"#a78bfa"}}>{PRICING.tier1Price}<span style={{fontSize:9,fontWeight:400,color:"#5a7590"}}>/mo</span></div>
                     </div>
-                  );})}
+                    <div style={{fontSize:10,color:"#5a7590",lineHeight:1.6,marginBottom:10}}>Unlimited PDF scans · Load tracking · Earnings dashboard · AI trucking guidance</div>
+                    <a href={PRICING.tier1Url} target="_blank" rel="noreferrer" style={{display:"block",textAlign:"center",padding:"8px",borderRadius:8,background:"rgba(167,139,250,0.15)",border:"1px solid rgba(167,139,250,0.35)",color:"#a78bfa",fontSize:11,fontWeight:700,textDecoration:"none"}}>Get Standard →</a>
+                  </div>
+                  {/* Tier 2 */}
+                  <div style={{background:"rgba(0,255,204,0.06)",border:"1px solid rgba(0,255,204,0.25)",borderRadius:12,padding:"14px 16px",position:"relative"}}>
+                    <div style={{position:"absolute",top:-9,right:12,background:"linear-gradient(135deg,#00ffcc,#00d4aa)",borderRadius:20,padding:"2px 10px",fontSize:8,fontWeight:800,color:"#080c16",letterSpacing:"0.08em"}}>MOST POPULAR</div>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#d0daf0"}}>Pro Smart</div>
+                      <div style={{fontSize:14,fontWeight:800,color:"#00ffcc"}}>{PRICING.tier2Price}<span style={{fontSize:9,fontWeight:400,color:"#5a7590"}}>/mo</span></div>
+                    </div>
+                    <div style={{fontSize:10,color:"#5a7590",lineHeight:1.6,marginBottom:10}}>Everything in Standard + Live diesel prices · Live weather · Smart AI with your real numbers · Load profitability math</div>
+                    <a href={PRICING.tier2Url} target="_blank" rel="noreferrer" style={{display:"block",textAlign:"center",padding:"8px",borderRadius:8,background:"linear-gradient(135deg,rgba(0,255,204,0.2),rgba(0,212,170,0.2))",border:"1px solid rgba(0,255,204,0.4)",color:"#00ffcc",fontSize:11,fontWeight:700,textDecoration:"none"}}>Get Pro Smart →</a>
+                  </div>
+                  {/* Annual */}
+                  <div style={{background:"rgba(251,191,36,0.06)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:12,padding:"12px 16px"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:800,color:"#d0daf0"}}>Pro Smart Annual</div>
+                      <div style={{fontSize:13,fontWeight:800,color:"#fbbf24"}}>{PRICING.annualPrice}<span style={{fontSize:9,fontWeight:400,color:"#5a7590"}}>/yr</span></div>
+                    </div>
+                    <div style={{fontSize:10,color:"#5a7590",marginBottom:8}}>{PRICING.annualNote}</div>
+                    <a href={PRICING.annualUrl} target="_blank" rel="noreferrer" style={{display:"block",textAlign:"center",padding:"7px",borderRadius:8,background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.3)",color:"#fbbf24",fontSize:11,fontWeight:700,textDecoration:"none"}}>Get Annual →</a>
+                  </div>
                 </div>
 
               </div>
@@ -1301,6 +1321,7 @@ export default function ContractorIQv26(){
                     <div style={{fontSize:11,color:C.text,fontWeight:600,wordBreak:"break-all"}}>{user?.email||""}</div>
                     <div style={{fontSize:9,color:C.accent,marginTop:3}}>☁️ Synced to cloud</div>
                   </div>
+                  <button onClick={()=>{setShowWelcome(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(0,255,204,0.08)",border:"1px solid rgba(0,255,204,0.2)",color:"#00ffcc",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,fontWeight:700}}>💎 View Plans & Pricing</button>
                   <button onClick={()=>{doLogout();setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>🚪</span><span style={{fontWeight:600}}>Sign Out</span></button>
                   <button onClick={()=>{setShowAbout(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>💰</span><span style={{fontWeight:600}}>About ContractorIQ</span></button>
                   <button onClick={()=>{setShowMarket(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:5,display:"flex",alignItems:"center",gap:8}}><span>📈</span><span style={{fontWeight:600}}>Market Overview</span></button>
