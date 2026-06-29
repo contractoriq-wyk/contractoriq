@@ -263,6 +263,8 @@ export default function ContractorIQv26(){
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
   const C=darkMode?DARK:LIGHT;
   const K=_K(C);
+  const toggleCard=(id)=>setCollapsedCards(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
+  const isCollapsed=(id)=>collapsedCards.has(id);
   useEffect(()=>{document.body.style.background=C.bg;document.body.style.color=C.text;},[darkMode]);
   const [searchQ,setSearchQ]=useState("");
   const [searchResult,setSearchResult]=useState("");
@@ -302,6 +304,7 @@ export default function ContractorIQv26(){
   const [hideUnitNum,setHideUnitNum]=useState(false);
   const [activeOnlyVendor,setActiveOnlyVendor]=useState(null);
   const [helpCard,setHelpCard]=useState(null);
+  const [collapsedCards,setCollapsedCards]=useState(new Set());
   const [showProfile,setShowProfile]=useState(false);
   const [profile,setProfile]=useState(()=>{try{const s=localStorage.getItem("ciq_profile");return s?JSON.parse(s):{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}catch{return{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}});
   const [expenses,setExpenses]=useState(()=>{try{const s=localStorage.getItem("ciq_expenses");return s?JSON.parse(s):[];}catch{return[];}});
@@ -1693,16 +1696,36 @@ ${pdfText.slice(0,24000)}`}]};
                 const h=Math.max(8,(w.net/maxNet)*68);
                 const vc=VENDORS[detectVendor(w)]?.color||C.accent;
                 const isSelected=sD===i;
+                const g=wg(w);
                 return(
-                  <div key={w.week+i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",maxWidth:44}}
+                  <div key={w.week+i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,position:"relative"}}
                     onClick={()=>{
                       const ki=allW.findIndex(function(x){return x.week===w.week&&(x.from||"")===(w.from||"");});
                       const ni=ki>=0?ki:i;
                       setSD(ni);setSM(ni);setSH(ni);
                     }}>
-                    <div style={{fontSize:8,color:isSelected?vc:C.sub,fontWeight:isSelected?800:500,lineHeight:1,marginBottom:1}}>${(w.net/1000).toFixed(1)}k</div>
-                    <div style={{width:"70%",height:h,borderRadius:"3px 3px 0 0",background:vc,opacity:isSelected?1:0.7,boxShadow:isSelected?`0 0 8px ${vc}66`:"none",transition:"all 0.15s",minWidth:6}}/>
-                    <div style={{fontSize:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?700:400,marginTop:2,lineHeight:1}}>W{w.week}</div>
+                    {/* Net label on top */}
+                    <div style={{fontSize:isSelected?9:7,color:isSelected?vc:C.sub,fontWeight:isSelected?800:500,lineHeight:1,marginBottom:3,transition:"all 0.15s"}}>${(w.net/1000).toFixed(1)}k</div>
+                    {/* Bar with grade color glow */}
+                    <div style={{position:"relative",width:"72%",display:"flex",flexDirection:"column",justifyContent:"flex-end",height:72}}>
+                      <div style={{
+                        width:"100%",height:h,
+                        borderRadius:"4px 4px 0 0",
+                        background:isSelected?`linear-gradient(180deg,${vc},${vc}bb)`:vc,
+                        opacity:isSelected?1:0.55,
+                        boxShadow:isSelected?`0 0 12px ${vc}88,0 0 4px ${vc}44`:"none",
+                        transition:"all 0.2s ease",
+                        minWidth:6,
+                        position:"relative"
+                      }}>
+                        {/* Grade dot on top of bar */}
+                        {isSelected&&<div style={{position:"absolute",top:-5,left:"50%",transform:"translateX(-50%)",width:8,height:8,borderRadius:"50%",background:g.c,border:"2px solid "+C.bg,boxShadow:`0 0 6px ${g.c}`}}/>}
+                      </div>
+                    </div>
+                    {/* Week label */}
+                    <div style={{fontSize:isSelected?8:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?800:400,marginTop:3,lineHeight:1,transition:"all 0.15s"}}>W{w.week}</div>
+                    {/* Selected indicator dot */}
+                    {isSelected&&<div style={{width:4,height:4,borderRadius:"50%",background:vc,marginTop:2,boxShadow:`0 0 4px ${vc}`}}/>}
                     <div style={{width:4,height:4,borderRadius:"50%",background:vc,opacity:0.8,marginTop:1}}/>
                   </div>
                 );
@@ -1716,12 +1739,11 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={K()}>
               {/* Card header */}
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>🔍 Deduction Breakdown {helpBtn("deductions")}</div>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>🔍 Deduction Breakdown {helpBtn("deductions")}<button onClick={e=>{e.stopPropagation();toggleCard("ded");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("ded")?"▶":"▼"}</button></div>
                 <Nav i={sD} max={allW.length-1} prev={()=>setSD(p=>p-1)} next={()=>setSD(p=>p+1)} label={"W"+dw.week}/>
               </div>
               {helpModal("deductions")}
-
-              {(()=>{
+              {!isCollapsed("ded")&&(()=>{
                 const deds=(dw.deds||[]).filter(d=>d&&d.l);
                 const fuelA=deds.filter(d=>d.l.toLowerCase().includes("fuel advance"));
                 const insD=deds.filter(d=>d&&d.l&&["physical damage","bobtail","occacc","occ/acc","roadside","liability limiter"].some(k=>d.l.toLowerCase().includes(k)));
@@ -1976,15 +1998,15 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
 
           <div style={K()}>
-                <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>🏆 Week Grades{helpBtn("grades")}</div>
+                <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>🏆 Week Grades{helpBtn("grades")}<button onClick={e=>{e.stopPropagation();toggleCard("grades");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("grades")?"▶":"▼"}</button></div>
                 {helpModal("grades")}
-                {vendorStats.map((v,vi)=>{
+                {!isCollapsed("grades")&&vendorStats.map((v,vi)=>{
                   const vwi=allW.map((w,i)=>({w,i})).filter(({w})=>detectVendor(w)===v.key);
                   const vAvg=vwi.length>0?vwi.reduce((s,{w})=>s+w.net/w.gross*100,0)/vwi.length:0;
                   return(<div key={v.key} style={{marginBottom:vi<vendorStats.length-1?14:0,paddingBottom:vi<vendorStats.length-1?14:0,borderBottom:vi<vendorStats.length-1?`1px solid ${C.border}`:"none"}}>
                     <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}><span style={{fontSize:13}}>{v.icon}</span><span style={{fontSize:10,fontWeight:700,color:v.color}}>{v.short}</span><span style={{fontSize:9,color:C.sub}}>avg {vAvg.toFixed(1)}%</span></div>
                     <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                      {vwi.map(({w,i})=>{const g=wg(w);return(<div key={w.week} onClick={()=>setSH(i)} style={{padding:"5px 9px",borderRadius:7,background:i===sH?`${v.color}30`:`${v.color}12`,border:`2px solid ${i===sH?v.color:v.color+"33"}`,textAlign:"center",cursor:"pointer",minWidth:52}}><div style={{fontSize:8,color:C.sub}}>W{w.week}</div><div style={{fontSize:10,fontWeight:800,color:v.color}}>{g.i}</div><div style={{fontSize:8,color:v.color,opacity:0.8}}>{g.l}</div></div>);})}
+                      {vwi.map(({w,i})=>{const g=wg(w);return(<div key={w.week} onClick={()=>{setSH(i);setSD(i);}} style={{padding:"5px 9px",borderRadius:7,background:i===sH?`${v.color}30`:`${v.color}12`,border:`2px solid ${i===sH?v.color:v.color+"33"}`,textAlign:"center",cursor:"pointer",minWidth:52}}><div style={{fontSize:8,color:C.sub}}>W{w.week}</div><div style={{fontSize:10,fontWeight:800,color:v.color}}>{g.i}</div><div style={{fontSize:8,color:v.color,opacity:0.8}}>{g.l}</div></div>);})}
                     </div>
                   </div>);
                 })}
@@ -2007,7 +2029,7 @@ ${pdfText.slice(0,24000)}`}]};
           {/* MOVE PERFORMANCE */}
           {!focusMode&&<div style={K()}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🚛 Move Performance{helpBtn("movePerf")}</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>🚛 Move Performance{helpBtn("movePerf")}<button onClick={e=>{e.stopPropagation();toggleCard("movePerf");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("movePerf")?"▶":"▼"}</button></div>
               <Nav i={sM} max={allW.length-1} prev={()=>setSM(p=>p-1)} next={()=>setSM(p=>p+1)} label={`W${mwBase.week}`}/>
             </div>
             {helpModal("movePerf")}
