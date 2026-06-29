@@ -1,10 +1,9 @@
 // api/ticker.js — Live market prices via Polygon.io
-// Free tier: unlimited calls, 15-second delayed data for US stocks
-// Docs: https://polygon.io/docs/stocks/get_v2_snapshot_locale_us_markets_stocks_tickers
+// Falls back to previous close when market is closed
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Cache-Control", "s-maxage=30, stale-while-revalidate=15");
+  res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=30");
 
   const { symbols } = req.query;
   if (!symbols) return res.status(400).json({ error: "symbols required" });
@@ -12,7 +11,6 @@ export default async function handler(req, res) {
   const key = process.env.POLYGON_KEY;
   if (!key) return res.status(500).json({ error: "POLYGON_KEY not configured" });
 
-  // Map TradingView proNames to Polygon ticker symbols
   const pmap = {
     "AMEX:SPY": "SPY", "AMEX:DIA": "DIA", "NASDAQ:QQQ": "QQQ",
     "AMEX:IWM": "IWM", "CBOE:VIX": "VIX", "AMEX:GLD": "GLD",
@@ -24,57 +22,82 @@ export default async function handler(req, res) {
   };
 
   const inSymbols = symbols.split(",").map(s => s.trim());
-  
-  // Separate stock tickers from crypto
   const stockSyms = inSymbols
     .filter(s => !s.startsWith("COINBASE:"))
     .map(s => pmap[s] || s.split(":").pop());
-  
-  const cryptoSyms = inSymbols
-    .filter(s => s.startsWith("COINBASE:"))
-    .map(s => ({ proName: s, poly: pmap[s] }))
-    .filter(s => s.poly);
 
   try {
     const out = {};
 
-    // Fetch stocks snapshot (batch call)
-    if (stockSyms.length > 0) {
-      const url = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${stockSyms.join(",")}&apiKey=${key}`;
-      const r = await fetch(url);
-      if (r.ok) {
-        const data = await r.json();
-        const tickers = data?.tickers || [];
-        tickers.forEach(t => {
-          const price = t.day?.c || t.prevDay?.c || null;
-          const open = t.day?.o || t.prevDay?.o || null;
-          const pct = t.todaysChangePerc ?? (price && open && open > 0 ? ((price - open) / open) * 100 : null);
-          // Remap back to proName
-          const proName = inSymbols.find(s => (pmap[s] || s.split(":").pop()) === t.ticker);
-          if (proName && price) {
-            out[proName] = { price, pct: pct ?? 0 };
-          }
-        });
+    // Try snapshot first (works during market hours)
+    const snapUrl = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${stockSyms.join(",")}&apiKey=${key}`;
+    const snapRes = await fetch(snapUrl);
+
+    if (snapRes.ok) {
+      const snapData = await snapRes.json();
+      const tickers = snapData?.tickers || [];
+
+      for (const t of tickers) {
+        // Use day close if available, otherwise prevDay close
+        const price = (t.day?.c && t.day.c > 0) ? t.day.c : (t.prevDay?.c || null);
+        const prevClose = t.prevDay?.c || null;
+        const pct = t.todaysChangePerc ?? (price && prevClose && prevClose > 0
+          ? ((price - prevClose) / prevClose) * 100
+          : 0);
+
+        const proName = inSymbols.find(s => (pmap[s] || s.split(":").pop()) === t.ticker);
+        if (proName && price) {
+          out[proName] = {
+            price,
+            pct: pct ?? 0,
+            prevClose,
+            afterHours: !t.day?.c || t.day.c === 0,
+          };
+        }
       }
     }
 
-    // Fetch crypto individually
-    for (const { proName, poly } of cryptoSyms) {
+    // For any symbols not yet in out, fetch previous close individually
+    const missing = inSymbols.filter(s => !out[s] && !s.startsWith("COINBASE:"));
+    for (const proName of missing) {
       try {
+        const sym = pmap[proName] || proName.split(":").pop();
+        // Get last trading day's data
+        const prevUrl = `https://api.polygon.io/v2/aggs/ticker/${sym}/prev?adjusted=true&apiKey=${key}`;
+        const r = await fetch(prevUrl);
+        if (r.ok) {
+          const d = await r.json();
+          const result = d?.results?.[0];
+          if (result?.c) {
+            const price = result.c;
+            const prevOpen = result.o;
+            const pct = prevOpen > 0 ? ((price - prevOpen) / prevOpen) * 100 : 0;
+            out[proName] = { price, pct, afterHours: true };
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Crypto
+    const cryptoSyms = inSymbols.filter(s => s.startsWith("COINBASE:"));
+    for (const proName of cryptoSyms) {
+      try {
+        const poly = pmap[proName];
+        if (!poly) continue;
         const url = `https://api.polygon.io/v2/snapshot/locale/global/markets/crypto/tickers/${poly}?apiKey=${key}`;
         const r = await fetch(url);
         if (r.ok) {
-          const data = await r.json();
-          const t = data?.ticker;
+          const d = await r.json();
+          const t = d?.ticker;
           const price = t?.day?.c || t?.prevDay?.c || null;
-          const pct = t?.todaysChangePerc ?? null;
-          if (price) out[proName] = { price, pct: pct ?? 0 };
+          const pct = t?.todaysChangePerc ?? 0;
+          if (price) out[proName] = { price, pct };
         }
       } catch (e) {}
     }
 
     if (Object.keys(out).length === 0) {
-      return res.status(503).json({ error: "No data returned from Polygon" });
+      return res.status(503).json({ error: "No data available" });
     }
     return res.status(200).json(out);
   } catch (e) {
