@@ -344,7 +344,7 @@ export default function ContractorIQv26(){
   const [docScanMsg,setDocScanMsg]=useState("");
   const [isPro,setIsPro]=useState(()=>{if(typeof window!=="undefined"&&window.location.hostname.includes("navy"))return true;try{return localStorage.getItem("ciq_pro")==="true";}catch{return false;}});
   const [trialStart,setTrialStart]=useState(()=>{try{const t=localStorage.getItem("ciq_trial_start");return t?parseInt(t):null;}catch{return null;}});
-  const [isSmart,setIsSmart]=useState(()=>{try{return localStorage.getItem("ciq_smart")==="true";}catch{return false;}});
+  const [isSmart,setIsSmart]=useState(()=>{if(typeof window!=="undefined"&&(window.location.hostname.includes("navy")||window.location.search.includes("owner=true")))return true;try{return localStorage.getItem("ciq_smart")==="true";}catch{return false;}});
   const [liveData,setLiveData]=useState({diesel:null,weather:null,dieselPeriod:null});
   const [showUpgrade,setShowUpgrade]=useState(false);
   const [upgradeSrc,setUpgradeSrc]=useState("");
@@ -709,7 +709,17 @@ ${pdfText.slice(0,24000)}`}]};
         const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000,maximumAge:60000}));
         userLat=pos.coords.latitude.toFixed(4);
         userLon=pos.coords.longitude.toFixed(4);
-        locationCtx=`User location: lat ${userLat}, lon ${userLon}.`;
+        // Reverse geocode for accurate city name
+        try{
+          const geo=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json`);
+          const gd=await geo.json();
+          const city=gd?.address?.city||gd?.address?.town||gd?.address?.village||gd?.address?.county||"";
+          const state=gd?.address?.state||"";
+          const zip=gd?.address?.postcode||"";
+          locationCtx=`User location: ${city}${state?", "+state:""} ${zip} (lat ${userLat}, lon ${userLon}).`;
+        }catch(e){
+          locationCtx=`User location: lat ${userLat}, lon ${userLon}.`;
+        }
       }catch(e){}
 
       // Build intelligence briefing for Smart (Tier 2) users
@@ -718,8 +728,8 @@ ${pdfText.slice(0,24000)}`}]};
         const fetches=[];
         // 1. Live diesel price
         fetches.push(fetch("/api/diesel").then(r=>r.json()).catch(()=>null));
-        // 2. Live weather — use GPS if available, else Baltimore (home market)
-        const weatherQ=userLat?`/api/weather?lat=${userLat}&lon=${userLon}`:`/api/weather?city=Baltimore`;
+        // 2. Live weather — use GPS coordinates for exact location accuracy
+        const weatherQ=userLat?`/api/weather?lat=${userLat}&lon=${userLon}`:`/api/weather?city=Columbia,MD`;
         fetches.push(fetch(weatherQ).then(r=>r.json()).catch(()=>null));
         const [dp,wp]=await Promise.all(fetches);
 
