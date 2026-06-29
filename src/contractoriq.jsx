@@ -7,20 +7,21 @@ const LOGO_ICON="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDP
 
 // ═══ PRICING (swap these at launch — single source of truth) ═══
 const PRICING={
-  // Tier 1 — Test Drive
+  // Tier 1 — Standard ($14.99/mo)
+  tier1Url:"https://buy.stripe.com/14A9ATbW1aIU2M2gKq9MY03",
+  tier1Price:"$14.99",
+  tier1Note:"Unlimited scans · Load tracking · AI guidance",
+  // Tier 2 — Pro Smart ($24.99/mo)
+  tier2Url:"https://buy.stripe.com/fZu5kDe498AM2M2am29MY04",
+  tier2Price:"$24.99",
+  tier2Note:"Live diesel · Live weather · Smart AI · Your real numbers",
+  // Tier 2 — Annual ($249/yr)
+  annualUrl:"https://buy.stripe.com/7sY3cvd05dV6fyOcua9MY05",
+  annualPrice:"$249",
+  annualNote:"Save $51 · 2 months free · Everything in Pro Smart",
+  // Legacy (kept for reference)
   trialUrl:"https://buy.stripe.com/aFa8wP7FLbMY4Ua0Ls9MY00",
   trialPrice:"$1",
-  // Tier 2 — Pro Smart (monthly) — TODO: create Stripe link, add here
-  smartUrl:"https://buy.stripe.com/fZufZh2lr2co3Q6am29MY01",
-  smartPrice:"$29.99",
-  smartNote:"Live data · Smarter AI · Unlimited scans",
-  // Tier 3 — Annual — TODO: create Stripe link, add here
-  annualUrl:"https://buy.stripe.com/fZufZh2lr2co3Q6am29MY01",
-  annualPrice:"$249",
-  annualNote:"Save $110 · 2 months free · Everything in Smart",
-  // Legacy monthly (kept for existing subscribers)
-  monthlyUrl:"https://buy.stripe.com/fZufZh2lr2co3Q6am29MY01",
-  monthlyPrice:"$19.99",
 };
 
 const DARK={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#8fa3c0",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
@@ -437,7 +438,7 @@ export default function ContractorIQv26(){
     const c=getSB(); if(!c) return;
     (async()=>{
       try{
-        const {data}=await c.from("user_data").select("data").eq("user_id",user.id).maybeSingle();
+        const {data}=await c.from("user_data").select("data,plan").eq("user_id",user.id).maybeSingle();
         const d=data&&data.data;
         if(d){
           if(d.addedW)setAddedW(d.addedW);
@@ -446,6 +447,11 @@ export default function ContractorIQv26(){
           if(d.docs)setDocs(d.docs);
           if(d.reviews)setReviews(d.reviews);
         }
+        // Set tier from Supabase plan column
+        const plan=data?.plan||"free";
+        if(plan==="tier2"){setIsPro(true);setIsSmart(true);try{localStorage.setItem("ciq_pro","true");localStorage.setItem("ciq_smart","true");}catch(e){}}
+        else if(plan==="tier1"){setIsPro(true);setIsSmart(false);try{localStorage.setItem("ciq_pro","true");localStorage.setItem("ciq_smart","false");}catch(e){}}
+        else{setIsPro(false);setIsSmart(false);try{localStorage.setItem("ciq_pro","false");localStorage.setItem("ciq_smart","false");}catch(e){}}
       }catch(e){ console.error("cloud pull",e&&e.message); }
       setCloudLoaded(true);
     })();
