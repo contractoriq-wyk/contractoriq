@@ -1,6 +1,5 @@
-// api/ticker.js — Live stock/market prices
-// Primary: Yahoo Finance v8 (no auth required)
-// Fallback: Yahoo Finance v7 with cookie bypass
+// api/ticker.js — Live market prices via multiple free sources
+// No API key required — uses public endpoints
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -9,62 +8,85 @@ export default async function handler(req, res) {
   const { symbols } = req.query;
   if (!symbols) return res.status(400).json({ error: "symbols required" });
 
-  const headers = {
+  // Map TradingView proNames to Yahoo Finance symbols
+  const ymap = {
+    "AMEX:SPY": "SPY", "AMEX:DIA": "DIA", "NASDAQ:QQQ": "QQQ",
+    "AMEX:IWM": "IWM", "CBOE:VIX": "%5EVIX", "AMEX:GLD": "GLD",
+    "AMEX:USO": "USO", "COINBASE:BTCUSD": "BTC-USD",
+    "NYSE:XOM": "XOM", "NASDAQ:JBHT": "JBHT", "NASDAQ:AAPL": "AAPL",
+    "NASDAQ:TSLA": "TSLA", "NASDAQ:NVDA": "NVDA", "NASDAQ:GOOGL": "GOOGL",
+    "NASDAQ:AMZN": "AMZN", "NYSE:CVX": "CVX", "NYSE:ODFL": "ODFL",
+    "COINBASE:ETHUSD": "ETH-USD", "NASDAQ:META": "META", "NYSE:UNP": "UNP",
+  };
+
+  // Convert incoming proNames to Yahoo symbols
+  const inSymbols = symbols.split(",").map(s => s.trim());
+  const yahooSyms = inSymbols.map(s => ymap[s] || s.split(":").pop());
+  const uniqueSyms = [...new Set(yahooSyms)].join(",");
+
+  const baseHeaders = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Accept": "application/json",
+    "Accept": "application/json, text/plain, */*",
     "Accept-Language": "en-US,en;q=0.9",
     "Referer": "https://finance.yahoo.com/",
     "Origin": "https://finance.yahoo.com",
   };
 
-  // Try v8 first (more reliable, no crumb needed)
+  // Method 1: Yahoo Finance v8 (most reliable, no crumb needed)
   try {
-    const url = `https://query2.finance.yahoo.com/v8/finance/quote?symbols=${encodeURIComponent(symbols)}&fields=regularMarketPrice,regularMarketChangePercent,shortName`;
-    const r = await fetch(url, { headers });
+    const url = `https://query2.finance.yahoo.com/v8/finance/quote?symbols=${encodeURIComponent(uniqueSyms)}&fields=regularMarketPrice,regularMarketChangePercent,shortName,regularMarketTime`;
+    const r = await fetch(url, { headers: baseHeaders });
     if (r.ok) {
       const data = await r.json();
       const quotes = data?.quoteResponse?.result || [];
       if (quotes.length > 0) {
-        const out = {};
-        quotes.forEach((q) => {
-          out[q.symbol] = {
+        const yahooMap = {};
+        quotes.forEach(q => {
+          yahooMap[q.symbol] = {
             price: q.regularMarketPrice ?? null,
             pct: q.regularMarketChangePercent ?? null,
             name: q.shortName ?? null,
           };
         });
-        return res.status(200).json(out);
+        // Remap back to proName keys
+        const out = {};
+        inSymbols.forEach(proName => {
+          const ys = ymap[proName] || proName.split(":").pop();
+          if (yahooMap[ys]) out[proName] = yahooMap[ys];
+        });
+        if (Object.keys(out).length > 0) {
+          return res.status(200).json(out);
+        }
       }
     }
   } catch (e) {}
 
-  // Fallback: v7 with cookie
+  // Method 2: Yahoo Finance v7 with crumb
   try {
-    // First get a crumb
-    const cookieRes = await fetch("https://finance.yahoo.com/", { headers });
-    const setCookie = cookieRes.headers.get("set-cookie") || "";
-    const cookieMatch = setCookie.match(/A3=([^;]+)/);
-    const cookie = cookieMatch ? `A3=${cookieMatch[1]}` : "";
-
     const crumbRes = await fetch("https://query1.finance.yahoo.com/v1/test/getcrumb", {
-      headers: { ...headers, Cookie: cookie },
+      headers: { ...baseHeaders, Cookie: "tbla_id=placeholder" },
     });
-    const crumb = await crumbRes.text();
+    const crumb = (await crumbRes.text()).trim();
 
-    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols)}&crumb=${encodeURIComponent(crumb)}&fields=regularMarketPrice,regularMarketChangePercent`;
-    const r = await fetch(url, { headers: { ...headers, Cookie: cookie } });
-    if (!r.ok) throw new Error("Yahoo v7 status " + r.status);
-    const data = await r.json();
-    const quotes = data?.quoteResponse?.result || [];
-    const out = {};
-    quotes.forEach((q) => {
-      out[q.symbol] = {
-        price: q.regularMarketPrice ?? null,
-        pct: q.regularMarketChangePercent ?? null,
-      };
-    });
-    return res.status(200).json(out);
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
-  }
+    if (crumb && crumb.length < 50) {
+      const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(uniqueSyms)}&crumb=${encodeURIComponent(crumb)}`;
+      const r = await fetch(url, { headers: baseHeaders });
+      if (r.ok) {
+        const data = await r.json();
+        const quotes = data?.quoteResponse?.result || [];
+        const yahooMap = {};
+        quotes.forEach(q => {
+          yahooMap[q.symbol] = { price: q.regularMarketPrice ?? null, pct: q.regularMarketChangePercent ?? null };
+        });
+        const out = {};
+        inSymbols.forEach(proName => {
+          const ys = ymap[proName] || proName.split(":").pop();
+          if (yahooMap[ys]) out[proName] = yahooMap[ys];
+        });
+        if (Object.keys(out).length > 0) return res.status(200).json(out);
+      }
+    }
+  } catch (e) {}
+
+  return res.status(503).json({ error: "Market data temporarily unavailable" });
 }
