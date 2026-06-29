@@ -147,9 +147,16 @@ function pairRoundTrips(moves){
 }
 
 function grpDeds(deds,gross){
-  const fuel=deds.filter(d=>["fuel advance","fuel","diesel"].some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
-  const ins=deds.filter(d=>["physical damage","bobtail","occ/acc","roadside"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
-  const ops=deds.filter(d=>["eld","event recorder","parking","license","highway tax"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+  // FUEL: any deduction labeled "FUEL ADVANCE" or containing "fuel"/"diesel" (not escrow/rebate)
+  const fuel=deds.filter(d=>["fuel advance","fuel","diesel"].some(k=>d.l.toLowerCase().includes(k))&&!d.l.toLowerCase().includes("escrow")&&!d.l.toLowerCase().includes("rebate")).reduce((s,d)=>s+d.a,0);
+  // INSURANCE: physical damage, bobtail, occ/acc, occacc, roadside, liability
+  const ins=deds.filter(d=>["physical damage","bobtail","occ/acc","occacc","roadside","liability limiter"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+  // OPERATIONS: eld, event recorder, parking, license, highway tax, fuel highway
+  const ops=deds.filter(d=>["eld","event recorder","parking","license","highway tax","fuel-highway"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+  // ESCROW: regular and 2290
+  const escrowDeds=deds.filter(d=>d.l.toLowerCase().includes("escrow")).reduce((s,d)=>s+d.a,0);
+  // FUEL ADVANCE details for tooltip/breakdown
+  const fuelAdvances=deds.filter(d=>d.l.toLowerCase().includes("fuel advance"));
   return [
     {icon:"⛽",label:"Fuel Advances",amt:fuel,color:"#f87171",pct:(fuel/gross*100).toFixed(1)},
     {icon:"🛡️",label:"Insurance",amt:ins,color:"#fbbf24",pct:(ins/gross*100).toFixed(1)},
@@ -540,7 +547,7 @@ export default function ContractorIQv26(){
       try{
         // Reuse scanPDF logic inline
         const isImage=file.type.startsWith("image/");
-        const EXTRACT_PROMPT=`You are extracting data from a drayage/trucking settlement statement. Return ONLY valid JSON — no markdown, no commentary.\n\nRULES (follow exactly):\n1. The JSON below is a FORMAT TEMPLATE. Every value must come from THIS document. NEVER copy the example numbers — they are zeros on purpose.\n2. "moves": include ONE entry for EVERY load/trip row in the settlement detail. Each row that begins with an order number (e.g. IBP...) is a separate move — INCLUDING multiple legs of the same order (leg 1, leg 2, leg 3 are each their own entry). Statements often have 20-40+ rows. Do not skip, merge, summarize, or stop early. List every single row.\n3. "deds": include ONE entry for EVERY deduction line item. Do not skip any.\n4. For escrow, read the ACTUAL BALANCE column from the Deductions Statement, NOT the weekly deduction amount.\n5. Extract gallons from fuel advance notes (e.g. "Gallons: 170.49"), price per gallon, and any reimbursements.\n6. If a field is genuinely not in the document, use 0 (for numbers) or "" (for text). NEVER invent or estimate.\n7. All numbers must be plain (no $ signs, no commas). For move fields: t=L or E (loaded/empty), fr=From, to=To, mi=Miles, rt=Rate, fc=FSC.\n8. Before returning: count the order rows and confirm "moves" has exactly that many entries. Gross minus totalDeductions plus reimbursements should be close to net.\n\nFORMAT TEMPLATE (replace every value with the REAL value):\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0}],"deds":[{"l":"line label","a":0}]}`;
+        const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
         let pdfText="";
         if(!isImage&&window.pdfjsLib){
           try{
@@ -620,7 +627,7 @@ ${pdfText.slice(0,24000)}`}]};
     setScanning(true);setScanResult(null);setScanMsg("");
     try{
       const isImage=fileType==="image"||file.type.startsWith("image/");
-      const EXTRACT_PROMPT=`You are extracting data from a drayage/trucking settlement statement. Return ONLY valid JSON — no markdown, no commentary.\n\nRULES (follow exactly):\n1. The JSON below is a FORMAT TEMPLATE. Every value must come from THIS document. NEVER copy the example numbers — they are zeros on purpose.\n2. "moves": include ONE entry for EVERY load/trip row in the settlement detail. Each row that begins with an order number (e.g. IBP...) is a separate move — INCLUDING multiple legs of the same order (leg 1, leg 2, leg 3 are each their own entry). Statements often have 20-40+ rows. Do not skip, merge, summarize, or stop early. List every single row.\n3. "deds": include ONE entry for EVERY deduction line item. Do not skip any.\n4. For escrow, read the ACTUAL BALANCE column from the Deductions Statement, NOT the weekly deduction amount.\n5. Extract gallons from fuel advance notes (e.g. "Gallons: 170.49"), price per gallon, and any reimbursements.\n6. If a field is genuinely not in the document, use 0 (for numbers) or "" (for text). NEVER invent or estimate.\n7. All numbers must be plain (no $ signs, no commas). For move fields: t=L or E (loaded/empty), fr=From, to=To, mi=Miles, rt=Rate, fc=FSC.\n8. Before returning: count the order rows and confirm "moves" has exactly that many entries. Gross minus totalDeductions plus reimbursements should be close to net.\n\nFORMAT TEMPLATE (replace every value with the REAL value):\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0}],"deds":[{"l":"line label","a":0}]}`;
+      const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
 
       // For text-based PDFs, extract the actual text first (far more accurate than vision on dense tables)
       let pdfText="";
@@ -1705,208 +1712,70 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={K()}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔍 Deduction Breakdown{helpBtn("deductions")}</div>
-                <Nav i={sD} max={allW.length-1} prev={()=>setSD(p=>p-1)} next={()=>setSD(p=>p+1)} label={"W"+dw.week}/>
+                <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                  <button onClick={()=>setSelWkKeys(p=>{const n=new Set(p);wks.forEach(w=>n.has(w.week)?n.delete(w.week):n.add(w.week));return n;})} style={{fontSize:9,padding:"3px 8px",borderRadius:5,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,cursor:"pointer",fontFamily:"inherit"}}>all weeks</button>
+                  {[...selWkKeys].map(k=><button key={k} onClick={()=>setSelWkKeys(p=>{const n=new Set(p);n.delete(k);return n;})} style={{fontSize:9,padding:"3px 8px",borderRadius:5,background:`${C.accent}20`,border:`1px solid ${C.accent}44`,color:C.accent,cursor:"pointer",fontFamily:"inherit"}}>W{k} ✕</button>)}
+                </div>
               </div>
               {helpModal("deductions")}
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:C.bg,borderRadius:9,border:`1px solid ${dg.c}44`,marginBottom:14}}>
-                <div><div style={{fontSize:10,color:C.sub}}>{dw.from} – {dw.to}</div><div style={{fontSize:13,color:C.text,marginTop:3}}>Net <strong style={{color:dg.c}}>${dw.net.toLocaleString("en-US",{minimumFractionDigits:2})}</strong> · <strong style={{color:dg.c}}>{(dw.net/dw.gross*100).toFixed(1)}%</strong></div></div>
-                <div style={{padding:"6px 13px",borderRadius:9,background:`${dg.c}18`,border:`1px solid ${dg.c}55`,textAlign:"center",flexShrink:0}}><div style={{fontSize:18}}>{dg.i}</div><div style={{fontSize:10,fontWeight:800,color:dg.c}}>{dg.l}</div></div>
-              </div>
-              <div style={{marginBottom:14}}>
-                <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>Cost Groups</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9,marginBottom:10}}>
-                  {dwGroups.map(g=>(
-                    <div key={g.label} style={{background:C.bg,borderRadius:10,padding:"12px 8px",border:`1px solid ${g.color}55`,textAlign:"center"}}>
-                      <div style={{fontSize:20,marginBottom:5}}>{g.icon}</div>
-                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:g.color}}>${g.amt.toFixed(0)}</div>
-                      <div style={{fontSize:9,color:C.sub,marginTop:3,textTransform:"uppercase",letterSpacing:"0.04em"}}>{g.label}</div>
-                      <div style={{marginTop:7}}><Tag color={g.color}>{g.pct}% gross</Tag></div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{height:10,borderRadius:5,overflow:"hidden",display:"flex",marginBottom:6}}>
-                  {dwGroups.map(g=><div key={g.label} style={{flex:Math.max(g.amt,1),background:g.color,opacity:0.85}}/>)}
-                </div>
-                <div style={{display:"flex",gap:12,justifyContent:"center",marginBottom:12}}>
-                  {dwGroups.map(g=><div key={g.label} style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:8,height:8,borderRadius:2,background:g.color}}/><span style={{fontSize:9,color:C.sub}}>{g.label}</span></div>)}
-                </div>
-              </div>
-
-              {/* ⛽ FUEL VS MILES MPG CARD */}
-              {(()=>{
-                const reportedMiles=(dw.moves||[]).reduce(function(s,m){return s+(m.mi||m.miles||0);},0);
-                const dwFuelCost=(dw.deds||[]).filter(function(d){return d.l.toLowerCase().includes("fuel advance");}).reduce(function(s,d){return s+d.a;},0);
-                const hasRealGallons=dw.gallons&&dw.gallons>0;
-                const realPricePerGallon=dw.price_per_gallon&&dw.price_per_gallon>0?dw.price_per_gallon:fuelPrice;
-                const gallonsBought=hasRealGallons?dw.gallons:(realPricePerGallon>0?dwFuelCost/realPricePerGallon:0);
-                const gallonsSource=hasRealGallons?"from settlement":"estimated";
-                const settlementMPG=gallonsBought>0?reportedMiles/gallonsBought:0;
-                const truckBeatBaseline=settlementMPG>=fuelMPG;
-                const mpgDiff=Math.abs(settlementMPG-fuelMPG).toFixed(2);
-                const verdictColor=truckBeatBaseline?C.green:C.red;
-                const gallonsAtBaseline=fuelMPG>0?reportedMiles/fuelMPG:0;
-                const costAtBaseline=gallonsAtBaseline*fuelPrice;
-                const galDiff=gallonsBought-gallonsAtBaseline;
-                const unpaidMiles=Math.round(reportedMiles*milesBuffer/100);
-                const gallonsUnpaid=settlementMPG>0?unpaidMiles/settlementMPG:0;
-                const unpaidCost=gallonsUnpaid*fuelPrice;
+              {selWeeks.map(w=>{
+                const deds=w.deds||[];
+                const fuelA=deds.filter(d=>d.l.toLowerCase().includes("fuel advance"));
+                const fixedD=deds.filter(d=>!d.l.toLowerCase().includes("fuel advance"));
+                const fuelTotal=fuelA.reduce((s,d)=>s+d.a,0);
+                const fixedTotal=fixedD.reduce((s,d)=>s+d.a,0);
+                const dedSum=deds.reduce((s,d)=>s+d.a,0);
+                const docTotal=w.totalDeductions||0;
+                const mismatch=docTotal>0&&Math.abs(dedSum-docTotal)>1.50;
                 return(
-                  <div style={{background:`${verdictColor}08`,borderRadius:12,border:`1px solid ${verdictColor}33`,padding:"14px",marginBottom:14}}>
-
-                    {/* Header */}
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                      <div style={{display:"flex",alignItems:"center",gap:7}}>
-                        <span style={{fontSize:16}}>⛽</span>
-                        <span style={{fontSize:12,fontWeight:700,color:C.text}}>Fuel vs Miles · W{dw.week}</span>
-                      </div>
-                      <span style={{padding:"3px 10px",borderRadius:20,background:`${verdictColor}18`,border:`1px solid ${verdictColor}44`,fontSize:11,fontWeight:700,color:verdictColor}}>
-                        {truckBeatBaseline?"✅ Efficient":"⚠️ Below Baseline"}
-                      </span>
+                  <div key={w.week} style={{marginBottom:16}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <div style={{fontSize:11,fontWeight:700,color:C.text}}>{w.from} – {w.to}</div>
+                      <div style={{fontSize:11,fontWeight:800,color:w.net/w.gross>0.65?C.green:w.net/w.gross>0.55?C.gold:C.red}}>Net ${w.net?.toFixed(2)} · {w.net&&w.gross?(w.net/w.gross*100).toFixed(1):0}%</div>
                     </div>
-
-                    {/* Big MPG number */}
-                    <div style={{padding:"14px",background:`${verdictColor}10`,borderRadius:10,border:`1px solid ${verdictColor}33`,display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:10,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>Settlement MPG — {gallonsSource}</div>
-                        <div style={{fontSize:11,color:C.sub,marginBottom:5}}>{reportedMiles.toLocaleString()} paid miles ÷ {gallonsBought.toFixed(1)} gallons bought</div>
-                        <div style={{fontSize:12,fontWeight:700,color:verdictColor}}>
-                          {truckBeatBaseline
-                            ?`✅ +${mpgDiff} MPG above your ${fuelMPG} baseline — running efficient`
-                            :`⚠️ ${mpgDiff} MPG below your ${fuelMPG} baseline — burning excess fuel`}
-                        </div>
-                      </div>
-                      <div style={{textAlign:"center",flexShrink:0,marginLeft:16}}>
-                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:40,fontWeight:900,color:verdictColor,lineHeight:1}}>{settlementMPG>0?settlementMPG.toFixed(2):"—"}</div>
-                        <div style={{fontSize:9,color:C.sub,marginTop:2}}>MPG this week</div>
-                        <div style={{fontSize:9,color:C.sub,marginTop:1}}>Target: {fuelMPG} MPG</div>
-                      </div>
-                    </div>
-
-                    {/* 3 stat tiles */}
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
-                      {[
-                        {l:"Miles Paid",v:`${reportedMiles.toLocaleString()} mi`,sub:"Settlement reported",c:C.accent},
-                        {l:`At ${fuelMPG} MPG`,v:`${gallonsAtBaseline.toFixed(0)} gal`,sub:`Cost $${costAtBaseline.toFixed(0)}`,c:C.sub},
-                        {l:"Fuel Advances",v:`$${dwFuelCost.toFixed(0)}`,sub:`~${gallonsBought.toFixed(0)} gal`,c:C.sub},
-                      ].map(function(s){return(
-                        <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}>
-                          <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:4,lineHeight:1.3}}>{s.l}</div>
-                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:s.c}}>{s.v}</div>
-                          <div style={{fontSize:9,color:C.sub,marginTop:3,lineHeight:1.4}}>{s.sub}</div>
-                        </div>
-                      );})}
-                    </div>
-
-                    {/* Unpaid miles warning */}
-                    {unpaidMiles>0&&(
-                      <div style={{padding:"10px 13px",background:`${C.red}10`,borderRadius:9,border:`1px solid ${C.red}44`,marginBottom:12}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    {/* Mismatch warning */}
+                    {mismatch&&<div style={{padding:"6px 10px",borderRadius:7,background:`${C.red}15`,border:`1px solid ${C.red}44`,fontSize:10,color:C.red,marginBottom:8}}>⚠️ Deduction total mismatch — document shows ${docTotal.toFixed(2)} but extracted ${dedSum.toFixed(2)}. Re-scan this week for accuracy.</div>}
+                    {/* Fuel Advances — variable */}
+                    <div style={{marginBottom:8}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#f87171",letterSpacing:"0.07em",textTransform:"uppercase",marginBottom:5}}>⛽ Fuel Advances — Variable</div>
+                      {fuelA.length===0&&<div style={{fontSize:10,color:C.sub,padding:"6px 10px",background:C.raised,borderRadius:7}}>No fuel advances this week</div>}
+                      {fuelA.map((d,i)=>(
+                        <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 10px",background:`${C.red}10`,border:`1px solid ${C.red}25`,borderRadius:7,marginBottom:4}}>
                           <div>
-                            <div style={{fontSize:12,fontWeight:700,color:C.red}}>🚫 ~{unpaidMiles} unpaid miles — out of pocket</div>
-                            <div style={{fontSize:10,color:C.sub,marginTop:2}}>Drove these miles, broker paid $0. Burned ~{gallonsUnpaid.toFixed(0)} gal at your own cost.</div>
+                            <div style={{fontSize:11,fontWeight:700,color:C.text}}>Fuel Advance {fuelA.length>1?`#${i+1}`:""}</div>
+                            {d.gal>0&&<div style={{fontSize:9,color:C.sub,marginTop:1}}>{d.gal} gal @ ${d.ppg?.toFixed(3)||"?"}/gal{d.inv?` · INV#${d.inv}`:""}</div>}
                           </div>
-                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:900,color:"#f87171",flexShrink:0,marginLeft:10}}>-${unpaidCost.toFixed(0)}</div>
+                          <div style={{fontSize:13,fontWeight:800,color:"#f87171"}}>-${d.a.toFixed(2)}</div>
                         </div>
-                      </div>
-                    )}
-
-                    {/* Calibration sliders */}
-                    <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12}}>
-                      <div style={{fontSize:9,color:"#fbbf24",fontWeight:700,marginBottom:8,textTransform:"uppercase",letterSpacing:"0.07em"}}>⚙️ Calibrate to your truck</div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-
-                        {/* MPG baseline */}
-                        <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
-                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Baseline MPG</div>
-                            <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.accent}}>{fuelMPG.toFixed(1)}</span>
+                      ))}
+                      {fuelA.length>0&&<div style={{textAlign:"right",fontSize:10,color:"#f87171",fontWeight:700,marginTop:2}}>Total: -${fuelTotal.toFixed(2)}</div>}
+                    </div>
+                    {/* Fixed Deductions */}
+                    <div>
+                      <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.07em",textTransform:"uppercase",marginBottom:5}}>📋 Fixed & Recurring</div>
+                      {fixedD.sort((a,b)=>b.a-a.a).map((d,i)=>{
+                        // Flag anything that looks suspiciously high (>200) for a non-fuel item
+                        const suspicious=d.a>200&&!d.l.toLowerCase().includes("escrow");
+                        return(
+                          <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 10px",background:suspicious?`${C.red}12`:C.raised,border:`1px solid ${suspicious?C.red:C.border}`,borderRadius:6,marginBottom:3}}>
+                            <div style={{fontSize:10,color:suspicious?C.red:C.text,flex:1,marginRight:8}}>{d.l}{suspicious?" ⚠️":""}</div>
+                            <div style={{fontSize:10,fontWeight:700,color:suspicious?C.red:C.sub,flexShrink:0}}>-${d.a.toFixed(2)}</div>
                           </div>
-                          <input type="range" min="3.5" max="9.0" step="0.1" value={fuelMPG}
-                            onChange={function(e){setFuelMPG(parseFloat(e.target.value));}}
-                            style={{width:"100%",accentColor:C.accent,cursor:"pointer",marginBottom:4}}/>
-                          <div style={{display:"flex",justifyContent:"space-between",fontSize:8}}>
-                            <span style={{color:"#f87171"}}>3.5 poor</span>
-                            <span style={{color:"#4ade80"}}>9.0 great</span>
-                          </div>
-                          <div style={{fontSize:9,color:C.sub,marginTop:5,lineHeight:1.5}}>Green when your actual MPG beats this number</div>
-                        </div>
-
-                        {/* Price per gallon */}
-                        <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
-                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Price / Gallon</div>
-                            <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:fuelPrice>=6?C.red:C.gold}}>${fuelPrice.toFixed(2)}</span>
-                          </div>
-                          <input type="range" min="3.50" max="8.00" step="0.01" value={fuelPrice}
-                            onChange={function(e){setFuelPrice(parseFloat(e.target.value));}}
-                            style={{width:"100%",accentColor:C.accent,cursor:"pointer",marginBottom:4}}/>
-                          <div style={{display:"flex",justifyContent:"space-between",fontSize:8}}>
-                            <span style={{color:"#4ade80"}}>$3.50</span>
-                            <span style={{color:"#f87171"}}>$8.00</span>
-                          </div>
-                          <div style={{fontSize:9,color:C.sub,marginTop:5,lineHeight:1.5}}>{hasRealGallons?"Real gallons from settlement":"Match your Pilot receipt for accuracy"}</div>
-                        </div>
-                      </div>
-
-                      {/* Unpaid miles buffer */}
-                      <div style={{background:unpaidMiles>0?`${C.red}08`:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${unpaidMiles>0?C.red+"33":C.border}`}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                          <div>
-                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Unreported Miles Buffer</div>
-                            <div style={{fontSize:9,color:C.sub,marginTop:1}}>Wrong turns, yard moves, short legs not on settlement</div>
-                          </div>
-                          <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:unpaidMiles>0?C.red:C.sub}}>+{milesBuffer}%</span>
-                        </div>
-                        <input type="range" min="0" max="15" step="1" value={milesBuffer}
-                          onChange={function(e){setMilesBuffer(parseInt(e.target.value));}}
-                          style={{width:"100%",accentColor:"#f87171",cursor:"pointer"}}/>
-                        <div style={{display:"flex",justifyContent:"space-between",fontSize:8,marginTop:4}}>
-                          <span style={{color:"#4ade80"}}>0% = no hidden miles</span>
-                          <span style={{color:"#f87171"}}>15% = big hidden cost</span>
-                        </div>
-                      </div>
+                        );
+                      })}
+                      <div style={{textAlign:"right",fontSize:10,color:C.sub,fontWeight:700,marginTop:4}}>Fixed total: -${fixedTotal.toFixed(2)}</div>
+                    </div>
+                    {/* Grand total row */}
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:C.bg,borderRadius:8,border:`1px solid ${C.border}`,marginTop:8}}>
+                      <div style={{fontSize:11,fontWeight:700,color:C.text}}>Total Deductions</div>
+                      <div style={{fontSize:13,fontWeight:800,color:C.red}}>-${dedSum.toFixed(2)}</div>
                     </div>
                   </div>
                 );
-              })()}
-
-                            {!focusMode&&[...dwDeds].filter(d=>!d.l.toLowerCase().includes("escrow")).sort((a,b)=>b.a-a.a).map((d,i)=>{
-                const pct=(d.a/dw.gross*100).toFixed(1),big=d.a>200;
-                return(<div key={i} style={{marginBottom:9}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}><span style={{fontSize:11,color:C.sub,flex:1}}>{d.l}</span><div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}><Tag color={big?C.red:C.gold}>{pct}%</Tag><span style={{fontSize:12,fontWeight:700,color:big?C.red:C.text,minWidth:64,textAlign:"right"}}>${d.a.toFixed(2)}</span></div></div><Bar pct={d.a/dw.totalDeductions*100} color={big?C.red:d.a>50?C.gold:C.accent}/></div>);
               })}
-              <div style={{marginTop:12,paddingTop:11,borderTop:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span style={{fontSize:11,color:C.sub}}>Total Deductions</span>
-                <div style={{display:"flex",gap:9,alignItems:"center"}}><Tag color={C.red}>{(dw.totalDeductions/dw.gross*100).toFixed(1)}% of gross</Tag><span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.red}}>${dw.totalDeductions.toFixed(2)}</span></div>
-              </div>
             </div>
 
-            {/* RIGHT COL */}
-            <div style={{display:"flex",flexDirection:"column",gap:14}}>
-              <div style={K()}>
-                <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>📊 Business Health{helpBtn("health")}</div>
-                {helpModal("health")}
-                {vendorStats.map((v,vi)=>{
-                  const vw=allW.filter(w=>detectVendor(w)===v.key),vGross=vw.reduce((s,w)=>s+w.gross,0),vNet=vw.reduce((s,w)=>s+w.net,0),vMargin=vGross>0?(vNet/vGross*100).toFixed(1):"0.0";
-                  const vMoves=vw.flatMap(w=>w.moves||[]),vLoaded=vMoves.length>0?Math.round(vMoves.filter(m=>m.t==="L"||m.type==="L").length/vMoves.length*100):0;
-                  const vFuel=vw.reduce((s,w)=>s+(w.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((ss,d)=>ss+d.a,0),0),vFuelPct=vGross>0?(vFuel/vGross*100).toFixed(0):0;
-                  return(<div key={v.key} style={{marginBottom:vi<vendorStats.length-1?16:0,paddingBottom:vi<vendorStats.length-1?16:0,borderBottom:vi<vendorStats.length-1?`1px solid ${C.border}`:"none"}}>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-                      <div style={{display:"flex",alignItems:"center",gap:7}}><span style={{fontSize:16}}>{v.icon}</span><span style={{fontSize:11,fontWeight:700,color:v.color}}>{demoMode?"Demo Driver Co":(profile.company||profile.name||v.name)}</span></div>
-                      <Tag color={v.color}>{vMargin}% margin</Tag>
-                    </div>
-                    {[{l:"Net Margin",pct:+vMargin,txt:`${vMargin}%`,c:+vMargin>20?C.green:C.red},{l:"Loaded %",pct:vLoaded,txt:`${vLoaded}%`,c:vLoaded>=60?C.green:C.gold},{l:"Fuel/Gross",pct:+vFuelPct,txt:`${vFuelPct}%`,c:C.red}].map(m=>(
-                      <div key={m.l} style={{marginBottom:8}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:10,color:C.sub}}>{m.l}</span><span style={{fontSize:11,fontWeight:700,color:m.c}}>{m.txt}</span></div><Bar pct={Math.min(m.pct,100)} color={m.c}/></div>
-                    ))}
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginTop:10}}>
-                      {[{l:"Weeks",v:`${vw.length}`,c:v.color},{l:"YTD Net",v:`$${(vNet/1000).toFixed(1)}k`,c:C.green},{l:"Moves",v:`${vMoves.length}`,c:C.a3}].map(s=>(
-                        <div key={s.l} style={{background:C.bg,borderRadius:7,padding:"7px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}><div style={{fontSize:8,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:s.c}}>{s.v}</div></div>
-                      ))}
-                    </div>
-                  </div>);
-                })}
-              </div>
-
-              <div style={K()}>
+          <div style={K()}>
                 <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>🏆 Week Grades{helpBtn("grades")}</div>
                 {helpModal("grades")}
                 {vendorStats.map((v,vi)=>{
@@ -1935,7 +1804,6 @@ ${pdfText.slice(0,24000)}`}]};
                 </div>
               </div>
             </div>
-          </div>
 
           {/* MOVE PERFORMANCE */}
           {!focusMode&&<div style={K()}>
