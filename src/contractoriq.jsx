@@ -411,11 +411,6 @@ export default function ContractorIQv26(){
     if(!user) setShowWelcome(true);
   },[user]);
 
-  // Show welcome/landing page whenever user is not logged in
-  useEffect(()=>{
-    if(!user) setShowWelcome(true);
-  },[user]);
-
   // Check existing session + listen for login/logout
   useEffect(()=>{
     const c=getSB();
@@ -831,8 +826,6 @@ export default function ContractorIQv26(){
   if(!authChecked){
     return(<div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.sub,display:"flex",alignItems:"center",justifyContent:"center"}}>Loading…</div>);
   }
-  if(!user){
-    // Not logged in — show welcome/landing page (setShowWelcome handled by useEffect below)
   if(!user&&!showWelcome){
     return(
       <div style={{background:"#080c16",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
