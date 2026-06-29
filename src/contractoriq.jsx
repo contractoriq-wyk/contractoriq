@@ -1712,13 +1712,10 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={K()}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔍 Deduction Breakdown{helpBtn("deductions")}</div>
-                <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                  <button onClick={()=>setSelWkKeys(p=>{const n=new Set(p);wks.forEach(w=>n.has(w.week)?n.delete(w.week):n.add(w.week));return n;})} style={{fontSize:9,padding:"3px 8px",borderRadius:5,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,cursor:"pointer",fontFamily:"inherit"}}>all weeks</button>
-                  {[...selWkKeys].map(k=><button key={k} onClick={()=>setSelWkKeys(p=>{const n=new Set(p);n.delete(k);return n;})} style={{fontSize:9,padding:"3px 8px",borderRadius:5,background:`${C.accent}20`,border:`1px solid ${C.accent}44`,color:C.accent,cursor:"pointer",fontFamily:"inherit"}}>W{k} ✕</button>)}
-                </div>
+                <Nav i={sD} max={allW.length-1} prev={()=>setSD(p=>p-1)} next={()=>setSD(p=>p+1)} label={"W"+dw.week}/>
               </div>
               {helpModal("deductions")}
-              {selWeeks.map(w=>{
+              {[dw].map(w=>{
                 const deds=(w.deds||[]).filter(d=>d&&d.l);
                 const fuelA=deds.filter(d=>d.l.toLowerCase().includes("fuel advance"));
                 const fixedD=deds.filter(d=>!d.l.toLowerCase().includes("fuel advance"));
