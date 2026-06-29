@@ -406,10 +406,10 @@ export default function ContractorIQv26(){
   const [authMsg,setAuthMsg]=useState("");
   const [cloudLoaded,setCloudLoaded]=useState(false);
 
-  // Show welcome/landing page whenever user is not logged in
+  // Show welcome/landing page whenever user is not logged in (skip for dev mode)
   useEffect(()=>{
-    if(!user) setShowWelcome(true);
-  },[user]);
+    if(!user&&!isOwnerMode) setShowWelcome(true);
+  },[user,isOwnerMode]);
 
   // Check existing session + listen for login/logout
   useEffect(()=>{
@@ -458,9 +458,18 @@ export default function ContractorIQv26(){
         }
         // Set tier from Supabase plan column
         const plan=data?.plan||"free";
-        if(plan==="tier2"){setIsPro(true);setIsSmart(true);try{localStorage.setItem("ciq_pro","true");localStorage.setItem("ciq_smart","true");}catch(e){}}
-        else if(plan==="tier1"){setIsPro(true);setIsSmart(false);try{localStorage.setItem("ciq_pro","true");localStorage.setItem("ciq_smart","false");}catch(e){}}
-        else{setIsPro(false);setIsSmart(false);try{localStorage.setItem("ciq_pro","false");localStorage.setItem("ciq_smart","false");}catch(e){}}
+        if(plan==="tier2"){
+          setIsPro(true);setIsSmart(true);
+          setDarkMode(true);// Tier 2 = dark mode (cinematic)
+          try{localStorage.setItem("ciq_pro","true");localStorage.setItem("ciq_smart","true");localStorage.setItem("ciq_theme","dark");}catch(e){}
+        }else if(plan==="tier1"){
+          setIsPro(true);setIsSmart(false);
+          setDarkMode(false);// Tier 1 = light mode (clean)
+          try{localStorage.setItem("ciq_pro","true");localStorage.setItem("ciq_smart","false");localStorage.setItem("ciq_theme","light");}catch(e){}
+        }else{
+          setIsPro(false);setIsSmart(false);
+          try{localStorage.setItem("ciq_pro","false");localStorage.setItem("ciq_smart","false");}catch(e){}
+        }
       }catch(e){ console.error("cloud pull",e&&e.message); }
       setCloudLoaded(true);
     })();
@@ -845,10 +854,10 @@ export default function ContractorIQv26(){
   const TB=({t,l})=><button onClick={()=>setTab(t)} style={{flex:1,padding:"9px 4px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:11,letterSpacing:"0.04em",textTransform:"uppercase",border:"none",background:tab===t?C.accent:C.raised,color:tab===t?"#000":C.sub,transition:"all 0.2s",boxShadow:tab===t?`0 0 14px ${C.accent}66,0 0 28px ${C.accent}22`:"none"}}>{l}</button>;
 
   // ═══ AUTH GATE (login required) ═══
-  if(!authChecked){
+  if(!authChecked&&!isOwnerMode){
     return(<div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.sub,display:"flex",alignItems:"center",justifyContent:"center"}}>Loading…</div>);
   }
-  if(!user&&!showWelcome){
+  if(!user&&!showWelcome&&!isOwnerMode){
     return(
       <div style={{background:"#080c16",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{color:"#00ffcc",fontFamily:"'IBM Plex Mono',monospace",fontSize:12}}>Loading...</div>
