@@ -226,26 +226,6 @@ function TVTickerTape({symbols}){
         })}
       </div>
     </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
   );
 }
 
@@ -425,6 +405,11 @@ export default function ContractorIQv26(){
   const [authBusy,setAuthBusy]=useState(false);
   const [authMsg,setAuthMsg]=useState("");
   const [cloudLoaded,setCloudLoaded]=useState(false);
+
+  // Show welcome/landing page whenever user is not logged in
+  useEffect(()=>{
+    if(!user) setShowWelcome(true);
+  },[user]);
 
   // Show welcome/landing page whenever user is not logged in
   useEffect(()=>{
@@ -2664,9 +2649,5 @@ export default function ContractorIQv26(){
       </div>
       <div style={{height:58}}/>
     </div>
-    </div>
-    </div>
-    </div>
-
   );
 }
