@@ -7,12 +7,20 @@ const LOGO_ICON="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDP
 
 // ═══ PRICING (swap these at launch — single source of truth) ═══
 const PRICING={
+  // Tier 1 — Test Drive
   trialUrl:"https://buy.stripe.com/aFa8wP7FLbMY4Ua0Ls9MY00",
+  trialPrice:"$1",
+  // Tier 2 — Pro Smart (monthly) — TODO: create Stripe link, add here
+  smartUrl:"https://buy.stripe.com/fZufZh2lr2co3Q6am29MY01",
+  smartPrice:"$29.99",
+  smartNote:"Live data · Smarter AI · Unlimited scans",
+  // Tier 3 — Annual — TODO: create Stripe link, add here
+  annualUrl:"https://buy.stripe.com/fZufZh2lr2co3Q6am29MY01",
+  annualPrice:"$249",
+  annualNote:"Save $110 · 2 months free · Everything in Smart",
+  // Legacy monthly (kept for existing subscribers)
   monthlyUrl:"https://buy.stripe.com/fZufZh2lr2co3Q6am29MY01",
-  annualUrl:"https://buy.stripe.com/fZufZh2lr2co3Q6am29MY01", // TODO: replace with REAL annual Stripe link
   monthlyPrice:"$19.99",
-  annualPrice:"$199",
-  annualNote:"Save $40 · 2 months free",
 };
 
 const DARK={bg:"#0b0f1c",surf:"#141928",card:"#1a2236",raised:"#232f45",border:"#2c3a52",accent:"#00ffcc",a2:"#ff7a45",a3:"#a78bfa",text:"#f0f6ff",sub:"#8fa3c0",green:"#4ade80",red:"#f87171",gold:"#fbbf24"};
@@ -297,8 +305,9 @@ export default function ContractorIQv26(){
   const [docScanMsg,setDocScanMsg]=useState("");
   const [isPro,setIsPro]=useState(()=>{if(typeof window!=="undefined"&&window.location.hostname.includes("navy"))return true;try{return localStorage.getItem("ciq_pro")==="true";}catch{return false;}});
   const [trialStart,setTrialStart]=useState(()=>{try{const t=localStorage.getItem("ciq_trial_start");return t?parseInt(t):null;}catch{return null;}});
+  const [isSmart,setIsSmart]=useState(()=>{try{return localStorage.getItem("ciq_smart")==="true";}catch{return false;}});
+  const [liveData,setLiveData]=useState({diesel:null,weather:null,dieselPeriod:null});
   const [showUpgrade,setShowUpgrade]=useState(false);
-  const [ownerTaps,setOwnerTaps]=useState(0);
   const [upgradeSrc,setUpgradeSrc]=useState("");
   const [oUses,setOUses]=useState(()=>{try{return parseInt(localStorage.getItem("ciq_o_uses")||"0");}catch{return 0;}});
   const [aiUses,setAiUses]=useState(()=>{try{return parseInt(localStorage.getItem("ciq_ai_uses")||"0");}catch{return 0;}});
@@ -356,6 +365,34 @@ export default function ContractorIQv26(){
   useEffect(()=>{try{localStorage.setItem("ciq_ai_uses",String(aiUses));}catch(e){};},[aiUses]);
   useEffect(()=>{try{localStorage.setItem("ciq_dis_ads",JSON.stringify(dismissedAds));}catch(e){};},[dismissedAds]);
   useEffect(()=>{try{localStorage.setItem("ciq_ticker",JSON.stringify(tickerSyms));}catch(e){};},[tickerSyms]);
+  useEffect(()=>{try{localStorage.setItem("ciq_smart",String(isSmart));}catch(e){};},[isSmart]);
+
+  // Fetch live diesel + weather for Tier 2 Smart users
+  useEffect(()=>{
+    if(!isSmart)return;
+    async function fetchLive(){
+      try{
+        // Diesel price (EIA, weekly)
+        const dr=await fetch("/api/diesel");
+        const dd=dr.ok?await dr.json():null;
+        // Weather (needs geolocation)
+        let wd=null;
+        try{
+          const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:5000,maximumAge:300000}));
+          const wr=await fetch(`/api/weather?lat=${pos.coords.latitude.toFixed(4)}&lon=${pos.coords.longitude.toFixed(4)}`);
+          if(wr.ok)wd=await wr.json();
+        }catch(e){}
+        setLiveData({
+          diesel:dd?.price||null,
+          dieselPeriod:dd?.period||null,
+          weather:wd?.desc?`${wd.city}: ${wd.desc}, ${wd.tempF}°F, wind ${wd.windMph}mph`:null,
+        });
+      }catch(e){}
+    }
+    fetchLive();
+    const t=setInterval(fetchLive,1800000);// refresh every 30min
+    return()=>clearInterval(t);
+  },[isSmart]);
 
 
   // ═══ AUTH + CLOUD SYNC ═══
@@ -1214,7 +1251,7 @@ export default function ContractorIQv26(){
             ):trialDaysLeft>0?(
               <div style={{padding:"6px 9px",borderRadius:8,background:C.gold+"20",border:"1px solid "+C.gold+"55",fontSize:9,fontWeight:700,color:"#fbbf24",flexShrink:0}}>{trialDaysLeft}d left</div>
             ):(
-              <button onClick={()=>{const t=ownerTaps+1;setOwnerTaps(t);if(t>=5){setIsPro(true);setOwnerTaps(0);try{localStorage.setItem("ciq_pro","true");localStorage.removeItem("ciq_ai_uses");localStorage.removeItem("ciq_o_uses");}catch(e){}}else{openUpgrade("header");}}} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{ownerTaps>0?`(${ownerTaps}/5)`:"Upgrade"}</button>
+              <button onClick={()=>openUpgrade("header")} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Upgrade</button>
             )}
           </div>
         </div>
