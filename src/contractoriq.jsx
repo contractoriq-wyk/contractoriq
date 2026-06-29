@@ -267,6 +267,9 @@ export default function ContractorIQv26(){
   const [newMove,setNewMove]=useState({type:"L",from:"",to:"",miles:"",rate:"",fsc:""});
   const [extra,setExtra]=useState([]);
   const [scanning,setScanning]=useState(false);
+  const [scanQueue,setScanQueue]=useState([]);// {file, fileType, status, result, error}
+  const [scanQueueActive,setScanQueueActive]=useState(false);
+  const [scanQueueLog,setScanQueueLog]=useState([]);// summary of completed scans
   const [scanResult,setScanResult]=useState(null);
   const [scanMsg,setScanMsg]=useState("");
   const [scanForm,setScanForm]=useState({week:"",from:"",to:"",gross:"",net:"",deds:"",moves:""});
@@ -522,6 +525,82 @@ export default function ContractorIQv26(){
   const latFuel=(latest.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
   const SYS=`Expert drayage business advisor for YOUR COMPANY, CDL owner-operator, Baltimore MD. Real settlement data: ${allW.map(function(w){return "W"+w.week+": Gross $"+w.gross+", Net $"+w.net+", Margin "+(w.net/w.gross*100).toFixed(1)+"%, "+(w.moves||[]).length+" moves";}).join(" | ")}. YTD: Gross $${tGross.toFixed(0)}, Net $${tNet.toFixed(0)}, Margin ${margin}%, Avg RPM $${avgRPM}, Loaded ${ldPct}%. Be specific, practical, use real numbers. Under 300 words.`;
 
+  // Process multiple PDFs sequentially
+  async function processScanQueue(files){
+    if(!files||files.length===0)return;
+    setScanQueueActive(true);
+    setScanQueueLog([]);
+    setScanResult(null);
+    const log=[];
+    for(let i=0;i<files.length;i++){
+      const file=files[i];
+      setScanQueue(files.length>1?[{name:file.name,index:i,total:files.length,status:"scanning"}]:[]);
+      setScanMsg(`⏳ Scanning ${i+1} of ${files.length}: ${file.name}...`);
+      setScanning(true);
+      try{
+        // Reuse scanPDF logic inline
+        const isImage=file.type.startsWith("image/");
+        const EXTRACT_PROMPT=`You are extracting data from a drayage/trucking settlement statement. Return ONLY valid JSON — no markdown, no commentary.\n\nRULES (follow exactly):\n1. The JSON below is a FORMAT TEMPLATE. Every value must come from THIS document. NEVER copy the example numbers — they are zeros on purpose.\n2. "moves": include ONE entry for EVERY load/trip row in the settlement detail. Each row that begins with an order number (e.g. IBP...) is a separate move — INCLUDING multiple legs of the same order (leg 1, leg 2, leg 3 are each their own entry). Statements often have 20-40+ rows. Do not skip, merge, summarize, or stop early. List every single row.\n3. "deds": include ONE entry for EVERY deduction line item. Do not skip any.\n4. For escrow, read the ACTUAL BALANCE column from the Deductions Statement, NOT the weekly deduction amount.\n5. Extract gallons from fuel advance notes (e.g. "Gallons: 170.49"), price per gallon, and any reimbursements.\n6. If a field is genuinely not in the document, use 0 (for numbers) or "" (for text). NEVER invent or estimate.\n7. All numbers must be plain (no $ signs, no commas). For move fields: t=L or E (loaded/empty), fr=From, to=To, mi=Miles, rt=Rate, fc=FSC.\n8. Before returning: count the order rows and confirm "moves" has exactly that many entries. Gross minus totalDeductions plus reimbursements should be close to net.\n\nFORMAT TEMPLATE (replace every value with the REAL value):\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0}],"deds":[{"l":"line label","a":0}]}`;
+        let pdfText="";
+        if(!isImage&&window.pdfjsLib){
+          try{
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+            const buf=await file.arrayBuffer();
+            const pdf=await window.pdfjsLib.getDocument({data:buf}).promise;
+            let t="";
+            for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p);const c=await page.getTextContent();t+=c.items.map(i=>i.str).join(" ")+"\n";}
+            pdfText=t.trim();
+          }catch(ex){pdfText="";}
+        }
+        let reqBody;
+        if(pdfText&&pdfText.length>200){
+          reqBody={model:"claude-sonnet-4-5",max_tokens:8000,messages:[{role:"user",content:`${EXTRACT_PROMPT}
+
+SETTLEMENT STATEMENT TEXT (read all of it):
+${pdfText.slice(0,24000)}`}]};
+        }else{
+          const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+          const mediaType=isImage?(file.type||"image/jpeg"):"application/pdf";
+          const contentBlock=isImage?{type:"image",source:{type:"base64",media_type:mediaType,data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
+          reqBody={model:"claude-sonnet-4-5",max_tokens:8000,betas:["pdfs-2024-09-25"],messages:[{role:"user",content:[contentBlock,{type:"text",text:EXTRACT_PROMPT}]}]};
+        }
+        const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(reqBody)});
+        if(!resp.ok){log.push({name:file.name,status:"error",msg:`API Error ${resp.status}`});continue;}
+        const d=await resp.json();
+        if(d.error){log.push({name:file.name,status:"error",msg:d.error.message});continue;}
+        const txt=d.content?.map(b=>b.text||"").join("").trim();
+        const jsonStart=txt.indexOf("{"),jsonEnd=txt.lastIndexOf("}")+1;
+        if(jsonStart===-1){log.push({name:file.name,status:"error",msg:"Could not extract data"});continue;}
+        let jsonStr=txt.slice(jsonStart,jsonEnd);
+        try{JSON.parse(jsonStr);}catch(truncErr){let depth=0;for(const c of jsonStr){if(c==="{"||c==="[")depth++;else if(c==="}"||c==="]")depth--;}if(depth>0)jsonStr+="]".repeat(Math.max(0,jsonStr.split("[").length-jsonStr.split("]").length))+"}".repeat(Math.max(0,jsonStr.split("{").length-jsonStr.split("}").length));}
+        const parsed=JSON.parse(jsonStr);
+        parsed.label=`Week ${String(parsed.week).padStart(2,"0")}`;
+        parsed.week=String(parsed.week).padStart(2,"0");
+        const wNum=parsed.week;
+        const exists=addedW.find(w=>w.week===wNum);
+        if(exists){
+          setAddedW(p=>p.map(w=>w.week===wNum?{...parsed,vendor:vendorPick,week:wNum,label:`Week ${wNum}`}:w));
+          log.push({name:file.name,status:"updated",week:wNum,gross:parsed.gross,net:parsed.net});
+        }else{
+          setAddedW(p=>[...p,{...parsed,vendor:vendorPick,week:wNum,label:`Week ${wNum}`}]);
+          log.push({name:file.name,status:"saved",week:wNum,gross:parsed.gross,net:parsed.net});
+        }
+      }catch(e){
+        log.push({name:file.name,status:"error",msg:e.message});
+      }
+      setScanning(false);
+      // Small delay between scans to avoid rate limits
+      if(i<files.length-1) await new Promise(r=>setTimeout(r,800));
+    }
+    setScanQueueLog(log);
+    setScanQueue([]);
+    setScanQueueActive(false);
+    setScanning(false);
+    const saved=log.filter(l=>l.status==="saved"||l.status==="updated").length;
+    const errors=log.filter(l=>l.status==="error").length;
+    setScanMsg(`✅ Done — ${saved} week${saved!==1?"s":""} saved${errors>0?`, ${errors} failed`:""}`);
+  }
+
   function confirmScan(){
     if(!scanResult)return;
     const wNum=String(scanResult.week).padStart(2,"0");
@@ -551,7 +630,7 @@ export default function ContractorIQv26(){
           const buf=await file.arrayBuffer();
           const pdf=await window.pdfjsLib.getDocument({data:buf}).promise;
           let t="";
-          for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p);const c=await page.getTextContent();t+=c.items.map(i=>i.str).join(" ")+"\n";}
+          for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p);const c=await page.getTextContent();t+=c.items.map(i=>i.str).join(" ")+"\\n";}
           pdfText=t.trim();
         }catch(ex){pdfText="";}
       }
@@ -1941,7 +2020,7 @@ export default function ContractorIQv26(){
               <div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>Add Settlement Week{helpBtn("addSettlement")}</div><div style={{fontSize:11,color:C.sub,marginTop:2}}>Upload PDF · Paste text · Type numbers</div></div>
             </div>
             {helpModal("addSettlement")}
-            <input ref={fileRef} type="file" accept="application/pdf,.pdf" style={{display:"none"}} onChange={e=>{const file=e.target.files[0];if(file){setScanMode("scan");scanPDF(file,"pdf");}e.target.value="";}}/>
+            <input ref={fileRef} type="file" accept="application/pdf,.pdf" multiple style={{display:"none"}} onChange={e=>{const files=Array.from(e.target.files);if(files.length>0){setScanMode("scan");if(files.length===1){scanPDF(files[0],"pdf");}else{processScanQueue(files);}}e.target.value="";}}/>
             <input ref={imgRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{const file=e.target.files[0];if(file){setScanMode("scan");scanPDF(file,"image");}e.target.value="";}}/>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,marginBottom:16}}>
               {[{m:"scan",icon:"📤",label:"Upload PDF",desc:"Tap to scan"},{m:"paste",icon:"📋",label:"Paste Text",desc:"Copy & paste"},{m:"form",icon:"✏️",label:"Type In",desc:"Manual"},{m:"tips",icon:"💡",label:"How To",desc:"Guide"}].map(t=>(
@@ -1956,14 +2035,25 @@ export default function ContractorIQv26(){
                 {!scanning&&!scanResult&&(
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
                     <button onClick={()=>fileRef.current?.click()} style={{padding:"22px 10px",borderRadius:14,background:`linear-gradient(135deg,${C.a3}20,${C.accent}15)`,border:`2px solid ${C.a3}`,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
-                      <div style={{fontSize:32,marginBottom:8}}>📂</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#a78bfa",marginBottom:4}}>Open PDF File</div><div style={{fontSize:10,color:C.sub,lineHeight:1.5}}>Browse your Downloads or Files app</div>
+                      <div style={{fontSize:32,marginBottom:8}}>📂</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#a78bfa",marginBottom:4}}>Open PDF Files</div><div style={{fontSize:10,color:C.sub,lineHeight:1.5}}>Select one or multiple at once</div>
                     </button>
                     <button onClick={()=>imgRef.current?.click()} style={{padding:"22px 10px",borderRadius:14,background:`linear-gradient(135deg,${C.gold}15,${C.a3}10)`,border:`2px solid ${C.gold}`,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
                       <div style={{fontSize:32,marginBottom:8}}>📷</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#fbbf24",marginBottom:4}}>Take a Photo</div><div style={{fontSize:10,color:C.sub,lineHeight:1.5}}>Photo of printed statement</div>
                     </button>
                   </div>
                 )}
-                {scanning&&<div style={{textAlign:"center",padding:"32px 16px"}}><div style={{fontSize:42,marginBottom:12}}>⏳</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:"#a78bfa",marginBottom:6}}>AI Reading Your Settlement...</div><div style={{height:4,background:C.raised,borderRadius:4,overflow:"hidden"}}><div style={{height:"100%",width:"70%",background:`linear-gradient(90deg,${C.a3},${C.accent})`,borderRadius:4}}/></div></div>}
+                {scanning&&(
+                  <div style={{textAlign:"center",padding:"28px 16px"}}>
+                    <div style={{fontSize:42,marginBottom:12}}>⏳</div>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:"#a78bfa",marginBottom:6}}>
+                      {scanQueue.length>0?scanQueue[0]?.name||"Scanning...":"AI Reading Your Settlement..."}
+                    </div>
+                    {scanQueue.length>0&&<div style={{fontSize:11,color:C.sub,marginBottom:10}}>File {(scanQueue[0]?.index||0)+1} of {scanQueue[0]?.total||1} — auto-saving each week</div>}
+                    <div style={{height:5,background:C.raised,borderRadius:4,overflow:"hidden",marginBottom:6}}>
+                      <div style={{height:"100%",background:`linear-gradient(90deg,${C.a3},${C.accent})`,borderRadius:4,transition:"width 0.3s",width:scanQueue.length>0?`${Math.round(((scanQueue[0]?.index||0)/((scanQueue[0]?.total||1)))*100)}%`:"70%"}}/>
+                    </div>
+                  </div>
+                )}
                 {scanResult&&!scanning&&(
                   <div style={{background:C.bg,borderRadius:10,border:`1px solid ${C.a3}44`,padding:14}}>
                     <div style={{fontSize:11,fontWeight:700,color:"#a78bfa",marginBottom:12,textTransform:"uppercase",letterSpacing:"0.08em"}}>✅ PDF Read — Review & Confirm</div>
@@ -2033,6 +2123,22 @@ export default function ContractorIQv26(){
               </div>
             )}
             {scanMsg&&<div style={{padding:"11px 14px",background:scanMsg.startsWith("⚠️")?`${C.red}12`:`${C.green}12`,borderRadius:9,border:`1px solid ${scanMsg.startsWith("⚠️")?C.red:C.green}44`,fontSize:12,color:scanMsg.startsWith("⚠️")?C.red:C.green,marginTop:10}}>{scanMsg}</div>}
+            {scanQueueLog.length>1&&(
+              <div style={{marginTop:12,background:C.bg,borderRadius:10,border:`1px solid ${C.border}`,padding:12}}>
+                <div style={{fontSize:10,fontWeight:800,color:C.sub,letterSpacing:"0.08em",marginBottom:8}}>BULK SCAN SUMMARY</div>
+                {scanQueueLog.map((l,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:i<scanQueueLog.length-1?`1px solid ${C.border}`:"none"}}>
+                    <span style={{fontSize:12}}>{l.status==="error"?"❌":"✅"}</span>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:11,color:C.text,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.name}</div>
+                      {l.status!=="error"&&<div style={{fontSize:10,color:C.sub}}>Week {l.week} · Gross ${Number(l.gross||0).toFixed(0)} · Net ${Number(l.net||0).toFixed(0)} · {l.status==="updated"?"updated":"saved"}</div>}
+                      {l.status==="error"&&<div style={{fontSize:10,color:C.red}}>{l.msg}</div>}
+                    </div>
+                  </div>
+                ))}
+                <button onClick={()=>setScanQueueLog([])} style={{marginTop:8,width:"100%",padding:"7px",borderRadius:7,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>✕ Dismiss</button>
+              </div>
+            )}
           </div>
 
           {/* ══ UPLOADED DOCS MANAGER ══ */}
