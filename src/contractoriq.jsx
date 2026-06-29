@@ -226,6 +226,26 @@ function TVTickerTape({symbols}){
         })}
       </div>
     </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
   );
 }
 
@@ -2644,5 +2664,9 @@ export default function ContractorIQv26(){
       </div>
       <div style={{height:58}}/>
     </div>
+    </div>
+    </div>
+    </div>
+
   );
 }
