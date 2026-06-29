@@ -1770,6 +1770,127 @@ ${pdfText.slice(0,24000)}`}]};
                   </div>
                 );
               })}
+
+              {/* ⛽ FUEL VS MILES MPG CARD */}
+              {(()=>{
+                const reportedMiles=(dw.moves||[]).reduce(function(s,m){return s+(m.mi||m.miles||0);},0);
+                const dwFuelCost=(dw.deds||[]).filter(function(d){return d&&d.l&&d.l.toLowerCase().includes("fuel advance");}).reduce(function(s,d){return s+d.a;},0);
+                const hasRealGallons=dw.gallons&&dw.gallons>0;
+                const realPricePerGallon=dw.price_per_gallon&&dw.price_per_gallon>0?dw.price_per_gallon:fuelPrice;
+                const gallonsBought=hasRealGallons?dw.gallons:(realPricePerGallon>0?dwFuelCost/realPricePerGallon:0);
+                const gallonsSource=hasRealGallons?"from settlement":"estimated";
+                const settlementMPG=gallonsBought>0?reportedMiles/gallonsBought:0;
+                const truckBeatBaseline=settlementMPG>=fuelMPG;
+                const mpgDiff=Math.abs(settlementMPG-fuelMPG).toFixed(2);
+                const verdictColor=truckBeatBaseline?C.green:C.red;
+                const gallonsAtBaseline=fuelMPG>0?reportedMiles/fuelMPG:0;
+                const costAtBaseline=gallonsAtBaseline*fuelPrice;
+                const galDiff=gallonsBought-gallonsAtBaseline;
+                const unpaidMiles=Math.round(reportedMiles*milesBuffer/100);
+                const gallonsUnpaid=settlementMPG>0?unpaidMiles/settlementMPG:0;
+                const unpaidCost=gallonsUnpaid*fuelPrice;
+                return(
+                  <div style={{background:`${verdictColor}08`,borderRadius:12,border:`1px solid ${verdictColor}33`,padding:"14px",marginBottom:14}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                      <div style={{display:"flex",alignItems:"center",gap:7}}>
+                        <span style={{fontSize:16}}>⛽</span>
+                        <span style={{fontSize:12,fontWeight:700,color:C.text}}>Fuel vs Miles · W{dw.week}</span>
+                      </div>
+                      <span style={{padding:"3px 10px",borderRadius:20,background:`${verdictColor}18`,border:`1px solid ${verdictColor}44`,fontSize:11,fontWeight:700,color:verdictColor}}>
+                        {truckBeatBaseline?"✅ Efficient":"⚠️ Below Baseline"}
+                      </span>
+                    </div>
+                    <div style={{padding:"14px",background:`${verdictColor}10`,borderRadius:10,border:`1px solid ${verdictColor}33`,display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:10,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>Settlement MPG — {gallonsSource}</div>
+                        <div style={{fontSize:11,color:C.sub,marginBottom:5}}>{reportedMiles.toLocaleString()} paid miles + {gallonsBought.toFixed(1)} gallons bought</div>
+                        <div style={{fontSize:12,fontWeight:700,color:verdictColor}}>
+                          {truckBeatBaseline
+                            ?`✅ +${mpgDiff} MPG above your ${fuelMPG} baseline — running efficient`
+                            :`⚠️ ${mpgDiff} MPG below your ${fuelMPG} baseline — burning excess fuel`}
+                        </div>
+                      </div>
+                      <div style={{textAlign:"center",flexShrink:0,marginLeft:16}}>
+                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:40,fontWeight:900,color:verdictColor,lineHeight:1}}>{settlementMPG>0?settlementMPG.toFixed(2):"—"}</div>
+                        <div style={{fontSize:9,color:C.sub,marginTop:2}}>MPG this week</div>
+                        <div style={{fontSize:9,color:C.sub,marginTop:1}}>Target: {fuelMPG} MPG</div>
+                      </div>
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
+                      {[
+                        {l:"Miles Paid",v:`${reportedMiles.toLocaleString()} mi`,sub:"Settlement reported",c:C.accent},
+                        {l:`At ${fuelMPG} MPG`,v:`${gallonsAtBaseline.toFixed(0)} gal`,sub:`Cost $${costAtBaseline.toFixed(0)}`,c:C.sub},
+                        {l:"Fuel Advances",v:`$${dwFuelCost.toFixed(0)}`,sub:`~${gallonsBought.toFixed(0)} gal`,c:C.sub},
+                      ].map(function(s){return(
+                        <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}>
+                          <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:4,lineHeight:1.3}}>{s.l}</div>
+                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:s.c}}>{s.v}</div>
+                          <div style={{fontSize:9,color:C.sub,marginTop:3,lineHeight:1.4}}>{s.sub}</div>
+                        </div>
+                      );})}
+                    </div>
+                    {unpaidMiles>0&&(
+                      <div style={{padding:"10px 13px",background:`${C.red}10`,borderRadius:9,border:`1px solid ${C.red}44`,marginBottom:12}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div>
+                            <div style={{fontSize:12,fontWeight:700,color:C.red}}>🚫 ~{unpaidMiles} unpaid miles — out of pocket</div>
+                            <div style={{fontSize:10,color:C.sub,marginTop:2}}>Drove these miles, broker paid $0. Burned ~{gallonsUnpaid.toFixed(0)} gal at your own cost.</div>
+                          </div>
+                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:900,color:"#f87171",flexShrink:0,marginLeft:10}}>-${unpaidCost.toFixed(0)}</div>
+                        </div>
+                      </div>
+                    )}
+                    <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12}}>
+                      <div style={{fontSize:9,color:"#fbbf24",fontWeight:700,marginBottom:8,textTransform:"uppercase",letterSpacing:"0.07em"}}>⚙️ Calibrate to your truck</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                        <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Baseline MPG</div>
+                            <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.accent}}>{fuelMPG.toFixed(1)}</span>
+                          </div>
+                          <input type="range" min="3.5" max="9.0" step="0.1" value={fuelMPG}
+                            onChange={function(e){setFuelMPG(parseFloat(e.target.value));}}
+                            style={{width:"100%",accentColor:C.accent,cursor:"pointer",marginBottom:4}}/>
+                          <div style={{display:"flex",justifyContent:"space-between",fontSize:8}}>
+                            <span style={{color:"#f87171"}}>3.5 poor</span>
+                            <span style={{color:"#4ade80"}}>9.0 great</span>
+                          </div>
+                        </div>
+                        <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Price / Gallon</div>
+                            <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:fuelPrice>=6?C.red:C.gold}}>${fuelPrice.toFixed(2)}</span>
+                          </div>
+                          <input type="range" min="3.50" max="8.00" step="0.01" value={fuelPrice}
+                            onChange={function(e){setFuelPrice(parseFloat(e.target.value));}}
+                            style={{width:"100%",accentColor:C.accent,cursor:"pointer",marginBottom:4}}/>
+                          <div style={{display:"flex",justifyContent:"space-between",fontSize:8}}>
+                            <span style={{color:"#4ade80"}}>$3.50</span>
+                            <span style={{color:"#f87171"}}>$8.00</span>
+                          </div>
+                          <div style={{fontSize:9,color:C.sub,marginTop:5,lineHeight:1.5}}>{hasRealGallons?"Real gallons from settlement":"Match your fuel receipt for accuracy"}</div>
+                        </div>
+                      </div>
+                      <div style={{background:unpaidMiles>0?`${C.red}08`:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${unpaidMiles>0?C.red+"33":C.border}`}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                          <div>
+                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Unreported Miles Buffer</div>
+                            <div style={{fontSize:9,color:C.sub,marginTop:1}}>Wrong turns, yard moves, short legs not on settlement</div>
+                          </div>
+                          <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:unpaidMiles>0?C.red:C.sub}}>+{milesBuffer}%</span>
+                        </div>
+                        <input type="range" min="0" max="15" step="1" value={milesBuffer}
+                          onChange={function(e){setMilesBuffer(parseInt(e.target.value));}}
+                          style={{width:"100%",accentColor:"#f87171",cursor:"pointer"}}/>
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:8,marginTop:4}}>
+                          <span style={{color:"#4ade80"}}>0% = no hidden miles</span>
+                          <span style={{color:"#f87171"}}>15% = big hidden cost</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
           <div style={K()}>
