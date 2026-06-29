@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Welcome to DrayageIQ</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:#080c16;color:#e2e8f0;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+    .card{background:#141928;border:1px solid #1a2535;border-radius:16px;padding:40px 32px;max-width:420px;width:100%;text-align:center;}
+    .icon{font-size:48px;margin-bottom:16px;}
+    h1{font-size:22px;font-weight:800;color:#00ffcc;margin-bottom:8px;}
+    p{font-size:14px;color:#8fa3c0;line-height:1.6;margin-bottom:24px;}
+    .badge{display:inline-block;padding:6px 16px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:0.08em;margin-bottom:24px;}
+    .badge-tier1{background:#a78bfa22;border:1px solid #a78bfa55;color:#a78bfa;}
+    .badge-tier2{background:#00ffcc22;border:1px solid #00ffcc55;color:#00ffcc;}
+    .btn{display:block;width:100%;padding:14px;border-radius:10px;border:none;font-size:14px;font-weight:800;cursor:pointer;text-decoration:none;background:linear-gradient(135deg,#00ffcc,#00d4aa);color:#080c16;}
+    .status{font-size:12px;color:#8fa3c0;margin-top:16px;min-height:20px;}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">🚛</div>
+  <h1 id="title">Welcome to DrayageIQ!</h1>
+  <div id="badge" class="badge"></div>
+  <p id="desc">Setting up your account...</p>
+  <a href="/" class="btn">Open DrayageIQ →</a>
+  <div class="status" id="status">Activating your plan...</div>
+</div>
+
+<script>
+const SUPABASE_URL="https://idlcghudcpisyoyokmbb.supabase.co";
+const SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkbGNnaHVkY3Bpc3lveW9rbWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjUzMzksImV4cCI6MjA5NDYwMTMzOX0.S3O3d8UrgNk5f3GbzqbTloHpQv0FuFKeQJOeIwu8HKA";
+
+const params=new URLSearchParams(window.location.search);
+const plan=params.get("plan")||"tier1";
+
+// Update UI based on plan
+const badge=document.getElementById("badge");
+const desc=document.getElementById("desc");
+if(plan==="tier2"){
+  badge.className="badge badge-tier2";
+  badge.textContent="⚡ PRO SMART ACTIVATED";
+  desc.textContent="You now have access to live diesel prices, real-time weather, and Smart AI that knows your actual settlement numbers. The sharpest tool a drayage owner-operator can have.";
+}else{
+  badge.className="badge badge-tier1";
+  badge.textContent="✓ STANDARD ACTIVATED";
+  desc.textContent="You now have unlimited PDF settlement scanning, load tracking, earnings dashboard, and AI-powered trucking guidance.";
+}
+
+// Save plan to Supabase
+(async()=>{
+  const status=document.getElementById("status");
+  try{
+    const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+    const {data:{user}}=await sb.auth.getUser();
+    if(!user){status.textContent="Sign in to DrayageIQ to activate your plan.";return;}
+    const {error}=await sb.from("user_data").upsert({user_id:user.id,plan:plan},{onConflict:"user_id"});
+    if(error)throw error;
+    status.textContent="✅ Plan activated! Opening DrayageIQ...";
+    setTimeout(()=>{window.location.href="/";},2000);
+  }catch(e){
+    status.textContent="✅ Payment confirmed! Open DrayageIQ and sign in to activate.";
+  }
+})();
+</script>
+</body>
+</html>
