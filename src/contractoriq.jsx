@@ -583,15 +583,7 @@ export default function ContractorIQv26(){
           const totalLoads=recent.reduce((s,w)=>s+(w.moves?.length||0),0);
           const avgLoadsPerWeek=totalLoads/recent.length;
           const lastWeek=weeks[weeks.length-1];
-          settlementCtx=`
-DRIVER SETTLEMENT DATA (last ${recent.length} weeks):
-- Avg weekly gross: $${avgGross.toFixed(0)}
-- Avg weekly net: $${avgNet.toFixed(0)}
-- Avg miles/week: ${avgMiles.toFixed(0)}
-- Avg revenue per mile: $${avgRPM.toFixed(3)}/mi
-- Avg loads/week: ${avgLoadsPerWeek.toFixed(1)}
-- Truck MPG setting: ${fuelMPG} MPG
-- Last week: Week ${lastWeek.week||"?"}, Gross $${lastWeek.gross||0}, Net $${lastWeek.net||0}, Miles ${lastWeek.miles||0}`;
+          settlementCtx="\nDRIVER SETTLEMENT DATA (last "+recent.length+" weeks):\n- Avg weekly gross: $"+avgGross.toFixed(0)+"\n- Avg weekly net: $"+avgNet.toFixed(0)+"\n- Avg miles/week: "+avgMiles.toFixed(0)+"\n- Avg revenue per mile: $"+avgRPM.toFixed(3)+"/mi\n- Avg loads/week: "+avgLoadsPerWeek.toFixed(1)+"\n- Truck MPG setting: "+fuelMPG+" MPG\n- Last week: Week "+(lastWeek.week||"?")+", Gross $"+(lastWeek.gross||0)+", Net $"+(lastWeek.net||0)+", Miles "+(lastWeek.miles||0);
         }
 
         // Build live data context
@@ -600,37 +592,19 @@ DRIVER SETTLEMENT DATA (last ${recent.length} weeks):
         if(wp?.temp!=null) livePts.push(`🌤️ Weather at your location: ${wp.temp}°F, ${wp.description||wp.condition}, wind ${wp.wind_mph}mph, visibility ${wp.visibility_miles}mi`);
         if(dp?.price&&fuelMPG>0) livePts.push(`⛽ Your fuel cost estimate: $${(dp.price/fuelMPG).toFixed(3)}/mile at ${fuelMPG}MPG`);
 
-        briefing=`
-═══ SMART ADVISOR INTELLIGENCE BRIEFING ═══
-${livePts.join("
-")}
-${settlementCtx}
-═══════════════════════════════════════════`;
+        briefing="\n═══ SMART ADVISOR INTELLIGENCE BRIEFING ═══\n"+livePts.join("\n")+"\n"+settlementCtx+"\n═══════════════════════════════════════════";
       }
 
       // Build system prompt — Tier 1 vs Tier 2
       const isTier2=isSmart;
-      const systemPrompt=isTier2
-        ?`You are an elite AI business advisor for a professional commercial drayage truck driver and owner-operator. You have access to their real settlement data, live diesel prices, and live weather. Your job is to give sharp, data-driven answers that help them make more money, cut costs, and run a smarter operation.
-
-RULES:
-- Always use the driver's actual numbers from their settlement data when answering
-- When fuel cost matters, calculate using their actual MPG and today's live diesel price
-- For load profitability questions, show the math: gross rate, fuel cost, net, RPM
-- Be direct and specific — no generic advice. They are a professional, not a beginner
-- Flag if a load rate is below their historical average RPM
-- For weather questions, use the live reading above
-- Format answers clearly with numbers. Max 200 words unless math requires more.
-${briefing}
-${locationCtx}`
-        :`You are a knowledgeable assistant for a commercial truck driver. Answer using general knowledge. Be honest when real-time data would help — suggest they upgrade to Pro Smart for live data. Answer concisely in 150 words or fewer. Use bullet points for lists. ${locationCtx}`;
+      const smartRules="You are an elite AI business advisor for a professional commercial drayage truck driver and owner-operator. You have access to their real settlement data, live diesel prices, and live weather. Your job is to give sharp, data-driven answers that help them make more money, cut costs, and run a smarter operation.\n\nRULES:\n- Always use the driver actual numbers from their settlement data when answering\n- When fuel cost matters, calculate using their actual MPG and today live diesel price\n- For load profitability questions, show the math: gross rate, fuel cost, net, RPM\n- Be direct and specific. They are a professional, not a beginner\n- Flag if a load rate is below their historical average RPM\n- For weather questions, use the live reading above\n- Format answers clearly with numbers. Max 200 words unless math requires more.\n"+briefing+"\n"+locationCtx;
+      const tier1Rules="You are a knowledgeable assistant for a commercial truck driver. Answer using general knowledge. Be honest when real-time data would help — suggest they upgrade to Pro Smart for live data. Answer concisely in 150 words or fewer. Use bullet points for lists. "+locationCtx;
+      const systemPrompt=isTier2?smartRules:tier1Rules;
 
       const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
         model:"claude-sonnet-4-5",
         max_tokens:isTier2?800:600,
-        messages:[{role:"user",content:`${systemPrompt}
-
-Question: ${query}`}]
+        messages:[{role:"user",content:systemPrompt+"\n\nQuestion: "+query}]
       })});
       const d=await resp.json();
       const txt=d.content?.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
