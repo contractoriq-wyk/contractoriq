@@ -1,5 +1,5 @@
-// api/ticker.js — Live market prices via Polygon.io
-// Uses /v2/aggs/ticker/prev (works on free tier always)
+// api/ticker.js — Live market prices via Polygon.io free tier
+// Only fetches symbols we know work — skips unknowns gracefully
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -11,52 +11,68 @@ export default async function handler(req, res) {
   const key = process.env.POLYGON_KEY;
   if (!key) return res.status(500).json({ error: "POLYGON_KEY not configured" });
 
+  // Only symbols confirmed to work on Polygon free tier
   const pmap = {
     "AMEX:SPY": "SPY", "AMEX:DIA": "DIA", "NASDAQ:QQQ": "QQQ",
-    "AMEX:IWM": "IWM", "CBOE:VIX": "VIX", "AMEX:GLD": "GLD",
-    "AMEX:USO": "USO", "COINBASE:BTCUSD": "X:BTCUSD",
+    "AMEX:IWM": "IWM", "AMEX:GLD": "GLD", "AMEX:USO": "USO",
     "NYSE:XOM": "XOM", "NASDAQ:JBHT": "JBHT", "NASDAQ:AAPL": "AAPL",
     "NASDAQ:TSLA": "TSLA", "NASDAQ:NVDA": "NVDA", "NASDAQ:GOOGL": "GOOGL",
     "NASDAQ:AMZN": "AMZN", "NYSE:CVX": "CVX", "NYSE:ODFL": "ODFL",
-    "COINBASE:ETHUSD": "X:ETHUSD", "NASDAQ:META": "META", "NYSE:UNP": "UNP",
+    "NASDAQ:META": "META", "NYSE:UNP": "UNP", "NYSE:UPS": "UPS",
+    "NASDAQ:INTC": "INTC", "NYSE:F": "F", "NYSE:GM": "GM",
+    "NYSE:DAL": "DAL", "NYSE:UAL": "UAL", "NYSE:AAL": "AAL",
+    "NYSE:WMT": "WMT", "NASDAQ:COST": "COST", "NYSE:HD": "HD",
+    // Crypto via Polygon crypto endpoint
+    "COINBASE:BTCUSD": "X:BTCUSD",
+    "COINBASE:ETHUSD": "X:ETHUSD",
   };
 
   const inSymbols = symbols.split(",").map(s => s.trim());
 
+  // Skip symbols not in our supported map
+  const supported = inSymbols.filter(s => pmap[s]);
+  const unsupported = inSymbols.filter(s => !pmap[s]);
+
+  if (supported.length === 0) {
+    return res.status(200).json({});
+  }
+
+  const stockSyms = supported.filter(s => !s.startsWith("COINBASE:"));
+  const cryptoSyms = supported.filter(s => s.startsWith("COINBASE:"));
+
   try {
     const out = {};
 
-    // Fetch each symbol using /prev endpoint (always available on free tier)
-    await Promise.all(inSymbols.map(async (proName) => {
+    // Stocks — use /prev (always available)
+    await Promise.all(stockSyms.map(async (proName) => {
       try {
-        const isCrypto = proName.startsWith("COINBASE:");
-        const sym = pmap[proName] || proName.split(":").pop();
-
-        let url;
-        if (isCrypto) {
-          // Crypto previous close
-          url = `https://api.polygon.io/v2/aggs/ticker/${sym}/prev?adjusted=true&apiKey=${key}`;
-        } else {
-          // Stock previous close
-          url = `https://api.polygon.io/v2/aggs/ticker/${sym}/prev?adjusted=true&apiKey=${key}`;
-        }
-
-        const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+        const sym = pmap[proName];
+        const url = `https://api.polygon.io/v2/aggs/ticker/${sym}/prev?adjusted=true&apiKey=${key}`;
+        const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
         if (!r.ok) return;
         const d = await r.json();
         const result = d?.results?.[0];
         if (!result?.c) return;
-
-        const price = result.c;
-        const open = result.o;
-        const pct = open > 0 ? ((price - open) / open) * 100 : 0;
-        out[proName] = { price, pct };
+        const pct = result.o > 0 ? ((result.c - result.o) / result.o) * 100 : 0;
+        out[proName] = { price: result.c, pct };
       } catch (e) {}
     }));
 
-    if (Object.keys(out).length === 0) {
-      return res.status(503).json({ error: "No data available" });
-    }
+    // Crypto — use Polygon crypto prev
+    await Promise.all(cryptoSyms.map(async (proName) => {
+      try {
+        const sym = pmap[proName]; // e.g. X:BTCUSD
+        const url = `https://api.polygon.io/v2/aggs/ticker/${sym}/prev?adjusted=true&apiKey=${key}`;
+        const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        const result = d?.results?.[0];
+        if (!result?.c) return;
+        const pct = result.o > 0 ? ((result.c - result.o) / result.o) * 100 : 0;
+        out[proName] = { price: result.c, pct };
+      } catch (e) {}
+    }));
+
     return res.status(200).json(out);
   } catch (e) {
     return res.status(500).json({ error: e.message });
