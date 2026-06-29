@@ -308,7 +308,15 @@ export default function ContractorIQv26(){
   const [scanMsg,setScanMsg]=useState("");
   const [scanForm,setScanForm]=useState({week:"",from:"",to:"",gross:"",net:"",deds:"",moves:""});
   const [vendorPick,setVendorPick]=useState("CPG");
-  const [fuelMPG,setFuelMPG]=useState(5.2);
+  const [fuelMPG,setFuelMPG]=useState(()=>{
+    try{
+      // Profile targetMPG takes priority
+      const prof=localStorage.getItem("ciq_profile");
+      if(prof){const p=JSON.parse(prof);if(p.targetMPG&&parseFloat(p.targetMPG)>0)return parseFloat(p.targetMPG);}
+      const v=localStorage.getItem("ciq_mpg");
+      return v?parseFloat(v):5.2;
+    }catch{return 5.2;}
+  });
   const [fuelPrice,setFuelPrice]=useState(6.22);
   const [milesBuffer,setMilesBuffer]=useState(5);
   const [focusMode,setFocusMode]=useState(false);
@@ -398,7 +406,16 @@ export default function ContractorIQv26(){
   useEffect(()=>{const h=()=>setWide(window.innerWidth>700);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[]);
   useEffect(()=>{chatEnd.current?.scrollIntoView({behavior:"smooth"});},[chat]);
   useEffect(()=>{try{localStorage.setItem("ciq_addedWeeks",JSON.stringify(addedW));}catch(e){}},[addedW]);
-  useEffect(()=>{try{localStorage.setItem("ciq_profile",JSON.stringify(profile));}catch(e){};},[profile]);
+  useEffect(()=>{
+    try{
+      localStorage.setItem("ciq_profile",JSON.stringify(profile));
+      // Sync targetMPG to fuelMPG
+      if(profile.targetMPG&&parseFloat(profile.targetMPG)>0){
+        setFuelMPG(parseFloat(profile.targetMPG));
+        localStorage.setItem("ciq_mpg",profile.targetMPG);
+      }
+    }catch(e){}
+  },[profile]);
   useEffect(()=>{try{localStorage.setItem("ciq_expenses",JSON.stringify(expenses));}catch(e){};},[expenses]);
   useEffect(()=>{try{localStorage.setItem("ciq_docs",JSON.stringify(docs));}catch(e){};},[docs]);
   useEffect(()=>{try{localStorage.setItem("ciq_o_uses",String(oUses));}catch(e){};},[oUses]);
@@ -1767,8 +1784,12 @@ ${pdfText.slice(0,24000)}`}]};
                         {isSelected&&<div style={{position:"absolute",top:-5,left:"50%",transform:"translateX(-50%)",width:8,height:8,borderRadius:"50%",background:g.c,border:"2px solid "+C.bg,boxShadow:`0 0 6px ${g.c}`}}/>}
                       </div>
                     </div>
-                    {/* Week label — hide on mobile when too many weeks */}
-                    {(wide||allW.length<=10||isSelected)&&<div style={{fontSize:isSelected?8:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?800:400,marginTop:3,lineHeight:1,transition:"all 0.15s"}}>{isSelected?"W"+w.week:allW.length>14?""+"W"+w.week.slice(-2):"W"+w.week}</div>}
+                    {/* Week label — smart display based on screen/count */}
+                    {(isSelected||(wide&&allW.length<=20)||(allW.length<=8))&&(
+                      <div style={{fontSize:isSelected?8:6,color:isSelected?C.text:C.sub,fontWeight:isSelected?800:400,marginTop:2,lineHeight:1,transition:"all 0.15s",whiteSpace:"nowrap"}}>
+                        W{w.week?.toString().replace("-2026","").replace("-","")}
+                      </div>
+                    )}
                     {/* Selected indicator dot */}
                     {isSelected&&<div style={{width:4,height:4,borderRadius:"50%",background:vc,marginTop:2,boxShadow:`0 0 4px ${vc}`}}/>}
                     <div style={{width:4,height:4,borderRadius:"50%",background:vc,opacity:0.8,marginTop:1}}/>
@@ -1998,7 +2019,7 @@ ${pdfText.slice(0,24000)}`}]};
                             <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.accent}}>{fuelMPG.toFixed(1)}</span>
                           </div>
                           <input type="range" min="3.5" max="9.0" step="0.1" value={fuelMPG}
-                            onChange={function(e){setFuelMPG(parseFloat(e.target.value));}}
+                            onChange={function(e){const v=parseFloat(e.target.value);setFuelMPG(v);setProfile(p=>({...p,targetMPG:String(v)}));try{localStorage.setItem("ciq_mpg",v);}catch(ex){}}}
                             style={{width:"100%",accentColor:C.accent,cursor:"pointer",marginBottom:4}}/>
                           <div style={{display:"flex",justifyContent:"space-between",fontSize:8}}>
                             <span style={{color:"#f87171"}}>3.5 poor</span>
@@ -2078,7 +2099,7 @@ ${pdfText.slice(0,24000)}`}]};
               <Nav i={sM} max={allW.length-1} prev={()=>setSM(p=>p-1)} next={()=>setSM(p=>p+1)} label={`W${mwBase.week}`}/>
             </div>
             {helpModal("movePerf")}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:14}}>
+            <div style={{display:isCollapsed("movePerf")?"none":"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:14}}>
               {[{l:"Gross",v:`$${mwBase.gross.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.accent},{l:"Net",v:`$${mwBase.net.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.green},{l:"Avg RPM",v:`$${mwRPM}`,c:C.a3},{l:"Loaded %",v:`${mwLd}%`,c:mwLd>=60?C.green:C.gold}].map(s=>(
                 <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`,textAlign:"center"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:700,color:s.c}}>{s.v}</div></div>
               ))}
@@ -2122,7 +2143,7 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{fontSize:9,padding:"2px 7px",borderRadius:5,background:C.green+"20",color:C.green,fontWeight:700,marginLeft:"auto"}}>W{lw.week} · {topActions.length} actions</div>
                 </div>
                 {helpModal("actionPlan")}
-                <div style={{display:"flex",flexDirection:"column",gap:9}}>
+                <div style={{display:isCollapsed("actionPlan")?"none":"flex",flexDirection:"column",gap:9}}>
                   {topActions.map(function(a,idx){return(
                     <div key={idx} style={{display:"flex",gap:10,padding:"11px 12px",background:C.bg,borderRadius:9,border:"1px solid "+a.color+"44"}}>
                       <div style={{width:32,height:32,borderRadius:8,background:a.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{a.icon}</div>
@@ -2280,7 +2301,7 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{padding:"13px 16px",background:"linear-gradient(135deg,"+C.a3+"14,"+C.accent+"08)",borderBottom:"1px solid "+C.border}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
                 <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.text}}>📁 My Uploaded Settlements</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.text}}>📁 My Uploaded Settlements<button onClick={e=>{e.stopPropagation();toggleCard("uploads");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("uploads")?"▶":"▼"}</button></div>
                   <div style={{fontSize:10,color:C.sub,marginTop:2}}>{addedW.length} uploaded · check box to select · delete selected</div>
                 </div>
                 <div style={{display:"flex",gap:7,flexShrink:0}}>
@@ -2350,9 +2371,9 @@ ${pdfText.slice(0,24000)}`}]};
 
           {/* FULL HISTORY */}
           <div style={K()}>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}</div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}<button onClick={e=>{e.stopPropagation();toggleCard("fullHist");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("fullHist")?"▶":"▼"}</button></div>
             {helpModal("fullHistory")}
-            <div style={{overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
+            <div style={{display:isCollapsed("fullHist")?"none":"block",overflowX:"auto",overflowY:"auto",maxHeight:420,display:isCollapsed("uploads")?"none":"block",borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
                 <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Wk","Vendor","Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 6px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>{allMoves.slice().reverse().map((m,i)=>{
@@ -2525,7 +2546,7 @@ ${pdfText.slice(0,24000)}`}]};
                 <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🧠 AI Chat</span>
                 <span style={{fontSize:10,color:C.sub,marginLeft:"auto"}}>{allMoves.length} moves · {allW.length} weeks</span>
               </div>
-              <div style={{overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:11,background:C.bg,minHeight:280,maxHeight:400}}>
+              <div style={{overflowY:"auto",padding:"16px",display:isCollapsed("savedWeeks")?"none":"flex",flexDirection:"column",gap:11,background:C.bg,minHeight:280,maxHeight:400}}>
                 {chat.map((m,i)=>(
                   <div key={i} style={{display:"flex",justifyContent:m.r==="u"?"flex-end":"flex-start",gap:8,alignItems:"flex-end"}}>
                     {m.r==="a"&&<div style={{width:26,height:26,borderRadius:7,background:C.surf,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>🧠</div>}
@@ -2744,7 +2765,7 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{fontSize:10,color:C.sub,marginTop:2}}>Your verified income qualifies you for real business capital</div>
                 </div>
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+              <div style={{display:isCollapsed("funded")?"none":"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
                 {[
                   {l:"Monthly Income",v:`$${Math.round(monthlyNet).toLocaleString()}`,c:"#4ade80"},
                   {l:"Annual Estimate",v:`$${Math.round(annualNet).toLocaleString()}`,c:"#00ffcc"},
