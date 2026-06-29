@@ -288,8 +288,6 @@ export default function ContractorIQv26(){
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
   const C=darkMode?DARK:LIGHT;
   const K=_K(C);
-  const toggleCard=(id)=>setCollapsedCards(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
-  const isCollapsed=(id)=>collapsedCards.has(id);
   useEffect(()=>{document.body.style.background=C.bg;document.body.style.color=C.text;},[darkMode]);
   const [searchQ,setSearchQ]=useState("");
   const [searchResult,setSearchResult]=useState("");
@@ -338,6 +336,8 @@ export default function ContractorIQv26(){
   const [activeOnlyVendor,setActiveOnlyVendor]=useState(null);
   const [helpCard,setHelpCard]=useState(null);
   const [collapsedCards,setCollapsedCards]=useState(new Set());
+  const toggleCard=(id)=>setCollapsedCards(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
+  const isCollapsed=(id)=>collapsedCards.has(id);
   const [showProfile,setShowProfile]=useState(false);
   const [profile,setProfile]=useState(()=>{try{const s=localStorage.getItem("ciq_profile");return s?JSON.parse(s):{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}catch{return{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}});
   const [expenses,setExpenses]=useState(()=>{try{const s=localStorage.getItem("ciq_expenses");return s?JSON.parse(s):[];}catch{return[];}});
@@ -359,7 +359,7 @@ export default function ContractorIQv26(){
   const [oUses,setOUses]=useState(()=>{try{return parseInt(localStorage.getItem("ciq_o_uses")||"0");}catch{return 0;}});
   const [aiUses,setAiUses]=useState(()=>{try{return parseInt(localStorage.getItem("ciq_ai_uses")||"0");}catch{return 0;}});
   const [dismissedAds,setDismissedAds]=useState(()=>{try{const s=localStorage.getItem("ciq_dis_ads");return s?JSON.parse(s):[];}catch{return [];}});
-  const DEFAULT_TICKER=[{proName:"AMEX:SPY",title:"S&P 500"},{proName:"AMEX:DIA",title:"Dow 30"},{proName:"NASDAQ:QQQ",title:"Nasdaq"},{proName:"AMEX:IWM",title:"Russell 2000"},{proName:"CBOE:VIX",title:"VIX"},{proName:"AMEX:GLD",title:"Gold ETF"},{proName:"AMEX:USO",title:"Oil ETF"},{proName:"COINBASE:BTCUSD",title:"Bitcoin"},{proName:"NYSE:XOM",title:"Exxon"},{proName:"NASDAQ:JBHT",title:"J.B. Hunt"}];
+  const DEFAULT_TICKER=[{proName:"AMEX:SPY",title:"S&P 500"},{proName:"AMEX:DIA",title:"Dow 30"},{proName:"NASDAQ:QQQ",title:"Nasdaq"},{proName:"AMEX:IWM",title:"Russell 2000"},{proName:"AMEX:GLD",title:"Gold ETF"},{proName:"AMEX:USO",title:"Oil ETF"},{proName:"COINBASE:BTCUSD",title:"Bitcoin"},{proName:"NYSE:XOM",title:"Exxon"},{proName:"NASDAQ:NVDA",title:"Nvidia"},{proName:"NASDAQ:JBHT",title:"J.B. Hunt"}];
   const [tickerSyms,setTickerSyms]=useState(()=>{try{const s=localStorage.getItem("ciq_ticker");return s?JSON.parse(s):DEFAULT_TICKER;}catch{return DEFAULT_TICKER;}});
   const [showTickerEdit,setShowTickerEdit]=useState(false);
   const [tickerInput,setTickerInput]=useState("");
@@ -1410,13 +1410,17 @@ ${pdfText.slice(0,24000)}`}]};
                     var raw=tickerInput.trim();
                     var proName=raw.includes(":")?raw:"NASDAQ:"+raw;
                     var title=proName.split(":").pop();
+                    // Only allow US stocks/ETFs (AMEX, NASDAQ, NYSE) - Polygon free tier
+                    var exchange=proName.split(":")[0];
+                    var allowed=["AMEX","NASDAQ","NYSE",""];
+                    if(!allowed.includes(exchange)){alert("Only US stocks/ETFs supported (NASDAQ, NYSE, AMEX). Crypto and indices not available on this plan.");return;}
                     if(!tickerSyms.find(function(s){return s.proName===proName;})){
                       setTickerSyms(function(p){return [...p,{proName:proName,title:title}];});
                     }
                     setTickerInput("");
                   }
                 }}
-                placeholder="Type symbol: AAPL · TSLA · NYSE:CVX · COINBASE:ETHUSD"
+                placeholder="US stocks only: AAPL · TSLA · CVX · ODFL · UNP"
                 style={{flex:1,padding:"8px 12px",background:"#141928",border:"1px solid #2c3a52",borderRadius:9,color:"#f0f6ff",fontSize:11,fontFamily:"'IBM Plex Mono',monospace",outline:"none"}}
               />
               <button onClick={function(){
@@ -1424,6 +1428,9 @@ ${pdfText.slice(0,24000)}`}]};
                 if(!raw)return;
                 var proName=raw.includes(":")?raw:"NASDAQ:"+raw;
                 var title=proName.split(":").pop();
+                var exchange=proName.split(":")[0];
+                var allowed=["AMEX","NASDAQ","NYSE",""];
+                if(!allowed.includes(exchange)){alert("Only US stocks/ETFs supported (NASDAQ, NYSE, AMEX).");return;}
                 if(!tickerSyms.find(function(s){return s.proName===proName;})){
                   setTickerSyms(function(p){return [...p,{proName:proName,title:title}];});
                 }
@@ -1440,13 +1447,13 @@ ${pdfText.slice(0,24000)}`}]};
                 {proName:"NASDAQ:NVDA",  title:"NVIDIA"},
                 {proName:"NASDAQ:GOOGL", title:"Google"},
                 {proName:"NASDAQ:AMZN",  title:"Amazon"},
+                {proName:"NASDAQ:META",  title:"Meta"},
                 {proName:"NYSE:CVX",     title:"Chevron"},
                 {proName:"NYSE:ODFL",    title:"Old Dominion"},
                 {proName:"NYSE:UNP",     title:"Union Pacific"},
                 {proName:"NYSE:UPS",     title:"UPS"},
-                {proName:"COINBASE:ETHUSD",title:"Ethereum"},
                 {proName:"AMEX:TLT",     title:"Bonds ETF"},
-                {proName:"NASDAQ:META",  title:"Meta"},
+                {proName:"NASDAQ:JBHT",  title:"J.B. Hunt"},
               ].map(function(p){
                 var active=!!tickerSyms.find(function(s){return s.proName===p.proName;});
                 return(
