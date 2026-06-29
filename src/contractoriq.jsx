@@ -822,33 +822,84 @@ export default function ContractorIQv26(){
   }
   if(!user){
     return(
-      <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}>
-        <div style={{width:"100%",maxWidth:380,textAlign:"center"}}>
-          <img src={LOGO_HERO} alt="DrayageIQ" style={{width:140,height:"auto",marginBottom:18,borderRadius:12}}/>
-          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,marginBottom:6}}>Sign in to DrayageIQ</div>
-          <div style={{fontSize:12,color:C.sub,lineHeight:1.6,marginBottom:22}}>Your data syncs securely to the cloud and follows you to any device.</div>
-          {!authSent?(
-            <div>
-              <input value={authEmail} onChange={e=>setAuthEmail(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")sendMagicLink();}} placeholder="you@email.com" type="email" autoComplete="email" style={{width:"100%",padding:"14px",borderRadius:10,background:C.card,border:"1px solid "+C.border,color:C.text,fontSize:14,boxSizing:"border-box",fontFamily:"inherit",outline:"none",marginBottom:12,textAlign:"center"}}/>
-              <button onClick={sendMagicLink} disabled={authBusy} style={{width:"100%",padding:"15px",borderRadius:10,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:authBusy?"default":"pointer",fontFamily:"inherit",opacity:authBusy?0.6:1}}>{authBusy?"Sending…":"Email me a sign-in link"}</button>
-              {authMsg&&<div style={{fontSize:11,color:authMsg.startsWith("Error")?C.red:C.sub,marginTop:10}}>{authMsg}</div>}
-              <div style={{fontSize:10,color:C.sub,marginTop:18,lineHeight:1.6}}>No password needed. We'll email you a secure link — tap it and you're in.</div>
+    <div style={{fontFamily:"'IBM Plex Mono',monospace",background:"#080c16",minHeight:"100vh",color:"#e2e8f0",display:"flex",flexDirection:wide?"row":"column",overflowY:"auto"}}>
+
+      {/* LEFT — Branding + Pricing */}
+      <div style={{flex:wide?"0 0 52%":"1",padding:wide?"48px 44px":"32px 22px",display:"flex",flexDirection:"column",justifyContent:"flex-start",position:"relative",overflowY:"auto",background:"#080c16"}}>
+        <div style={{position:"absolute",top:"10%",left:"-10%",width:"60%",height:"50%",background:"radial-gradient(ellipse,rgba(0,255,204,0.07) 0%,transparent 70%)",pointerEvents:"none"}}/>
+        <div style={{position:"relative",zIndex:1}}>
+          {/* Logo */}
+          <div style={{marginBottom:wide?32:20}}>
+            <img src={LOGO_HERO} alt="DrayageIQ" style={{width:"100%",maxWidth:wide?380:260,height:"auto",display:"block",filter:"drop-shadow(0 0 24px rgba(0,255,204,0.15))"}}/>
+            <div style={{fontSize:9,color:"#3a5060",letterSpacing:"0.06em",marginTop:6,marginLeft:2}}>by Lilwemma Services</div>
+          </div>
+          {/* Headline */}
+          <h1 style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:wide?30:22,fontWeight:800,color:"#f0f6ff",lineHeight:1.1,margin:"0 0 10px",letterSpacing:"-0.02em"}}>Stop Guessing.<br/>Start Knowing.</h1>
+          <p style={{fontSize:12,color:"#6a8099",lineHeight:1.75,margin:"0 0 28px"}}>Upload your settlement and see exactly where every dollar goes — gross, net, deductions, margin — in 30 seconds.</p>
+
+          {/* Pricing Cards */}
+          <div style={{fontSize:10,fontWeight:700,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12}}>Choose Your Plan</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {/* Tier 1 */}
+            <div style={{background:"rgba(167,139,250,0.06)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:12,padding:"13px 15px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#d0daf0"}}>Standard</div>
+                <div style={{fontSize:14,fontWeight:800,color:"#a78bfa"}}>{PRICING.tier1Price}<span style={{fontSize:9,fontWeight:400,color:"#5a7590"}}>/mo</span></div>
+              </div>
+              <div style={{fontSize:10,color:"#5a7590",lineHeight:1.6,marginBottom:9}}>Unlimited PDF scans · Load tracking · Earnings dashboard · AI guidance</div>
+              <a href={PRICING.tier1Url} target="_blank" rel="noreferrer" style={{display:"block",textAlign:"center",padding:"7px",borderRadius:8,background:"rgba(167,139,250,0.12)",border:"1px solid rgba(167,139,250,0.3)",color:"#a78bfa",fontSize:11,fontWeight:700,textDecoration:"none"}}>Get Standard →</a>
             </div>
-          ):(
-            <div>
-              <div style={{fontSize:40,marginBottom:12}}>📬</div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:700,marginBottom:8}}>Check your email</div>
-              <div style={{fontSize:12,color:C.sub,lineHeight:1.6,marginBottom:18}}>We sent a sign-in link to <b style={{color:C.text}}>{authEmail}</b>. Open it on this device to continue.</div>
-              <button onClick={()=>{setAuthSent(false);setAuthMsg("");}} style={{padding:"10px 18px",borderRadius:9,background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>← Use a different email</button>
+            {/* Tier 2 */}
+            <div style={{background:"rgba(0,255,204,0.06)",border:"1px solid rgba(0,255,204,0.25)",borderRadius:12,padding:"13px 15px",position:"relative"}}>
+              <div style={{position:"absolute",top:-9,right:12,background:"linear-gradient(135deg,#00ffcc,#00d4aa)",borderRadius:20,padding:"2px 10px",fontSize:8,fontWeight:800,color:"#080c16",letterSpacing:"0.08em"}}>MOST POPULAR</div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:"#d0daf0"}}>Pro Smart</div>
+                <div style={{fontSize:14,fontWeight:800,color:"#00ffcc"}}>{PRICING.tier2Price}<span style={{fontSize:9,fontWeight:400,color:"#5a7590"}}>/mo</span></div>
+              </div>
+              <div style={{fontSize:10,color:"#5a7590",lineHeight:1.6,marginBottom:9}}>Everything in Standard + Live diesel · Live weather · Smart AI with your real numbers</div>
+              <a href={PRICING.tier2Url} target="_blank" rel="noreferrer" style={{display:"block",textAlign:"center",padding:"7px",borderRadius:8,background:"linear-gradient(135deg,rgba(0,255,204,0.15),rgba(0,212,170,0.15))",border:"1px solid rgba(0,255,204,0.35)",color:"#00ffcc",fontSize:11,fontWeight:700,textDecoration:"none"}}>Get Pro Smart →</a>
             </div>
-          )}
-          <div style={{marginTop:26,fontSize:9,color:C.sub}}>
-            <a href="/privacy.html" style={{color:C.sub,textDecoration:"none"}}>Privacy</a> · <a href="/terms.html" style={{color:C.sub,textDecoration:"none"}}>Terms</a>
+            {/* Annual */}
+            <div style={{background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.18)",borderRadius:12,padding:"11px 15px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:800,color:"#d0daf0"}}>Pro Smart Annual</div>
+                <div style={{fontSize:13,fontWeight:800,color:"#fbbf24"}}>{PRICING.annualPrice}<span style={{fontSize:9,fontWeight:400,color:"#5a7590"}}>/yr</span></div>
+              </div>
+              <div style={{fontSize:10,color:"#5a7590",marginBottom:8}}>{PRICING.annualNote}</div>
+              <a href={PRICING.annualUrl} target="_blank" rel="noreferrer" style={{display:"block",textAlign:"center",padding:"7px",borderRadius:8,background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.25)",color:"#fbbf24",fontSize:11,fontWeight:700,textDecoration:"none"}}>Get Annual →</a>
+            </div>
           </div>
         </div>
       </div>
-    );
-  }
+
+      {/* RIGHT — Sign In Form */}
+      <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:wide?"48px 44px":"32px 22px",background:wide?"linear-gradient(160deg,#0f1825 0%,#0a0f1c 100%)":"#080c16",borderLeft:wide?"1px solid #192535":"none"}}>
+        <div style={{width:"100%",maxWidth:360}}>
+          {!authSent?(
+            <div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:wide?26:22,fontWeight:800,color:"#f0f6ff",marginBottom:8,textAlign:wide?"left":"center"}}>Sign In</div>
+              <div style={{fontSize:12,color:"#6a8099",lineHeight:1.65,marginBottom:24,textAlign:wide?"left":"center"}}>Already have a plan? Sign in below. New here? Choose a plan on the left first.</div>
+              <input value={authEmail} onChange={e=>setAuthEmail(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")sendMagicLink();}} placeholder="you@email.com" type="email" autoComplete="email" style={{width:"100%",padding:"14px",borderRadius:10,background:"#141928",border:"1px solid #1a2535",color:"#e2e8f0",fontSize:14,boxSizing:"border-box",fontFamily:"inherit",outline:"none",marginBottom:12,textAlign:"center"}}/>
+              <button onClick={sendMagicLink} disabled={authBusy} style={{width:"100%",padding:"15px",borderRadius:10,background:"linear-gradient(135deg,#00ffcc,#00d4aa)",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:authBusy?"default":"pointer",fontFamily:"inherit",opacity:authBusy?0.6:1}}>{authBusy?"Sending…":"Email me a sign-in link"}</button>
+              {authMsg&&<div style={{fontSize:11,color:authMsg.startsWith("Error")?"#f87171":"#8fa3c0",marginTop:10,textAlign:"center"}}>{authMsg}</div>}
+              <div style={{fontSize:10,color:"#3a5570",marginTop:20,lineHeight:1.7,textAlign:"center"}}>No password needed. We'll email you a secure one-click link.</div>
+              <div style={{marginTop:16,textAlign:"center",fontSize:10,color:"#3a5570"}}>
+                <a href="/privacy" style={{color:"#3a5570",textDecoration:"none"}}>Privacy</a> · <a href="/terms" style={{color:"#3a5570",textDecoration:"none"}}>Terms</a>
+              </div>
+            </div>
+          ):(
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:40,marginBottom:16}}>📬</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:"#f0f6ff",marginBottom:10}}>Check your email</div>
+              <div style={{fontSize:13,color:"#6a8099",lineHeight:1.65,marginBottom:20}}>We sent a sign-in link to <b style={{color:"#e2e8f0"}}>{authEmail}</b>. Open it on this device to continue.</div>
+              <button onClick={()=>{setAuthSent(false);setAuthMsg("");}} style={{padding:"10px 18px",borderRadius:9,background:"#141928",border:"1px solid #1a2535",color:"#8fa3c0",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>← Try a different email</button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
   return(
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
