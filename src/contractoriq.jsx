@@ -581,15 +581,21 @@ export default function ContractorIQv26(){
         const weeks=allW.filter(w=>w.gross>0);
         let settlementCtx="";
         if(weeks.length>0){
-          const recent=weeks.slice(-8);// last 8 weeks
+          const recent=weeks.slice(-8);
           const avgGross=recent.reduce((s,w)=>s+(w.gross||0),0)/recent.length;
           const avgNet=recent.reduce((s,w)=>s+(w.net||0),0)/recent.length;
-          const avgMiles=recent.reduce((s,w)=>s+(w.miles||0),0)/recent.length;
+          // Miles are stored inside moves as move.mi — sum them per week
+          const weekMiles=w=>((w.moves||[]).reduce((s,m)=>s+(m.mi||0),0));
+          const avgMiles=recent.reduce((s,w)=>s+weekMiles(w),0)/recent.length;
           const avgRPM=avgMiles>0?(avgGross/avgMiles):0;
           const totalLoads=recent.reduce((s,w)=>s+(w.moves?.length||0),0);
           const avgLoadsPerWeek=totalLoads/recent.length;
           const lastWeek=weeks[weeks.length-1];
-          settlementCtx="\nDRIVER SETTLEMENT DATA (last "+recent.length+" weeks):\n- Avg weekly gross: $"+avgGross.toFixed(0)+"\n- Avg weekly net: $"+avgNet.toFixed(0)+"\n- Avg miles/week: "+avgMiles.toFixed(0)+"\n- Avg revenue per mile: $"+avgRPM.toFixed(3)+"/mi\n- Avg loads/week: "+avgLoadsPerWeek.toFixed(1)+"\n- Truck MPG setting: "+fuelMPG+" MPG\n- Last week: Week "+(lastWeek.week||"?")+", Gross $"+(lastWeek.gross||0)+", Net $"+(lastWeek.net||0)+", Miles "+(lastWeek.miles||0);
+          const lastMiles=weekMiles(lastWeek);
+          // Build per-week breakdown for last 4 weeks
+          const recentFour=weeks.slice(-4);
+          const weekLines=recentFour.map(w=>"  Week "+w.week+": Gross $"+(w.gross||0)+", Net $"+(w.net||0)+", Miles "+weekMiles(w)+", Loads "+(w.moves?.length||0)).join("\n");
+          settlementCtx="\nDRIVER SETTLEMENT DATA (last "+recent.length+" weeks):\n- Avg weekly gross: $"+avgGross.toFixed(0)+"\n- Avg weekly net: $"+avgNet.toFixed(0)+"\n- Avg miles/week: "+avgMiles.toFixed(0)+"\n- Avg revenue per mile (RPM): $"+avgRPM.toFixed(3)+"/mi\n- Avg loads/week: "+avgLoadsPerWeek.toFixed(1)+"\n- Truck MPG: "+fuelMPG+"\nLast 4 weeks detail:\n"+weekLines;
         }
 
         // Build live data context
