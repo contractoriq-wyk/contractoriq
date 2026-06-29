@@ -1358,7 +1358,7 @@ export default function ContractorIQv26(){
                     <div style={{fontSize:11,color:C.text,fontWeight:700,wordBreak:"break-all",marginBottom:2}}>{user?.email||"Dev Mode"}</div>
                     <div style={{display:"flex",alignItems:"center",gap:6}}>
                       <span style={{fontSize:9,color:C.accent}}>☁️ Synced to cloud</span>
-                      {isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#00ffcc",background:"#00ffcc18",border:"1px solid #00ffcc33",borderRadius:20,padding:"1px 7px",letterSpacing:"0.06em"}}>⚡ PRO SMART</span>}
+                      {isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#00ffcc",background:"#00ffcc18",border:"1px solid #00ffcc33",borderRadius:20,padding:"1px 7px",letterSpacing:"0.06em"}}>★ PRO SMART</span>}
                       {isPro&&!isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#a78bfa",background:"#a78bfa18",border:"1px solid #a78bfa33",borderRadius:20,padding:"1px 7px",letterSpacing:"0.06em"}}>STANDARD</span>}
                     </div>
                   </div>
