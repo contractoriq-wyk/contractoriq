@@ -1383,7 +1383,7 @@ ${pdfText.slice(0,24000)}`}]};
                 {proName:"NYSE:UNP",     title:"Union Pacific"},
                 {proName:"NYSE:UPS",     title:"UPS"},
                 {proName:"COINBASE:ETHUSD",title:"Ethereum"},
-                {proName:"AMEX:TLT",     title:"Bonds ETF"},
+                {proName:"NYSE:WMT",     title:"Walmart"},
                 {proName:"NASDAQ:META",  title:"Meta"},
               ].map(function(p){
                 var active=!!tickerSyms.find(function(s){return s.proName===p.proName;});
