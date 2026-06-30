@@ -257,7 +257,6 @@ export default function ContractorIQv26(){
   const [showMenu,setShowMenu]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
   const [showInsurance,setShowInsurance]=useState(false);
-  const [showQR,setShowQR]=useState(false);
   const [showMarket,setShowMarket]=useState(false);
   const [showReviews,setShowReviews]=useState(false);
   const [showIconKey,setShowIconKey]=useState(false);
@@ -962,25 +961,7 @@ ${pdfText.slice(0,24000)}`}]};
       )}
 
       {/* QR MODAL */}
-      {showQR&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.95)",display:"flex",flexDirection:"column"}} onClick={()=>setShowQR(false)}>
-          <div style={{background:C.card,borderRadius:"0 0 20px 20px",padding:"16px",flexShrink:0,display:"flex",justifyContent:"space-between",alignItems:"center"}} onClick={e=>e.stopPropagation()}>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:C.text}}>📱 Transfer Data via QR</div>
-            <button onClick={()=>setShowQR(false)} style={{padding:"7px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
-          </div>
-          <div style={{flex:1,overflowY:"auto",padding:"20px 16px"}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:C.card,borderRadius:20,padding:"24px",marginBottom:16,textAlign:"center",border:`2px solid #a78bfa44`}}>
-              <div style={{fontSize:11,fontWeight:700,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:16}}>Scan on your other device</div>
-              <div style={{background:"#fff",borderRadius:16,padding:16,display:"inline-block",marginBottom:14}}>
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("CIQDATA:"+btoa(JSON.stringify({addedW,profile:{name:profile?.name||"",company:profile?.company||""},exported:new Date().toISOString()})).substring(0,1800))}`} alt="QR Code" style={{width:220,height:220,display:"block"}}/>
-              </div>
-              <div style={{fontSize:11,color:C.sub,lineHeight:1.7}}>Open DrayageIQ on your other device → Menu → Transfer Data via QR → Scan this code</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MARKET MODAL */}
+            {/* MARKET MODAL */}
       {showMarket&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:C.bg,display:"flex",flexDirection:"column"}}>
           <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
