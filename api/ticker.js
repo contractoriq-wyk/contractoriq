@@ -11,10 +11,11 @@ export default async function handler(req, res) {
   const key = process.env.POLYGON_KEY;
   if (!key) return res.status(500).json({ error: "POLYGON_KEY not configured" });
 
-  // Only symbols confirmed to work on Polygon free tier
+  // Symbols confirmed to work on Polygon free tier — covers Quick Add panel + defaults
   const pmap = {
     "AMEX:SPY": "SPY", "AMEX:DIA": "DIA", "NASDAQ:QQQ": "QQQ",
     "AMEX:IWM": "IWM", "AMEX:GLD": "GLD", "AMEX:USO": "USO",
+    "AMEX:TLT": "TLT",
     "NYSE:XOM": "XOM", "NASDAQ:JBHT": "JBHT", "NASDAQ:AAPL": "AAPL",
     "NASDAQ:TSLA": "TSLA", "NASDAQ:NVDA": "NVDA", "NASDAQ:GOOGL": "GOOGL",
     "NASDAQ:AMZN": "AMZN", "NYSE:CVX": "CVX", "NYSE:ODFL": "ODFL",
@@ -27,11 +28,8 @@ export default async function handler(req, res) {
     "COINBASE:ETHUSD": "X:ETHUSD",
   };
 
-  const inSymbols = symbols.split(",").map(s => s.trim());
-
-  // Skip symbols not in our supported map
+  const inSymbols = symbols.split(",").map(s => s.trim()).filter(Boolean);
   const supported = inSymbols.filter(s => pmap[s]);
-  const unsupported = inSymbols.filter(s => !pmap[s]);
 
   if (supported.length === 0) {
     return res.status(200).json({});
@@ -43,7 +41,6 @@ export default async function handler(req, res) {
   try {
     const out = {};
 
-    // Stocks — use /prev (always available)
     await Promise.all(stockSyms.map(async (proName) => {
       try {
         const sym = pmap[proName];
@@ -58,10 +55,9 @@ export default async function handler(req, res) {
       } catch (e) {}
     }));
 
-    // Crypto — use Polygon crypto prev
     await Promise.all(cryptoSyms.map(async (proName) => {
       try {
-        const sym = pmap[proName]; // e.g. X:BTCUSD
+        const sym = pmap[proName];
         const url = `https://api.polygon.io/v2/aggs/ticker/${sym}/prev?adjusted=true&apiKey=${key}`;
         const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
         if (!r.ok) return;
