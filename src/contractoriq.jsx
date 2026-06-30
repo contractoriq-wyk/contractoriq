@@ -1659,38 +1659,38 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
             {helpModal("trend")}
             <div style={{position:"relative"}}>
-              {/* Trend line SVG overlay */}
+              {/* Trend line SVG overlay — anchored exactly to bar tops */}
               {allW.length>1&&(()=>{
                 const maxNet=Math.max(...allW.map(x=>x.net));
                 const n=allW.length;
-                const barAreaH=72;// matches bar max height area
-                const topPad=18;
+                // Bar geometry: container height=108, padding-top=18 (for net label),
+                // bar zone height=72, bars sit at bottom of that zone (justifyContent:flex-end)
+                const NET_LABEL_H=14;// approx space the $X.Xk label + margin takes
+                const BAR_ZONE_H=72;
                 const pts=allW.map((w,i)=>{
                   const xPct=((i+0.5)/n)*100;
                   const h=Math.max(8,(w.net/maxNet)*68);
-                  const yPx=topPad+18+(barAreaH-h);// 18 = net label height approx
+                  // Bar top y-position within the 108px tall container
+                  const yPx=18+NET_LABEL_H+(BAR_ZONE_H-h);
                   return {x:xPct,y:yPx,net:w.net};
                 });
-                const gradId="trendGrad"+Math.random().toString(36).slice(2,8);
-                const pathD=pts.map((p,i)=>(i===0?"M":"L")+p.x+","+p.y).join(" ");
-                // Build color stops based on direction between points
+                const gradId="tg"+Math.random().toString(36).slice(2,8);
+                const pathD=pts.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(2)+","+p.y.toFixed(2)).join(" ");
                 return(
-                  <svg style={{position:"absolute",top:0,left:0,width:"100%",height:108,pointerEvents:"none",zIndex:1}} preserveAspectRatio="none" viewBox={"0 0 100 108"}>
+                  <svg style={{position:"absolute",top:0,left:0,width:"100%",height:"108px",pointerEvents:"none",zIndex:5}} preserveAspectRatio="none" viewBox="0 0 100 108">
                     <defs>
-                      <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+                      <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
                         {pts.map((p,i)=>{
-                          if(i===0)return null;
-                          const prev=pts[i-1];
-                          const up=p.net>=prev.net;
+                          const up=i===0?true:p.net>=pts[i-1].net;
                           const color=up?"#4ade80":"#f87171";
-                          const offsetPct=(i/(pts.length-1))*100;
+                          const offsetPct=(p.x).toFixed(1);
                           return <stop key={i} offset={offsetPct+"%"} stopColor={color}/>;
                         })}
                       </linearGradient>
                     </defs>
-                    <path d={pathD} fill="none" stroke={"url(#"+gradId+")"} strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" opacity="0.85" vectorEffect="non-scaling-stroke"/>
+                    <path d={pathD} fill="none" stroke={"url(#"+gradId+")"} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" opacity="0.95"/>
                     {pts.map((p,i)=>(
-                      <circle key={i} cx={p.x} cy={p.y} r="1.4" fill={i>0&&p.net>=pts[i-1].net?"#4ade80":i===0?"#8fa3c0":"#f87171"} opacity="0.9"/>
+                      <circle key={i} cx={p.x} cy={p.y} r="1.6" fill={i===0?"#8fa3c0":(p.net>=pts[i-1].net?"#4ade80":"#f87171")} stroke="#0b0f1c" strokeWidth="0.5"/>
                     ))}
                   </svg>
                 );
