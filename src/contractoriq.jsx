@@ -1879,6 +1879,20 @@ ${pdfText.slice(0,24000)}`}]};
                       </div>
                     </div>
 
+                    {/* Fuel Rebate Banner */}
+                    {dw.rebate>0&&(
+                      <div style={{padding:"10px 12px",borderRadius:9,background:`${C.green}10`,border:`1px solid ${C.green}33`,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <span style={{fontSize:14}}>💰</span>
+                          <div>
+                            <div style={{fontSize:11,fontWeight:700,color:C.text}}>Fuel Rebate Earned</div>
+                            <div style={{fontSize:9,color:C.sub,marginTop:1}}>Cash back from your fuel vendor this week</div>
+                          </div>
+                        </div>
+                        <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.green}}>+${dw.rebate.toFixed(2)}</div>
+                      </div>
+                    )}
+
                     {/* Smart Insights */}
                     {(()=>{
                       const recentW=allW.slice(Math.max(0,allW.findIndex(w=>w.week===dw.week)-7),allW.findIndex(w=>w.week===dw.week)+1);
