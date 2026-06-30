@@ -1,5 +1,5 @@
 /**
- * DrayageIQ / ContractorIQ — Dual-Provider AI Proxy
+ * DrayageIQ — Dual-Provider AI Proxy
  * OpenAI (primary) + Google Gemini (fallback).
  * The frontend still sends Anthropic-shaped requests and reads Anthropic-shaped
  * responses — this proxy translates in/out, so NO app code changes are needed.
@@ -9,8 +9,6 @@
  */
 
 const ALLOWED_ORIGINS = [
-  "https://getcontractoriq.com",
-  "https://www.getcontractoriq.com",
   "https://getdrayageiq.com",
   "https://www.getdrayageiq.com",
   "https://unyamwezinijikolamamajjj.com",
