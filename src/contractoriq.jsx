@@ -1396,7 +1396,6 @@ ${pdfText.slice(0,24000)}`}]};
             <TB t="ai" l="🧠 AI"/>
             <TB t="growth" l="🚀 Growth"/>
             <button onClick={()=>setShowInsurance(true)} style={{padding:"8px 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa",boxShadow:"0 0 12px #a78bfa33",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>🛡️ Protect</button>
-            <button onClick={()=>setShowQR(true)} style={{padding:"8px 12px",borderRadius:8,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>📱 QR</button>
             <button onClick={()=>setFocusMode(p=>!p)} style={{padding:"8px 12px",borderRadius:8,background:focusMode?C.gold:`${C.gold}22`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{focusMode?"⚡ ON":"⚡ Focus"}</button>
           </div>
           <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
