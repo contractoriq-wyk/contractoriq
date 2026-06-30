@@ -271,6 +271,8 @@ export default function ContractorIQv26(){
   const [activeOnlyVendor,setActiveOnlyVendor]=useState(null);
   const [helpCard,setHelpCard]=useState(null);
   const [collapsedCards,setCollapsedCards]=useState(new Set());
+  const [ownerNotes,setOwnerNotes]=useState(()=>{try{const s=localStorage.getItem("ciq_owner_notes");return s?JSON.parse(s):{};}catch{return {};}});
+  useEffect(()=>{try{localStorage.setItem("ciq_owner_notes",JSON.stringify(ownerNotes));}catch(e){};},[ownerNotes]);
   const toggleCard=(id)=>setCollapsedCards(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
   const isCollapsed=(id)=>collapsedCards.has(id);
   const [showProfile,setShowProfile]=useState(false);
@@ -1869,12 +1871,91 @@ ${pdfText.slice(0,24000)}`}]};
                     ))}
 
                     {/* Grand total bar */}
-                    <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
+                    <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4,marginBottom:14}}>
                       <div style={{fontSize:11,fontWeight:700,color:C.text}}>Total Deductions</div>
                       <div style={{display:"flex",alignItems:"center",gap:10}}>
                         <div style={{fontSize:9,color:C.sub}}>{dw.gross>0?(dedSum/dw.gross*100).toFixed(1):0}% of gross</div>
                         <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:"#f87171"}}>-${dedSum.toFixed(2)}</div>
                       </div>
+                    </div>
+
+                    {/* Smart Insights */}
+                    {(()=>{
+                      const recentW=allW.slice(Math.max(0,allW.findIndex(w=>w.week===dw.week)-7),allW.findIndex(w=>w.week===dw.week)+1);
+                      const histW=recentW.length>1?recentW.slice(0,-1):[];
+                      const avgOf=(cat)=>{
+                        if(histW.length===0)return null;
+                        const vals=histW.map(w=>{
+                          const wd=(w.deds||[]).filter(d=>d&&d.l);
+                          if(cat==="fuel")return wd.filter(d=>d.l.toLowerCase().includes("fuel advance")).reduce((s,d)=>s+d.a,0);
+                          if(cat==="insurance")return wd.filter(d=>["physical damage","bobtail","occacc","occ/acc","roadside","liability limiter"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+                          if(cat==="ops")return wd.filter(d=>["eld","event recorder","parking","license","highway tax"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+                          return 0;
+                        });
+                        return vals.reduce((a,b)=>a+b,0)/vals.length;
+                      };
+                      const catTotals={fuel:fuelTotal,insurance:insTotal,ops:opsTotal};
+                      const movers=Object.keys(catTotals).map(cat=>{
+                        const avg=avgOf(cat);
+                        if(avg===null||avg===0)return null;
+                        const pctChange=((catTotals[cat]-avg)/avg)*100;
+                        return {cat,pctChange,current:catTotals[cat],avg};
+                      }).filter(Boolean).filter(m=>Math.abs(m.pctChange)>15).sort((a,b)=>Math.abs(b.pctChange)-Math.abs(a.pctChange));
+                      const topMover=movers[0];
+                      const catLabel={fuel:"Fuel",insurance:"Insurance",ops:"Operations"};
+                      const catIcon={fuel:"⛽",insurance:"🛡️",ops:"⚙️"};
+
+                      // Escrow countdown
+                      const escTarget=2500;
+                      const escBalance=dw.escrow_regular_balance||0;
+                      const escPct=Math.min(100,(escBalance/escTarget)*100);
+                      const weeklyEscrow=100;
+                      const weeksLeft=escBalance<escTarget?Math.ceil((escTarget-escBalance)/weeklyEscrow):0;
+
+                      return(
+                        <div style={{marginBottom:14}}>
+                          <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>💡 Smart Insights</div>
+
+                          {topMover&&(
+                            <div style={{padding:"10px 12px",borderRadius:9,background:topMover.pctChange>0?`${C.red}10`:`${C.green}10`,border:`1px solid ${topMover.pctChange>0?C.red:C.green}33`,marginBottom:8,display:"flex",alignItems:"flex-start",gap:8}}>
+                              <span style={{fontSize:14,flexShrink:0}}>{topMover.pctChange>0?"⚠️":"✅"}</span>
+                              <div style={{fontSize:10,color:C.text,lineHeight:1.5}}>
+                                <b>{catIcon[topMover.cat]} {catLabel[topMover.cat]}</b> {topMover.pctChange>0?"up":"down"} <b style={{color:topMover.pctChange>0?C.red:C.green}}>{Math.abs(topMover.pctChange).toFixed(0)}%</b> vs your {histW.length}-week average (${topMover.avg.toFixed(0)} → ${topMover.current.toFixed(0)})
+                              </div>
+                            </div>
+                          )}
+
+                          {escBalance>0&&escBalance<escTarget&&(
+                            <div style={{padding:"10px 12px",borderRadius:9,background:`${C.a3}10`,border:`1px solid ${C.a3}33`,marginBottom:8}}>
+                              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                                <div style={{fontSize:10,color:C.text,fontWeight:700}}>🏦 Escrow Progress</div>
+                                <div style={{fontSize:10,color:C.a3,fontWeight:700}}>${escBalance.toFixed(0)} / ${escTarget}</div>
+                              </div>
+                              <div style={{height:5,background:C.bg,borderRadius:3,overflow:"hidden",marginBottom:5}}>
+                                <div style={{height:"100%",width:escPct+"%",background:C.a3,borderRadius:3}}/>
+                              </div>
+                              <div style={{fontSize:9,color:C.sub}}>{weeksLeft>0?`~${weeksLeft} weeks left at $100/wk`:"Target reached!"}</div>
+                            </div>
+                          )}
+
+                          {!topMover&&!(escBalance>0&&escBalance<escTarget)&&(
+                            <div style={{padding:"10px 12px",borderRadius:9,background:C.bg,border:`1px solid ${C.border}`,fontSize:10,color:C.sub}}>
+                              ✅ Deductions look stable — no unusual changes detected this week.
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Owner Notes */}
+                    <div>
+                      <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>📝 Owner Notes — W{dw.week}</div>
+                      <textarea
+                        value={ownerNotes[dw.week]||""}
+                        onChange={e=>setOwnerNotes(p=>({...p,[dw.week]:e.target.value}))}
+                        placeholder="e.g. Called carrier about the $55 license fee — confirmed permanent..."
+                        style={{width:"100%",minHeight:64,padding:"10px 12px",borderRadius:9,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",resize:"vertical",boxSizing:"border-box",lineHeight:1.5}}
+                      />
                     </div>
                   </div>
                 );
