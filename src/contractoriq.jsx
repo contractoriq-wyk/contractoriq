@@ -1834,6 +1834,17 @@ ${pdfText.slice(0,24000)}`}]};
                             <div style={{fontSize:9,color:"#8fa3c0"}}>{b.pct}% of gross</div>
                             <div style={{fontSize:9,color:b.color,fontWeight:700}}>{b.items.length} item{b.items.length!==1?"s":""} {helpCard===b.id+"_open"?"▲":"▼"}</div>
                           </div>
+                          {/* Net-of-rebate line — fuel only */}
+                          {b.id==="ded_fuel"&&dw.rebate>0&&(()=>{
+                            const netFuel=Math.max(0,fuelTotal-dw.rebate);
+                            const netPct=dw.gross>0?(netFuel/dw.gross*100).toFixed(1):0;
+                            return(
+                              <div style={{marginTop:4,paddingTop:4,borderTop:`1px solid ${b.color}22`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                                <div style={{fontSize:8,color:"#4ade80"}}>↳ net of rebate</div>
+                                <div style={{fontSize:9,color:"#4ade80",fontWeight:700}}>${netFuel.toFixed(0)} · {netPct}%</div>
+                              </div>
+                            );
+                          })()}
                           {/* Mini bar */}
                           <div style={{height:3,background:`${b.color}25`,borderRadius:2,marginTop:7,overflow:"hidden"}}>
                             <div style={{height:"100%",width:`${Math.min(b.pct*3,100)}%`,background:b.color,borderRadius:2}}/>
@@ -2620,7 +2631,9 @@ ${pdfText.slice(0,24000)}`}]};
       const monthlyNet=weeklyAvgNet*4.33;
       const annualNet=monthlyNet*12;
       const totalFuel=allW.reduce(function(s,w){return s+(w.deds||[]).filter(function(d){return d.l.toLowerCase().includes("fuel");}).reduce(function(ss,d){return ss+d.a;},0);},0);
-      const fuelPct=tGross>0?totalFuel/tGross*100:0;
+      const totalRebates=allW.reduce(function(s,w){return s+(w.rebate||0);},0);
+      const netFuelTotal=Math.max(0,totalFuel-totalRebates);
+      const fuelPct=tGross>0?netFuelTotal/tGross*100:0;
       const emptyMoves=allMoves.filter(function(m){return m.type==="E"||m.t==="E";}).length;
       const emptyPct=allMoves.length>0?Math.round(emptyMoves/allMoves.length*100):0;
       const badLoads=allMoves.filter(function(m){const s=scoreMove(m);return s.grade==="D";}).length;
@@ -2642,7 +2655,7 @@ ${pdfText.slice(0,24000)}`}]};
       const hG=hScore>=80?{g:"A",c:"#4ade80",l:"Excellent"}:hScore>=65?{g:"B",c:"#00ffcc",l:"Strong"}:hScore>=50?{g:"C",c:"#fbbf24",l:"Average"}:hScore>=35?{g:"D",c:"#f97316",l:"Needs Work"}:{g:"F",c:"#f87171",l:"Critical"};
 
       const pains=[];
-      if(fuelPct>38)pains.push({icon:"⛽",title:"Fuel Costs Critical",detail:`$${totalFuel.toFixed(0)} — ${fuelPct.toFixed(1)}% of gross goes to fuel. Industry target is under 35%.`,severity:"critical",loss:totalFuel*(fuelPct-35)/fuelPct,color:"#f87171"});
+      if(fuelPct>38)pains.push({icon:"⛽",title:"Fuel Costs Critical",detail:`$${netFuelTotal.toFixed(0)} net of $${totalRebates.toFixed(0)} rebates — ${fuelPct.toFixed(1)}% of gross. Industry target is under 35%.`,severity:"critical",loss:netFuelTotal*(fuelPct-35)/fuelPct,color:"#f87171"});
       if(emptyPct>42)pains.push({icon:"🚗",title:"Too Many Empty Miles",detail:`${emptyPct}% of your runs are empty. Every empty mile costs you money with zero revenue.`,severity:emptyPct>55?"critical":"moderate",loss:0,color:"#fb923c"});
       if(badLoads>0)pains.push({icon:"📉",title:`${badLoads} D-Grade Loads Accepted`,detail:`${badLoads} load${badLoads>1?"s":""} scored D-grade this period. These low-RPM loads drag down your average.`,severity:"moderate",loss:0,color:"#fbbf24"});
       if(+margin<18)pains.push({icon:"💸",title:"Net Margin Below Target",detail:`Your ${margin}% margin is below the 20% target. You're leaving $${Math.round(tGross*0.02).toLocaleString()} on the table each week.`,severity:+margin<12?"critical":"moderate",loss:tGross*0.02,color:"#f87171"});
@@ -2775,7 +2788,7 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{padding:"12px",display:"flex",flexDirection:"column",gap:10}}>
               {(function(){
                 const steps=[];
-                if(fuelPct>35)steps.push({n:1,icon:"⛽",title:"Fuel Strategy",action:`Cut fuel advances by 15% → save ~$${Math.round(totalFuel*0.15).toLocaleString()}/yr. Use Pilot Flying J Fuel Card for discounts. Pre-plan fuel stops to avoid full-price fills.`,impact:"HIGH"});
+                if(fuelPct>35)steps.push({n:1,icon:"⛽",title:"Fuel Strategy",action:`Cut fuel advances by 15% → save ~$${Math.round(netFuelTotal*0.15).toLocaleString()}/yr. Use Pilot Flying J Fuel Card for discounts. Pre-plan fuel stops to avoid full-price fills.`,impact:"HIGH"});
                 if(emptyPct>40)steps.push({n:2,icon:"📦",title:"Backhaul Optimization",action:`${emptyPct}% empty rate costs real money. Work your dispatcher for backhauls on every repositioning move. Even $50 empties add up to $${Math.round(emptyMoves*50).toLocaleString()} extra annually.`,impact:"HIGH"});
                 steps.push({n:steps.length+1,icon:"📊",title:"Weekly Data Habit",action:`You have ${allW.length} weeks tracked. Drivers who track 52+ weeks earn 23% more annually because they spot trends and negotiate from a position of data — not guesswork.`,impact:"MEDIUM"});
                 if(+margin<20)steps.push({n:steps.length+1,icon:"💰",title:`Close the ${(20-+margin).toFixed(1)}% Margin Gap`,action:`At $${(weeklyAvgGross).toFixed(0)} average weekly gross, every 1% margin improvement = $${(weeklyAvgGross*0.01*52).toFixed(0)}/year extra. Reject D-grade loads and negotiate FSC on every load.`,impact:"HIGH"});
