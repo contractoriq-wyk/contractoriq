@@ -1658,7 +1658,44 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{display:"flex",gap:10}}>{vendorStats.map(v=><div key={v.key} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:8,height:8,borderRadius:"50%",background:v.color}}/><span style={{fontSize:9,color:C.sub}}>{v.short}</span></div>)}</div>
             </div>
             {helpModal("trend")}
-            <div style={{display:"flex",alignItems:"flex-end",gap:wide?6:3,height:108,padding:"18px 2px 0",overflowX:wide?"visible":"auto"}}>
+            <div style={{position:"relative"}}>
+              {/* Trend line SVG overlay */}
+              {allW.length>1&&(()=>{
+                const maxNet=Math.max(...allW.map(x=>x.net));
+                const n=allW.length;
+                const barAreaH=72;// matches bar max height area
+                const topPad=18;
+                const pts=allW.map((w,i)=>{
+                  const xPct=((i+0.5)/n)*100;
+                  const h=Math.max(8,(w.net/maxNet)*68);
+                  const yPx=topPad+18+(barAreaH-h);// 18 = net label height approx
+                  return {x:xPct,y:yPx,net:w.net};
+                });
+                const gradId="trendGrad"+Math.random().toString(36).slice(2,8);
+                const pathD=pts.map((p,i)=>(i===0?"M":"L")+p.x+","+p.y).join(" ");
+                // Build color stops based on direction between points
+                return(
+                  <svg style={{position:"absolute",top:0,left:0,width:"100%",height:108,pointerEvents:"none",zIndex:1}} preserveAspectRatio="none" viewBox={"0 0 100 108"}>
+                    <defs>
+                      <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+                        {pts.map((p,i)=>{
+                          if(i===0)return null;
+                          const prev=pts[i-1];
+                          const up=p.net>=prev.net;
+                          const color=up?"#4ade80":"#f87171";
+                          const offsetPct=(i/(pts.length-1))*100;
+                          return <stop key={i} offset={offsetPct+"%"} stopColor={color}/>;
+                        })}
+                      </linearGradient>
+                    </defs>
+                    <path d={pathD} fill="none" stroke={"url(#"+gradId+")"} strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" opacity="0.85" vectorEffect="non-scaling-stroke"/>
+                    {pts.map((p,i)=>(
+                      <circle key={i} cx={p.x} cy={p.y} r="1.4" fill={i>0&&p.net>=pts[i-1].net?"#4ade80":i===0?"#8fa3c0":"#f87171"} opacity="0.9"/>
+                    ))}
+                  </svg>
+                );
+              })()}
+              <div style={{display:"flex",alignItems:"flex-end",gap:wide?6:3,height:108,padding:"18px 2px 0",overflowX:wide?"visible":"auto",position:"relative",zIndex:2}}>
               {allW.map((w,i)=>{
                 const maxNet=Math.max(...allW.map(x=>x.net));
                 const h=Math.max(8,(w.net/maxNet)*68);
@@ -1698,6 +1735,7 @@ ${pdfText.slice(0,24000)}`}]};
                   </div>
                 );
               })}
+            </div>
             </div>
             <div style={{fontSize:9,color:C.sub,marginTop:8,textAlign:"center"}}>Tap any bar to sync all cards · W{allW[sD]?.week} selected</div>
           </div>
