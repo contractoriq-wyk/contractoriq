@@ -183,34 +183,34 @@ function getSB(){ if(!_sb && typeof window!=="undefined" && window.supabase){ _s
 // ═══ DESKTOP TICKER — Pure CSS marquee with live prices from /api/ticker ═══
 function TVTickerTape({symbols}){
   const [prices,setPrices]=useState({});
+  const [loaded,setLoaded]=useState(false);
   useEffect(()=>{
     async function load(){
       try{
-        // Map TradingView proNames to Yahoo Finance symbols
-        const ymap={"AMEX:SPY":"SPY","AMEX:DIA":"DIA","NASDAQ:QQQ":"QQQ","AMEX:IWM":"IWM","CBOE:VIX":"%5EVIX","AMEX:GLD":"GLD","AMEX:USO":"USO","COINBASE:BTCUSD":"BTC-USD","NYSE:XOM":"XOM","NASDAQ:JBHT":"JBHT","NASDAQ:AAPL":"AAPL","NASDAQ:TSLA":"TSLA","NASDAQ:NVDA":"NVDA","NASDAQ:GOOGL":"GOOGL","NASDAQ:AMZN":"AMZN","NYSE:CVX":"CVX","NYSE:ODFL":"ODFL","COINBASE:ETHUSD":"ETH-USD","AMEX:TLT":"TLT","NASDAQ:META":"META"};
-        const syms=symbols.map(s=>ymap[s.proName]||s.proName.split(":").pop());
-        const r=await fetch("/api/ticker?symbols="+syms.join(","));
+        // Send proNames directly — api/ticker handles the mapping
+        const proNames=symbols.map(s=>s.proName).join(",");
+        const r=await fetch("/api/ticker?symbols="+encodeURIComponent(proNames));
         if(!r.ok)return;
         const d=await r.json();
-        // remap yahoo key -> proName key
-        const out={};
-        symbols.forEach(s=>{
-          const ys=ymap[s.proName]||s.proName.split(":").pop();
-          if(d[ys])out[s.proName]=d[ys];
-        });
-        setPrices(out);
+        if(d.error)return;
+        setPrices(d);
+        setLoaded(true);
       }catch(e){}
     }
     load();
-    const t=setInterval(load,90000);
+    const t=setInterval(load,60000);
     return()=>clearInterval(t);
   },[symbols.map(s=>s.proName).join(",")]);
 
   const items=[...symbols,...symbols,...symbols];
   return(
     <div style={{flex:1,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",background:"#070b15",height:46}}>
-      {/* Fade masks */}
-      <div style={{position:"absolute",left:0,top:0,bottom:0,width:48,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+      {/* Left fade + LIVE dot */}
+      <div style={{position:"absolute",left:0,top:0,bottom:0,width:56,background:"linear-gradient(to right,#070b15 60%,transparent)",zIndex:3,pointerEvents:"none",display:"flex",alignItems:"center",paddingLeft:8,gap:4}}>
+        <div style={{width:5,height:5,borderRadius:"50%",background:loaded?"#4ade80":"#4a6080",boxShadow:loaded?"0 0 5px #4ade80":"none",flexShrink:0}}/>
+        <span style={{fontSize:7,fontWeight:800,color:loaded?"#4ade80":"#4a6080",letterSpacing:"0.1em",fontFamily:"'IBM Plex Mono',monospace"}}>{loaded?"LIVE":"···"}</span>
+      </div>
+      {/* Right fade */}
       <div style={{position:"absolute",right:0,top:0,bottom:0,width:48,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
       {/* Scrolling track */}
       <div style={{display:"flex",animation:"ticker-scroll 40s linear infinite",whiteSpace:"nowrap",willChange:"transform"}}>
@@ -2337,7 +2337,7 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
                 <div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 Manage Saved Weeks<button onClick={e=>{e.stopPropagation();toggleCard("savedWeeks");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("savedWeeks")?"▶":"▼"}</button></div>
-                  <div style={{fontSize:10,color:C.sub}}>{addedW.length} uploaded · {allW.length} total · tap ☑ to select then delete</div>
+                  <div style={{fontSize:10,color:C.sub,display:isCollapsed("savedWeeks")?"none":"block"}}>{addedW.length} uploaded · {allW.length} total · tap ☑ to select then delete</div>
                 </div>
                 <div style={{display:"flex",gap:7,flexShrink:0}}>
                   {addedW.length>0&&(
@@ -2363,7 +2363,7 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
 
             {/* Week list */}
-            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7,maxHeight:320,overflowY:"auto"}}>
+            <div style={{padding:"10px 12px",display:isCollapsed("savedWeeks")?"none":"flex",flexDirection:"column",gap:7,maxHeight:320,overflowY:"auto"}}>
               {addedW.length===0?(
                 <div style={{textAlign:"center",padding:"20px",color:C.sub,fontSize:11}}>
                   <div style={{fontSize:28,marginBottom:8}}>📭</div>
@@ -2480,7 +2480,7 @@ ${pdfText.slice(0,24000)}`}]};
                 <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🧠 AI Chat</span>
                 <span style={{fontSize:10,color:C.sub,marginLeft:"auto"}}>{allMoves.length} moves · {allW.length} weeks</span>
               </div>
-              <div style={{overflowY:"auto",padding:"16px",display:isCollapsed("savedWeeks")?"none":"flex",flexDirection:"column",gap:11,background:C.bg,minHeight:280,maxHeight:400}}>
+              <div style={{overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:11,background:C.bg,minHeight:280,maxHeight:400}}>
                 {chat.map((m,i)=>(
                   <div key={i} style={{display:"flex",justifyContent:m.r==="u"?"flex-end":"flex-start",gap:8,alignItems:"flex-end"}}>
                     {m.r==="a"&&<div style={{width:26,height:26,borderRadius:7,background:C.surf,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>🧠</div>}
