@@ -1490,13 +1490,13 @@ ${pdfText.slice(0,24000)}`}]};
                 {/* Backdrop */}
                 <div style={{position:"fixed",inset:0,zIndex:9998,background:"rgba(0,0,0,0.5)"}} onClick={()=>setShowMenu(false)}/>
                 {/* Menu panel — full screen drawer on mobile, dropdown on desktop */}
-                <div style={wide?{position:"fixed",top:108,right:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"8px 6px",zIndex:9999,width:260,maxHeight:"calc(100vh - 120px)",overflowY:"auto",WebkitOverflowScrolling:"touch",boxShadow:"0 8px 40px rgba(0,0,0,0.7)"}:{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.card,zIndex:9999,display:"flex",flexDirection:"column",overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-                {/* Mobile close bar */}
-                {!wide&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 16px 8px",borderBottom:`1px solid ${C.border}`,flexShrink:0}}>
+                <div style={window.innerWidth>900?{position:"fixed",top:108,right:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"8px 6px",zIndex:9999,width:260,maxHeight:"calc(100vh - 120px)",overflowY:"auto",WebkitOverflowScrolling:"touch",boxShadow:"0 8px 40px rgba(0,0,0,0.7)"}:{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.card,zIndex:9999,display:"flex",flexDirection:"column"}}>
+                {/* Mobile close bar — always show on phones */}
+                {window.innerWidth<=900&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 16px 8px",borderBottom:`1px solid ${C.border}`,flexShrink:0}}>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.text}}>Menu</div>
                   <button onClick={()=>setShowMenu(false)} style={{background:"none",border:"none",color:C.sub,fontSize:22,cursor:"pointer",lineHeight:1,padding:"4px 8px"}}>✕</button>
                 </div>}
-                <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:wide?"0":"0 0 80px"}}>
+                <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:window.innerWidth>900?"0":"0 16px 80px"}}>
 
                   {/* Account header */}
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
