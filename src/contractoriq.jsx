@@ -270,6 +270,8 @@ export default function ContractorIQv26(){
   const [activeOnlyVendor,setActiveOnlyVendor]=useState(null);
   const [helpCard,setHelpCard]=useState(null);
   const [collapsedCards,setCollapsedCards]=useState(new Set());
+  const [showOnboarding,setShowOnboarding]=useState(false);
+  const [onboardStep,setOnboardStep]=useState(0);
   const [ownerNotes,setOwnerNotes]=useState(()=>{try{const s=localStorage.getItem("ciq_owner_notes");return s?JSON.parse(s):{};}catch{return {};}});
   useEffect(()=>{try{localStorage.setItem("ciq_owner_notes",JSON.stringify(ownerNotes));}catch(e){};},[ownerNotes]);
   const toggleCard=(id)=>setCollapsedCards(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
@@ -453,6 +455,11 @@ export default function ContractorIQv26(){
         }
       }catch(e){ console.error("cloud pull",e&&e.message); }
       setCloudLoaded(true);
+      // Show onboarding for new users (first login, no data yet)
+      try{
+        const done=localStorage.getItem("ciq_onboarding_done");
+        if(!done){setShowOnboarding(true);setOnboardStep(0);}
+      }catch(e){}
     })();
   },[user]);
 
@@ -922,6 +929,78 @@ ${pdfText.slice(0,24000)}`}]};
   return(
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
       {upgradeModal()}
+      {/* ═══ AI ONBOARDING GUIDE ═══ */}
+      {showOnboarding&&(
+        <div style={{position:"fixed",inset:0,zIndex:10000,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0 0 70px"}} onClick={()=>{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}}>
+          <div style={{background:C.card,borderRadius:20,padding:"24px 20px",maxWidth:420,width:"100%",border:`1px solid ${C.accent}44`,boxShadow:`0 0 40px ${C.accent}22`}} onClick={e=>e.stopPropagation()}>
+            {[
+              {
+                icon:"👋",step:"Welcome",
+                title:"Welcome to DrayageIQ!",
+                body:"This is your command center for your trucking business. In 30 seconds you'll understand exactly where your money goes every week — and how to keep more of it. Let me show you around.",
+                tip:null,
+                action:"Let's Go →"
+              },
+              {
+                icon:"📄",step:"Step 1 of 4",
+                title:"Upload Your Settlement PDF",
+                body:"Tap the ANALYZER tab at the bottom. Then tap the big upload button and pick your settlement PDF from your Downloads folder. The AI reads it automatically — no typing needed.",
+                tip:"💡 Tip: You can upload multiple weeks at once by holding and selecting several PDFs.",
+                action:"Got it →"
+              },
+              {
+                icon:"📊",step:"Step 2 of 4",
+                title:"Read Your Dashboard",
+                body:"After uploading, your DASH tab shows your gross pay, net pay, deductions, and average revenue per mile. Tap any bar in the chart to zoom into that specific week. Green is good, red needs attention.",
+                tip:"💡 Tip: Tap any card header to collapse it and save screen space.",
+                action:"Next →"
+              },
+              {
+                icon:"🧠",step:"Step 3 of 4",
+                title:"Ask the AI Anything",
+                body:"Tap the AI tab and ask real questions like: 'What were my worst weeks?' or 'How much did I spend on fuel this month?' or 'Should I take a load to Hagerstown?'. It knows your actual numbers.",
+                tip:"💡 Tip: Pro Smart members get live diesel prices and weather included in every answer.",
+                action:"Almost done →"
+              },
+              {
+                icon:"🚀",step:"Step 4 of 4",
+                title:"You're Ready!",
+                body:"That's it. Upload your settlements weekly and DrayageIQ tracks everything automatically. Check your deduction breakdown each week — if any number jumps, you'll catch it early before it leaks money.",
+                tip:"💡 Tip: Tap ≡ Menu → View Plans & Pricing anytime to upgrade your plan.",
+                action:"Start Using DrayageIQ ✓"
+              },
+            ].slice(onboardStep,onboardStep+1).map(s=>(
+              <div key={s.step}>
+                {/* Progress dots */}
+                <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:16}}>
+                  {[0,1,2,3,4].map(i=>(
+                    <div key={i} onClick={()=>setOnboardStep(i)} style={{width:i===onboardStep?20:6,height:6,borderRadius:3,background:i===onboardStep?C.accent:C.border,transition:"all 0.2s",cursor:"pointer"}}/>
+                  ))}
+                </div>
+                {/* Icon + Step label */}
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                  <div style={{fontSize:32}}>{s.icon}</div>
+                  <div>
+                    <div style={{fontSize:9,fontWeight:700,color:C.accent,letterSpacing:"0.1em",textTransform:"uppercase"}}>{s.step}</div>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.text,lineHeight:1.1}}>{s.title}</div>
+                  </div>
+                </div>
+                {/* Body */}
+                <div style={{fontSize:13,color:C.sub,lineHeight:1.7,marginBottom:s.tip?10:16}}>{s.body}</div>
+                {/* Tip */}
+                {s.tip&&<div style={{padding:"8px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,fontSize:11,color:C.gold,lineHeight:1.5,marginBottom:16}}>{s.tip}</div>}
+                {/* Buttons */}
+                <div style={{display:"flex",gap:8}}>
+                  {onboardStep>0&&<button onClick={()=>setOnboardStep(p=>p-1)} style={{padding:"10px 16px",borderRadius:10,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>← Back</button>}
+                  <button onClick={()=>{if(onboardStep<4){setOnboardStep(p=>p+1);}else{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}}} style={{flex:1,padding:"12px",borderRadius:10,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{s.action}</button>
+                </div>
+                {/* Skip */}
+                {onboardStep<4&&<div onClick={()=>{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}} style={{textAlign:"center",marginTop:10,fontSize:10,color:C.sub,cursor:"pointer"}}>Skip tour</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* INSURANCE MODAL */}
       {showInsurance&&(
@@ -1387,7 +1466,7 @@ ${pdfText.slice(0,24000)}`}]};
               {showMenu&&(
                 <>
                 <div style={{position:"fixed",inset:0,zIndex:9998}} onClick={()=>setShowMenu(false)}/>
-                <div style={{position:"fixed",top:wide?108:96,right:8,left:wide?"auto":8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"8px 6px",zIndex:9999,minWidth:wide?210:"auto",maxWidth:wide?260:"none",maxHeight:"calc(100vh - 120px)",overflowY:"auto",WebkitOverflowScrolling:"touch",boxShadow:"0 8px 40px rgba(0,0,0,0.7)"}}>
+                <div style={{position:"fixed",top:wide?108:96,right:8,left:wide?"auto":8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"8px 6px",zIndex:9999,minWidth:wide?210:"auto",maxWidth:wide?260:"none",maxHeight:wide?"calc(100vh - 120px)":"calc(100vh - 165px)",overflowY:"scroll",WebkitOverflowScrolling:"touch",overscrollBehavior:"contain",boxShadow:"0 8px 40px rgba(0,0,0,0.7)"}}>
 
                   {/* Account header */}
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
@@ -1420,6 +1499,7 @@ ${pdfText.slice(0,24000)}`}]};
                   {/* ── DISCOVER ── */}
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Discover</div>
                   <button onClick={()=>{setShowAbout(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🚛</span><span>About DrayageIQ</span></button>
+                  <button onClick={()=>{setOnboardStep(0);setShowOnboarding(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,color:C.accent,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🎓</span><span>How to Use DrayageIQ</span></button>
                   <button onClick={()=>{setShowMarket(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>📊</span><span>Market Overview</span></button>
                   <button onClick={()=>{setShowReviews(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⭐</span><span>Customer Reviews</span>{reviews.length>0&&<span style={{marginLeft:"auto",fontSize:9,color:C.gold,fontWeight:700}}>{reviews.length}</span>}</button>
                   <button onClick={()=>{setShowIconKey(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.a3}12`,border:`1px solid ${C.a3}33`,color:C.a3,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🔑</span><span>Icon Guide</span></button>
