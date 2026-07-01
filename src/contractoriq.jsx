@@ -182,56 +182,24 @@ function getSB(){ if(!_sb && typeof window!=="undefined" && window.supabase){ _s
 
 // ═══ DESKTOP TICKER — Pure CSS marquee with live prices from /api/ticker ═══
 function TVTickerTape({symbols}){
-  const [prices,setPrices]=useState({});
-  useEffect(()=>{
-    async function load(){
-      try{
-        // Map TradingView proNames to Yahoo Finance symbols
-        const ymap={"AMEX:SPY":"SPY","AMEX:DIA":"DIA","NASDAQ:QQQ":"QQQ","AMEX:IWM":"IWM","CBOE:VIX":"%5EVIX","AMEX:GLD":"GLD","AMEX:USO":"USO","COINBASE:BTCUSD":"BTC-USD","NYSE:XOM":"XOM","NASDAQ:JBHT":"JBHT","NASDAQ:AAPL":"AAPL","NASDAQ:TSLA":"TSLA","NASDAQ:NVDA":"NVDA","NASDAQ:GOOGL":"GOOGL","NASDAQ:AMZN":"AMZN","NYSE:CVX":"CVX","NYSE:ODFL":"ODFL","COINBASE:ETHUSD":"ETH-USD","AMEX:TLT":"TLT","NASDAQ:META":"META"};
-        const syms=symbols.map(s=>ymap[s.proName]||s.proName.split(":").pop());
-        const r=await fetch("/api/ticker?symbols="+syms.join(","));
-        if(!r.ok)return;
-        const d=await r.json();
-        // remap yahoo key -> proName key
-        const out={};
-        symbols.forEach(s=>{
-          const ys=ymap[s.proName]||s.proName.split(":").pop();
-          if(d[ys])out[s.proName]=d[ys];
-        });
-        setPrices(out);
-      }catch(e){}
-    }
-    load();
-    const t=setInterval(load,90000);
-    return()=>clearInterval(t);
-  },[symbols.map(s=>s.proName).join(",")]);
-
-  const items=[...symbols,...symbols,...symbols];
   return(
-    <div style={{flex:1,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",background:"#070b15",height:46}}>
-      {/* Fade masks */}
-      <div style={{position:"absolute",left:0,top:0,bottom:0,width:48,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
-      <div style={{position:"absolute",right:0,top:0,bottom:0,width:48,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
-      {/* Scrolling track */}
-      <div style={{display:"flex",animation:"ticker-scroll 40s linear infinite",whiteSpace:"nowrap",willChange:"transform"}}>
-        {items.map((s,i)=>{
-          const sym=s.title||s.proName.split(":").pop();
-          const p=prices[s.proName];
-          const price=p?.price;
-          const pct=p?.pct;
-          const up=pct==null?null:pct>=0;
-          const col=price==null?"#8fa3c0":up?"#4ade80":"#f87171";
-          const priceStr=price==null?"···":price>=1000?price.toFixed(0):price>=10?price.toFixed(2):price.toFixed(4);
-          const pctStr=pct==null?"":( up?"+":"")+pct.toFixed(2)+"%";
-          return(
-            <div key={i} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"0 20px",borderRight:"1px solid #1a2535",height:46,flexShrink:0}}>
-              <span style={{fontSize:10,fontWeight:800,color:"#8fa3c0",letterSpacing:"0.07em",fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
-              <span style={{fontSize:11,fontWeight:800,color:col,fontFamily:"'IBM Plex Mono',monospace"}}>{priceStr}</span>
-              {pctStr&&<span style={{fontSize:9,fontWeight:700,color:col,fontFamily:"'IBM Plex Mono',monospace",padding:"1px 4px",borderRadius:3,background:col+"22"}}>{pctStr}</span>}
-            </div>
-          );
-        })}
-      </div>
+    <div style={{flex:1,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",background:"#070b15",height:46,minWidth:0}}>
+      <div style={{position:"absolute",left:0,top:0,bottom:0,width:24,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+      <div style={{position:"absolute",right:0,top:0,bottom:0,width:24,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+      <iframe
+        key={symbols.map(s=>s.proName).join(",")}
+        src={"https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#"+encodeURIComponent(JSON.stringify({
+          symbols:symbols,
+          showSymbolLogo:true,
+          colorTheme:"dark",
+          isTransparent:true,
+          displayMode:"adaptive",
+          locale:"en"
+        }))}
+        style={{width:"100%",height:46,border:"none",display:"block"}}
+        title="Live Market Ticker"
+        loading="lazy"
+      />
     </div>
   );
 }
