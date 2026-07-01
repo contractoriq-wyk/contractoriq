@@ -94,7 +94,7 @@ const DEMO_W=[
 
 const VENDORS={
   JDT:{name:"Demo Driver Co",short:"DEMO",icon:"🚛",color:"#00ffcc",unit:""},
-  CPG:{name:"Lilwemma Services Co",short:"CPG",icon:"⚓",color:"#00ffcc",unit:"BAL975"},
+  CPG:{name:"Demo Trucking LLC",short:"CPG",icon:"⚓",color:"#00ffcc",unit:"TRK001"},
   STG:{name:"STG Drayage",short:"STG",icon:"⚓",color:"#a78bfa",unit:""},
   AMZ:{name:"Amazon Freight",short:"AMZ",icon:"📦",color:"#ff7a45",unit:""},
   OTH:{name:"Other",short:"OTH",icon:"🏢",color:"#fbbf24",unit:""},
@@ -182,56 +182,24 @@ function getSB(){ if(!_sb && typeof window!=="undefined" && window.supabase){ _s
 
 // ═══ DESKTOP TICKER — Pure CSS marquee with live prices from /api/ticker ═══
 function TVTickerTape({symbols}){
-  const [prices,setPrices]=useState({});
-  useEffect(()=>{
-    async function load(){
-      try{
-        // Map TradingView proNames to Yahoo Finance symbols
-        const ymap={"AMEX:SPY":"SPY","AMEX:DIA":"DIA","NASDAQ:QQQ":"QQQ","AMEX:IWM":"IWM","CBOE:VIX":"%5EVIX","AMEX:GLD":"GLD","AMEX:USO":"USO","COINBASE:BTCUSD":"BTC-USD","NYSE:XOM":"XOM","NASDAQ:JBHT":"JBHT","NASDAQ:AAPL":"AAPL","NASDAQ:TSLA":"TSLA","NASDAQ:NVDA":"NVDA","NASDAQ:GOOGL":"GOOGL","NASDAQ:AMZN":"AMZN","NYSE:CVX":"CVX","NYSE:ODFL":"ODFL","COINBASE:ETHUSD":"ETH-USD","AMEX:TLT":"TLT","NASDAQ:META":"META"};
-        const syms=symbols.map(s=>ymap[s.proName]||s.proName.split(":").pop());
-        const r=await fetch("/api/ticker?symbols="+syms.join(","));
-        if(!r.ok)return;
-        const d=await r.json();
-        // remap yahoo key -> proName key
-        const out={};
-        symbols.forEach(s=>{
-          const ys=ymap[s.proName]||s.proName.split(":").pop();
-          if(d[ys])out[s.proName]=d[ys];
-        });
-        setPrices(out);
-      }catch(e){}
-    }
-    load();
-    const t=setInterval(load,90000);
-    return()=>clearInterval(t);
-  },[symbols.map(s=>s.proName).join(",")]);
-
-  const items=[...symbols,...symbols,...symbols];
   return(
-    <div style={{flex:1,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",background:"#070b15",height:46}}>
-      {/* Fade masks */}
-      <div style={{position:"absolute",left:0,top:0,bottom:0,width:48,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
-      <div style={{position:"absolute",right:0,top:0,bottom:0,width:48,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
-      {/* Scrolling track */}
-      <div style={{display:"flex",animation:"ticker-scroll 40s linear infinite",whiteSpace:"nowrap",willChange:"transform"}}>
-        {items.map((s,i)=>{
-          const sym=s.title||s.proName.split(":").pop();
-          const p=prices[s.proName];
-          const price=p?.price;
-          const pct=p?.pct;
-          const up=pct==null?null:pct>=0;
-          const col=price==null?"#8fa3c0":up?"#4ade80":"#f87171";
-          const priceStr=price==null?"···":price>=1000?price.toFixed(0):price>=10?price.toFixed(2):price.toFixed(4);
-          const pctStr=pct==null?"":( up?"+":"")+pct.toFixed(2)+"%";
-          return(
-            <div key={i} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"0 20px",borderRight:"1px solid #1a2535",height:46,flexShrink:0}}>
-              <span style={{fontSize:10,fontWeight:800,color:"#8fa3c0",letterSpacing:"0.07em",fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
-              <span style={{fontSize:11,fontWeight:800,color:col,fontFamily:"'IBM Plex Mono',monospace"}}>{priceStr}</span>
-              {pctStr&&<span style={{fontSize:9,fontWeight:700,color:col,fontFamily:"'IBM Plex Mono',monospace",padding:"1px 4px",borderRadius:3,background:col+"22"}}>{pctStr}</span>}
-            </div>
-          );
-        })}
-      </div>
+    <div style={{flex:1,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",background:"#070b15",height:46,minWidth:0}}>
+      <div style={{position:"absolute",left:0,top:0,bottom:0,width:24,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+      <div style={{position:"absolute",right:0,top:0,bottom:0,width:24,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+      <iframe
+        key={symbols.map(s=>s.proName).join(",")}
+        src={"https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#"+encodeURIComponent(JSON.stringify({
+          symbols:symbols,
+          showSymbolLogo:true,
+          colorTheme:"dark",
+          isTransparent:true,
+          displayMode:"adaptive",
+          locale:"en"
+        }))}
+        style={{width:"100%",height:46,border:"none",display:"block"}}
+        title="Live Market Ticker"
+        loading="lazy"
+      />
     </div>
   );
 }
@@ -266,6 +234,10 @@ export default function ContractorIQv26(){
   const toggleCard=(id)=>setCollapsedCards(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
   const isCollapsed=(id)=>collapsedCards.has(id);
   useEffect(()=>{document.body.style.background=C.bg;document.body.style.color=C.text;},[darkMode]);
+  useEffect(()=>{
+    const vp=document.querySelector("meta[name=viewport]");
+    if(vp)vp.content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes";
+  },[]);
   const [searchQ,setSearchQ]=useState("");
   const [searchResult,setSearchResult]=useState("");
   const [searchLoading,setSearchLoading]=useState(false);
@@ -305,6 +277,8 @@ export default function ContractorIQv26(){
   const [activeOnlyVendor,setActiveOnlyVendor]=useState(null);
   const [helpCard,setHelpCard]=useState(null);
   const [collapsedCards,setCollapsedCards]=useState(new Set());
+  const [ownerNotes,setOwnerNotes]=useState(()=>{try{const s=localStorage.getItem("ciq_owner_notes");return s?JSON.parse(s):{};}catch{return {};}});
+  useEffect(()=>{try{localStorage.setItem("ciq_owner_notes",JSON.stringify(ownerNotes));}catch(e){};},[ownerNotes]);
   const [showProfile,setShowProfile]=useState(false);
   const [profile,setProfile]=useState(()=>{try{const s=localStorage.getItem("ciq_profile");return s?JSON.parse(s):{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}catch{return{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}});
   const [expenses,setExpenses]=useState(()=>{try{const s=localStorage.getItem("ciq_expenses");return s?JSON.parse(s):[];}catch{return[];}});
@@ -1137,7 +1111,7 @@ ${pdfText.slice(0,24000)}`}]};
               {/* Logo */}
               <div style={{marginBottom:wide?40:26}}>
                 <img src={LOGO_HERO} alt="DrayageIQ" style={{width:"100%",maxWidth:wide?420:300,height:"auto",display:"block",filter:"drop-shadow(0 0 30px rgba(0,255,204,0.15))"}}/>
-                <div style={{fontSize:9,color:"#3a5060",letterSpacing:"0.06em",marginTop:6,marginLeft:2}}>by Lilwemma Services</div>
+                
               </div>
 
               {/* Headline */}
@@ -1247,7 +1221,7 @@ ${pdfText.slice(0,24000)}`}]};
                   Settlement analysis<br/>made effortless.
                 </h2>
                 <p style={{fontSize:11,color:"#5a7590",lineHeight:1.65,margin:"0 0 16px"}}>
-                  Built for drayage owner-operators — simple, smart, and efficient.
+                  Built for Independent Truckers — Drayage, Solo Owner-Operators, Short Haul, Long Haul.
                 </p>
 
                 {/* PRICING TIERS */}
@@ -1426,7 +1400,6 @@ ${pdfText.slice(0,24000)}`}]};
             <TB t="ai" l="🧠 AI"/>
             <TB t="growth" l="🚀 Growth"/>
             <button onClick={()=>setShowInsurance(true)} style={{padding:"8px 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa",boxShadow:"0 0 12px #a78bfa33",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>🛡️ Protect</button>
-            <button onClick={()=>setShowQR(true)} style={{padding:"8px 12px",borderRadius:8,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>📱 QR</button>
             <button onClick={()=>setFocusMode(p=>!p)} style={{padding:"8px 12px",borderRadius:8,background:focusMode?C.gold:`${C.gold}22`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{focusMode?"⚡ ON":"⚡ Focus"}</button>
           </div>
           <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
@@ -1437,7 +1410,7 @@ ${pdfText.slice(0,24000)}`}]};
               {showMenu&&(
                 <>
                 <div style={{position:"fixed",inset:0,zIndex:9998}} onClick={()=>setShowMenu(false)}/>
-                <div style={{position:"fixed",top:108,right:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"8px 6px",zIndex:9999,minWidth:210,boxShadow:"0 8px 40px rgba(0,0,0,0.7)",maxHeight:"85vh",overflowY:"auto"}}>
+                <div style={{position:"fixed",top:58,right:8,bottom:60,width:Math.min(window.innerWidth-16,300),background:C.card,border:`1px solid ${C.border}`,borderRadius:16,zIndex:9999,boxShadow:"0 8px 40px rgba(0,0,0,0.8)",display:"flex",flexDirection:"column",overflow:"hidden"}}><div style={{flex:1,minHeight:0,height:0,overflowY:"scroll",WebkitOverflowScrolling:"touch",padding:"8px 6px 20px"}}>
 
                   {/* Account header */}
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
@@ -1481,7 +1454,7 @@ ${pdfText.slice(0,24000)}`}]};
                   {/* ── SUPPORT ── */}
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Support</div>
                   <a href="https://whatsapp.com/channel/0029VazNGCd0bIdZvxjLIB2L" target="_blank" rel="noreferrer" style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700,textDecoration:"none",boxSizing:"border-box"}}><span>💬</span><div style={{flex:1}}><div>WhatsApp Support</div><div style={{fontSize:9,fontWeight:400,color:C.sub,marginTop:1}}>Join our channel · Get help fast</div></div><span style={{fontSize:8,fontWeight:800,color:"#080c16",background:"#25D366",borderRadius:20,padding:"2px 7px"}}>LIVE</span></a>
-
+                </div>
                 </div>
                 </>
               )}
@@ -1826,6 +1799,16 @@ ${pdfText.slice(0,24000)}`}]};
                             <div style={{fontSize:9,color:"#8fa3c0"}}>{b.pct}% of gross</div>
                             <div style={{fontSize:9,color:b.color,fontWeight:700}}>{b.items.length} item{b.items.length!==1?"s":""} {helpCard===b.id+"_open"?"▲":"▼"}</div>
                           </div>
+                          {b.id==="ded_fuel"&&dw.rebate>0&&(()=>{
+                            const netFuel=Math.max(0,fuelTotal-dw.rebate);
+                            const netPct=dw.gross>0?(netFuel/dw.gross*100).toFixed(1):0;
+                            return(
+                              <div style={{marginTop:4,paddingTop:4,borderTop:`1px solid ${b.color}22`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                                <div style={{fontSize:8,color:"#4ade80"}}>↳ net of rebate</div>
+                                <div style={{fontSize:9,color:"#4ade80",fontWeight:700}}>${netFuel.toFixed(0)} · {netPct}%</div>
+                              </div>
+                            );
+                          })()}
                           {/* Mini bar */}
                           <div style={{height:3,background:`${b.color}25`,borderRadius:2,marginTop:7,overflow:"hidden"}}>
                             <div style={{height:"100%",width:`${Math.min(b.pct*3,100)}%`,background:b.color,borderRadius:2}}/>
@@ -1863,12 +1846,109 @@ ${pdfText.slice(0,24000)}`}]};
                     ))}
 
                     {/* Grand total bar */}
-                    <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
+                    <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4,marginBottom:14}}>
                       <div style={{fontSize:11,fontWeight:700,color:C.text}}>Total Deductions</div>
                       <div style={{display:"flex",alignItems:"center",gap:10}}>
                         <div style={{fontSize:9,color:C.sub}}>{dw.gross>0?(dedSum/dw.gross*100).toFixed(1):0}% of gross</div>
                         <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:"#f87171"}}>-${dedSum.toFixed(2)}</div>
                       </div>
+                    </div>
+
+                    {/* Fuel Rebate Banner */}
+                    {dw.rebate>0&&(()=>{
+                      const weekFuelA=(dw.deds||[]).filter(d=>d&&d.l&&d.l.toLowerCase().includes("fuel advance")&&d.vendor);
+                      const topVendor=weekFuelA.length>0?weekFuelA.reduce((a,b)=>(b.gal||0)>(a.gal||0)?b:a):null;
+                      const vendorLabel=topVendor?`${topVendor.vendor}${topVendor.city?", "+topVendor.city:""}`:null;
+                      return(
+                        <div style={{padding:"10px 12px",borderRadius:9,background:`${C.green}10`,border:`1px solid ${C.green}33`,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8}}>
+                            <span style={{fontSize:14}}>💰</span>
+                            <div>
+                              <div style={{fontSize:11,fontWeight:700,color:C.text}}>Fuel Rebate Earned</div>
+                              <div style={{fontSize:9,color:C.sub,marginTop:1}}>{vendorLabel?`From ${vendorLabel}`:"Cash back from your fuel vendor this week"}</div>
+                            </div>
+                          </div>
+                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.green}}>+${dw.rebate.toFixed(2)}</div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Smart Insights */}
+                    {(()=>{
+                      const recentW=allW.slice(Math.max(0,allW.findIndex(w=>w.week===dw.week)-7),allW.findIndex(w=>w.week===dw.week)+1);
+                      const histW=recentW.length>1?recentW.slice(0,-1):[];
+                      const avgOf=(cat)=>{
+                        if(histW.length===0)return null;
+                        const vals=histW.map(w=>{
+                          const wd=(w.deds||[]).filter(d=>d&&d.l);
+                          if(cat==="fuel")return wd.filter(d=>d.l.toLowerCase().includes("fuel advance")).reduce((s,d)=>s+d.a,0);
+                          if(cat==="insurance")return wd.filter(d=>["physical damage","bobtail","occacc","occ/acc","roadside","liability limiter"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+                          if(cat==="ops")return wd.filter(d=>["eld","event recorder","parking","license","highway tax"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+                          return 0;
+                        });
+                        return vals.reduce((a,b)=>a+b,0)/vals.length;
+                      };
+                      const catTotals={fuel:fuelTotal,insurance:insTotal,ops:opsTotal};
+                      const movers=Object.keys(catTotals).map(cat=>{
+                        const avg=avgOf(cat);
+                        if(avg===null||avg===0)return null;
+                        const pctChange=((catTotals[cat]-avg)/avg)*100;
+                        return {cat,pctChange,current:catTotals[cat],avg};
+                      }).filter(Boolean).filter(m=>Math.abs(m.pctChange)>15).sort((a,b)=>Math.abs(b.pctChange)-Math.abs(a.pctChange));
+                      const topMover=movers[0];
+                      const catLabel={fuel:"Fuel",insurance:"Insurance",ops:"Operations"};
+                      const catIcon={fuel:"⛽",insurance:"🛡️",ops:"⚙️"};
+
+                      const escTarget=2500;
+                      const escBalance=dw.escrow_regular_balance||0;
+                      const escPct=Math.min(100,(escBalance/escTarget)*100);
+                      const weeklyEscrow=100;
+                      const weeksLeft=escBalance<escTarget?Math.ceil((escTarget-escBalance)/weeklyEscrow):0;
+
+                      return(
+                        <div style={{marginBottom:14}}>
+                          <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>💡 Smart Insights</div>
+
+                          {topMover&&(
+                            <div style={{padding:"10px 12px",borderRadius:9,background:topMover.pctChange>0?`${C.red}10`:`${C.green}10`,border:`1px solid ${topMover.pctChange>0?C.red:C.green}33`,marginBottom:8,display:"flex",alignItems:"flex-start",gap:8}}>
+                              <span style={{fontSize:14,flexShrink:0}}>{topMover.pctChange>0?"⚠️":"✅"}</span>
+                              <div style={{fontSize:10,color:C.text,lineHeight:1.5}}>
+                                <b>{catIcon[topMover.cat]} {catLabel[topMover.cat]}</b> {topMover.pctChange>0?"up":"down"} <b style={{color:topMover.pctChange>0?C.red:C.green}}>{Math.abs(topMover.pctChange).toFixed(0)}%</b> vs your {histW.length}-week average (${topMover.avg.toFixed(0)} → ${topMover.current.toFixed(0)})
+                              </div>
+                            </div>
+                          )}
+
+                          {escBalance>0&&escBalance<escTarget&&(
+                            <div style={{padding:"10px 12px",borderRadius:9,background:`${C.a3}10`,border:`1px solid ${C.a3}33`,marginBottom:8}}>
+                              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                                <div style={{fontSize:10,color:C.text,fontWeight:700}}>🏦 Escrow Progress</div>
+                                <div style={{fontSize:10,color:C.a3,fontWeight:700}}>${escBalance.toFixed(0)} / ${escTarget}</div>
+                              </div>
+                              <div style={{height:5,background:C.bg,borderRadius:3,overflow:"hidden",marginBottom:5}}>
+                                <div style={{height:"100%",width:escPct+"%",background:C.a3,borderRadius:3}}/>
+                              </div>
+                              <div style={{fontSize:9,color:C.sub}}>{weeksLeft>0?`~${weeksLeft} weeks left at $100/wk`:"Target reached!"}</div>
+                            </div>
+                          )}
+
+                          {!topMover&&!(escBalance>0&&escBalance<escTarget)&&(
+                            <div style={{padding:"10px 12px",borderRadius:9,background:C.bg,border:`1px solid ${C.border}`,fontSize:10,color:C.sub}}>
+                              ✅ Deductions look stable — no unusual changes detected this week.
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Owner Notes */}
+                    <div>
+                      <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>📝 Owner Notes — W{dw.week}</div>
+                      <textarea
+                        value={ownerNotes[dw.week]||""}
+                        onChange={e=>setOwnerNotes(p=>({...p,[dw.week]:e.target.value}))}
+                        placeholder="e.g. Called carrier about the $55 license fee — confirmed permanent..."
+                        style={{width:"100%",minHeight:64,padding:"10px 12px",borderRadius:9,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",resize:"vertical",boxSizing:"border-box",lineHeight:1.5}}
+                      />
                     </div>
                   </div>
                 );
@@ -2073,11 +2153,11 @@ ${pdfText.slice(0,24000)}`}]};
             return(
               <div style={K({marginBottom:16})}>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🎯 Weekly Action Plan{helpBtn("actionPlan")}</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🎯 Weekly Action Plan{helpBtn("actionPlan")}<button onClick={e=>{e.stopPropagation();toggleCard("actionPlan");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("actionPlan")?"▶":"▼"}</button></div>
                   <div style={{fontSize:9,padding:"2px 7px",borderRadius:5,background:C.green+"20",color:C.green,fontWeight:700,marginLeft:"auto"}}>W{lw.week} · {topActions.length} actions</div>
                 </div>
                 {helpModal("actionPlan")}
-                <div style={{display:"flex",flexDirection:"column",gap:9}}>
+                <div style={{display:isCollapsed("actionPlan")?"none":"flex",flexDirection:"column",gap:9}}>
                   {topActions.map(function(a,idx){return(
                     <div key={idx} style={{display:"flex",gap:10,padding:"11px 12px",background:C.bg,borderRadius:9,border:"1px solid "+a.color+"44"}}>
                       <div style={{width:32,height:32,borderRadius:8,background:a.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{a.icon}</div>
@@ -2235,7 +2315,7 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{padding:"13px 16px",background:"linear-gradient(135deg,"+C.a3+"14,"+C.accent+"08)",borderBottom:"1px solid "+C.border}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
                 <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.text}}>📁 My Uploaded Settlements</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.text}}>📁 My Uploaded Settlements<button onClick={e=>{e.stopPropagation();toggleCard("uploads");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("uploads")?"▶":"▼"}</button></div>
                   <div style={{fontSize:10,color:C.sub,marginTop:2}}>{addedW.length} uploaded · check box to select · delete selected</div>
                 </div>
                 <div style={{display:"flex",gap:7,flexShrink:0}}>
@@ -2244,7 +2324,7 @@ ${pdfText.slice(0,24000)}`}]};
                 </div>
               </div>
             </div>
-            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7}}>
+            <div style={{padding:"10px 12px",display:isCollapsed("uploads")?"none":"flex",flexDirection:"column",gap:7}}>
               {addedW.length===0?<div style={{textAlign:"center",padding:"18px",color:C.sub,fontSize:11}}><div style={{fontSize:26,marginBottom:6}}>📭</div><div>No uploads yet — scan a PDF above</div></div>:[...addedW].reverse().map(function(w,i){
                 const g=wg(w),wKey=w.week+(w.from||""),isSel=selWkKeys.has(wKey);
                 return(
@@ -2305,9 +2385,9 @@ ${pdfText.slice(0,24000)}`}]};
 
           {/* FULL HISTORY */}
           <div style={K()}>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}</div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}<button onClick={e=>{e.stopPropagation();toggleCard("fullHist");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("fullHist")?"▶":"▼"}</button></div>
             {helpModal("fullHistory")}
-            <div style={{overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
+            <div style={{display:isCollapsed("fullHist")?"none":"block",overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
                 <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Wk","Vendor","Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 6px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>{allMoves.slice().reverse().map((m,i)=>{
@@ -2336,7 +2416,7 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{padding:"13px 16px",background:"linear-gradient(135deg,"+C.a3+"14,"+C.accent+"08)",borderBottom:"1px solid "+C.border}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
                 <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 Manage Saved Weeks</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 Manage Saved Weeks<button onClick={e=>{e.stopPropagation();toggleCard("savedWeeks");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("savedWeeks")?"▶":"▼"}</button></div>
                   <div style={{fontSize:10,color:C.sub}}>{addedW.length} uploaded · {allW.length} total · tap ☑ to select then delete</div>
                 </div>
                 <div style={{display:"flex",gap:7,flexShrink:0}}>
@@ -2363,7 +2443,7 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
 
             {/* Week list */}
-            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7,maxHeight:320,overflowY:"auto"}}>
+            <div style={{padding:"10px 12px",display:isCollapsed("savedWeeks")?"none":"flex",flexDirection:"column",gap:7,maxHeight:320,overflowY:"auto"}}>
               {addedW.length===0?(
                 <div style={{textAlign:"center",padding:"20px",color:C.sub,fontSize:11}}>
                   <div style={{fontSize:28,marginBottom:8}}>📭</div>
@@ -2465,8 +2545,8 @@ ${pdfText.slice(0,24000)}`}]};
           </div>
           {aiMode==="chat"&&(
             <div style={K()}>
-              <div style={{fontSize:10,fontWeight:700,color:C.sub,marginBottom:11,textTransform:"uppercase",letterSpacing:"0.1em"}}>⚡ Quick Questions</div>
-              <div style={{display:"grid",gridTemplateColumns:wide?"repeat(2,1fr)":"1fr",gap:7}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.sub,marginBottom:11,textTransform:"uppercase",letterSpacing:"0.1em"}}>⚡ Quick Questions<button onClick={e=>{e.stopPropagation();toggleCard("quickQ");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("quickQ")?"▶":"▼"}</button></div>
+              <div style={{display:isCollapsed("quickQ")?"none":"grid",gridTemplateColumns:wide?"repeat(2,1fr)":"1fr",gap:7}}>
                 {["Where am I losing the most money?","What's my biggest profit leak?","How can I increase my net pay?","Which routes give the best RPM?","Give me a 4-week income forecast","Should I take more Hagerstown loads?","How much are fuel advances really costing me?","What should my target weekly net be?"].map(q=>(
                   <button key={q} onClick={()=>setChatIn(q)} style={{padding:"11px 13px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,textAlign:"left",cursor:"pointer",fontFamily:"inherit",lineHeight:1.5}}>{q}</button>
                 ))}
@@ -2695,11 +2775,11 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:8}}>
                 <div style={{width:36,height:36,borderRadius:9,background:"#fbbf2422",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🏦</div>
                 <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#fbbf24"}}>Get Funded — Institutions That Trust Your Data</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#fbbf24"}}>Get Funded — Institutions That Trust Your Data<button onClick={e=>{e.stopPropagation();toggleCard("funded");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("funded")?"▶":"▼"}</button></div>
                   <div style={{fontSize:10,color:C.sub,marginTop:2}}>Your verified income qualifies you for real business capital</div>
                 </div>
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+              <div style={{display:isCollapsed("funded")?"none":"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
                 {[
                   {l:"Monthly Income",v:`$${Math.round(monthlyNet).toLocaleString()}`,c:"#4ade80"},
                   {l:"Annual Estimate",v:`$${Math.round(annualNet).toLocaleString()}`,c:"#00ffcc"},
@@ -2712,7 +2792,7 @@ ${pdfText.slice(0,24000)}`}]};
                 );})}
               </div>
             </div>
-            <div style={{padding:"12px",display:"flex",flexDirection:"column",gap:10}}>
+            <div style={{padding:"12px",display:isCollapsed("funded")?"none":"flex",flexDirection:"column",gap:10}}>
               {[
                 {
                   icon:"🦅",name:"OOIDA Business Services",type:"Owner-Operator Focused",
@@ -2833,7 +2913,7 @@ ${pdfText.slice(0,24000)}`}]};
             <a href="/faq.html" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>FAQ</a>
             <a href="mailto:support@getdrayageiq.com" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>Contact Support</a>
           </div>
-          <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid "+C.border,fontSize:8,color:C.border}}>© {new Date().getFullYear()} Lilwemma Services Co · DrayageIQ · All Rights Reserved · getdrayageiq.com</div>
+          <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid "+C.border,fontSize:8,color:C.border}}>© {new Date().getFullYear()} DrayageIQ · All Rights Reserved · getdrayageiq.com</div>
         </div>
       </div>
 
