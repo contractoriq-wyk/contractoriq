@@ -305,6 +305,8 @@ export default function ContractorIQv26(){
   const [activeOnlyVendor,setActiveOnlyVendor]=useState(null);
   const [helpCard,setHelpCard]=useState(null);
   const [collapsedCards,setCollapsedCards]=useState(new Set());
+  const [showOnboarding,setShowOnboarding]=useState(false);
+  const [onboardStep,setOnboardStep]=useState(0);
   const [showProfile,setShowProfile]=useState(false);
   const [profile,setProfile]=useState(()=>{try{const s=localStorage.getItem("ciq_profile");return s?JSON.parse(s):{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}catch{return{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}});
   const [expenses,setExpenses]=useState(()=>{try{const s=localStorage.getItem("ciq_expenses");return s?JSON.parse(s):[];}catch{return[];}});
@@ -484,6 +486,7 @@ export default function ContractorIQv26(){
         }
       }catch(e){ console.error("cloud pull",e&&e.message); }
       setCloudLoaded(true);
+      try{if(!localStorage.getItem("ciq_onboarding_done")){setShowOnboarding(true);setOnboardStep(0);}}catch(e){}
     })();
   },[user]);
 
@@ -953,6 +956,53 @@ ${pdfText.slice(0,24000)}`}]};
   return(
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
       {upgradeModal()}
+      {showOnboarding&&(
+        <div style={{position:"fixed",inset:0,zIndex:10000,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0 8px 70px"}} onClick={()=>{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}}>
+          <div style={{background:C.card,borderRadius:20,padding:"22px 18px",maxWidth:440,width:"100%",border:`1px solid ${C.accent}44`,boxShadow:`0 0 40px ${C.accent}22`}} onClick={e=>e.stopPropagation()}>
+            {(()=>{
+              const steps=[
+                {icon:"👋",step:"Welcome",title:"Welcome to DrayageIQ!",body:"Your personal trucking business command center. DrayageIQ reads your weekly settlement and shows you exactly where every dollar goes. You stop guessing. You start knowing.",tip:null,action:"Let's Go →"},
+                {icon:"📊",step:"Tab 1 — DASH",title:"DASH: Your Business Dashboard",body:"DASH is your home screen. At the top: YTD Gross (everything your carrier paid you), YTD Net (what you actually took home), total deductions, and your Avg RPM (revenue per mile). These 4 numbers tell the complete story of your business health.",tip:"💡 Tap any bar in the chart to zoom into that specific week — every card on the page updates instantly.",action:"Next →"},
+                {icon:"📈",step:"DASH — Net Pay Trend",title:"Weekly Net Pay Trend Chart",body:"Each bar is one settlement week. Taller = better week. The colored line traces the trend — green when pay went up, red when it dropped. This is your income history at a glance. Tap any bar and the entire dashboard syncs to that week.",tip:"💡 Look for patterns — if you always drop in certain months, that's a pattern you can plan around.",action:"Next →"},
+                {icon:"🔍",step:"DASH — Deductions",title:"Deduction Breakdown: Your Money Map",body:"Splits every dollar taken from your paycheck into 4 buckets: FUEL (red) — fuel advance spending, changes weekly. INSURANCE (purple) — fixed premiums: physical damage, bobtail, OccAcc, roadside. OPERATIONS (gold) — fixed fees: ELD, event recorder, license plate, parking. ESCROW (green) — YOUR savings held by carrier.",tip:"💡 Tap any bucket to see every line item. If insurance suddenly shows a different amount, contact your carrier — it may be a billing error.",action:"Next →"},
+                {icon:"⛽",step:"DASH — Fuel vs Miles",title:"Fuel vs Miles: Truck Health Monitor",body:"Calculates your real MPG from settlement data — actual gallons purchased divided by actual miles driven. Compare it to your baseline target. MPG dropping below your baseline for multiple weeks = early warning sign. Could be a tuneup, tire pressure, or excess idling needed.",tip:"💡 Adjust the Baseline MPG slider to match your truck's known performance for the most accurate analysis.",action:"Next →"},
+                {icon:"🏆",step:"DASH — Week Grades",title:"Week Grades: Your Weekly Report Card",body:"Every week gets a grade A through F based on your net margin, average RPM, loaded percentage, and trend. A = excellent. B = strong. C = average. D = below your own history. F = something went wrong — check that week's deductions and routes closely. Tap any grade pill to jump to that week.",tip:"💡 DrayageIQ grades you against YOUR own history, not other drivers. The grades reflect YOUR improvement over time.",action:"Next →"},
+                {icon:"💰",step:"DASH — Escrow",title:"Savings & Escrow: Your Money",body:"Escrow Regular builds toward a $2,500 target — this is YOUR money returned when you leave the carrier. 2290 Escrow covers your federal Heavy Highway Vehicle Use Tax. Both are savings, not fees. The progress bar shows how close you are to your escrow target.",tip:"💡 Never leave a carrier without requesting your escrow balance in writing. DrayageIQ tracks it week by week from your settlements.",action:"Next →"},
+                {icon:"🚛",step:"DASH — Move Performance",title:"Move Performance: Every Route Analyzed",body:"Shows every load from your settlement — LOAD (paid trip) and EMPTY (unpaid repositioning). For each: origin, destination, miles, rate, FSC (Fuel Surcharge), total pay, and RPM grade. Grade A moves are your most profitable routes. Grade C means the load didn't pay well.",tip:"💡 Review your Grade C moves. These drag your average down. Next time that load is offered, negotiate the rate or decline.",action:"Next →"},
+                {icon:"📋",step:"Tab 2 — ANALYZER",title:"ANALYZER: Upload Your Settlements",body:"Tap the upload button, pick your settlement PDF from Downloads, and the AI reads it in under 30 seconds. No typing. No math. It finds every load, every deduction, every fuel advance, every mile. You can also upload multiple weeks at once.",tip:"💡 You can select multiple PDFs at once to upload several weeks in one go. The AI processes them automatically.",action:"Next →"},
+                {icon:"🧠",step:"Tab 3 — AI",title:"AI Advisor: Ask Anything",body:"Ask real questions in plain English: 'What were my worst weeks?', 'How much did fuel cost me total?', 'Should I take a Baltimore to Hagerstown load at $200?'. It answers using YOUR actual data — not generic advice. Pro Smart members get live diesel prices and weather included in every answer.",tip:"💡 Try the quick-tap buttons for instant insights about your routes, RPM trends, and load profitability.",action:"Next →"},
+                {icon:"🚀",step:"Tab 4 — GROWTH",title:"GROWTH: Build Your Business",body:"Business Health Score grades your overall operation. Weekly Action Plan gives you 2-3 specific things to do THIS week to improve. Offer Scorer tests any load offer instantly. Get Funded shows real lenders who work with 1099 income — based on your actual documented earnings.",tip:"💡 The Get Funded section uses your real YTD earnings to show loan amounts you likely qualify for. Real money to grow your business.",action:"Next →"},
+                {icon:"✅",step:"You're Ready!",title:"You Know Everything Now",body:"Start by uploading your most recent settlement in the ANALYZER tab. Your numbers appear on DASH instantly. Come back every week after your settlement and DrayageIQ keeps track of everything. Tap ≡ Menu → How to Use DrayageIQ anytime for a refresher.",tip:"💡 Every card has a ? button. Tap it anytime for a plain-English reminder of what that card means.",action:"Start Using DrayageIQ ✓"},
+              ];
+              const s=steps[onboardStep];
+              const total=steps.length;
+              return(
+                <div>
+                  <div style={{display:"flex",justifyContent:"center",gap:5,marginBottom:14}}>
+                    {steps.map((_,i)=>(
+                      <div key={i} onClick={()=>setOnboardStep(i)} style={{width:i===onboardStep?18:6,height:6,borderRadius:3,background:i===onboardStep?C.accent:i<onboardStep?C.accent+"66":C.border,transition:"all 0.2s",cursor:"pointer"}}/>
+                    ))}
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                    <div style={{fontSize:28,flexShrink:0}}>{s.icon}</div>
+                    <div>
+                      <div style={{fontSize:9,fontWeight:700,color:C.accent,letterSpacing:"0.1em",textTransform:"uppercase"}}>{s.step} · {onboardStep+1}/{total}</div>
+                      <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.text,lineHeight:1.1,marginTop:2}}>{s.title}</div>
+                    </div>
+                  </div>
+                  <div style={{fontSize:12,color:C.sub,lineHeight:1.75,marginBottom:s.tip?10:14}}>{s.body}</div>
+                  {s.tip&&<div style={{padding:"8px 11px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,fontSize:10,color:C.gold,lineHeight:1.5,marginBottom:14}}>{s.tip}</div>}
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    {onboardStep>0&&<button onClick={()=>setOnboardStep(p=>p-1)} style={{padding:"10px 14px",borderRadius:10,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>←</button>}
+                    <button onClick={()=>{if(onboardStep<total-1){setOnboardStep(p=>p+1);}else{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}}} style={{flex:1,padding:"12px",borderRadius:10,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{s.action}</button>
+                  </div>
+                  {onboardStep<total-1&&<div onClick={()=>{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}} style={{textAlign:"center",marginTop:10,fontSize:10,color:C.sub,cursor:"pointer",padding:"4px"}}>Skip tour</div>}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
 
       {/* INSURANCE MODAL */}
       {showInsurance&&(
@@ -1469,6 +1519,7 @@ ${pdfText.slice(0,24000)}`}]};
                   {/* ── DISCOVER ── */}
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Discover</div>
                   <button onClick={()=>{setShowAbout(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🚛</span><span>About DrayageIQ</span></button>
+                  <button onClick={()=>{setOnboardStep(0);setShowOnboarding(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,color:C.accent,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🎓</span><span>How to Use DrayageIQ</span></button>
                   <button onClick={()=>{setShowMarket(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>📊</span><span>Market Overview</span></button>
                   <button onClick={()=>{setShowReviews(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⭐</span><span>Customer Reviews</span>{reviews.length>0&&<span style={{marginLeft:"auto",fontSize:9,color:C.gold,fontWeight:700}}>{reviews.length}</span>}</button>
                   <button onClick={()=>{setShowIconKey(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.a3}12`,border:`1px solid ${C.a3}33`,color:C.a3,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🔑</span><span>Icon Guide</span></button>
