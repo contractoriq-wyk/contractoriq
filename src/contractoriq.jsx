@@ -232,6 +232,13 @@ export default function ContractorIQv26(){
   const C=darkMode?DARK:LIGHT;
   const K=_K(C);
   useEffect(()=>{document.body.style.background=C.bg;document.body.style.color=C.text;},[darkMode]);
+  useEffect(()=>{
+    // Fix mobile viewport height (Chrome URL bar issue)
+    const setVH=()=>document.documentElement.style.setProperty("--vh",`${window.innerHeight*0.01}px`);
+    setVH();
+    window.addEventListener("resize",setVH);
+    return()=>window.removeEventListener("resize",setVH);
+  },[]);
   const [searchQ,setSearchQ]=useState("");
   const [searchResult,setSearchResult]=useState("");
   const [searchLoading,setSearchLoading]=useState(false);
@@ -934,46 +941,32 @@ ${pdfText.slice(0,24000)}`}]};
         <div style={{position:"fixed",inset:0,zIndex:10000,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0 0 70px"}} onClick={()=>{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}}>
           <div style={{background:C.card,borderRadius:20,padding:"24px 20px",maxWidth:420,width:"100%",border:`1px solid ${C.accent}44`,boxShadow:`0 0 40px ${C.accent}22`}} onClick={e=>e.stopPropagation()}>
             {[
-              {
-                icon:"👋",step:"Welcome",
-                title:"Welcome to DrayageIQ!",
-                body:"This is your command center for your trucking business. In 30 seconds you'll understand exactly where your money goes every week — and how to keep more of it. Let me show you around.",
-                tip:null,
-                action:"Let's Go →"
-              },
-              {
-                icon:"📄",step:"Step 1 of 4",
-                title:"Upload Your Settlement PDF",
-                body:"Tap the ANALYZER tab at the bottom. Then tap the big upload button and pick your settlement PDF from your Downloads folder. The AI reads it automatically — no typing needed.",
-                tip:"💡 Tip: You can upload multiple weeks at once by holding and selecting several PDFs.",
-                action:"Got it →"
-              },
-              {
-                icon:"📊",step:"Step 2 of 4",
-                title:"Read Your Dashboard",
-                body:"After uploading, your DASH tab shows your gross pay, net pay, deductions, and average revenue per mile. Tap any bar in the chart to zoom into that specific week. Green is good, red needs attention.",
-                tip:"💡 Tip: Tap any card header to collapse it and save screen space.",
-                action:"Next →"
-              },
-              {
-                icon:"🧠",step:"Step 3 of 4",
-                title:"Ask the AI Anything",
-                body:"Tap the AI tab and ask real questions like: 'What were my worst weeks?' or 'How much did I spend on fuel this month?' or 'Should I take a load to Hagerstown?'. It knows your actual numbers.",
-                tip:"💡 Tip: Pro Smart members get live diesel prices and weather included in every answer.",
-                action:"Almost done →"
-              },
-              {
-                icon:"🚀",step:"Step 4 of 4",
-                title:"You're Ready!",
-                body:"That's it. Upload your settlements weekly and DrayageIQ tracks everything automatically. Check your deduction breakdown each week — if any number jumps, you'll catch it early before it leaks money.",
-                tip:"💡 Tip: Tap ≡ Menu → View Plans & Pricing anytime to upgrade your plan.",
-                action:"Start Using DrayageIQ ✓"
-              },
+              {icon:"👋",step:"Welcome",title:"Welcome to DrayageIQ!",
+                body:"This is your personal business command center. Whether you're new to trucking apps or very experienced, DrayageIQ does one thing: shows you exactly where your money goes — and helps you keep more of it. Let me walk you through the 4 main tabs.",
+                tip:null,action:"Let's Go →"},
+              {icon:"📊",step:"Tab 1 of 4 — DASH",title:"DASH — Your Business Dashboard",
+                body:"DASH is your home base. Every time you upload a settlement, this tab updates automatically. You'll see your YTD Gross (total earnings), YTD Net (what you actually kept), total deductions, and average revenue per mile — all in one place. The bar chart shows your weekly net pay trend over time. Tap any bar to drill into that specific week.",
+                tip:"💡 Cards you'll use most: Weekly Net Trend, Deduction Breakdown (shows exactly what was taken out), Fuel vs Miles (truck efficiency), and Week Grades.",action:"Next →"},
+              {icon:"📋",step:"Tab 2 of 4 — ANALYZER",title:"ANALYZER — Upload & Manage Settlements",
+                body:"This is where you feed DrayageIQ your data. Tap the upload button and pick your settlement PDF — the AI reads it in seconds. No typing, no math. It extracts every load, every deduction, every mile automatically. You can also view your full move history, manage uploaded weeks, and delete or re-scan any week.",
+                tip:"💡 You can select multiple PDFs at once to scan a whole month in one go. The AI cross-checks the numbers so you can trust what it reads.",action:"Next →"},
+              {icon:"🧠",step:"Tab 3 of 4 — AI",title:"AI — Your Smart Business Advisor",
+                body:"The AI tab is like having a business advisor in your pocket who knows your actual numbers. Ask it anything — 'Which routes make me the most money?', 'Why was Week 22 so low?', 'How much did fuel cost me this year?'. Pro Smart members get even smarter answers using your live settlement data, real diesel prices, and current weather.",
+                tip:"💡 Try the quick-tap buttons for instant insights about your routes, RPM trends, and load profitability.",action:"Next →"},
+              {icon:"🚀",step:"Tab 4 of 4 — GROWTH",title:"GROWTH — Build Your Business",
+                body:"GROWTH shows you the big picture. It analyzes your trends, identifies your profit leaks, and shows you business funding you qualify for based on your documented income. The Weekly Action Plan gives you specific steps to improve this week. Fleet Pricing is here when you're ready to scale beyond one truck.",
+                tip:"💡 The 'Get Funded' section shows real lenders and loan amounts you qualify for based on your actual documented earnings — not a credit guess.",action:"Next →"},
+              {icon:"🔍",step:"Advanced — Your Data Cards",title:"Understanding Your Key Numbers",
+                body:"AVG RPM (Revenue Per Mile) — This is the most important number. It tells you how much you earn per mile driven. $3.00+ is strong. Below $2.50 means you need better loads or routes. LOADED % — What percent of your miles were paid loads vs empty runs. Higher is better. DEDUCTIONS — Everything taken out of your gross before you get paid: fuel advances, insurance, ELD, escrow, parking.",
+                tip:"💡 Escrow is YOUR money held by your carrier. It gets returned when you leave. Track it in the Deduction Breakdown card so you always know your balance.",action:"Next →"},
+              {icon:"✅",step:"You're All Set!",title:"Ready to Take Control",
+                body:"That's everything. Start by uploading your most recent settlement PDF in the ANALYZER tab. Then check your DASH — your numbers will be waiting. Check in weekly and DrayageIQ will do the rest. If you ever need a refresher, tap ≡ Menu → How to Use DrayageIQ.",
+                tip:"💡 Tip: Tap any ? button on any card for a plain-English explanation of exactly what that card shows.",action:"Start Using DrayageIQ ✓"},
             ].slice(onboardStep,onboardStep+1).map(s=>(
               <div key={s.step}>
                 {/* Progress dots */}
                 <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:16}}>
-                  {[0,1,2,3,4].map(i=>(
+                  {[0,1,2,3,4,5,6].map(i=>(
                     <div key={i} onClick={()=>setOnboardStep(i)} style={{width:i===onboardStep?20:6,height:6,borderRadius:3,background:i===onboardStep?C.accent:C.border,transition:"all 0.2s",cursor:"pointer"}}/>
                   ))}
                 </div>
@@ -992,10 +985,10 @@ ${pdfText.slice(0,24000)}`}]};
                 {/* Buttons */}
                 <div style={{display:"flex",gap:8}}>
                   {onboardStep>0&&<button onClick={()=>setOnboardStep(p=>p-1)} style={{padding:"10px 16px",borderRadius:10,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>← Back</button>}
-                  <button onClick={()=>{if(onboardStep<4){setOnboardStep(p=>p+1);}else{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}}} style={{flex:1,padding:"12px",borderRadius:10,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{s.action}</button>
+                  <button onClick={()=>{if(onboardStep<6){setOnboardStep(p=>p+1);}else{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}}} style={{flex:1,padding:"12px",borderRadius:10,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{s.action}</button>
                 </div>
                 {/* Skip */}
-                {onboardStep<4&&<div onClick={()=>{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}} style={{textAlign:"center",marginTop:10,fontSize:10,color:C.sub,cursor:"pointer"}}>Skip tour</div>}
+                {onboardStep<6&&<div onClick={()=>{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}} style={{textAlign:"center",marginTop:10,fontSize:10,color:C.sub,cursor:"pointer"}}>Skip tour</div>}
               </div>
             ))}
           </div>
@@ -1466,7 +1459,7 @@ ${pdfText.slice(0,24000)}`}]};
               {showMenu&&(
                 <>
                 <div style={{position:"fixed",inset:0,zIndex:9998,touchAction:"none"}} onClick={()=>setShowMenu(false)}/>
-                <div style={{position:"fixed",top:wide?108:96,right:8,left:wide?"auto":8,bottom:wide?"auto":70,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"8px 6px",zIndex:9999,minWidth:wide?210:"auto",maxWidth:wide?260:"none",maxHeight:wide?"calc(100vh - 120px)":"none",overflowY:"auto",WebkitOverflowScrolling:"touch",overscrollBehavior:"contain",touchAction:"pan-y",boxShadow:"0 8px 40px rgba(0,0,0,0.7)"}}>
+                <div style={{position:"fixed",top:wide?108:96,right:8,left:wide?"auto":8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"8px 6px",zIndex:9999,minWidth:wide?210:"auto",maxWidth:wide?260:"none",height:wide?"auto":`calc(var(--vh, 1vh) * 100 - 170px)`,maxHeight:wide?"calc(100vh - 120px)":"none",overflowY:"auto",WebkitOverflowScrolling:"touch",overscrollBehavior:"contain",touchAction:"pan-y",boxShadow:"0 8px 40px rgba(0,0,0,0.7)"}}>
 
                   {/* Account header */}
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
