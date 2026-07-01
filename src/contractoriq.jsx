@@ -1437,7 +1437,7 @@ ${pdfText.slice(0,24000)}`}]};
               {showMenu&&(
                 <>
                 <div style={{position:"fixed",inset:0,zIndex:9998}} onClick={()=>setShowMenu(false)}/>
-                <div style={{position:"fixed",top:58,right:8,width:Math.min(window.innerWidth-16,300),maxHeight:"calc(100vh - 80px)",background:C.card,border:`1px solid ${C.border}`,borderRadius:16,zIndex:9999,boxShadow:"0 8px 40px rgba(0,0,0,0.8)",display:"flex",flexDirection:"column",overflow:"hidden"}}><div style={{flex:1,minHeight:0,height:0,overflowY:"scroll",WebkitOverflowScrolling:"touch",padding:"8px 6px 20px"}}>
+                <div style={{position:"fixed",top:58,right:8,width:Math.min(window.innerWidth-16,300),maxHeight:"calc(100vh - 70px)",background:C.card,border:`1px solid ${C.border}`,borderRadius:16,zIndex:9999,boxShadow:"0 8px 40px rgba(0,0,0,0.8)",display:"flex",flexDirection:"column",overflow:"hidden"}}><div style={{flex:1,minHeight:0,height:0,overflowY:"scroll",WebkitOverflowScrolling:"touch",padding:"8px 6px 20px"}}>
 
                   {/* Account header */}
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
