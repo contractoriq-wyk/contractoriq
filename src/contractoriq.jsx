@@ -182,24 +182,56 @@ function getSB(){ if(!_sb && typeof window!=="undefined" && window.supabase){ _s
 
 // ═══ DESKTOP TICKER — Pure CSS marquee with live prices from /api/ticker ═══
 function TVTickerTape({symbols}){
+  const [prices,setPrices]=useState({});
+  useEffect(()=>{
+    async function load(){
+      try{
+        // Map TradingView proNames to Yahoo Finance symbols
+        const ymap={"AMEX:SPY":"SPY","AMEX:DIA":"DIA","NASDAQ:QQQ":"QQQ","AMEX:IWM":"IWM","CBOE:VIX":"%5EVIX","AMEX:GLD":"GLD","AMEX:USO":"USO","COINBASE:BTCUSD":"BTC-USD","NYSE:XOM":"XOM","NASDAQ:JBHT":"JBHT","NASDAQ:AAPL":"AAPL","NASDAQ:TSLA":"TSLA","NASDAQ:NVDA":"NVDA","NASDAQ:GOOGL":"GOOGL","NASDAQ:AMZN":"AMZN","NYSE:CVX":"CVX","NYSE:ODFL":"ODFL","COINBASE:ETHUSD":"ETH-USD","AMEX:TLT":"TLT","NASDAQ:META":"META"};
+        const syms=symbols.map(s=>ymap[s.proName]||s.proName.split(":").pop());
+        const r=await fetch("/api/ticker?symbols="+syms.join(","));
+        if(!r.ok)return;
+        const d=await r.json();
+        // remap yahoo key -> proName key
+        const out={};
+        symbols.forEach(s=>{
+          const ys=ymap[s.proName]||s.proName.split(":").pop();
+          if(d[ys])out[s.proName]=d[ys];
+        });
+        setPrices(out);
+      }catch(e){}
+    }
+    load();
+    const t=setInterval(load,90000);
+    return()=>clearInterval(t);
+  },[symbols.map(s=>s.proName).join(",")]);
+
+  const items=[...symbols,...symbols,...symbols];
   return(
-    <div style={{flex:1,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",background:"#070b15",height:46,minWidth:0}}>
-      <div style={{position:"absolute",left:0,top:0,bottom:0,width:24,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
-      <div style={{position:"absolute",right:0,top:0,bottom:0,width:24,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
-      <iframe
-        key={symbols.map(s=>s.proName).join(",")}
-        src={"https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#"+encodeURIComponent(JSON.stringify({
-          symbols:symbols,
-          showSymbolLogo:true,
-          colorTheme:"dark",
-          isTransparent:true,
-          displayMode:"adaptive",
-          locale:"en"
-        }))}
-        style={{width:"100%",height:46,border:"none",display:"block"}}
-        title="Live Market Ticker"
-        loading="lazy"
-      />
+    <div style={{flex:1,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",background:"#070b15",height:46}}>
+      {/* Fade masks */}
+      <div style={{position:"absolute",left:0,top:0,bottom:0,width:48,background:"linear-gradient(to right,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+      <div style={{position:"absolute",right:0,top:0,bottom:0,width:48,background:"linear-gradient(to left,#070b15,transparent)",zIndex:3,pointerEvents:"none"}}/>
+      {/* Scrolling track */}
+      <div style={{display:"flex",animation:"ticker-scroll 40s linear infinite",whiteSpace:"nowrap",willChange:"transform"}}>
+        {items.map((s,i)=>{
+          const sym=s.title||s.proName.split(":").pop();
+          const p=prices[s.proName];
+          const price=p?.price;
+          const pct=p?.pct;
+          const up=pct==null?null:pct>=0;
+          const col=price==null?"#8fa3c0":up?"#4ade80":"#f87171";
+          const priceStr=price==null?"···":price>=1000?price.toFixed(0):price>=10?price.toFixed(2):price.toFixed(4);
+          const pctStr=pct==null?"":( up?"+":"")+pct.toFixed(2)+"%";
+          return(
+            <div key={i} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"0 20px",borderRight:"1px solid #1a2535",height:46,flexShrink:0}}>
+              <span style={{fontSize:10,fontWeight:800,color:"#8fa3c0",letterSpacing:"0.07em",fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
+              <span style={{fontSize:11,fontWeight:800,color:col,fontFamily:"'IBM Plex Mono',monospace"}}>{priceStr}</span>
+              {pctStr&&<span style={{fontSize:9,fontWeight:700,color:col,fontFamily:"'IBM Plex Mono',monospace",padding:"1px 4px",borderRadius:3,background:col+"22"}}>{pctStr}</span>}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -231,17 +263,9 @@ export default function ContractorIQv26(){
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
   const C=darkMode?DARK:LIGHT;
   const K=_K(C);
+  const toggleCard=(id)=>setCollapsedCards(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
+  const isCollapsed=(id)=>collapsedCards.has(id);
   useEffect(()=>{document.body.style.background=C.bg;document.body.style.color=C.text;},[darkMode]);
-  useEffect(()=>{
-    // Fix mobile viewport height (Chrome URL bar issue)
-    const setVH=()=>document.documentElement.style.setProperty("--vh",`${window.innerHeight*0.01}px`);
-    setVH();
-    window.addEventListener("resize",setVH);
-    // Enable pinch-to-zoom on mobile
-    const vp=document.querySelector("meta[name=viewport]");
-    if(vp)vp.content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes";
-    return()=>window.removeEventListener("resize",setVH);
-  },[]);
   const [searchQ,setSearchQ]=useState("");
   const [searchResult,setSearchResult]=useState("");
   const [searchLoading,setSearchLoading]=useState(false);
@@ -259,7 +283,7 @@ export default function ContractorIQv26(){
   const [scanMsg,setScanMsg]=useState("");
   const [scanForm,setScanForm]=useState({week:"",from:"",to:"",gross:"",net:"",deds:"",moves:""});
   const [vendorPick,setVendorPick]=useState("CPG");
-  const [fuelMPG,setFuelMPG]=useState(()=>{try{const v=localStorage.getItem("ciq_mpg");return v?parseFloat(v):5.2;}catch{return 5.2;}});
+  const [fuelMPG,setFuelMPG]=useState(5.2);
   const [fuelPrice,setFuelPrice]=useState(6.22);
   const [milesBuffer,setMilesBuffer]=useState(5);
   const [focusMode,setFocusMode]=useState(false);
@@ -267,6 +291,7 @@ export default function ContractorIQv26(){
   const [showMenu,setShowMenu]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
   const [showInsurance,setShowInsurance]=useState(false);
+  const [showQR,setShowQR]=useState(false);
   const [showMarket,setShowMarket]=useState(false);
   const [showReviews,setShowReviews]=useState(false);
   const [showIconKey,setShowIconKey]=useState(false);
@@ -280,12 +305,6 @@ export default function ContractorIQv26(){
   const [activeOnlyVendor,setActiveOnlyVendor]=useState(null);
   const [helpCard,setHelpCard]=useState(null);
   const [collapsedCards,setCollapsedCards]=useState(new Set());
-  const [showOnboarding,setShowOnboarding]=useState(false);
-  const [onboardStep,setOnboardStep]=useState(0);
-  const [ownerNotes,setOwnerNotes]=useState(()=>{try{const s=localStorage.getItem("ciq_owner_notes");return s?JSON.parse(s):{};}catch{return {};}});
-  useEffect(()=>{try{localStorage.setItem("ciq_owner_notes",JSON.stringify(ownerNotes));}catch(e){};},[ownerNotes]);
-  const toggleCard=(id)=>setCollapsedCards(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
-  const isCollapsed=(id)=>collapsedCards.has(id);
   const [showProfile,setShowProfile]=useState(false);
   const [profile,setProfile]=useState(()=>{try{const s=localStorage.getItem("ciq_profile");return s?JSON.parse(s):{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}catch{return{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}});
   const [expenses,setExpenses]=useState(()=>{try{const s=localStorage.getItem("ciq_expenses");return s?JSON.parse(s):[];}catch{return[];}});
@@ -307,7 +326,7 @@ export default function ContractorIQv26(){
   const [oUses,setOUses]=useState(()=>{try{return parseInt(localStorage.getItem("ciq_o_uses")||"0");}catch{return 0;}});
   const [aiUses,setAiUses]=useState(()=>{try{return parseInt(localStorage.getItem("ciq_ai_uses")||"0");}catch{return 0;}});
   const [dismissedAds,setDismissedAds]=useState(()=>{try{const s=localStorage.getItem("ciq_dis_ads");return s?JSON.parse(s):[];}catch{return [];}});
-  const DEFAULT_TICKER=[{proName:"AMEX:SPY",title:"S&P 500"},{proName:"AMEX:DIA",title:"Dow 30"},{proName:"NASDAQ:QQQ",title:"Nasdaq"},{proName:"AMEX:IWM",title:"Russell 2000"},{proName:"NASDAQ:NVDA",title:"Nvidia"},{proName:"AMEX:GLD",title:"Gold ETF"},{proName:"AMEX:USO",title:"Oil ETF"},{proName:"COINBASE:BTCUSD",title:"Bitcoin"},{proName:"NYSE:XOM",title:"Exxon"},{proName:"NASDAQ:JBHT",title:"J.B. Hunt"}];
+  const DEFAULT_TICKER=[{proName:"AMEX:SPY",title:"S&P 500"},{proName:"AMEX:DIA",title:"Dow 30"},{proName:"NASDAQ:QQQ",title:"Nasdaq"},{proName:"AMEX:IWM",title:"Russell 2000"},{proName:"CBOE:VIX",title:"VIX"},{proName:"AMEX:GLD",title:"Gold ETF"},{proName:"AMEX:USO",title:"Oil ETF"},{proName:"COINBASE:BTCUSD",title:"Bitcoin"},{proName:"NYSE:XOM",title:"Exxon"},{proName:"NASDAQ:JBHT",title:"J.B. Hunt"}];
   const [tickerSyms,setTickerSyms]=useState(()=>{try{const s=localStorage.getItem("ciq_ticker");return s?JSON.parse(s):DEFAULT_TICKER;}catch{return DEFAULT_TICKER;}});
   const [showTickerEdit,setShowTickerEdit]=useState(false);
   const [tickerInput,setTickerInput]=useState("");
@@ -320,7 +339,7 @@ export default function ContractorIQv26(){
   const imgRef=useRef(null);
   const expRef=useRef(null);
   const docRef=useRef(null);
-  const [chat,setChat]=useState([{r:"a",t:"👋 Welcome to DrayageIQ! Upload your first settlement or explore demo mode. Ask me anything about your trucking business."}]);
+  const [chat,setChat]=useState([{r:"a",t:"👋 Welcome to ContractorIQ! Upload your first settlement or explore demo mode. Ask me anything about your trucking business."}]);
   const [chatIn,setChatIn]=useState("");
   const [chatLoad,setChatLoad]=useState(false);
   const [aiMode,setAiMode]=useState("chat");
@@ -465,11 +484,6 @@ export default function ContractorIQv26(){
         }
       }catch(e){ console.error("cloud pull",e&&e.message); }
       setCloudLoaded(true);
-      // Show onboarding for new users (first login, no data yet)
-      try{
-        const done=localStorage.getItem("ciq_onboarding_done");
-        if(!done){setShowOnboarding(true);setOnboardStep(0);}
-      }catch(e){}
     })();
   },[user]);
 
@@ -536,7 +550,7 @@ export default function ContractorIQv26(){
       try{
         // Reuse scanPDF logic inline
         const isImage=file.type.startsWith("image/");
-        const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Location City, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>,"vendor":"<Location Name from Notes, e.g. TA BALTIMORE or PILOT 179>","city":"<Location City from Notes>"}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually, each with their own vendor name.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0,"vendor":"","city":""},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
+        const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
         let pdfText="";
         if(!isImage&&window.pdfjsLib){
           try{
@@ -616,7 +630,7 @@ ${pdfText.slice(0,24000)}`}]};
     setScanning(true);setScanResult(null);setScanMsg("");
     try{
       const isImage=fileType==="image"||file.type.startsWith("image/");
-      const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Location City, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>,"vendor":"<Location Name from Notes, e.g. TA BALTIMORE or PILOT 179>","city":"<Location City from Notes>"}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually, each with their own vendor name.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0,"vendor":"","city":""},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
+      const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
 
       // For text-based PDFs, extract the actual text first (far more accurate than vision on dense tables)
       let pdfText="";
@@ -837,13 +851,13 @@ ${pdfText.slice(0,24000)}`}]};
     var docRows=docs.map(function(d){return "<tr><td>"+d.date+"</td><td>"+d.category+"</td><td>"+d.title+"</td><td>"+d.note+"</td></tr>";}).join("");
     var expSec=expRows?"<h2>Extra Expenses</h2><table><thead><tr><th>Date</th><th>Cat</th><th>Desc</th><th>Amt</th></tr></thead><tbody>"+expRows+"</tbody></table>":"";
     var docSec=docRows?"<h2>Documents on File</h2><table><thead><tr><th>Date</th><th>Type</th><th>Title</th><th>Notes</th></tr></thead><tbody>"+docRows+"</tbody></table>":"";
-    var html="<!DOCTYPE html><html><head><meta charset='UTF-8'/><title>Report</title><style>body{font-family:Arial,sans-serif;padding:28px;font-size:13px}h2{font-size:12px;font-weight:700;margin:20px 0 8px;text-transform:uppercase;border-bottom:2px solid #000}table{width:100%;border-collapse:collapse}th{text-align:left;padding:6px 8px;background:#f5f5f5;font-size:10px;text-transform:uppercase;border-bottom:2px solid #ddd}td{padding:6px 8px;border-bottom:1px solid #eee}</style></head><body><h1>DrayageIQ Report</h1><p>"+name+" - "+unit+" - "+new Date().toLocaleDateString()+"</p><p>YTD Gross: $"+tGross.toFixed(2)+" | YTD Net: $"+tNet.toFixed(2)+" | Margin: "+margin+"% | Weeks: "+allW.length+"</p>"+expSec+docSec+"</body></html>";
+    var html="<!DOCTYPE html><html><head><meta charset='UTF-8'/><title>Report</title><style>body{font-family:Arial,sans-serif;padding:28px;font-size:13px}h2{font-size:12px;font-weight:700;margin:20px 0 8px;text-transform:uppercase;border-bottom:2px solid #000}table{width:100%;border-collapse:collapse}th{text-align:left;padding:6px 8px;background:#f5f5f5;font-size:10px;text-transform:uppercase;border-bottom:2px solid #ddd}td{padding:6px 8px;border-bottom:1px solid #eee}</style></head><body><h1>ContractorIQ Report</h1><p>"+name+" - "+unit+" - "+new Date().toLocaleDateString()+"</p><p>YTD Gross: $"+tGross.toFixed(2)+" | YTD Net: $"+tNet.toFixed(2)+" | Margin: "+margin+"% | Weeks: "+allW.length+"</p>"+expSec+docSec+"</body></html>";
     var w=window.open("","_blank");if(w){w.document.write(html);w.document.close();w.focus();setTimeout(function(){w.print();},500);}
   }
 
   function emailReport(){
-    var name=profile.name||"YOUR COMPANY";var sub="DrayageIQ Report - "+name+" - "+new Date().toLocaleDateString();
-    var body="Business Report\n\nYTD Gross: $"+tGross.toFixed(2)+"\nYTD Net: $"+tNet.toFixed(2)+"\nMargin: "+margin+"%\nWeeks: "+allW.length+"\n\nGenerated by DrayageIQ";
+    var name=profile.name||"YOUR COMPANY";var sub="ContractorIQ Report - "+name+" - "+new Date().toLocaleDateString();
+    var body="Business Report\n\nYTD Gross: $"+tGross.toFixed(2)+"\nYTD Net: $"+tNet.toFixed(2)+"\nMargin: "+margin+"%\nWeeks: "+allW.length+"\n\nGenerated by ContractorIQ";
     window.location.href="mailto:?subject="+encodeURIComponent(sub)+"&body="+encodeURIComponent(body);
   }
 
@@ -895,7 +909,7 @@ ${pdfText.slice(0,24000)}`}]};
         <div style={{background:C.card,borderRadius:20,padding:"28px 22px",maxWidth:360,width:"100%",border:"1px solid "+C.border,boxShadow:"0 24px 60px rgba(0,0,0,0.6)"}}>
           <div style={{textAlign:"center",marginBottom:20}}>
             <div style={{fontSize:36,marginBottom:8}}>🚛</div>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:C.text,marginBottom:6}}>Unlock DrayageIQ</div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:C.text,marginBottom:6}}>Unlock ContractorIQ</div>
             <div style={{fontSize:12,color:C.sub,lineHeight:1.6}}>{upgradeSrc==="ai"?"You've used your "+FREE_AI+" free AI messages.":upgradeSrc==="scorer"?"You've used your "+FREE_OS+" free offer scores.":"Upgrade to access the full decision engine."}</div>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
@@ -939,90 +953,6 @@ ${pdfText.slice(0,24000)}`}]};
   return(
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
       {upgradeModal()}
-      {/* ═══ AI ONBOARDING GUIDE ═══ */}
-      {showOnboarding&&(
-        <div style={{position:"fixed",inset:0,zIndex:10000,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0 0 70px"}} onClick={()=>{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}}>
-          <div style={{background:C.card,borderRadius:20,padding:"24px 20px",maxWidth:420,width:"100%",border:`1px solid ${C.accent}44`,boxShadow:`0 0 40px ${C.accent}22`}} onClick={e=>e.stopPropagation()}>
-            {[
-              {icon:"👋",step:"Welcome",title:"Welcome to DrayageIQ!",
-                body:"This is your personal trucking business command center. Whether you drive for ContainerPort, Seagirt, or any drayage carrier — DrayageIQ reads your weekly settlement and shows you exactly where every dollar goes. You stop guessing. You start knowing. Let me walk you through everything.",
-                tip:null,action:"Let's Go →"},
-
-              {icon:"📊",step:"Tab 1 — DASH",title:"DASH: Your Business at a Glance",
-                body:"DASH is your home screen. It updates every time you upload a settlement. At the top you see your YTD Gross (everything your carrier paid you this year), YTD Net (what you actually took home after all deductions), total deductions, and your Average RPM (revenue per mile). These 4 numbers tell the story of your business health.",
-                tip:"💡 If your Net is much lower than your Gross, your deductions are eating into your pay. DrayageIQ shows you exactly which ones.",action:"Next →"},
-
-              {icon:"📈",step:"DASH Card — Weekly Net Trend",title:"Weekly Net Pay Trend Chart",
-                body:"This bar chart shows your take-home pay week by week. Each bar is one settlement. Taller bars mean better weeks. The colored line on top shows the direction — green when pay went up, red when it dropped. Tap any bar and EVERY card on the page updates to show that specific week's data. This is how you compare your best weeks to your worst.",
-                tip:"💡 Look for patterns. If you always drop in certain months, that's not bad luck — it's a pattern you can plan around.",action:"Next →"},
-
-              {icon:"🔍",step:"DASH Card — Deduction Breakdown",title:"Deduction Breakdown: Your Money Map",
-                body:"This card splits every dollar taken from your paycheck into 4 buckets. FUEL (red) — what you spent on fuel advances that week, changes every week. INSURANCE (purple) — fixed weekly premiums: physical damage, bobtail, occupational accident, roadside. OPERATIONS (gold) — fixed fees: ELD device, event recorder, license plate, parking. ESCROW (green) — your savings being held by the carrier.",
-                tip:"💡 Tap any bucket to expand and see every single line item. If insurance suddenly shows a different number than usual, that's a billing error — contact your carrier immediately.",action:"Next →"},
-
-              {icon:"⛽",step:"DASH Card — Fuel vs Miles",title:"Fuel vs Miles: Is Your Truck Healthy?",
-                body:"This card calculates your real MPG from your settlement data — actual gallons purchased divided by actual miles driven. Compare it to your baseline MPG target. If your MPG drops 2+ points below your baseline for multiple weeks, your truck may need a tuneup, your tires might need air, or you could be idling too much. This is your early warning system for maintenance.",
-                tip:"💡 The Unreported Miles slider accounts for yard moves, wrong turns, and short legs not on your settlement. Adjust it to see your true fuel cost.",action:"Next →"},
-
-              {icon:"🏆",step:"DASH Card — Week Grades",title:"Week Grades: Your Report Card",
-                body:"Every week gets a grade from A to F based on your net margin, average RPM, loaded percentage, and trend direction. A = excellent week, you're firing on all cylinders. B = strong week. C = average, room to improve. D = below your own history. F = something went wrong — check that week's deductions and routes closely. Tap any grade pill to jump to that week's details.",
-                tip:"💡 Don't compare yourself to other drivers. DrayageIQ grades you against YOUR own history, so the grades reflect improvement over time.",action:"Next →"},
-
-              {icon:"💰",step:"DASH Card — Savings & Escrow",title:"Savings & Escrow: YOUR Money",
-                body:"Escrow is money your carrier holds as a security deposit. ESCROW REGULAR builds toward a $2,500 target — when you leave the carrier, this is returned to you. 2290 ESCROW covers your federal Heavy Highway Vehicle Use Tax (IRS Form 2290, due annually). Both are YOUR money, not fees. The progress bar shows how close you are to your escrow target.",
-                tip:"💡 Never leave a carrier without requesting your escrow balance in writing. DrayageIQ tracks it for you week by week from your settlements.",action:"Next →"},
-
-              {icon:"🚛",step:"DASH Card — Move Performance",title:"Move Performance: Every Route Analyzed",
-                body:"This table shows every single load from your settlement — every LOAD (paid trip) and EMPTY (unpaid repositioning). For each move you see: origin and destination, miles, rate, FSC (Fuel Surcharge), total pay, and RPM. Moves are graded A through C. Grade A moves are your most profitable routes. Grade C means the load didn't pay well per mile.",
-                tip:"💡 Look at your Grade C moves. These are the loads dragging your average down. Next time that load is offered, negotiate the rate or decline it.",action:"Next →"},
-
-              {icon:"📋",step:"Tab 2 — ANALYZER",title:"ANALYZER: Upload Your Settlements",
-                body:"This is where you feed DrayageIQ your data. Tap the upload button, pick your settlement PDF from your Downloads folder, and the AI reads it in under 30 seconds. No typing. No math. It finds every load, every deduction, every fuel advance, every mile. The Add Settlement section also lets you paste text or type numbers manually if needed.",
-                tip:"💡 You can select multiple PDFs at once to upload several weeks in one go. The AI processes them one by one automatically.",action:"Next →"},
-
-              {icon:"🧠",step:"Tab 3 — AI",title:"AI Advisor: Ask Anything",
-                body:"The AI tab is your business advisor who knows your actual numbers. Ask real questions in plain English: 'What were my worst weeks this year?', 'How much did fuel cost me total?', 'Am I making more or less than 3 months ago?', 'Should I take a Baltimore to Hagerstown load at $200?'. It answers using YOUR data — not generic advice.",
-                tip:"💡 Pro Smart members get even smarter answers with live national diesel prices, real-time weather on your routes, and full settlement data in every response.",action:"Next →"},
-
-              {icon:"🚀",step:"Tab 4 — GROWTH",title:"GROWTH: Build Your Business",
-                body:"GROWTH is your big-picture strategy tab. Business Health Score grades your overall operation. Weekly Action Plan gives you 2-3 specific things to do THIS week to improve. Offer Scorer lets you test any load offer — enter the rate, miles, and fuel cost and it tells you if the load is worth taking. Get Funded shows real lenders who will work with your 1099 documented income.",
-                tip:"💡 The Get Funded section uses your actual YTD earnings to show loan and line-of-credit amounts you likely qualify for. This is real money available to grow your business.",action:"Next →"},
-
-              {icon:"✅",step:"You're Ready!",title:"You Now Know Everything",
-                body:"That's the full tour. Start by uploading your most recent settlement in the ANALYZER tab. Your numbers will appear on DASH instantly. Come back every week after your settlement drops and DrayageIQ keeps track of everything. Any time you need a refresher, tap ≡ Menu → How to Use DrayageIQ.",
-                tip:"💡 Every card has a ? button. Tap it anytime for a quick reminder of what that card means.",action:"Start Using DrayageIQ ✓"},
-            ].slice(onboardStep,onboardStep+1).map(s=>(
-              <div key={s.step}>
-                {/* Progress dots */}
-                <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:16}}>
-                  {Array.from({length:12},(_, i)=>i).map(i=>(
-                    <div key={i} onClick={()=>setOnboardStep(i)} style={{width:i===onboardStep?20:6,height:6,borderRadius:3,background:i===onboardStep?C.accent:C.border,transition:"all 0.2s",cursor:"pointer"}}/>
-                  ))}
-                </div>
-                {/* Icon + Step label */}
-                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-                  <div style={{fontSize:32}}>{s.icon}</div>
-                  <div>
-                    <div style={{fontSize:9,fontWeight:700,color:C.accent,letterSpacing:"0.1em",textTransform:"uppercase"}}>{s.step}</div>
-                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.text,lineHeight:1.1}}>{s.title}</div>
-                  </div>
-                </div>
-                {/* Body */}
-                <div style={{fontSize:13,color:C.sub,lineHeight:1.7,marginBottom:s.tip?10:16}}>{s.body}</div>
-                {/* Tip */}
-                {s.tip&&<div style={{padding:"8px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,fontSize:11,color:C.gold,lineHeight:1.5,marginBottom:16}}>{s.tip}</div>}
-                {/* Buttons */}
-                <div style={{display:"flex",gap:8}}>
-                  {onboardStep>0&&<button onClick={()=>setOnboardStep(p=>p-1)} style={{padding:"10px 16px",borderRadius:10,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>← Back</button>}
-                  <button onClick={()=>{if(onboardStep<11){setOnboardStep(p=>p+1);}else{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}}} style={{flex:1,padding:"12px",borderRadius:10,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{s.action}</button>
-                </div>
-                {/* Skip */}
-                {onboardStep<11&&<div onClick={()=>{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}} style={{textAlign:"center",marginTop:10,fontSize:10,color:C.sub,cursor:"pointer"}}>Skip tour</div>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* INSURANCE MODAL */}
       {showInsurance&&(
@@ -1044,7 +974,7 @@ ${pdfText.slice(0,24000)}`}]};
             ))}
             <div style={{background:"linear-gradient(135deg,#1a1a3a,#0d1525)",borderRadius:16,padding:"18px 16px",marginBottom:14,border:"2px solid #a78bfa55"}}>
               <div style={{fontSize:10,fontWeight:800,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>🛡️ Your Trusted Agents</div>
-              {[{name:"Nelle Kigembe",role:"Licensed Insurance Producer",zone:"🌊 West Coast",color:"#a78bfa",link:"https://calendly.com/nellekigembe/60min?utm_source=drayageiq&utm_medium=app&utm_campaign=protect_income"},{name:"Wemma Kigembe",role:"Licensed Producer · DrayageIQ Founder",zone:"🏛️ DMV Area",color:"#00ffcc",link:"https://calendly.com/wkigembe-crvm/30min?utm_source=drayageiq&utm_medium=app&utm_campaign=protect_income"}].map(ag=>(
+              {[{name:"Nelle Kigembe",role:"Licensed Insurance Producer",zone:"🌊 West Coast",color:"#a78bfa",link:"https://calendly.com/nellekigembe/60min?utm_source=contractoriq&utm_medium=app&utm_campaign=protect_income"},{name:"Wemma Kigembe",role:"Licensed Producer · ContractorIQ Founder",zone:"🏛️ DMV Area",color:"#00ffcc",link:"https://calendly.com/wkigembe-crvm/30min?utm_source=contractoriq&utm_medium=app&utm_campaign=protect_income"}].map(ag=>(
                 <div key={ag.name} style={{display:"flex",gap:12,alignItems:"flex-start",background:"#ffffff08",borderRadius:12,padding:"13px",marginBottom:10}}>
                   <div style={{width:48,height:48,borderRadius:"50%",background:`linear-gradient(135deg,${ag.color},${ag.color}88)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>👤</div>
                   <div style={{flex:1}}>
@@ -1062,7 +992,25 @@ ${pdfText.slice(0,24000)}`}]};
       )}
 
       {/* QR MODAL */}
-            {/* MARKET MODAL */}
+      {showQR&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.95)",display:"flex",flexDirection:"column"}} onClick={()=>setShowQR(false)}>
+          <div style={{background:C.card,borderRadius:"0 0 20px 20px",padding:"16px",flexShrink:0,display:"flex",justifyContent:"space-between",alignItems:"center"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:C.text}}>📱 Transfer Data via QR</div>
+            <button onClick={()=>setShowQR(false)} style={{padding:"7px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
+          </div>
+          <div style={{flex:1,overflowY:"auto",padding:"20px 16px"}} onClick={e=>e.stopPropagation()}>
+            <div style={{background:C.card,borderRadius:20,padding:"24px",marginBottom:16,textAlign:"center",border:`2px solid #a78bfa44`}}>
+              <div style={{fontSize:11,fontWeight:700,color:"#a78bfa",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:16}}>Scan on your other device</div>
+              <div style={{background:"#fff",borderRadius:16,padding:16,display:"inline-block",marginBottom:14}}>
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("CIQDATA:"+btoa(JSON.stringify({addedW,profile:{name:profile?.name||"",company:profile?.company||""},exported:new Date().toISOString()})).substring(0,1800))}`} alt="QR Code" style={{width:220,height:220,display:"block"}}/>
+              </div>
+              <div style={{fontSize:11,color:C.sub,lineHeight:1.7}}>Open ContractorIQ on your other device → Menu → Transfer Data via QR → Scan this code</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MARKET MODAL */}
       {showMarket&&(
         <div style={{position:"fixed",inset:0,zIndex:9999,background:C.bg,display:"flex",flexDirection:"column"}}>
           <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
@@ -1164,7 +1112,7 @@ ${pdfText.slice(0,24000)}`}]};
           <div style={{background:C.card,borderRadius:24,padding:"28px 22px",maxWidth:420,width:"100%",border:`1px solid ${C.border}`,boxShadow:"0 32px 80px rgba(0,0,0,0.9)"}}>
             <div style={{textAlign:"center",marginBottom:20}}>
               <div style={{fontSize:40,marginBottom:12}}>💰</div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.text,marginBottom:8}}>About DrayageIQ</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.text,marginBottom:8}}>About ContractorIQ</div>
               <div style={{fontSize:11,color:C.sub,lineHeight:1.8}}>Your personal profit analyst — built for every gig worker who deserves to know the truth about their business.</div>
             </div>
             <div style={{padding:"10px 14px",background:`${C.gold}15`,border:`2px solid ${C.gold}55`,borderRadius:12,marginBottom:16}}>
@@ -1260,7 +1208,7 @@ ${pdfText.slice(0,24000)}`}]};
               {/* Value tip */}
               <div style={{display:"flex",alignItems:"flex-start",gap:9,padding:"10px 13px",background:"rgba(251,191,36,0.05)",borderRadius:10,border:"1px solid rgba(251,191,36,0.16)",marginBottom:wide?20:14}}>
                 <span style={{fontSize:13,flexShrink:0,marginTop:1}}>⚡</span>
-                <div style={{fontSize:10,color:"#fbbf24",lineHeight:1.65}}><strong>One avoided bad load = $300–$800 back in your pocket.</strong> DrayageIQ pays for itself immediately.</div>
+                <div style={{fontSize:10,color:"#fbbf24",lineHeight:1.65}}><strong>One avoided bad load = $300–$800 back in your pocket.</strong> ContractorIQ pays for itself immediately.</div>
               </div>
 
               {/* SIGN IN FORM — embedded at bottom of welcome screen */}
@@ -1435,7 +1383,7 @@ ${pdfText.slice(0,24000)}`}]};
                 {proName:"NYSE:UNP",     title:"Union Pacific"},
                 {proName:"NYSE:UPS",     title:"UPS"},
                 {proName:"COINBASE:ETHUSD",title:"Ethereum"},
-                {proName:"NYSE:WMT",     title:"Walmart"},
+                {proName:"AMEX:TLT",     title:"Bonds ETF"},
                 {proName:"NASDAQ:META",  title:"Meta"},
               ].map(function(p){
                 var active=!!tickerSyms.find(function(s){return s.proName===p.proName;});
@@ -1478,6 +1426,7 @@ ${pdfText.slice(0,24000)}`}]};
             <TB t="ai" l="🧠 AI"/>
             <TB t="growth" l="🚀 Growth"/>
             <button onClick={()=>setShowInsurance(true)} style={{padding:"8px 12px",borderRadius:8,background:"linear-gradient(135deg,#a78bfa22,#6d28d922)",border:"2px solid #a78bfa",boxShadow:"0 0 12px #a78bfa33",color:"#a78bfa",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>🛡️ Protect</button>
+            <button onClick={()=>setShowQR(true)} style={{padding:"8px 12px",borderRadius:8,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>📱 QR</button>
             <button onClick={()=>setFocusMode(p=>!p)} style={{padding:"8px 12px",borderRadius:8,background:focusMode?C.gold:`${C.gold}22`,border:`2px solid ${C.gold}`,color:focusMode?"#000":C.gold,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{focusMode?"⚡ ON":"⚡ Focus"}</button>
           </div>
           <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
@@ -1485,28 +1434,10 @@ ${pdfText.slice(0,24000)}`}]};
               <button onClick={()=>setShowMenu(p=>!p)} style={{padding:"8px 12px",borderRadius:8,background:showMenu?`${C.a3}22`:C.raised,border:`1px solid ${showMenu?C.a3:C.border}`,color:showMenu?C.a3:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5,fontWeight:700,whiteSpace:"nowrap"}}>
                 <span>☰</span><span>Menu</span>
               </button>
-              showMenu&&(
+              {showMenu&&(
                 <>
-                {/* Backdrop — tap outside to close */}
                 <div style={{position:"fixed",inset:0,zIndex:9998}} onClick={()=>setShowMenu(false)}/>
-                {/* Floating panel */}
-                <div style={{
-                  position:"fixed",
-                  top:wide?64:58,
-                  right:8,
-                  width:wide?280:Math.min(window.innerWidth-16,320),
-                  maxHeight:"calc(100vh - 80px)",
-                  background:C.card,
-                  border:`1px solid ${C.border}`,
-                  borderRadius:16,
-                  zIndex:9999,
-                  boxShadow:"0 8px 40px rgba(0,0,0,0.7)",
-                  display:"flex",
-                  flexDirection:"column",
-                  overflow:"hidden"
-                }}>
-                  {/* Scrollable content */}
-                  <div style={{flex:1,minHeight:0,height:0,overflowY:"scroll",WebkitOverflowScrolling:"touch",padding:"8px 6px 16px"}}>
+                <div style={{position:"fixed",top:58,right:8,width:Math.min(window.innerWidth-16,300),maxHeight:"calc(100vh - 80px)",background:C.card,border:`1px solid ${C.border}`,borderRadius:16,zIndex:9999,boxShadow:"0 8px 40px rgba(0,0,0,0.8)",display:"flex",flexDirection:"column",overflow:"hidden"}}><div style={{flex:1,minHeight:0,height:0,overflowY:"scroll",WebkitOverflowScrolling:"touch",padding:"8px 6px 20px"}}>
 
                   {/* Account header */}
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
@@ -1519,7 +1450,7 @@ ${pdfText.slice(0,24000)}`}]};
                     </div>
                   </div>
 
-  {/* ── ACCOUNT ── */}
+                  {/* ── ACCOUNT ── */}
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Account</div>
                   <button onClick={()=>{setShowProfile(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>👤</span><span>My Profile</span></button>
                   <button onClick={()=>{setShowWelcome(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(0,255,204,0.08)",border:"1px solid rgba(0,255,204,0.25)",color:"#00ffcc",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700}}><span>💎</span><span>View Plans & Pricing</span></button>
@@ -1539,7 +1470,6 @@ ${pdfText.slice(0,24000)}`}]};
                   {/* ── DISCOVER ── */}
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Discover</div>
                   <button onClick={()=>{setShowAbout(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🚛</span><span>About DrayageIQ</span></button>
-                  <button onClick={()=>{setOnboardStep(0);setShowOnboarding(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,color:C.accent,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🎓</span><span>How to Use DrayageIQ</span></button>
                   <button onClick={()=>{setShowMarket(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>📊</span><span>Market Overview</span></button>
                   <button onClick={()=>{setShowReviews(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⭐</span><span>Customer Reviews</span>{reviews.length>0&&<span style={{marginLeft:"auto",fontSize:9,color:C.gold,fontWeight:700}}>{reviews.length}</span>}</button>
                   <button onClick={()=>{setShowIconKey(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.a3}12`,border:`1px solid ${C.a3}33`,color:C.a3,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🔑</span><span>Icon Guide</span></button>
@@ -1552,10 +1482,82 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Support</div>
                   <a href="https://whatsapp.com/channel/0029VazNGCd0bIdZvxjLIB2L" target="_blank" rel="noreferrer" style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700,textDecoration:"none",boxSizing:"border-box"}}><span>💬</span><div style={{flex:1}}><div>WhatsApp Support</div><div style={{fontSize:9,fontWeight:400,color:C.sub,marginTop:1}}>Join our channel · Get help fast</div></div><span style={{fontSize:8,fontWeight:800,color:"#080c16",background:"#25D366",borderRadius:20,padding:"2px 7px"}}>LIVE</span></a>
 
-                  </div>
+                </div>
                 </div>
                 </>
               )}
+            </div>
+            {isPro?(null):trialDaysLeft>0?(
+              <div style={{padding:"6px 9px",borderRadius:8,background:C.gold+"20",border:"1px solid "+C.gold+"55",fontSize:9,fontWeight:700,color:"#fbbf24",flexShrink:0}}>{trialDaysLeft}d left</div>
+            ):(
+              <button onClick={()=>openUpgrade("header")} style={{padding:"7px 11px",borderRadius:8,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",border:"none",fontSize:10,fontWeight:800,color:"#000",cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Upgrade</button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* SEARCH BAR */}
+      <div style={{background:`linear-gradient(135deg,${C.a3}18,${C.accent}12)`,borderBottom:`2px solid ${C.a3}55`,padding:"10px 14px"}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{flex:1,display:"flex",alignItems:"center",gap:8,background:C.surf,borderRadius:12,padding:"0 12px",border:`2px solid ${C.a3}66`}}>
+            <span style={{fontSize:15,flexShrink:0}}>{searchLoading?"⏳":"🔍"}</span>
+            <input value={searchQ||""} onChange={e=>setSearchQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&(searchQ||"").trim())runSearch();}} placeholder={isSmart?"Ask anything — I know your numbers, live diesel & weather...":"Ask anything: routes, HOS rules, fuel tips, regs..."} style={{background:"none",border:"none",color:C.text,fontSize:12,fontFamily:"inherit",padding:"11px 0",width:"100%",outline:"none"}}/>
+            {(searchQ||"").trim()&&<button onClick={()=>{setSearchQ("");setSearchResult("");}} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer",padding:"0 4px",flexShrink:0}}>×</button>}
+          </div>
+          <button onClick={()=>runSearch()} disabled={!(searchQ||"").trim()||searchLoading} style={{padding:"11px 16px",borderRadius:12,background:!(searchQ||"").trim()||searchLoading?C.raised:`linear-gradient(135deg,${C.a3},${C.accent})`,color:!(searchQ||"").trim()||searchLoading?C.sub:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{searchLoading?"⏳ ...":"Search"}</button>
+        </div>
+        {!searchResult&&!searchLoading&&(
+          <div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:2}}>
+            {(isSmart?["📊 Analyze my RPM trend","⛽ Cost of next load","🌤️ Weather on my route","💰 Should I take this load?","📈 How to improve my net"]:["⛽ MPG tips","📋 HOS rules","🚛 Load planning","💰 Fuel surcharge math","🔧 Tire blowout tips"]).map(s=>(
+              <button key={s} onClick={()=>{const q=s.replace(/^[^\s]+\s/,"");setSearchQ(q);setTimeout(()=>runSearch(q),50);}} style={{padding:"5px 11px",borderRadius:20,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:"#a78bfa",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{s}</button>
+            ))}
+          </div>
+        )}
+        {searchResult&&(
+          <div style={{marginTop:10,padding:"12px 14px",background:C.card,borderRadius:10,border:`1px solid ${C.a3}55`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap"}}>
+            {searchResult}<div style={{marginTop:8,padding:"7px 10px",borderRadius:8,background:isSmart?`${C.accent}12`:`${C.gold}12`,border:`1px solid ${isSmart?C.accent:C.gold}33`,fontSize:10,color:C.sub,lineHeight:1.5}}>{isSmart?"⚡ Smart AI — answered using your live settlement data, real diesel prices & weather.":"💡 Based on general knowledge — not live data. Upgrade to Pro Smart for live data & deeper answers."}</div><button onClick={()=>{setSearchResult("");setSearchQ("");}} style={{display:"block",marginTop:8,background:"none",border:"none",color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:0}}>✕ Clear</button>
+          </div>
+        )}
+      </div>
+
+      {/* SETTINGS PANEL */}
+      {showSettings&&(
+        <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div style={{fontSize:12,fontWeight:700,color:C.text}}>⚙️ Display Settings</div>
+            <button onClick={()=>setShowSettings(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:wide?"repeat(3,1fr)":"1fr",gap:10}}>
+            <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Show / Hide Vendors</div>
+              {vendorKeys.filter(vk=>allW.some(w=>detectVendor(w)===vk)).map(vk=>{
+                const v=VENDORS[vk],hidden=hiddenVendors.includes(vk),isOnly=activeOnlyVendor===vk;
+                return(<div key={vk} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                  <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:8,height:8,borderRadius:"50%",background:v.color,opacity:hidden?0.3:1}}/><span style={{fontSize:11,color:hidden?C.sub:C.text}}>{v.short}</span></div>
+                  <div style={{display:"flex",gap:5}}>
+                    <button onClick={()=>{setActiveOnlyVendor(isOnly?null:vk);setHiddenVendors([]);}} style={{padding:"3px 8px",borderRadius:5,background:isOnly?`${v.color}22`:"transparent",border:`1px solid ${isOnly?v.color:C.border}`,color:isOnly?v.color:C.sub,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{isOnly?"Only ✓":"Only"}</button>
+                    <button onClick={()=>setHiddenVendors(p=>hidden?p.filter(x=>x!==vk):[...p,vk])} style={{padding:"3px 8px",borderRadius:5,background:hidden?`${C.red}22`:"transparent",border:`1px solid ${hidden?C.red:C.border}`,color:hidden?C.red:C.sub,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{hidden?"Show":"Hide"}</button>
+                  </div>
+                </div>);
+              })}
+            </div>
+            <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Privacy</div>
+              {[{label:"Hide owner name",val:hideOwnerName,set:setHideOwnerName},{label:"Hide unit number",val:hideUnitNum,set:setHideUnitNum}].map(item=>(
+                <div key={item.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                  <span style={{fontSize:11,color:C.text}}>{item.label}</span>
+                  <button onClick={()=>item.set(p=>!p)} style={{width:40,height:20,borderRadius:10,background:item.val?C.accent:C.border,border:"none",cursor:"pointer",position:"relative",flexShrink:0}}><div style={{width:14,height:14,borderRadius:"50%",background:"white",position:"absolute",top:3,left:item.val?23:3,transition:"left 0.15s"}}/></button>
+                </div>
+              ))}
+            </div>
+            <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Active Filters</div>
+              <div style={{fontSize:11,color:visibleW.length===allW.length?C.sub:C.gold,marginBottom:6}}>{visibleW.length===allW.length?"✓ All weeks visible":"⚠️ "+visibleW.length+" of "+allW.length+" weeks shown"}</div>
+              <button onClick={()=>{setHiddenVendors([]);setActiveOnlyVendor(null);setHideOwnerName(false);setHideUnitNum(false);}} style={{width:"100%",marginTop:10,padding:"6px",borderRadius:6,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Reset All</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* PROFILE PANEL */}
       {showProfile&&(
@@ -1618,7 +1620,7 @@ ${pdfText.slice(0,24000)}`}]};
             if(insightCount<3)return null;
             return(
               <div style={{padding:"10px 14px",background:"linear-gradient(135deg,"+C.a3+"12,"+C.accent+"08)",borderRadius:9,border:"1px solid "+C.a3+"33",fontSize:11,marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
-                <div><div style={{fontWeight:700,color:"#a78bfa",marginBottom:1}}>💡 DrayageIQ is working for you</div><div style={{fontSize:10,color:C.sub}}>{insightCount} data points tracked · {badLoads>0?badLoads+" low-value routes flagged":allMoves.length+" routes analyzed"}</div></div>
+                <div><div style={{fontWeight:700,color:"#a78bfa",marginBottom:1}}>💡 ContractorIQ is working for you</div><div style={{fontSize:10,color:C.sub}}>{insightCount} data points tracked · {badLoads>0?badLoads+" low-value routes flagged":allMoves.length+" routes analyzed"}</div></div>
                 {!hasAccess&&<button onClick={()=>openUpgrade("value")} style={{padding:"5px 11px",borderRadius:7,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",color:"#000",fontSize:10,fontWeight:700,border:"none",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Upgrade</button>}
               </div>
             );
@@ -1685,48 +1687,11 @@ ${pdfText.slice(0,24000)}`}]};
           {/* TREND CHART — key-based bar selection (W15 fix) */}
           <div style={K({marginBottom:16,padding:"14px 16px"})}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:wide?"300px":"110px"}}>📈 {wide?"Weekly Net Pay Trend":"Net Trend"}{helpBtn("trend")}</div>
+              <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.08em"}}>📈 Weekly Net Pay Trend{helpBtn("trend")}</div>
               <div style={{display:"flex",gap:10}}>{vendorStats.map(v=><div key={v.key} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:8,height:8,borderRadius:"50%",background:v.color}}/><span style={{fontSize:9,color:C.sub}}>{v.short}</span></div>)}</div>
             </div>
             {helpModal("trend")}
-            <div style={{position:"relative"}}>
-              {/* Trend line SVG overlay — anchored exactly to bar tops */}
-              {allW.length>1&&(()=>{
-                const maxNet=Math.max(...allW.map(x=>x.net));
-                const n=allW.length;
-                // Bar geometry: container height=108, padding-top=18 (for net label),
-                // bar zone height=72, bars sit at bottom of that zone (justifyContent:flex-end)
-                const NET_LABEL_H=14;// approx space the $X.Xk label + margin takes
-                const BAR_ZONE_H=72;
-                const pts=allW.map((w,i)=>{
-                  const xPct=((i+0.5)/n)*100;
-                  const h=Math.max(8,(w.net/maxNet)*68);
-                  // Bar top y-position within the 108px tall container
-                  const yPx=18+NET_LABEL_H+(BAR_ZONE_H-h);
-                  return {x:xPct,y:yPx,net:w.net};
-                });
-                const gradId="tg"+Math.random().toString(36).slice(2,8);
-                const pathD=pts.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(2)+","+p.y.toFixed(2)).join(" ");
-                return(
-                  <svg style={{position:"absolute",top:0,left:0,width:"100%",height:"108px",pointerEvents:"none",zIndex:5}} preserveAspectRatio="none" viewBox="0 0 100 108">
-                    <defs>
-                      <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
-                        {pts.map((p,i)=>{
-                          const up=i===0?true:p.net>=pts[i-1].net;
-                          const color=up?"#4ade80":"#f87171";
-                          const offsetPct=(p.x).toFixed(1);
-                          return <stop key={i} offset={offsetPct+"%"} stopColor={color}/>;
-                        })}
-                      </linearGradient>
-                    </defs>
-                    <path d={pathD} fill="none" stroke={"url(#"+gradId+")"} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" opacity="0.95"/>
-                    {pts.map((p,i)=>(
-                      <circle key={i} cx={p.x} cy={p.y} r="1.6" fill={i===0?"#8fa3c0":(p.net>=pts[i-1].net?"#4ade80":"#f87171")} stroke="#0b0f1c" strokeWidth="0.5"/>
-                    ))}
-                  </svg>
-                );
-              })()}
-              <div style={{display:"flex",alignItems:"flex-end",gap:wide?6:3,height:108,padding:"18px 2px 0",overflowX:wide?"visible":"auto",position:"relative",zIndex:2}}>
+            <div style={{display:"flex",alignItems:"flex-end",gap:4,height:80,padding:"0 2px"}}>
               {allW.map((w,i)=>{
                 const maxNet=Math.max(...allW.map(x=>x.net));
                 const h=Math.max(8,(w.net/maxNet)*68);
@@ -1767,7 +1732,6 @@ ${pdfText.slice(0,24000)}`}]};
                 );
               })}
             </div>
-            </div>
             <div style={{fontSize:9,color:C.sub,marginTop:8,textAlign:"center"}}>Tap any bar to sync all cards · W{allW[sD]?.week} selected</div>
           </div>
 
@@ -1800,8 +1764,8 @@ ${pdfText.slice(0,24000)}`}]};
                      <div key={i} style={{padding:"8px 10px",borderBottom:i<fuelA.length-1?`1px solid #f8717122`:"none"}}>
                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                          <div style={{flex:1}}>
-                           <div style={{fontSize:11,fontWeight:700,color:"#f0f6ff"}}>Fuel Advance {fuelA.length>1?`#${i+1}`:""}{d.vendor?` — ${d.vendor}`:""}</div>
-                           {d.gal>0&&<div style={{fontSize:9,color:"#8fa3c0",marginTop:2}}>{d.gal} gal @ ${(d.ppg||0).toFixed(3)}/gal{d.inv?` · INV #${d.inv}`:""}{d.city?` · ${d.city}`:""}</div>}
+                           <div style={{fontSize:11,fontWeight:700,color:"#f0f6ff"}}>Fuel Advance {fuelA.length>1?`#${i+1}`:""}</div>
+                           {d.gal>0&&<div style={{fontSize:9,color:"#8fa3c0",marginTop:2}}>{d.gal} gal @ ${(d.ppg||0).toFixed(3)}/gal{d.inv?` · INV #${d.inv}`:""}</div>}
                          </div>
                          <div style={{fontSize:12,fontWeight:800,color:"#f87171",flexShrink:0}}>-${d.a.toFixed(2)}</div>
                        </div>
@@ -1863,17 +1827,6 @@ ${pdfText.slice(0,24000)}`}]};
                             <div style={{fontSize:9,color:"#8fa3c0"}}>{b.pct}% of gross</div>
                             <div style={{fontSize:9,color:b.color,fontWeight:700}}>{b.items.length} item{b.items.length!==1?"s":""} {helpCard===b.id+"_open"?"▲":"▼"}</div>
                           </div>
-                          {/* Net-of-rebate line — fuel only */}
-                          {b.id==="ded_fuel"&&dw.rebate>0&&(()=>{
-                            const netFuel=Math.max(0,fuelTotal-dw.rebate);
-                            const netPct=dw.gross>0?(netFuel/dw.gross*100).toFixed(1):0;
-                            return(
-                              <div style={{marginTop:4,paddingTop:4,borderTop:`1px solid ${b.color}22`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                                <div style={{fontSize:8,color:"#4ade80"}}>↳ net of rebate</div>
-                                <div style={{fontSize:9,color:"#4ade80",fontWeight:700}}>${netFuel.toFixed(0)} · {netPct}%</div>
-                              </div>
-                            );
-                          })()}
                           {/* Mini bar */}
                           <div style={{height:3,background:`${b.color}25`,borderRadius:2,marginTop:7,overflow:"hidden"}}>
                             <div style={{height:"100%",width:`${Math.min(b.pct*3,100)}%`,background:b.color,borderRadius:2}}/>
@@ -1911,111 +1864,12 @@ ${pdfText.slice(0,24000)}`}]};
                     ))}
 
                     {/* Grand total bar */}
-                    <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4,marginBottom:14}}>
+                    <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
                       <div style={{fontSize:11,fontWeight:700,color:C.text}}>Total Deductions</div>
                       <div style={{display:"flex",alignItems:"center",gap:10}}>
                         <div style={{fontSize:9,color:C.sub}}>{dw.gross>0?(dedSum/dw.gross*100).toFixed(1):0}% of gross</div>
                         <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:"#f87171"}}>-${dedSum.toFixed(2)}</div>
                       </div>
-                    </div>
-
-                    {/* Fuel Rebate Banner */}
-                    {dw.rebate>0&&(()=>{
-                      // Find the vendor with the most gallons this week — that's who the rebate is from
-                      const weekFuelA=(dw.deds||[]).filter(d=>d&&d.l&&d.l.toLowerCase().includes("fuel advance")&&d.vendor);
-                      const topVendor=weekFuelA.length>0?weekFuelA.reduce((a,b)=>(b.gal||0)>(a.gal||0)?b:a):null;
-                      const vendorLabel=topVendor?`${topVendor.vendor}${topVendor.city?", "+topVendor.city:""}`:null;
-                      return(
-                        <div style={{padding:"10px 12px",borderRadius:9,background:`${C.green}10`,border:`1px solid ${C.green}33`,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <div style={{display:"flex",alignItems:"center",gap:8}}>
-                            <span style={{fontSize:14}}>💰</span>
-                            <div>
-                              <div style={{fontSize:11,fontWeight:700,color:C.text}}>Fuel Rebate Earned</div>
-                              <div style={{fontSize:9,color:C.sub,marginTop:1}}>{vendorLabel?`From ${vendorLabel}`:"Cash back from your fuel vendor this week"}</div>
-                            </div>
-                          </div>
-                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.green}}>+${dw.rebate.toFixed(2)}</div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* Smart Insights */}
-                    {(()=>{
-                      const recentW=allW.slice(Math.max(0,allW.findIndex(w=>w.week===dw.week)-7),allW.findIndex(w=>w.week===dw.week)+1);
-                      const histW=recentW.length>1?recentW.slice(0,-1):[];
-                      const avgOf=(cat)=>{
-                        if(histW.length===0)return null;
-                        const vals=histW.map(w=>{
-                          const wd=(w.deds||[]).filter(d=>d&&d.l);
-                          if(cat==="fuel")return wd.filter(d=>d.l.toLowerCase().includes("fuel advance")).reduce((s,d)=>s+d.a,0);
-                          if(cat==="insurance")return wd.filter(d=>["physical damage","bobtail","occacc","occ/acc","roadside","liability limiter"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
-                          if(cat==="ops")return wd.filter(d=>["eld","event recorder","parking","license","highway tax"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
-                          return 0;
-                        });
-                        return vals.reduce((a,b)=>a+b,0)/vals.length;
-                      };
-                      const catTotals={fuel:fuelTotal,insurance:insTotal,ops:opsTotal};
-                      const movers=Object.keys(catTotals).map(cat=>{
-                        const avg=avgOf(cat);
-                        if(avg===null||avg===0)return null;
-                        const pctChange=((catTotals[cat]-avg)/avg)*100;
-                        return {cat,pctChange,current:catTotals[cat],avg};
-                      }).filter(Boolean).filter(m=>Math.abs(m.pctChange)>15).sort((a,b)=>Math.abs(b.pctChange)-Math.abs(a.pctChange));
-                      const topMover=movers[0];
-                      const catLabel={fuel:"Fuel",insurance:"Insurance",ops:"Operations"};
-                      const catIcon={fuel:"⛽",insurance:"🛡️",ops:"⚙️"};
-
-                      // Escrow countdown
-                      const escTarget=2500;
-                      const escBalance=dw.escrow_regular_balance||0;
-                      const escPct=Math.min(100,(escBalance/escTarget)*100);
-                      const weeklyEscrow=100;
-                      const weeksLeft=escBalance<escTarget?Math.ceil((escTarget-escBalance)/weeklyEscrow):0;
-
-                      return(
-                        <div style={{marginBottom:14}}>
-                          <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>💡 Smart Insights</div>
-
-                          {topMover&&(
-                            <div style={{padding:"10px 12px",borderRadius:9,background:topMover.pctChange>0?`${C.red}10`:`${C.green}10`,border:`1px solid ${topMover.pctChange>0?C.red:C.green}33`,marginBottom:8,display:"flex",alignItems:"flex-start",gap:8}}>
-                              <span style={{fontSize:14,flexShrink:0}}>{topMover.pctChange>0?"⚠️":"✅"}</span>
-                              <div style={{fontSize:10,color:C.text,lineHeight:1.5}}>
-                                <b>{catIcon[topMover.cat]} {catLabel[topMover.cat]}</b> {topMover.pctChange>0?"up":"down"} <b style={{color:topMover.pctChange>0?C.red:C.green}}>{Math.abs(topMover.pctChange).toFixed(0)}%</b> vs your {histW.length}-week average (${topMover.avg.toFixed(0)} → ${topMover.current.toFixed(0)})
-                              </div>
-                            </div>
-                          )}
-
-                          {escBalance>0&&escBalance<escTarget&&(
-                            <div style={{padding:"10px 12px",borderRadius:9,background:`${C.a3}10`,border:`1px solid ${C.a3}33`,marginBottom:8}}>
-                              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                                <div style={{fontSize:10,color:C.text,fontWeight:700}}>🏦 Escrow Progress</div>
-                                <div style={{fontSize:10,color:C.a3,fontWeight:700}}>${escBalance.toFixed(0)} / ${escTarget}</div>
-                              </div>
-                              <div style={{height:5,background:C.bg,borderRadius:3,overflow:"hidden",marginBottom:5}}>
-                                <div style={{height:"100%",width:escPct+"%",background:C.a3,borderRadius:3}}/>
-                              </div>
-                              <div style={{fontSize:9,color:C.sub}}>{weeksLeft>0?`~${weeksLeft} weeks left at $100/wk`:"Target reached!"}</div>
-                            </div>
-                          )}
-
-                          {!topMover&&!(escBalance>0&&escBalance<escTarget)&&(
-                            <div style={{padding:"10px 12px",borderRadius:9,background:C.bg,border:`1px solid ${C.border}`,fontSize:10,color:C.sub}}>
-                              ✅ Deductions look stable — no unusual changes detected this week.
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-
-                    {/* Owner Notes */}
-                    <div>
-                      <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>📝 Owner Notes — W{dw.week}</div>
-                      <textarea
-                        value={ownerNotes[dw.week]||""}
-                        onChange={e=>setOwnerNotes(p=>({...p,[dw.week]:e.target.value}))}
-                        placeholder="e.g. Called carrier about the $55 license fee — confirmed permanent..."
-                        style={{width:"100%",minHeight:64,padding:"10px 12px",borderRadius:9,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",resize:"vertical",boxSizing:"border-box",lineHeight:1.5}}
-                      />
                     </div>
                   </div>
                 );
@@ -2100,7 +1954,7 @@ ${pdfText.slice(0,24000)}`}]};
                             <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.accent}}>{fuelMPG.toFixed(1)}</span>
                           </div>
                           <input type="range" min="3.5" max="9.0" step="0.1" value={fuelMPG}
-                            onChange={function(e){const v=parseFloat(e.target.value);setFuelMPG(v);setProfile(p=>({...p,targetMPG:String(v)}));try{localStorage.setItem("ciq_mpg",String(v));}catch(ex){}}}
+                            onChange={function(e){setFuelMPG(parseFloat(e.target.value));}}
                             style={{width:"100%",accentColor:C.accent,cursor:"pointer",marginBottom:4}}/>
                           <div style={{display:"flex",justifyContent:"space-between",fontSize:8}}>
                             <span style={{color:"#f87171"}}>3.5 poor</span>
@@ -2180,12 +2034,12 @@ ${pdfText.slice(0,24000)}`}]};
               <Nav i={sM} max={allW.length-1} prev={()=>setSM(p=>p-1)} next={()=>setSM(p=>p+1)} label={`W${mwBase.week}`}/>
             </div>
             {helpModal("movePerf")}
-            <div style={{display:isCollapsed("movePerf")?"none":"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:14}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:14}}>
               {[{l:"Gross",v:`$${mwBase.gross.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.accent},{l:"Net",v:`$${mwBase.net.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.green},{l:"Avg RPM",v:`$${mwRPM}`,c:C.a3},{l:"Loaded %",v:`${mwLd}%`,c:mwLd>=60?C.green:C.gold}].map(s=>(
                 <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`,textAlign:"center"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:700,color:s.c}}>{s.v}</div></div>
               ))}
             </div>
-            <div style={{display:isCollapsed("movePerf")?"none":"block",overflowX:"auto",overflowY:"auto",maxHeight:320,borderRadius:8,border:`1px solid ${C.border}`}}>
+            <div style={{overflowX:"auto",overflowY:"auto",maxHeight:320,borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
                 <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 9px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>{mwMoves.map((m,i)=>{const s=scoreMove(m);return(
@@ -2220,11 +2074,11 @@ ${pdfText.slice(0,24000)}`}]};
             return(
               <div style={K({marginBottom:16})}>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🎯 Weekly Action Plan<button onClick={e=>{e.stopPropagation();toggleCard("actionPlan");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("actionPlan")?"▶":"▼"}</button>{helpBtn("actionPlan")}</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🎯 Weekly Action Plan{helpBtn("actionPlan")}</div>
                   <div style={{fontSize:9,padding:"2px 7px",borderRadius:5,background:C.green+"20",color:C.green,fontWeight:700,marginLeft:"auto"}}>W{lw.week} · {topActions.length} actions</div>
                 </div>
                 {helpModal("actionPlan")}
-                <div style={{display:isCollapsed("actionPlan")?"none":"flex",flexDirection:"column",gap:9}}>
+                <div style={{display:"flex",flexDirection:"column",gap:9}}>
                   {topActions.map(function(a,idx){return(
                     <div key={idx} style={{display:"flex",gap:10,padding:"11px 12px",background:C.bg,borderRadius:9,border:"1px solid "+a.color+"44"}}>
                       <div style={{width:32,height:32,borderRadius:8,background:a.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{a.icon}</div>
@@ -2382,7 +2236,7 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{padding:"13px 16px",background:"linear-gradient(135deg,"+C.a3+"14,"+C.accent+"08)",borderBottom:"1px solid "+C.border}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
                 <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.text}}>📁 My Uploaded Settlements<button onClick={e=>{e.stopPropagation();toggleCard("uploads");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("uploads")?"▶":"▼"}</button></div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.text}}>📁 My Uploaded Settlements</div>
                   <div style={{fontSize:10,color:C.sub,marginTop:2}}>{addedW.length} uploaded · check box to select · delete selected</div>
                 </div>
                 <div style={{display:"flex",gap:7,flexShrink:0}}>
@@ -2391,7 +2245,7 @@ ${pdfText.slice(0,24000)}`}]};
                 </div>
               </div>
             </div>
-            <div style={{padding:"10px 12px",display:isCollapsed("uploads")?"none":"flex",flexDirection:"column",gap:7}}>
+            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7}}>
               {addedW.length===0?<div style={{textAlign:"center",padding:"18px",color:C.sub,fontSize:11}}><div style={{fontSize:26,marginBottom:6}}>📭</div><div>No uploads yet — scan a PDF above</div></div>:[...addedW].reverse().map(function(w,i){
                 const g=wg(w),wKey=w.week+(w.from||""),isSel=selWkKeys.has(wKey);
                 return(
@@ -2452,9 +2306,9 @@ ${pdfText.slice(0,24000)}`}]};
 
           {/* FULL HISTORY */}
           <div style={K()}>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}<button onClick={e=>{e.stopPropagation();toggleCard("fullHist");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("fullHist")?"▶":"▼"}</button></div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}</div>
             {helpModal("fullHistory")}
-            <div style={{display:isCollapsed("fullHist")?"none":"block",overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
+            <div style={{overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
                 <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Wk","Vendor","Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 6px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>{allMoves.slice().reverse().map((m,i)=>{
@@ -2483,8 +2337,8 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{padding:"13px 16px",background:"linear-gradient(135deg,"+C.a3+"14,"+C.accent+"08)",borderBottom:"1px solid "+C.border}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
                 <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 Manage Saved Weeks<button onClick={e=>{e.stopPropagation();toggleCard("savedWeeks");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("savedWeeks")?"▶":"▼"}</button></div>
-                  <div style={{fontSize:10,color:C.sub,display:isCollapsed("savedWeeks")?"none":"block"}}>{addedW.length} uploaded · {allW.length} total · tap ☑ to select then delete</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 Manage Saved Weeks</div>
+                  <div style={{fontSize:10,color:C.sub}}>{addedW.length} uploaded · {allW.length} total · tap ☑ to select then delete</div>
                 </div>
                 <div style={{display:"flex",gap:7,flexShrink:0}}>
                   {addedW.length>0&&(
@@ -2510,7 +2364,7 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
 
             {/* Week list */}
-            <div style={{padding:"10px 12px",display:isCollapsed("savedWeeks")?"none":"flex",flexDirection:"column",gap:7,maxHeight:320,overflowY:"auto"}}>
+            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7,maxHeight:320,overflowY:"auto"}}>
               {addedW.length===0?(
                 <div style={{textAlign:"center",padding:"20px",color:C.sub,fontSize:11}}>
                   <div style={{fontSize:28,marginBottom:8}}>📭</div>
@@ -2612,8 +2466,8 @@ ${pdfText.slice(0,24000)}`}]};
           </div>
           {aiMode==="chat"&&(
             <div style={K()}>
-              <div style={{fontSize:10,fontWeight:700,color:C.sub,marginBottom:11,textTransform:"uppercase",letterSpacing:"0.1em"}}>⚡ Quick Questions<button onClick={e=>{e.stopPropagation();toggleCard("quickQ");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("quickQ")?"▶":"▼"}</button></div>
-              <div style={{display:isCollapsed("quickQ")?"none":"grid",gridTemplateColumns:wide?"repeat(2,1fr)":"1fr",gap:7}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.sub,marginBottom:11,textTransform:"uppercase",letterSpacing:"0.1em"}}>⚡ Quick Questions</div>
+              <div style={{display:"grid",gridTemplateColumns:wide?"repeat(2,1fr)":"1fr",gap:7}}>
                 {["Where am I losing the most money?","What's my biggest profit leak?","How can I increase my net pay?","Which routes give the best RPM?","Give me a 4-week income forecast","Should I take more Hagerstown loads?","How much are fuel advances really costing me?","What should my target weekly net be?"].map(q=>(
                   <button key={q} onClick={()=>setChatIn(q)} style={{padding:"11px 13px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,textAlign:"left",cursor:"pointer",fontFamily:"inherit",lineHeight:1.5}}>{q}</button>
                 ))}
@@ -2660,9 +2514,7 @@ ${pdfText.slice(0,24000)}`}]};
       const monthlyNet=weeklyAvgNet*4.33;
       const annualNet=monthlyNet*12;
       const totalFuel=allW.reduce(function(s,w){return s+(w.deds||[]).filter(function(d){return d.l.toLowerCase().includes("fuel");}).reduce(function(ss,d){return ss+d.a;},0);},0);
-      const totalRebates=allW.reduce(function(s,w){return s+(w.rebate||0);},0);
-      const netFuelTotal=Math.max(0,totalFuel-totalRebates);
-      const fuelPct=tGross>0?netFuelTotal/tGross*100:0;
+      const fuelPct=tGross>0?totalFuel/tGross*100:0;
       const emptyMoves=allMoves.filter(function(m){return m.type==="E"||m.t==="E";}).length;
       const emptyPct=allMoves.length>0?Math.round(emptyMoves/allMoves.length*100):0;
       const badLoads=allMoves.filter(function(m){const s=scoreMove(m);return s.grade==="D";}).length;
@@ -2684,7 +2536,7 @@ ${pdfText.slice(0,24000)}`}]};
       const hG=hScore>=80?{g:"A",c:"#4ade80",l:"Excellent"}:hScore>=65?{g:"B",c:"#00ffcc",l:"Strong"}:hScore>=50?{g:"C",c:"#fbbf24",l:"Average"}:hScore>=35?{g:"D",c:"#f97316",l:"Needs Work"}:{g:"F",c:"#f87171",l:"Critical"};
 
       const pains=[];
-      if(fuelPct>38)pains.push({icon:"⛽",title:"Fuel Costs Critical",detail:`$${netFuelTotal.toFixed(0)} net of $${totalRebates.toFixed(0)} rebates — ${fuelPct.toFixed(1)}% of gross. Industry target is under 35%.`,severity:"critical",loss:netFuelTotal*(fuelPct-35)/fuelPct,color:"#f87171"});
+      if(fuelPct>38)pains.push({icon:"⛽",title:"Fuel Costs Critical",detail:`$${totalFuel.toFixed(0)} — ${fuelPct.toFixed(1)}% of gross goes to fuel. Industry target is under 35%.`,severity:"critical",loss:totalFuel*(fuelPct-35)/fuelPct,color:"#f87171"});
       if(emptyPct>42)pains.push({icon:"🚗",title:"Too Many Empty Miles",detail:`${emptyPct}% of your runs are empty. Every empty mile costs you money with zero revenue.`,severity:emptyPct>55?"critical":"moderate",loss:0,color:"#fb923c"});
       if(badLoads>0)pains.push({icon:"📉",title:`${badLoads} D-Grade Loads Accepted`,detail:`${badLoads} load${badLoads>1?"s":""} scored D-grade this period. These low-RPM loads drag down your average.`,severity:"moderate",loss:0,color:"#fbbf24"});
       if(+margin<18)pains.push({icon:"💸",title:"Net Margin Below Target",detail:`Your ${margin}% margin is below the 20% target. You're leaving $${Math.round(tGross*0.02).toLocaleString()} on the table each week.`,severity:+margin<12?"critical":"moderate",loss:tGross*0.02,color:"#f87171"});
@@ -2817,7 +2669,7 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{padding:"12px",display:"flex",flexDirection:"column",gap:10}}>
               {(function(){
                 const steps=[];
-                if(fuelPct>35)steps.push({n:1,icon:"⛽",title:"Fuel Strategy",action:`Cut fuel advances by 15% → save ~$${Math.round(netFuelTotal*0.15).toLocaleString()}/yr. Use Pilot Flying J Fuel Card for discounts. Pre-plan fuel stops to avoid full-price fills.`,impact:"HIGH"});
+                if(fuelPct>35)steps.push({n:1,icon:"⛽",title:"Fuel Strategy",action:`Cut fuel advances by 15% → save ~$${Math.round(totalFuel*0.15).toLocaleString()}/yr. Use Pilot Flying J Fuel Card for discounts. Pre-plan fuel stops to avoid full-price fills.`,impact:"HIGH"});
                 if(emptyPct>40)steps.push({n:2,icon:"📦",title:"Backhaul Optimization",action:`${emptyPct}% empty rate costs real money. Work your dispatcher for backhauls on every repositioning move. Even $50 empties add up to $${Math.round(emptyMoves*50).toLocaleString()} extra annually.`,impact:"HIGH"});
                 steps.push({n:steps.length+1,icon:"📊",title:"Weekly Data Habit",action:`You have ${allW.length} weeks tracked. Drivers who track 52+ weeks earn 23% more annually because they spot trends and negotiate from a position of data — not guesswork.`,impact:"MEDIUM"});
                 if(+margin<20)steps.push({n:steps.length+1,icon:"💰",title:`Close the ${(20-+margin).toFixed(1)}% Margin Gap`,action:`At $${(weeklyAvgGross).toFixed(0)} average weekly gross, every 1% margin improvement = $${(weeklyAvgGross*0.01*52).toFixed(0)}/year extra. Reject D-grade loads and negotiate FSC on every load.`,impact:"HIGH"});
@@ -2844,11 +2696,11 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:8}}>
                 <div style={{width:36,height:36,borderRadius:9,background:"#fbbf2422",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🏦</div>
                 <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#fbbf24"}}>Get Funded — Institutions That Trust Your Data<button onClick={e=>{e.stopPropagation();toggleCard("funded");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("funded")?"▶":"▼"}</button></div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#fbbf24"}}>Get Funded — Institutions That Trust Your Data</div>
                   <div style={{fontSize:10,color:C.sub,marginTop:2}}>Your verified income qualifies you for real business capital</div>
                 </div>
               </div>
-              <div style={{display:isCollapsed("funded")?"none":"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
                 {[
                   {l:"Monthly Income",v:`$${Math.round(monthlyNet).toLocaleString()}`,c:"#4ade80"},
                   {l:"Annual Estimate",v:`$${Math.round(annualNet).toLocaleString()}`,c:"#00ffcc"},
@@ -2861,7 +2713,7 @@ ${pdfText.slice(0,24000)}`}]};
                 );})}
               </div>
             </div>
-            <div style={{padding:"12px",display:isCollapsed("funded")?"none":"flex",flexDirection:"column",gap:10}}>
+            <div style={{padding:"12px",display:"flex",flexDirection:"column",gap:10}}>
               {[
                 {
                   icon:"🦅",name:"OOIDA Business Services",type:"Owner-Operator Focused",
@@ -3011,7 +2863,7 @@ ${pdfText.slice(0,24000)}`}]};
         <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
         </svg>
-        <span>📹 Video Tips</span>
+        <span>Get Support</span>
       </a>
 
       {/* BOTTOM NAV */}
@@ -3024,10 +2876,6 @@ ${pdfText.slice(0,24000)}`}]};
         ))}
       </div>
       <div style={{height:58}}/>
-    </div>
-    </div>
-    </div>
-    </div>
     </div>
   );
 }
