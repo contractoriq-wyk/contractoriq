@@ -890,7 +890,7 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{fontSize:12,color:C.sub,lineHeight:1.6}}>{upgradeSrc==="ai"?"You've used your "+FREE_AI+" free AI messages.":upgradeSrc==="scorer"?"You've used your "+FREE_OS+" free offer scores.":"Upgrade to access the full decision engine."}</div>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
-            <button onClick={()=>window.open("https://buy.stripe.com/aFa8wP7FLbMY4Ua0Ls9MY00","_blank")} style={{padding:"16px",borderRadius:12,background:"linear-gradient(135deg,"+C.gold+",#f59e0b)",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}><div>🔥 Start 5-Day Test Drive</div><div style={{fontSize:11,fontWeight:400,marginTop:3}}>Just $1 — full access, cancel anytime</div></button>
+            <button onClick={()=>window.open(PRICING.tier1Url,"_blank")} style={{padding:"14px",borderRadius:12,background:C.raised,border:"1px solid "+C.a3+"55",color:"#a78bfa",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}><div>📋 Go Standard — {PRICING.tier1Price}/month</div><div style={{fontSize:10,fontWeight:400,color:C.sub,marginTop:2}}>Unlimited scans · AI guidance · Cancel anytime</div></button>
             <button onClick={()=>window.open(PRICING.tier2Url,"_blank")} style={{padding:"16px",borderRadius:12,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",color:"#000",fontWeight:800,fontSize:14,border:"none",cursor:"pointer",fontFamily:"inherit"}}><div>⚡ Go Pro Smart — {PRICING.tier2Price}/month</div><div style={{fontSize:11,fontWeight:400,marginTop:3}}>Live diesel · Live weather · Smart AI · Cancel anytime</div></button>
             <button onClick={()=>window.open(PRICING.annualUrl,"_blank")} style={{padding:"14px",borderRadius:12,background:C.raised,border:"1px solid "+C.a3+"55",color:"#a78bfa",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}><div>📅 Go Annual — {PRICING.annualPrice}/year</div><div style={{fontSize:10,fontWeight:400,color:C.sub,marginTop:2}}>{PRICING.annualNote} · Cancel anytime</div></button>
           </div>
@@ -1194,29 +1194,29 @@ ${pdfText.slice(0,24000)}`}]};
               {/* Plan grid 2×2 */}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:wide?22:16}}>
 
-                {/* $1 Trial */}
-                <div onClick={()=>window.open(PRICING.trialUrl,"_blank")} style={{background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.22)",borderRadius:13,padding:"15px 12px",cursor:"pointer",textAlign:"center"}}>
-                  <div style={{fontSize:22,marginBottom:6}}>🔥</div>
-                  <div style={{fontSize:11,fontWeight:800,color:"#fbbf24",marginBottom:3}}>5-Day Trial</div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:800,color:"#fbbf24",margin:"3px 0 4px"}}>$1</div>
-                  <div style={{fontSize:9,color:"#4a6080",lineHeight:1.55}}>Full access<br/>Cancel anytime</div>
+                {/* Standard */}
+                <div onClick={()=>window.open(PRICING.tier1Url,"_blank")} style={{background:"rgba(167,139,250,0.05)",border:"1px solid rgba(167,139,250,0.22)",borderRadius:13,padding:"15px 12px",cursor:"pointer",textAlign:"center"}}>
+                  <div style={{fontSize:22,marginBottom:6}}>📋</div>
+                  <div style={{fontSize:11,fontWeight:800,color:"#a78bfa",marginBottom:3}}>Standard</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:800,color:"#a78bfa",margin:"3px 0 4px"}}>{PRICING.tier1Price}<span style={{fontSize:9,fontWeight:400,color:"#4a6080"}}> /mo</span></div>
+                  <div style={{fontSize:9,color:"#4a6080",lineHeight:1.55}}>Unlimited scans<br/>AI guidance</div>
                 </div>
 
-                {/* Pro — hero card */}
+                {/* Pro Smart — hero card */}
                 <div onClick={()=>window.open(PRICING.tier2Url,"_blank")} style={{background:"linear-gradient(145deg,rgba(0,255,204,0.07),rgba(167,139,250,0.07))",border:"2px solid #00ffcc",borderRadius:13,padding:"15px 12px",cursor:"pointer",textAlign:"center",position:"relative",boxShadow:"0 0 22px rgba(0,255,204,0.18)"}}>
                   <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#00ffcc,#a78bfa)",borderRadius:20,padding:"2px 11px",fontSize:8,fontWeight:800,color:"#000",whiteSpace:"nowrap"}}>⭐ POPULAR</div>
                   <div style={{fontSize:22,marginBottom:4}}>💰</div>
-                  <div style={{fontSize:11,fontWeight:800,color:"#00ffcc",marginBottom:2}}>Monthly</div>
+                  <div style={{fontSize:11,fontWeight:800,color:"#00ffcc",marginBottom:2}}>Pro Smart</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:800,color:"#00ffcc",margin:"2px 0"}}>{PRICING.tier2Price}</div>
                   <div style={{fontSize:9,color:"#00ffcc",opacity:0.6,marginBottom:4}}>/month</div>
-                  <div style={{fontSize:9,color:"#4a6080",lineHeight:1.55}}>Unlimited AI<br/>No ads</div>
+                  <div style={{fontSize:9,color:"#4a6080",lineHeight:1.55}}>Live data<br/>Smart AI</div>
                 </div>
 
                 {/* Annual */}
-                <div onClick={()=>window.open(PRICING.annualUrl,"_blank")} style={{background:"rgba(167,139,250,0.05)",border:"1px solid rgba(167,139,250,0.22)",borderRadius:13,padding:"15px 12px",cursor:"pointer",textAlign:"center"}}>
+                <div onClick={()=>window.open(PRICING.annualUrl,"_blank")} style={{background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.22)",borderRadius:13,padding:"15px 12px",cursor:"pointer",textAlign:"center"}}>
                   <div style={{fontSize:22,marginBottom:6}}>📅</div>
-                  <div style={{fontSize:11,fontWeight:800,color:"#a78bfa",marginBottom:3}}>Annual</div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:"#a78bfa",margin:"3px 0 4px"}}>{PRICING.annualPrice}<span style={{fontSize:9,fontWeight:400,color:"#4a6080"}}> /yr</span></div>
+                  <div style={{fontSize:11,fontWeight:800,color:"#fbbf24",marginBottom:3}}>Annual</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:"#fbbf24",margin:"3px 0 4px"}}>{PRICING.annualPrice}<span style={{fontSize:9,fontWeight:400,color:"#4a6080"}}> /yr</span></div>
                   <div style={{fontSize:9,color:"#4a6080",lineHeight:1.55}}>{PRICING.annualNote}<br/>Cancel anytime</div>
                 </div>
 
