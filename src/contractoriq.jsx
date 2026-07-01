@@ -1465,8 +1465,8 @@ ${pdfText.slice(0,24000)}`}]};
               </button>
               {showMenu&&(
                 <>
-                <div style={{position:"fixed",inset:0,zIndex:9998}} onClick={()=>setShowMenu(false)}/>
-                <div style={{position:"fixed",top:wide?108:96,right:8,left:wide?"auto":8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"8px 6px",zIndex:9999,minWidth:wide?210:"auto",maxWidth:wide?260:"none",maxHeight:wide?"calc(100vh - 120px)":"calc(100vh - 165px)",overflowY:"scroll",WebkitOverflowScrolling:"touch",overscrollBehavior:"contain",boxShadow:"0 8px 40px rgba(0,0,0,0.7)"}}>
+                <div style={{position:"fixed",inset:0,zIndex:9998,touchAction:"none"}} onClick={()=>setShowMenu(false)}/>
+                <div style={{position:"fixed",top:wide?108:96,right:8,left:wide?"auto":8,bottom:wide?"auto":70,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"8px 6px",zIndex:9999,minWidth:wide?210:"auto",maxWidth:wide?260:"none",maxHeight:wide?"calc(100vh - 120px)":"none",overflowY:"auto",WebkitOverflowScrolling:"touch",overscrollBehavior:"contain",touchAction:"pan-y",boxShadow:"0 8px 40px rgba(0,0,0,0.7)"}}>
 
                   {/* Account header */}
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
