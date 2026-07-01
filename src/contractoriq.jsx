@@ -275,6 +275,8 @@ export default function ContractorIQv26(){
   const [activeOnlyVendor,setActiveOnlyVendor]=useState(null);
   const [helpCard,setHelpCard]=useState(null);
   const [collapsedCards,setCollapsedCards]=useState(new Set());
+  const [ownerNotes,setOwnerNotes]=useState(()=>{try{const s=localStorage.getItem("ciq_owner_notes");return s?JSON.parse(s):{};}catch{return {};}});
+  useEffect(()=>{try{localStorage.setItem("ciq_owner_notes",JSON.stringify(ownerNotes));}catch(e){};},[ownerNotes]);
   const [showOnboarding,setShowOnboarding]=useState(false);
   const [onboardStep,setOnboardStep]=useState(0);
   const [showProfile,setShowProfile]=useState(false);
@@ -1955,12 +1957,109 @@ ${pdfText.slice(0,24000)}`}]};
                     ))}
 
                     {/* Grand total bar */}
-                    <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
+                    <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4,marginBottom:14}}>
                       <div style={{fontSize:11,fontWeight:700,color:C.text}}>Total Deductions</div>
                       <div style={{display:"flex",alignItems:"center",gap:10}}>
                         <div style={{fontSize:9,color:C.sub}}>{dw.gross>0?(dedSum/dw.gross*100).toFixed(1):0}% of gross</div>
                         <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:"#f87171"}}>-${dedSum.toFixed(2)}</div>
                       </div>
+                    </div>
+
+                    {/* Fuel Rebate Banner */}
+                    {dw.rebate>0&&(()=>{
+                      const weekFuelA=(dw.deds||[]).filter(d=>d&&d.l&&d.l.toLowerCase().includes("fuel advance")&&d.vendor);
+                      const topVendor=weekFuelA.length>0?weekFuelA.reduce((a,b)=>(b.gal||0)>(a.gal||0)?b:a):null;
+                      const vendorLabel=topVendor?`${topVendor.vendor}${topVendor.city?", "+topVendor.city:""}`:null;
+                      return(
+                        <div style={{padding:"10px 12px",borderRadius:9,background:`${C.green}10`,border:`1px solid ${C.green}33`,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8}}>
+                            <span style={{fontSize:14}}>💰</span>
+                            <div>
+                              <div style={{fontSize:11,fontWeight:700,color:C.text}}>Fuel Rebate Earned</div>
+                              <div style={{fontSize:9,color:C.sub,marginTop:1}}>{vendorLabel?`From ${vendorLabel}`:"Cash back from your fuel vendor this week"}</div>
+                            </div>
+                          </div>
+                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.green}}>+${dw.rebate.toFixed(2)}</div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Smart Insights */}
+                    {(()=>{
+                      const recentW=allW.slice(Math.max(0,allW.findIndex(w=>w.week===dw.week)-7),allW.findIndex(w=>w.week===dw.week)+1);
+                      const histW=recentW.length>1?recentW.slice(0,-1):[];
+                      const avgOf=(cat)=>{
+                        if(histW.length===0)return null;
+                        const vals=histW.map(w=>{
+                          const wd=(w.deds||[]).filter(d=>d&&d.l);
+                          if(cat==="fuel")return wd.filter(d=>d.l.toLowerCase().includes("fuel advance")).reduce((s,d)=>s+d.a,0);
+                          if(cat==="insurance")return wd.filter(d=>["physical damage","bobtail","occacc","occ/acc","roadside","liability limiter"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+                          if(cat==="ops")return wd.filter(d=>["eld","event recorder","parking","license","highway tax"].some(k=>d.l.toLowerCase().includes(k))).reduce((s,d)=>s+d.a,0);
+                          return 0;
+                        });
+                        return vals.reduce((a,b)=>a+b,0)/vals.length;
+                      };
+                      const catTotals={fuel:fuelTotal,insurance:insTotal,ops:opsTotal};
+                      const movers=Object.keys(catTotals).map(cat=>{
+                        const avg=avgOf(cat);
+                        if(avg===null||avg===0)return null;
+                        const pctChange=((catTotals[cat]-avg)/avg)*100;
+                        return {cat,pctChange,current:catTotals[cat],avg};
+                      }).filter(Boolean).filter(m=>Math.abs(m.pctChange)>15).sort((a,b)=>Math.abs(b.pctChange)-Math.abs(a.pctChange));
+                      const topMover=movers[0];
+                      const catLabel={fuel:"Fuel",insurance:"Insurance",ops:"Operations"};
+                      const catIcon={fuel:"⛽",insurance:"🛡️",ops:"⚙️"};
+
+                      const escTarget=2500;
+                      const escBalance=dw.escrow_regular_balance||0;
+                      const escPct=Math.min(100,(escBalance/escTarget)*100);
+                      const weeklyEscrow=100;
+                      const weeksLeft=escBalance<escTarget?Math.ceil((escTarget-escBalance)/weeklyEscrow):0;
+
+                      return(
+                        <div style={{marginBottom:14}}>
+                          <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>💡 Smart Insights</div>
+
+                          {topMover&&(
+                            <div style={{padding:"10px 12px",borderRadius:9,background:topMover.pctChange>0?`${C.red}10`:`${C.green}10`,border:`1px solid ${topMover.pctChange>0?C.red:C.green}33`,marginBottom:8,display:"flex",alignItems:"flex-start",gap:8}}>
+                              <span style={{fontSize:14,flexShrink:0}}>{topMover.pctChange>0?"⚠️":"✅"}</span>
+                              <div style={{fontSize:10,color:C.text,lineHeight:1.5}}>
+                                <b>{catIcon[topMover.cat]} {catLabel[topMover.cat]}</b> {topMover.pctChange>0?"up":"down"} <b style={{color:topMover.pctChange>0?C.red:C.green}}>{Math.abs(topMover.pctChange).toFixed(0)}%</b> vs your {histW.length}-week average (${topMover.avg.toFixed(0)} → ${topMover.current.toFixed(0)})
+                              </div>
+                            </div>
+                          )}
+
+                          {escBalance>0&&escBalance<escTarget&&(
+                            <div style={{padding:"10px 12px",borderRadius:9,background:`${C.a3}10`,border:`1px solid ${C.a3}33`,marginBottom:8}}>
+                              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                                <div style={{fontSize:10,color:C.text,fontWeight:700}}>🏦 Escrow Progress</div>
+                                <div style={{fontSize:10,color:C.a3,fontWeight:700}}>${escBalance.toFixed(0)} / ${escTarget}</div>
+                              </div>
+                              <div style={{height:5,background:C.bg,borderRadius:3,overflow:"hidden",marginBottom:5}}>
+                                <div style={{height:"100%",width:escPct+"%",background:C.a3,borderRadius:3}}/>
+                              </div>
+                              <div style={{fontSize:9,color:C.sub}}>{weeksLeft>0?`~${weeksLeft} weeks left at $100/wk`:"Target reached!"}</div>
+                            </div>
+                          )}
+
+                          {!topMover&&!(escBalance>0&&escBalance<escTarget)&&(
+                            <div style={{padding:"10px 12px",borderRadius:9,background:C.bg,border:`1px solid ${C.border}`,fontSize:10,color:C.sub}}>
+                              ✅ Deductions look stable — no unusual changes detected this week.
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Owner Notes */}
+                    <div>
+                      <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>📝 Owner Notes — W{dw.week}</div>
+                      <textarea
+                        value={ownerNotes[dw.week]||""}
+                        onChange={e=>setOwnerNotes(p=>({...p,[dw.week]:e.target.value}))}
+                        placeholder="e.g. Called carrier about the $55 license fee — confirmed permanent..."
+                        style={{width:"100%",minHeight:64,padding:"10px 12px",borderRadius:9,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",resize:"vertical",boxSizing:"border-box",lineHeight:1.5}}
+                      />
                     </div>
                   </div>
                 );
@@ -2165,11 +2264,11 @@ ${pdfText.slice(0,24000)}`}]};
             return(
               <div style={K({marginBottom:16})}>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🎯 Weekly Action Plan{helpBtn("actionPlan")}</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🎯 Weekly Action Plan{helpBtn("actionPlan")}<button onClick={e=>{e.stopPropagation();toggleCard("actionPlan");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("actionPlan")?"▶":"▼"}</button></div>
                   <div style={{fontSize:9,padding:"2px 7px",borderRadius:5,background:C.green+"20",color:C.green,fontWeight:700,marginLeft:"auto"}}>W{lw.week} · {topActions.length} actions</div>
                 </div>
                 {helpModal("actionPlan")}
-                <div style={{display:"flex",flexDirection:"column",gap:9}}>
+                <div style={{display:isCollapsed("actionPlan")?"none":"flex",flexDirection:"column",gap:9}}>
                   {topActions.map(function(a,idx){return(
                     <div key={idx} style={{display:"flex",gap:10,padding:"11px 12px",background:C.bg,borderRadius:9,border:"1px solid "+a.color+"44"}}>
                       <div style={{width:32,height:32,borderRadius:8,background:a.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{a.icon}</div>
@@ -2327,7 +2426,7 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{padding:"13px 16px",background:"linear-gradient(135deg,"+C.a3+"14,"+C.accent+"08)",borderBottom:"1px solid "+C.border}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
                 <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.text}}>📁 My Uploaded Settlements</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.text}}>📁 My Uploaded Settlements<button onClick={e=>{e.stopPropagation();toggleCard("uploads");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("uploads")?"▶":"▼"}</button></div>
                   <div style={{fontSize:10,color:C.sub,marginTop:2}}>{addedW.length} uploaded · check box to select · delete selected</div>
                 </div>
                 <div style={{display:"flex",gap:7,flexShrink:0}}>
@@ -2336,7 +2435,7 @@ ${pdfText.slice(0,24000)}`}]};
                 </div>
               </div>
             </div>
-            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7}}>
+            <div style={{padding:"10px 12px",display:isCollapsed("uploads")?"none":"flex",flexDirection:"column",gap:7}}>
               {addedW.length===0?<div style={{textAlign:"center",padding:"18px",color:C.sub,fontSize:11}}><div style={{fontSize:26,marginBottom:6}}>📭</div><div>No uploads yet — scan a PDF above</div></div>:[...addedW].reverse().map(function(w,i){
                 const g=wg(w),wKey=w.week+(w.from||""),isSel=selWkKeys.has(wKey);
                 return(
@@ -2397,9 +2496,9 @@ ${pdfText.slice(0,24000)}`}]};
 
           {/* FULL HISTORY */}
           <div style={K()}>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}</div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}<button onClick={e=>{e.stopPropagation();toggleCard("fullHist");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("fullHist")?"▶":"▼"}</button></div>
             {helpModal("fullHistory")}
-            <div style={{overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
+            <div style={{display:isCollapsed("fullHist")?"none":"block",overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
                 <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Wk","Vendor","Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 6px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>{allMoves.slice().reverse().map((m,i)=>{
@@ -2428,7 +2527,7 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{padding:"13px 16px",background:"linear-gradient(135deg,"+C.a3+"14,"+C.accent+"08)",borderBottom:"1px solid "+C.border}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
                 <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 Manage Saved Weeks</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 Manage Saved Weeks<button onClick={e=>{e.stopPropagation();toggleCard("savedWeeks");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("savedWeeks")?"▶":"▼"}</button></div>
                   <div style={{fontSize:10,color:C.sub}}>{addedW.length} uploaded · {allW.length} total · tap ☑ to select then delete</div>
                 </div>
                 <div style={{display:"flex",gap:7,flexShrink:0}}>
@@ -2455,7 +2554,7 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
 
             {/* Week list */}
-            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7,maxHeight:320,overflowY:"auto"}}>
+            <div style={{padding:"10px 12px",display:isCollapsed("savedWeeks")?"none":"flex",flexDirection:"column",gap:7,maxHeight:320,overflowY:"auto"}}>
               {addedW.length===0?(
                 <div style={{textAlign:"center",padding:"20px",color:C.sub,fontSize:11}}>
                   <div style={{fontSize:28,marginBottom:8}}>📭</div>
@@ -2557,8 +2656,8 @@ ${pdfText.slice(0,24000)}`}]};
           </div>
           {aiMode==="chat"&&(
             <div style={K()}>
-              <div style={{fontSize:10,fontWeight:700,color:C.sub,marginBottom:11,textTransform:"uppercase",letterSpacing:"0.1em"}}>⚡ Quick Questions</div>
-              <div style={{display:"grid",gridTemplateColumns:wide?"repeat(2,1fr)":"1fr",gap:7}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.sub,marginBottom:11,textTransform:"uppercase",letterSpacing:"0.1em"}}>⚡ Quick Questions<button onClick={e=>{e.stopPropagation();toggleCard("quickQ");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("quickQ")?"▶":"▼"}</button></div>
+              <div style={{display:isCollapsed("quickQ")?"none":"grid",gridTemplateColumns:wide?"repeat(2,1fr)":"1fr",gap:7}}>
                 {["Where am I losing the most money?","What's my biggest profit leak?","How can I increase my net pay?","Which routes give the best RPM?","Give me a 4-week income forecast","Should I take more Hagerstown loads?","How much are fuel advances really costing me?","What should my target weekly net be?"].map(q=>(
                   <button key={q} onClick={()=>setChatIn(q)} style={{padding:"11px 13px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,textAlign:"left",cursor:"pointer",fontFamily:"inherit",lineHeight:1.5}}>{q}</button>
                 ))}
@@ -2787,11 +2886,11 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:8}}>
                 <div style={{width:36,height:36,borderRadius:9,background:"#fbbf2422",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🏦</div>
                 <div>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#fbbf24"}}>Get Funded — Institutions That Trust Your Data</div>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#fbbf24"}}>Get Funded — Institutions That Trust Your Data<button onClick={e=>{e.stopPropagation();toggleCard("funded");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("funded")?"▶":"▼"}</button></div>
                   <div style={{fontSize:10,color:C.sub,marginTop:2}}>Your verified income qualifies you for real business capital</div>
                 </div>
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+              <div style={{display:isCollapsed("funded")?"none":"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
                 {[
                   {l:"Monthly Income",v:`$${Math.round(monthlyNet).toLocaleString()}`,c:"#4ade80"},
                   {l:"Annual Estimate",v:`$${Math.round(annualNet).toLocaleString()}`,c:"#00ffcc"},
@@ -2804,7 +2903,7 @@ ${pdfText.slice(0,24000)}`}]};
                 );})}
               </div>
             </div>
-            <div style={{padding:"12px",display:"flex",flexDirection:"column",gap:10}}>
+            <div style={{padding:"12px",display:isCollapsed("funded")?"none":"flex",flexDirection:"column",gap:10}}>
               {[
                 {
                   icon:"🦅",name:"OOIDA Business Services",type:"Owner-Operator Focused",
