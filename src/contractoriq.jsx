@@ -247,6 +247,8 @@ export default function ContractorIQv26(){
   const [scanQueue,setScanQueue]=useState([]);// {file, fileType, status, result, error}
   const [scanQueueActive,setScanQueueActive]=useState(false);
   const [scanQueueLog,setScanQueueLog]=useState([]);// summary of completed scans
+  const [pendingBulkResults,setPendingBulkResults]=useState([]);// {parsed, fileName, checked, isExisting}
+  const [showBulkReview,setShowBulkReview]=useState(false);
   const [scanResult,setScanResult]=useState(null);
   const [scanMsg,setScanMsg]=useState("");
   const [scanForm,setScanForm]=useState({week:"",from:"",to:"",gross:"",net:"",deds:"",moves:""});
@@ -513,6 +515,7 @@ export default function ContractorIQv26(){
     setScanQueueLog([]);
     setScanResult(null);
     const log=[];
+    const bulkResults=[];
     for(let i=0;i<files.length;i++){
       const file=files[i];
       setScanQueue(files.length>1?[{name:file.name,index:i,total:files.length,status:"scanning"}]:[]);
@@ -559,13 +562,9 @@ ${pdfText.slice(0,24000)}`}]};
         parsed.week=String(parsed.week).padStart(2,"0");
         const wNum=parsed.week;
         const exists=addedW.find(w=>w.week===wNum);
-        if(exists){
-          setAddedW(p=>p.map(w=>w.week===wNum?{...parsed,vendor:vendorPick,week:wNum,label:`Week ${wNum}`}:w));
-          log.push({name:file.name,status:"updated",week:wNum,gross:parsed.gross,net:parsed.net});
-        }else{
-          setAddedW(p=>[...p,{...parsed,vendor:vendorPick,week:wNum,label:`Week ${wNum}`}]);
-          log.push({name:file.name,status:"saved",week:wNum,gross:parsed.gross,net:parsed.net});
-        }
+        // Queue for review instead of auto-saving
+        bulkResults.push({parsed:{...parsed,vendor:vendorPick},fileName:file.name,checked:true,isExisting:!!exists});
+        log.push({name:file.name,status:exists?"updated":"saved",week:wNum,gross:parsed.gross,net:parsed.net});
       }catch(e){
         log.push({name:file.name,status:"error",msg:e.message});
       }
@@ -577,6 +576,8 @@ ${pdfText.slice(0,24000)}`}]};
     setScanQueue([]);
     setScanQueueActive(false);
     setScanning(false);
+    setPendingBulkResults(bulkResults);
+    if(bulkResults.length>0)setShowBulkReview(true);
     const saved=log.filter(l=>l.status==="saved"||l.status==="updated").length;
     const errors=log.filter(l=>l.status==="error").length;
     setScanMsg(`✅ Done — ${saved} week${saved!==1?"s":""} saved${errors>0?`, ${errors} failed`:""}`);
@@ -924,6 +925,78 @@ ${pdfText.slice(0,24000)}`}]};
   return(
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
       {upgradeModal()}
+      {/* ═══ BULK SCAN REVIEW MODAL ═══ */}
+      {showBulkReview&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:C.bg,display:"flex",flexDirection:"column"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px",borderBottom:`1px solid ${C.border}`,flexShrink:0}}>
+            <div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.text}}>📋 Review Bulk Scan</div>
+              <div style={{fontSize:10,color:C.sub,marginTop:2}}>{pendingBulkResults.filter(r=>r.checked).length} of {pendingBulkResults.length} weeks selected to save</div>
+            </div>
+            <button onClick={()=>{setShowBulkReview(false);setPendingBulkResults([]);}} style={{background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:13,cursor:"pointer",lineHeight:1,padding:"8px 12px",borderRadius:8,fontFamily:"inherit",fontWeight:700}}>✕ Cancel All</button>
+          </div>
+
+          <div style={{flex:1,minHeight:0,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"14px 16px"}}>
+            {pendingBulkResults.map((r,idx)=>{
+              const p=r.parsed;
+              const netMargin=p.gross>0?((p.net/p.gross)*100).toFixed(1):0;
+              const suspicious=p.gross>0&&(netMargin<20||netMargin>80);
+              return(
+                <div key={idx} style={{background:r.checked?C.card:C.raised,border:`1px solid ${r.checked?C.border:C.border+"55"}`,borderRadius:12,padding:"14px",marginBottom:10,opacity:r.checked?1:0.5,transition:"all 0.2s"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+                    <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                      <input type="checkbox" checked={r.checked} onChange={()=>setPendingBulkResults(prev=>prev.map((x,i)=>i===idx?{...x,checked:!x.checked}:x))} style={{width:18,height:18,accentColor:C.accent,cursor:"pointer"}}/>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:800,color:C.text}}>Week {p.week}{r.isExisting?" (will replace)":""}</div>
+                        <div style={{fontSize:9,color:C.sub,marginTop:1}}>{r.fileName}</div>
+                      </div>
+                    </div>
+                    {r.isExisting&&<span style={{fontSize:8,fontWeight:800,color:C.gold,background:`${C.gold}18`,border:`1px solid ${C.gold}33`,borderRadius:20,padding:"2px 8px"}}>UPDATE</span>}
+                  </div>
+
+                  {suspicious&&<div style={{padding:"7px 10px",borderRadius:7,background:`${C.red}12`,border:`1px solid ${C.red}33`,fontSize:10,color:C.red,marginBottom:10}}>⚠️ Net margin of {netMargin}% looks unusual — double check this week before saving.</div>}
+
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                    <div>
+                      <div style={{fontSize:8,color:C.sub,marginBottom:3,textTransform:"uppercase"}}>Gross</div>
+                      <input type="number" value={p.gross} onChange={e=>setPendingBulkResults(prev=>prev.map((x,i)=>i===idx?{...x,parsed:{...x.parsed,gross:parseFloat(e.target.value)||0}}:x))} style={{width:"100%",padding:"7px 8px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.green,fontSize:12,fontWeight:700,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                    </div>
+                    <div>
+                      <div style={{fontSize:8,color:C.sub,marginBottom:3,textTransform:"uppercase"}}>Net</div>
+                      <input type="number" value={p.net} onChange={e=>setPendingBulkResults(prev=>prev.map((x,i)=>i===idx?{...x,parsed:{...x.parsed,net:parseFloat(e.target.value)||0}}:x))} style={{width:"100%",padding:"7px 8px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.accent,fontSize:12,fontWeight:700,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                    </div>
+                    <div>
+                      <div style={{fontSize:8,color:C.sub,marginBottom:3,textTransform:"uppercase"}}>Deductions</div>
+                      <input type="number" value={p.totalDeductions} onChange={e=>setPendingBulkResults(prev=>prev.map((x,i)=>i===idx?{...x,parsed:{...x.parsed,totalDeductions:parseFloat(e.target.value)||0}}:x))} style={{width:"100%",padding:"7px 8px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.red,fontSize:12,fontWeight:700,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                    </div>
+                  </div>
+                  <div style={{fontSize:9,color:C.sub,marginTop:8}}>{(p.moves||[]).length} moves · {(p.deds||[]).length} deductions extracted</div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{padding:"14px 16px",borderTop:`1px solid ${C.border}`,flexShrink:0,display:"flex",gap:10}}>
+            <button onClick={()=>{setShowBulkReview(false);setPendingBulkResults([]);}} style={{flex:1,padding:"13px",borderRadius:10,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button>
+            <button onClick={()=>{
+              const toSave=pendingBulkResults.filter(r=>r.checked);
+              setAddedW(prev=>{
+                let next=[...prev];
+                toSave.forEach(r=>{
+                  const wNum=r.parsed.week;
+                  const exists=next.find(w=>w.week===wNum);
+                  if(exists){next=next.map(w=>w.week===wNum?{...r.parsed,week:wNum,label:`Week ${wNum}`}:w);}
+                  else{next=[...next,{...r.parsed,week:wNum,label:`Week ${wNum}`}];}
+                });
+                return next;
+              });
+              setShowBulkReview(false);
+              setPendingBulkResults([]);
+              setScanMsg(`✅ Saved ${toSave.length} week${toSave.length!==1?"s":""}`);
+            }} style={{flex:2,padding:"13px",borderRadius:10,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>✅ Save {pendingBulkResults.filter(r=>r.checked).length} Week{pendingBulkResults.filter(r=>r.checked).length!==1?"s":""}</button>
+          </div>
+        </div>
+      )}
       {showOnboarding&&(
         <div style={{position:"fixed",inset:0,zIndex:10000,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0 8px 70px"}} onClick={()=>{try{localStorage.setItem("ciq_onboarding_done","true");}catch(e){}setShowOnboarding(false);}}>
           <div style={{background:C.card,borderRadius:20,padding:"22px 18px",maxWidth:440,width:"100%",border:`1px solid ${C.accent}44`,boxShadow:`0 0 40px ${C.accent}22`}} onClick={e=>e.stopPropagation()}>
