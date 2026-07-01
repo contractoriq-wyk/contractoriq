@@ -1487,17 +1487,23 @@ ${pdfText.slice(0,24000)}`}]};
               </button>
               {showMenu&&(
                 <>
-                {/* Backdrop */}
                 <div style={{position:"fixed",inset:0,zIndex:9998,background:"rgba(0,0,0,0.5)"}} onClick={()=>setShowMenu(false)}/>
-                {/* Menu panel — full screen drawer on mobile, dropdown on desktop */}
-                <div style={window.innerWidth>900?{position:"fixed",top:108,right:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"8px 6px",zIndex:9999,width:260,maxHeight:"calc(100vh - 120px)",overflowY:"auto",WebkitOverflowScrolling:"touch",boxShadow:"0 8px 40px rgba(0,0,0,0.7)"}:{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.card,zIndex:9999,display:"flex",flexDirection:"column"}}>
-                {/* Mobile close bar — always show on phones */}
-                {window.innerWidth<=900&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 16px 8px",borderBottom:`1px solid ${C.border}`,flexShrink:0}}>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.text}}>Menu</div>
-                  <button onClick={()=>setShowMenu(false)} style={{background:"none",border:"none",color:C.sub,fontSize:22,cursor:"pointer",lineHeight:1,padding:"4px 8px"}}>✕</button>
-                </div>}
-                <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:window.innerWidth>900?"0":"0 16px 80px"}}>
-
+                <div style={{
+                  position:"fixed",
+                  top:0,left:0,right:0,bottom:0,
+                  zIndex:9999,
+                  background:C.card,
+                  display:"flex",
+                  flexDirection:"column",
+                  overflow:"hidden"
+                }}>
+                  {/* Header */}
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px",borderBottom:`1px solid ${C.border}`,flexShrink:0,background:C.card}}>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.text}}>Menu</div>
+                    <button onClick={()=>setShowMenu(false)} style={{background:`${C.red}15`,border:`1px solid ${C.red}33`,color:C.red,fontSize:13,cursor:"pointer",lineHeight:1,padding:"6px 12px",borderRadius:8,fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
+                  </div>
+                  {/* Scrollable content */}
+                  <div style={{flex:1,minHeight:0,height:0,overflowY:"scroll",WebkitOverflowScrolling:"touch",padding:"8px 6px 100px"}}>
                   {/* Account header */}
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
                     <div style={{fontSize:8,color:C.sub,letterSpacing:"0.08em",marginBottom:3}}>SIGNED IN</div>
@@ -1542,7 +1548,8 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Support</div>
                   <a href="https://whatsapp.com/channel/0029VazNGCd0bIdZvxjLIB2L" target="_blank" rel="noreferrer" style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700,textDecoration:"none",boxSizing:"border-box"}}><span>💬</span><div style={{flex:1}}><div>WhatsApp Support</div><div style={{fontSize:9,fontWeight:400,color:C.sub,marginTop:1}}>Join our channel · Get help fast</div></div><span style={{fontSize:8,fontWeight:800,color:"#080c16",background:"#25D366",borderRadius:20,padding:"2px 7px"}}>LIVE</span></a>
 
-                </div>
+                
+                  </div>
                 </div>
                 </>
               )}
