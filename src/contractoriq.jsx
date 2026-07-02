@@ -126,8 +126,10 @@ function mergeExtraPay(moves){
 function pairRoundTrips(moves){
   const result=[],used=new Set();
 
-  // PASS 1: Group by order number (ord) — this is the reliable, definitive match.
-  // Multiple legs sharing the same order number are one round trip / multi-leg movement.
+  // Group by order number (ord) — this is the ONLY reliable way to detect a round trip.
+  // Multiple legs sharing the same order number are confirmed to be one truck movement.
+  // We do NOT guess based on matching routes/rates — that produces false pairings when
+  // multiple unrelated loads happen to run the same corridor at the same rate.
   const byOrd={};
   moves.forEach((m,i)=>{
     const ord=m.ord||"";
@@ -138,7 +140,7 @@ function pairRoundTrips(moves){
 
   Object.keys(byOrd).forEach(ord=>{
     const idxs=byOrd[ord];
-    if(idxs.length<2)return;// single leg under this order — leave for pass 2/3
+    if(idxs.length<2)return;// single leg under this order — report as its own move
     const legs=idxs.map(i=>moves[i]).sort((a,b)=>(a.leg||0)-(b.leg||0));
     const totalMi=legs.reduce((s,l)=>s+(l.mi||l.miles||0),0);
     const totalPay=legs.reduce((s,l)=>s+(l.rt||l.rate||0),0);
@@ -163,26 +165,14 @@ function pairRoundTrips(moves){
     idxs.forEach(i=>used.add(i));
   });
 
-  // PASS 2: For moves without an order number (or single-leg orders), fall back
-  // to the from/to reversal heuristic — matches empty+loaded pairs by route symmetry.
+  // Everything else — including all moves with no order number — reports as-is,
+  // individually. No guessing, no route-symmetry matching. Accurate but ungrouped
+  // beats confidently wrong.
   moves.forEach((m,i)=>{
     if(used.has(i))return;
-    const mi=m.mi||m.miles||0,rt=m.rt||m.rate||0,fc=m.fc||m.fsc||0,fr=m.fr||m.from||"",to=m.to||"",t=m.t||m.type||"L",isFlatRate=fc===0&&rt>=100;
-    if(!isFlatRate){result.push(m);return;}
-    let matchIdx=-1;
-    moves.forEach((m2,j)=>{
-      if(used.has(j)||j===i)return;
-      const rt2=m2.rt||m2.rate||0,fc2=m2.fc||m2.fsc||0,fr2=m2.fr||m2.from||"",to2=m2.to||"",t2=m2.t||m2.type||"L";
-      if(fc2===0&&rt2>=100&&fr===to2&&to===fr2&&t!==t2&&matchIdx===-1)matchIdx=j;
-    });
-    if(matchIdx!==-1){
-      const m2=moves[matchIdx],emptyLeg=t==="E"?m:m2,loadedLeg=t==="L"?m:m2;
-      const totalMi=(emptyLeg.mi||emptyLeg.miles||0)+(loadedLeg.mi||loadedLeg.miles||0);
-      const totalPay=(emptyLeg.rt||emptyLeg.rate||0)+(loadedLeg.rt||loadedLeg.rate||0);
-      result.push({t:"RT",type:"RT",fr:loadedLeg.fr||loadedLeg.from||"",to:loadedLeg.to||"",mi:totalMi,miles:totalMi,rt:totalPay,rate:totalPay,fc:0,fsc:0,extraPay:0,isRoundTrip:true,emptyPay:emptyLeg.rt||emptyLeg.rate||0,loadedPay:loadedLeg.rt||loadedLeg.rate||0,emptyMi:emptyLeg.mi||emptyLeg.miles||0,loadedMi:loadedLeg.mi||loadedLeg.miles||0,legCount:2});
-      used.add(i);used.add(matchIdx);
-    } else result.push(m);
+    result.push(m);
   });
+
   return result;
 }
 
