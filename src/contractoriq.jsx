@@ -1838,8 +1838,8 @@ ${pdfText.slice(0,24000)}`}]};
                       const ni=ki>=0?ki:i;
                       setSD(ni);setSM(ni);setSH(ni);
                     }}>
-                    {/* Net label on top */}
-                    <div style={{fontSize:isSelected?9:7,color:isSelected?vc:C.sub,fontWeight:isSelected?800:500,lineHeight:1,marginBottom:3,transition:"all 0.15s"}}>${(w.net/1000).toFixed(1)}k</div>
+                    {/* Net label on top — hide non-selected when many weeks to prevent overlap */}
+                    {(allW.length<=12||isSelected)&&<div style={{fontSize:isSelected?9:6,color:isSelected?vc:C.sub,fontWeight:isSelected?800:500,lineHeight:1,marginBottom:3,whiteSpace:"nowrap",transition:"all 0.15s"}}>${(w.net/1000).toFixed(1)}k</div>}
                     {/* Bar with grade color glow */}
                     <div style={{position:"relative",width:"72%",display:"flex",flexDirection:"column",justifyContent:"flex-end",height:72}}>
                       <div style={{
@@ -2294,9 +2294,13 @@ ${pdfText.slice(0,24000)}`}]};
                       <div style={{fontSize:9,color:"#fbbf24",fontWeight:700,marginBottom:8,textTransform:"uppercase",letterSpacing:"0.07em"}}>⚙️ Calibrate to your truck</div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
                         <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
-                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                             <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Baseline MPG</div>
-                            <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.accent}}>{fuelMPG.toFixed(1)}</span>
+                            <div style={{display:"flex",alignItems:"center",gap:8}}>
+                              <button onClick={function(){setFuelMPG(function(p){return Math.max(3.5,Math.round((p-0.1)*10)/10);});}} style={{width:26,height:26,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+                              <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:C.accent,minWidth:32,textAlign:"center"}}>{fuelMPG.toFixed(1)}</span>
+                              <button onClick={function(){setFuelMPG(function(p){return Math.min(9.0,Math.round((p+0.1)*10)/10);});}} style={{width:26,height:26,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+                            </div>
                           </div>
                           <input type="range" min="3.5" max="9.0" step="0.1" value={fuelMPG}
                             onChange={function(e){setFuelMPG(parseFloat(e.target.value));}}
@@ -2305,6 +2309,7 @@ ${pdfText.slice(0,24000)}`}]};
                             <span style={{color:"#f87171"}}>3.5 poor</span>
                             <span style={{color:"#4ade80"}}>9.0 great</span>
                           </div>
+                          <div style={{fontSize:8,color:C.sub,marginTop:5,lineHeight:1.4}}>💡 Use +/− buttons for precise 0.1 adjustments, or drag the slider for quick changes.</div>
                         </div>
                         <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
