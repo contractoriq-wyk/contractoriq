@@ -94,7 +94,7 @@ const DEMO_W=[
 
 const VENDORS={
   JDT:{name:"Demo Driver Co",short:"DEMO",icon:"🚛",color:"#00ffcc",unit:""},
-  CPG:{name:"Demo Trucking LLC",short:"CPG",icon:"⚓",color:"#00ffcc",unit:"TRK001"},
+  CPG:{name:"ContainerPort Group",short:"CPG",icon:"⚓",color:"#00ffcc",unit:""},
   STG:{name:"STG Drayage",short:"STG",icon:"⚓",color:"#a78bfa",unit:""},
   AMZ:{name:"Amazon Freight",short:"AMZ",icon:"📦",color:"#ff7a45",unit:""},
   OTH:{name:"Other",short:"OTH",icon:"🏢",color:"#fbbf24",unit:""},
@@ -322,8 +322,11 @@ export default function ContractorIQv26(){
   const [onboardStep,setOnboardStep]=useState(0);
   const [ownerNotes,setOwnerNotes]=useState(()=>{try{const s=localStorage.getItem("ciq_owner_notes");return s?JSON.parse(s):{};}catch{return {};}});
   useEffect(()=>{try{localStorage.setItem("ciq_owner_notes",JSON.stringify(ownerNotes));}catch(e){};},[ownerNotes]);
-  const [manualFuelLogs,setManualFuelLogs]=useState(()=>{try{const s=localStorage.getItem("ciq_manual_fuel");return s?JSON.parse(s):{};}catch{return {};}});
-  useEffect(()=>{try{localStorage.setItem("ciq_manual_fuel",JSON.stringify(manualFuelLogs));}catch(e){};},[manualFuelLogs]);
+  // Fuel fill-up log: array of {date, odometer, gallons, cost, mpg} — each entry closes the PREVIOUS one by
+  // calculating miles driven since the last fill-up odometer reading.
+  const [fuelFillups,setFuelFillups]=useState(()=>{try{const s=localStorage.getItem("ciq_fuel_fillups");return s?JSON.parse(s):[];}catch{return [];}});
+  useEffect(()=>{try{localStorage.setItem("ciq_fuel_fillups",JSON.stringify(fuelFillups));}catch(e){};},[fuelFillups]);
+  const [newFillup,setNewFillup]=useState({date:"",odometer:"",gallons:"",cost:""});
   const [showProfile,setShowProfile]=useState(false);
   const [profile,setProfile]=useState(()=>{try{const s=localStorage.getItem("ciq_profile");return s?JSON.parse(s):{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}catch{return{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}});
   const [expenses,setExpenses]=useState(()=>{try{const s=localStorage.getItem("ciq_expenses");return s?JSON.parse(s):[];}catch{return[];}});
@@ -2131,51 +2134,81 @@ ${pdfText.slice(0,24000)}`}]};
                       />
                     </div>
 
-                    {/* Manual Fuel Log — physical pump readings for real MPG verification */}
+                    {/* Manual Fuel Log — real pump-to-pump fill-up tracking */}
                     <div>
-                      <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>⛽ Manual Fuel Log — W{dw.week}</div>
-                      <div style={{fontSize:9,color:C.sub,lineHeight:1.5,marginBottom:10}}>Log what you actually pumped at the pump. Compare against the settlement-reported MPG to verify your truck's real efficiency.</div>
+                      <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>⛽ Manual Fuel Log — Real MPG Tracker</div>
+                      <div style={{fontSize:9,color:C.sub,lineHeight:1.5,marginBottom:10}}>Log your odometer every time you fuel up. DrayageIQ calculates miles driven and real MPG automatically between fill-ups — no manual math needed.</div>
+
                       {(()=>{
-                        const log=manualFuelLogs[dw.week]||{date:"",miles:"",gallons:"",cost:""};
-                        const updateLog=(field,val)=>setManualFuelLogs(p=>({...p,[dw.week]:{...log,[field]:val}}));
-                        const manualMPG=parseFloat(log.miles)>0&&parseFloat(log.gallons)>0?(parseFloat(log.miles)/parseFloat(log.gallons)).toFixed(2):null;
-                        // Settlement-reported MPG for comparison
-                        const settlementMiles=(dw.moves||[]).reduce((s,m)=>s+(m.mi||m.miles||0),0);
-                        const settlementGal=dw.gallons>0?dw.gallons:0;
-                        const settlementMPG=settlementGal>0?(settlementMiles/settlementGal).toFixed(2):null;
-                        const mpgDiff=manualMPG&&settlementMPG?(parseFloat(manualMPG)-parseFloat(settlementMPG)).toFixed(2):null;
+                        const sorted=[...fuelFillups].sort((a,b)=>new Date(a.date)-new Date(b.date));
+                        const lastFillup=sorted[sorted.length-1]||null;
+
+                        const addFillup=()=>{
+                          if(!newFillup.date||!newFillup.odometer||!newFillup.gallons||!newFillup.cost)return;
+                          const odo=parseFloat(newFillup.odometer);
+                          const gal=parseFloat(newFillup.gallons);
+                          const cost=parseFloat(newFillup.cost);
+                          let miles=null,mpg=null;
+                          if(lastFillup){
+                            miles=odo-parseFloat(lastFillup.odometer);
+                            if(miles>0&&gal>0)mpg=(miles/gal).toFixed(2);
+                          }
+                          setFuelFillups(p=>[...p,{date:newFillup.date,odometer:odo,gallons:gal,cost:cost,milesSinceLast:miles,mpg:mpg}]);
+                          setNewFillup({date:"",odometer:"",gallons:"",cost:""});
+                        };
+
                         return(
                           <div>
-                            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-                              <div>
-                                <div style={{fontSize:8,color:C.sub,marginBottom:3}}>DATE</div>
-                                <input type="date" value={log.date} onChange={e=>updateLog("date",e.target.value)} style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
-                              </div>
-                              <div>
-                                <div style={{fontSize:8,color:C.sub,marginBottom:3}}>MILES DRIVEN</div>
-                                <input type="number" value={log.miles} onChange={e=>updateLog("miles",e.target.value)} placeholder="e.g. 1850" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
-                              </div>
-                              <div>
-                                <div style={{fontSize:8,color:C.sub,marginBottom:3}}>GALLONS PUMPED</div>
-                                <input type="number" value={log.gallons} onChange={e=>updateLog("gallons",e.target.value)} placeholder="e.g. 320" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
-                              </div>
-                              <div>
-                                <div style={{fontSize:8,color:C.sub,marginBottom:3}}>TOTAL COST ($)</div>
-                                <input type="number" value={log.cost} onChange={e=>updateLog("cost",e.target.value)} placeholder="e.g. 1580" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
-                              </div>
-                            </div>
-                            {manualMPG&&(
-                              <div style={{padding:"10px 12px",borderRadius:9,background:`${C.accent}0d`,border:`1px solid ${C.accent}33`}}>
-                                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:settlementMPG?6:0}}>
-                                  <div style={{fontSize:10,color:C.text,fontWeight:700}}>Your Real MPG</div>
-                                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.accent}}>{manualMPG}</div>
+                            {/* Add new fill-up form */}
+                            <div style={{background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,padding:12,marginBottom:12}}>
+                              <div style={{fontSize:9,fontWeight:700,color:C.accent,marginBottom:8,textTransform:"uppercase"}}>{lastFillup?"Log Next Fill-Up":"Log Your First Fill-Up"}</div>
+                              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+                                <div>
+                                  <div style={{fontSize:8,color:C.sub,marginBottom:3}}>DATE</div>
+                                  <input type="date" value={newFillup.date} onChange={e=>setNewFillup(p=>({...p,date:e.target.value}))} style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.card,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
                                 </div>
-                                {settlementMPG&&(
-                                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:9,color:C.sub}}>
-                                    <span>Settlement reported: {settlementMPG} MPG</span>
-                                    <span style={{color:mpgDiff>=0?C.green:C.red,fontWeight:700}}>{mpgDiff>=0?"+":""}{mpgDiff} diff</span>
+                                <div>
+                                  <div style={{fontSize:8,color:C.sub,marginBottom:3}}>ODOMETER (mi)</div>
+                                  <input type="number" value={newFillup.odometer} onChange={e=>setNewFillup(p=>({...p,odometer:e.target.value}))} placeholder="e.g. 145820" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.card,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                                </div>
+                                <div>
+                                  <div style={{fontSize:8,color:C.sub,marginBottom:3}}>GALLONS PUMPED</div>
+                                  <input type="number" value={newFillup.gallons} onChange={e=>setNewFillup(p=>({...p,gallons:e.target.value}))} placeholder="e.g. 120" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.card,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                                </div>
+                                <div>
+                                  <div style={{fontSize:8,color:C.sub,marginBottom:3}}>TOTAL COST ($)</div>
+                                  <input type="number" value={newFillup.cost} onChange={e=>setNewFillup(p=>({...p,cost:e.target.value}))} placeholder="e.g. 590" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.card,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                                </div>
+                              </div>
+                              {lastFillup&&<div style={{fontSize:9,color:C.sub,marginBottom:8}}>Last fill-up: {lastFillup.odometer.toLocaleString()} mi on {lastFillup.date}</div>}
+                              <button onClick={addFillup} style={{width:"100%",padding:"9px",borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>+ Log Fill-Up</button>
+                            </div>
+
+                            {/* Most recent calculated MPG */}
+                            {lastFillup&&lastFillup.mpg&&(
+                              <div style={{padding:"10px 12px",borderRadius:9,background:`${C.green}0d`,border:`1px solid ${C.green}33`,marginBottom:10}}>
+                                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                                  <div>
+                                    <div style={{fontSize:10,color:C.text,fontWeight:700}}>Real MPG (Last Fill-Up)</div>
+                                    <div style={{fontSize:9,color:C.sub,marginTop:1}}>{lastFillup.milesSinceLast.toFixed(0)} mi driven since previous fill-up</div>
                                   </div>
-                                )}
+                                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.green}}>{lastFillup.mpg}</div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* History */}
+                            {sorted.length>0&&(
+                              <div>
+                                <div style={{fontSize:8,fontWeight:700,color:C.sub,marginBottom:6,textTransform:"uppercase"}}>Fill-Up History ({sorted.length})</div>
+                                <div style={{maxHeight:160,overflowY:"auto"}}>
+                                  {[...sorted].reverse().map((f,i)=>(
+                                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 9px",background:C.bg,borderRadius:6,marginBottom:4,fontSize:9}}>
+                                      <span style={{color:C.sub}}>{f.date} · {f.odometer.toLocaleString()} mi · {f.gallons} gal</span>
+                                      <span style={{color:f.mpg?C.accent:C.sub,fontWeight:700}}>{f.mpg?`${f.mpg} MPG`:"—"}</span>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -2860,7 +2893,9 @@ ${pdfText.slice(0,24000)}`}]};
 
       const strengths=[];
       if(+margin>=20)strengths.push({icon:"💰",title:"Healthy Net Margin",detail:`${margin}% margin puts you in the top tier of owner-operators. You keep more of what you earn.`,color:"#4ade80"});
-      const bestV=vendorStats.reduce(function(b,v){return v.margin>b.margin?v:b},{margin:0});
+      const bestVRaw=vendorStats.reduce(function(b,v){return v.margin>b.margin?v:b},{margin:0});
+      // In demo mode, label clearly as demo data. In real mode, use the actual carrier name.
+      const bestV=demoMode?{...bestVRaw,name:"Demo Driver Co"}:bestVRaw;
       if(bestV.margin>0)strengths.push({icon:"🏆",title:`${bestV.name} at ${bestV.margin}% Margin`,detail:`Your strongest vendor relationship is generating exceptional margins. Prioritize these loads.`,color:"#00ffcc"});
       if(ldPct>=60)strengths.push({icon:"📦",title:`${ldPct}% Loaded Miles`,detail:"Above 60% loaded rate means you're maximizing paid miles. Strong lane discipline.",color:"#a78bfa"});
       if(+avgRPM>=2.5)strengths.push({icon:"📈",title:`$${avgRPM} Average RPM`,detail:"Above $2.50 RPM is excellent for drayage. You're selecting high-value freight consistently.",color:"#fbbf24"});
