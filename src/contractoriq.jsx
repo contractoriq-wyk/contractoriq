@@ -837,7 +837,8 @@ ${pdfText.slice(0,24000)}`}]};
   async function runAITool(mode){
     setAiMode(mode);setAiOut("");setAiLoad(true);
     const w=allW[sR]||allW[allW.length-1]||safeW[safeW.length-1];
-    const fuel=w.deds.filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
+    const fuelGross=w.deds.filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
+    const fuel=Math.max(0,fuelGross-(w.rebate||0));// net of rebate for accurate reporting
     let prompt="",sys="";
     if(mode==="report"){sys="Write professional plain-text business reports for drayage owner-operators. No markdown. Clear, numbered sections.";prompt=`Weekly settlement report for ${w.label} (${w.from}-${w.to}).\nGross: $${w.gross} | Net: $${w.net} | Margin: ${(w.net/w.gross*100).toFixed(1)}%\nFuel: $${fuel.toFixed(0)} | Moves: ${w.moves.length} | YTD Net: $${tNet.toFixed(0)}\nWrite: 1) Week Summary 2) Top Profit Leak 3) Action Item 4) Outlook. Under 200 words.`;}
     if(mode==="bizplan"){sys="Write professional business plans for small trucking companies. Plain text, no markdown.";prompt=`Business plan for YOUR COMPANY seeking loan to expand 1 to 2 trucks.\nYTD Gross: $${tGross.toFixed(2)} over ${allW.length} weeks\nYTD Net: $${tNet.toFixed(2)} | Margin: ${margin}%\nAvg Weekly Net: $${(tNet/allW.length).toFixed(2)}\nWrite 5 sections: Executive Summary, Business Description, Financial Performance, Loan Request, Growth Strategy. ~400 words.`;}
@@ -2406,13 +2407,14 @@ ${pdfText.slice(0,24000)}`}]};
           {/* ACTION PLAN */}
           {(()=>{
             const lw=safeW[sD]||safeW[safeW.length-1];
-            const lwFuel=(lw.deds||[]).filter(function(d){return d.l.toLowerCase().includes("fuel");}).reduce(function(s,d){return s+d.a;},0);
+            const lwFuelGross=(lw.deds||[]).filter(function(d){return d.l.toLowerCase().includes("fuel");}).reduce(function(s,d){return s+d.a;},0);
+            const lwFuel=Math.max(0,lwFuelGross-(lw.rebate||0));// net of rebate for accurate alert
             const lwLoaded=lw.moves&&lw.moves.length>0?Math.round(lw.moves.filter(function(m){return m.t==="L"||m.type==="L";}).length/lw.moves.length*100):0;
             const targetNet=parseFloat(profile.targetWeeklyNet)||3000,gap=targetNet-lw.net,avgRPMnum=parseFloat(avgRPM)||0;
             const actions=[];
             if(lw.net<targetNet&&gap>0)actions.push({icon:"💰",color:"#fbbf24",title:"Close the $"+Math.round(gap).toLocaleString()+" gap to your weekly target",detail:"W"+lw.week+" net was $"+lw.net.toFixed(0)+". "+Math.ceil(gap/250)+" additional loaded runs at your average rate would close this gap."});
             if(lwLoaded<60)actions.push({icon:"📦",color:"#00ffcc",title:"Boost your loaded percentage — currently "+lwLoaded+"%",detail:"Less than 60% loaded miles hurts your revenue per mile. Prioritize back-to-back loaded moves."});
-            if(lwFuel>800)actions.push({icon:"⛽",color:"#f87171",title:"Fuel cost of $"+Math.round(lwFuel).toLocaleString()+" is high this week",detail:"Check if your settlement MPG is below baseline. High fuel advances could mean inefficient routes."});
+            if(lwFuel>800)actions.push({icon:"⛽",color:"#f87171",title:"Fuel cost of $"+Math.round(lwFuel).toLocaleString()+" (net of rebate) is high this week",detail:"Check if your settlement MPG is below baseline. High fuel advances could mean inefficient routes."});
             if(avgRPMnum<2.5)actions.push({icon:"📈",color:"#a78bfa",title:"Avg RPM of $"+avgRPM+" is below $2.50 target",detail:"Review your route mix and decline D-grade offers — they cost more than they pay."});
             const topActions=actions.slice(0,3);if(topActions.length===0)return null;
             return(
