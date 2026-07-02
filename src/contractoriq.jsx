@@ -309,7 +309,22 @@ export default function ContractorIQv26(){
   const [showReviews,setShowReviews]=useState(false);
   const [showIconKey,setShowIconKey]=useState(false);
   const [showFleet,setShowFleet]=useState(false);
-  const [reviews,setReviews]=useState(()=>{try{return JSON.parse(localStorage.getItem("ciq_reviews")||"[]");}catch{return [];}});
+  const [reviews,setReviews]=useState([]);
+  const [reviewsLoading,setReviewsLoading]=useState(true);
+  useEffect(()=>{
+    // Fetch shared reviews from Supabase — visible to all users
+    (async()=>{
+      try{
+        const c=getSB();
+        if(!c){setReviewsLoading(false);return;}
+        const {data,error}=await c.from("public_reviews").select("*").order("created_at",{ascending:false});
+        if(!error&&data){
+          setReviews(data.map(r=>({name:r.name,role:r.role,stars:r.stars,text:r.text,date:new Date(r.created_at).toLocaleDateString("en-US",{month:"short",year:"numeric"})})));
+        }
+      }catch(e){}
+      setReviewsLoading(false);
+    })();
+  },[]);
   const [reviewForm,setReviewForm]=useState({name:"",role:"",stars:5,text:""});
   const [addingReview,setAddingReview]=useState(false);
   const [hiddenVendors,setHiddenVendors]=useState([]);
@@ -1136,12 +1151,26 @@ ${pdfText.slice(0,24000)}`}]};
                 <div style={{marginBottom:10}}><div style={{fontSize:10,color:C.sub,fontWeight:700,marginBottom:6}}>RATING</div><div style={{display:"flex",gap:6}}>{[1,2,3,4,5].map(s=><button key={s} onClick={()=>setReviewForm(p=>({...p,stars:s}))} style={{fontSize:24,background:"none",border:"none",cursor:"pointer",opacity:s<=reviewForm.stars?1:0.3,padding:0}}>⭐</button>)}</div></div>
                 <div style={{marginBottom:12}}><div style={{fontSize:10,color:C.sub,fontWeight:700,marginBottom:4}}>YOUR REVIEW</div><textarea value={reviewForm.text} onChange={e=>setReviewForm(p=>({...p,text:e.target.value}))} rows={4} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",outline:"none",resize:"none",boxSizing:"border-box"}}/></div>
                 <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>{if(!reviewForm.name.trim()||!reviewForm.text.trim())return;const newR=[{...reviewForm,date:new Date().toLocaleDateString("en-US",{month:"short",year:"numeric"})},...reviews];setReviews(newR);try{localStorage.setItem("ciq_reviews",JSON.stringify(newR));}catch(e){}setReviewForm({name:"",role:"",stars:5,text:""});setAddingReview(false);}} style={{flex:1,padding:"11px",borderRadius:10,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontSize:12,fontWeight:800,border:"none",cursor:"pointer",fontFamily:"inherit"}}>✅ Submit</button>
+                  <button onClick={async()=>{
+                    if(!reviewForm.name.trim()||!reviewForm.text.trim())return;
+                    const optimistic={...reviewForm,date:new Date().toLocaleDateString("en-US",{month:"short",year:"numeric"})};
+                    setReviews(p=>[optimistic,...p]);// show immediately
+                    setReviewForm({name:"",role:"",stars:5,text:""});
+                    setAddingReview(false);
+                    try{
+                      const c=getSB();
+                      if(c){
+                        await c.from("public_reviews").insert({name:optimistic.name,role:optimistic.role,stars:optimistic.stars,text:optimistic.text});
+                      }
+                    }catch(e){}
+                  }} style={{flex:1,padding:"11px",borderRadius:10,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontSize:12,fontWeight:800,border:"none",cursor:"pointer",fontFamily:"inherit"}}>✅ Submit</button>
                   <button onClick={()=>setAddingReview(false)} style={{padding:"11px 16px",borderRadius:10,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button>
                 </div>
               </div>
             )}
-            {reviews.length===0&&!addingReview&&<div style={{textAlign:"center",padding:"32px 16px",color:C.sub}}><div style={{fontSize:40,marginBottom:12}}>⭐</div><div style={{fontSize:14,fontWeight:700,color:C.text}}>Be the first to review!</div></div>}
+            {reviewsLoading&&<div style={{textAlign:"center",padding:"32px 16px",color:C.sub,fontSize:12}}>Loading reviews...</div>}
+            {!reviewsLoading&&reviews.length===0&&!addingReview&&<div style={{textAlign:"center",padding:"32px 16px",color:C.sub}}><div style={{fontSize:40,marginBottom:12}}>⭐</div><div style={{fontSize:14,fontWeight:700,color:C.text}}>Be the first to review!</div></div>}
+            {!reviewsLoading&&reviews.length>0&&<div style={{fontSize:9,color:C.sub,marginBottom:12,textAlign:"center"}}>🌐 Reviews are shared publicly with all DrayageIQ users</div>}
             {reviews.map((r,i)=>(
               <div key={i} style={{background:C.card,borderRadius:14,padding:"16px",marginBottom:12,border:`1px solid ${C.border}`}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
@@ -1937,7 +1966,12 @@ ${pdfText.slice(0,24000)}`}]};
                     </div>
 
                     {/* Mismatch warning */}
-                    {mismatch&&<div style={{padding:"7px 11px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,fontSize:10,color:C.red,marginBottom:10}}>⚠️ Totals don't match — document shows ${docTotal.toFixed(2)} but we extracted ${dedSum.toFixed(2)}. Re-scan for accuracy.</div>}
+                    {mismatch&&(
+                      <div style={{padding:"9px 11px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,marginBottom:10}}>
+                        <div style={{fontSize:10,color:C.red,marginBottom:8}}>⚠️ Totals don't match — document shows ${docTotal.toFixed(2)} but we extracted ${dedSum.toFixed(2)}. This week's data may be incomplete.</div>
+                        <button onClick={()=>{setTab("loads");setScanMode("scan");setTimeout(()=>fileRef.current?.click(),150);}} style={{width:"100%",padding:"8px",borderRadius:7,background:`${C.red}20`,border:`1px solid ${C.red}55`,color:C.red,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🔄 Re-scan This Week</button>
+                      </div>
+                    )}
 
                     {/* 4 Summary Blocks */}
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
@@ -2201,14 +2235,20 @@ ${pdfText.slice(0,24000)}`}]};
                             {/* History */}
                             {sorted.length>0&&(
                               <div>
-                                <div style={{fontSize:8,fontWeight:700,color:C.sub,marginBottom:6,textTransform:"uppercase"}}>Fill-Up History ({sorted.length})</div>
+                                <div style={{fontSize:8,fontWeight:700,color:C.sub,marginBottom:6,textTransform:"uppercase"}}>Fill-Up History ({sorted.length}) — tap ✕ to remove</div>
                                 <div style={{maxHeight:160,overflowY:"auto"}}>
-                                  {[...sorted].reverse().map((f,i)=>(
-                                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 9px",background:C.bg,borderRadius:6,marginBottom:4,fontSize:9}}>
-                                      <span style={{color:C.sub}}>{f.date} · {f.odometer.toLocaleString()} mi · {f.gallons} gal</span>
-                                      <span style={{color:f.mpg?C.accent:C.sub,fontWeight:700}}>{f.mpg?`${f.mpg} MPG`:"—"}</span>
-                                    </div>
-                                  ))}
+                                  {[...sorted].reverse().map((f,i)=>{
+                                    const origIdx=fuelFillups.findIndex(x=>x.date===f.date&&x.odometer===f.odometer&&x.gallons===f.gallons);
+                                    return(
+                                      <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 9px",background:C.bg,borderRadius:6,marginBottom:4,fontSize:9}}>
+                                        <span style={{color:C.sub}}>{f.date} · {f.odometer.toLocaleString()} mi · {f.gallons} gal</span>
+                                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                          <span style={{color:f.mpg?C.accent:C.sub,fontWeight:700}}>{f.mpg?`${f.mpg} MPG`:"—"}</span>
+                                          <button onClick={()=>{if(origIdx>=0)setFuelFillups(p=>p.filter((_,idx)=>idx!==origIdx));}} style={{background:"none",border:"none",color:C.red,fontSize:12,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✕</button>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             )}
@@ -2990,6 +3030,50 @@ ${pdfText.slice(0,24000)}`}]};
               </div>
             </div>
           )}
+
+          {/* DATA HEALTH — scan all weeks for extraction mismatches */}
+          {(()=>{
+            const mismatchWeeks=allW.filter(w=>{
+              const dedSum=(w.deds||[]).reduce((s,d)=>s+(d.a||0),0);
+              const docTotal=w.totalDeductions||0;
+              return docTotal>0&&Math.abs(dedSum-docTotal)>1.50;
+            });
+            if(mismatchWeeks.length===0)return(
+              <div style={{borderRadius:14,padding:"12px 16px",background:`${C.green}0d`,border:`1px solid ${C.green}33`,marginBottom:14,display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:20}}>✅</span>
+                <div>
+                  <div style={{fontSize:12,fontWeight:700,color:C.green}}>Data Health: All Clear</div>
+                  <div style={{fontSize:10,color:C.sub,marginTop:1}}>All {allW.length} weeks match their settlement totals — your numbers are trustworthy.</div>
+                </div>
+              </div>
+            );
+            return(
+              <div style={{borderRadius:14,overflow:"hidden",border:`1px solid ${C.red}44`,marginBottom:14}}>
+                <div style={{padding:"12px 16px",background:`${C.red}12`,borderBottom:`1px solid ${C.red}33`,display:"flex",alignItems:"center",gap:10}}>
+                  <span style={{fontSize:20}}>⚠️</span>
+                  <div>
+                    <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.red}}>Data Health: {mismatchWeeks.length} Week{mismatchWeeks.length!==1?"s":""} Need Attention</div>
+                    <div style={{fontSize:10,color:C.sub,marginTop:1}}>These weeks have extraction totals that don't match the settlement document</div>
+                  </div>
+                </div>
+                <div style={{padding:"12px 16px"}}>
+                  {mismatchWeeks.map(w=>{
+                    const dedSum=(w.deds||[]).reduce((s,d)=>s+(d.a||0),0);
+                    const gap=Math.abs(dedSum-(w.totalDeductions||0));
+                    return(
+                      <div key={w.week} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.border}`}}>
+                        <div>
+                          <div style={{fontSize:11,fontWeight:700,color:C.text}}>Week {w.week}</div>
+                          <div style={{fontSize:9,color:C.sub}}>Document: ${(w.totalDeductions||0).toFixed(2)} · Extracted: ${dedSum.toFixed(2)}</div>
+                        </div>
+                        <div style={{fontSize:11,fontWeight:700,color:C.red}}>${gap.toFixed(2)} gap</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* WHAT'S HELPING YOUR BUSINESS */}
           {strengths.length>0&&(
