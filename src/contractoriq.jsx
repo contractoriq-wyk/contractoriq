@@ -322,6 +322,8 @@ export default function ContractorIQv26(){
   const [onboardStep,setOnboardStep]=useState(0);
   const [ownerNotes,setOwnerNotes]=useState(()=>{try{const s=localStorage.getItem("ciq_owner_notes");return s?JSON.parse(s):{};}catch{return {};}});
   useEffect(()=>{try{localStorage.setItem("ciq_owner_notes",JSON.stringify(ownerNotes));}catch(e){};},[ownerNotes]);
+  const [manualFuelLogs,setManualFuelLogs]=useState(()=>{try{const s=localStorage.getItem("ciq_manual_fuel");return s?JSON.parse(s):{};}catch{return {};}});
+  useEffect(()=>{try{localStorage.setItem("ciq_manual_fuel",JSON.stringify(manualFuelLogs));}catch(e){};},[manualFuelLogs]);
   const [showProfile,setShowProfile]=useState(false);
   const [profile,setProfile]=useState(()=>{try{const s=localStorage.getItem("ciq_profile");return s?JSON.parse(s):{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}catch{return{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}});
   const [expenses,setExpenses]=useState(()=>{try{const s=localStorage.getItem("ciq_expenses");return s?JSON.parse(s):[];}catch{return[];}});
@@ -550,7 +552,7 @@ export default function ContractorIQv26(){
   const mwRPM=mwMi>0?(mwMoves.reduce((s,m)=>s+m.rate+m.fsc,0)/mwMi).toFixed(2):"0.00";
   const mwLd=mwMoves.length>0?Math.round(mwMoves.filter(m=>m.type==="L").length/mwMoves.length*100):0;
   const hw=allW[sH]||allW[allW.length-1];
-  const latFuel=(latest.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
+  const latFuel=Math.max(0,(latest.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0)-(latest.rebate||0));// net of rebate
   const SYS=`Expert drayage business advisor for YOUR COMPANY, CDL owner-operator, Baltimore MD. Real settlement data: ${allW.map(function(w){return "W"+w.week+": Gross $"+w.gross+", Net $"+w.net+", Margin "+(w.net/w.gross*100).toFixed(1)+"%, "+(w.moves||[]).length+" moves";}).join(" | ")}. YTD: Gross $${tGross.toFixed(0)}, Net $${tNet.toFixed(0)}, Margin ${margin}%, Avg RPM $${avgRPM}, Loaded ${ldPct}%. Be specific, practical, use real numbers. Under 300 words.`;
 
   // Process multiple PDFs sequentially
@@ -2119,7 +2121,7 @@ ${pdfText.slice(0,24000)}`}]};
                     })()}
 
                     {/* Owner Notes */}
-                    <div>
+                    <div style={{marginBottom:14}}>
                       <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>📝 Owner Notes — W{dw.week}</div>
                       <textarea
                         value={ownerNotes[dw.week]||""}
@@ -2127,6 +2129,58 @@ ${pdfText.slice(0,24000)}`}]};
                         placeholder="e.g. Called carrier about the $55 license fee — confirmed permanent..."
                         style={{width:"100%",minHeight:64,padding:"10px 12px",borderRadius:9,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",resize:"vertical",boxSizing:"border-box",lineHeight:1.5}}
                       />
+                    </div>
+
+                    {/* Manual Fuel Log — physical pump readings for real MPG verification */}
+                    <div>
+                      <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>⛽ Manual Fuel Log — W{dw.week}</div>
+                      <div style={{fontSize:9,color:C.sub,lineHeight:1.5,marginBottom:10}}>Log what you actually pumped at the pump. Compare against the settlement-reported MPG to verify your truck's real efficiency.</div>
+                      {(()=>{
+                        const log=manualFuelLogs[dw.week]||{date:"",miles:"",gallons:"",cost:""};
+                        const updateLog=(field,val)=>setManualFuelLogs(p=>({...p,[dw.week]:{...log,[field]:val}}));
+                        const manualMPG=parseFloat(log.miles)>0&&parseFloat(log.gallons)>0?(parseFloat(log.miles)/parseFloat(log.gallons)).toFixed(2):null;
+                        // Settlement-reported MPG for comparison
+                        const settlementMiles=(dw.moves||[]).reduce((s,m)=>s+(m.mi||m.miles||0),0);
+                        const settlementGal=dw.gallons>0?dw.gallons:0;
+                        const settlementMPG=settlementGal>0?(settlementMiles/settlementGal).toFixed(2):null;
+                        const mpgDiff=manualMPG&&settlementMPG?(parseFloat(manualMPG)-parseFloat(settlementMPG)).toFixed(2):null;
+                        return(
+                          <div>
+                            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+                              <div>
+                                <div style={{fontSize:8,color:C.sub,marginBottom:3}}>DATE</div>
+                                <input type="date" value={log.date} onChange={e=>updateLog("date",e.target.value)} style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                              </div>
+                              <div>
+                                <div style={{fontSize:8,color:C.sub,marginBottom:3}}>MILES DRIVEN</div>
+                                <input type="number" value={log.miles} onChange={e=>updateLog("miles",e.target.value)} placeholder="e.g. 1850" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                              </div>
+                              <div>
+                                <div style={{fontSize:8,color:C.sub,marginBottom:3}}>GALLONS PUMPED</div>
+                                <input type="number" value={log.gallons} onChange={e=>updateLog("gallons",e.target.value)} placeholder="e.g. 320" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                              </div>
+                              <div>
+                                <div style={{fontSize:8,color:C.sub,marginBottom:3}}>TOTAL COST ($)</div>
+                                <input type="number" value={log.cost} onChange={e=>updateLog("cost",e.target.value)} placeholder="e.g. 1580" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                              </div>
+                            </div>
+                            {manualMPG&&(
+                              <div style={{padding:"10px 12px",borderRadius:9,background:`${C.accent}0d`,border:`1px solid ${C.accent}33`}}>
+                                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:settlementMPG?6:0}}>
+                                  <div style={{fontSize:10,color:C.text,fontWeight:700}}>Your Real MPG</div>
+                                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:C.accent}}>{manualMPG}</div>
+                                </div>
+                                {settlementMPG&&(
+                                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:9,color:C.sub}}>
+                                    <span>Settlement reported: {settlementMPG} MPG</span>
+                                    <span style={{color:mpgDiff>=0?C.green:C.red,fontWeight:700}}>{mpgDiff>=0?"+":""}{mpgDiff} diff</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 );
@@ -2291,12 +2345,12 @@ ${pdfText.slice(0,24000)}`}]};
               <Nav i={sM} max={allW.length-1} prev={()=>setSM(p=>p-1)} next={()=>setSM(p=>p+1)} label={`W${mwBase.week}`}/>
             </div>
             {helpModal("movePerf")}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:14}}>
+            <div style={{display:isCollapsed("movePerf")?"none":"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:14}}>
               {[{l:"Gross",v:`$${mwBase.gross.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.accent},{l:"Net",v:`$${mwBase.net.toLocaleString("en-US",{minimumFractionDigits:2})}`,c:C.green},{l:"Avg RPM",v:`$${mwRPM}`,c:C.a3},{l:"Loaded %",v:`${mwLd}%`,c:mwLd>=60?C.green:C.gold}].map(s=>(
                 <div key={s.l} style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`,textAlign:"center"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:700,color:s.c}}>{s.v}</div></div>
               ))}
             </div>
-            <div style={{overflowX:"auto",overflowY:"auto",maxHeight:320,borderRadius:8,border:`1px solid ${C.border}`}}>
+            <div style={{display:isCollapsed("movePerf")?"none":"block",overflowX:"auto",overflowY:"auto",maxHeight:320,borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
                 <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 9px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>{mwMoves.map((m,i)=>{const s=scoreMove(m);return(
@@ -2771,8 +2825,13 @@ ${pdfText.slice(0,24000)}`}]};
       const monthlyNet=weeklyAvgNet*4.33;
       const annualNet=monthlyNet*12;
       const totalFuel=allW.reduce(function(s,w){return s+(w.deds||[]).filter(function(d){return d.l.toLowerCase().includes("fuel");}).reduce(function(ss,d){return ss+d.a;},0);},0);
-      const fuelPct=tGross>0?totalFuel/tGross*100:0;
-      const emptyMoves=allMoves.filter(function(m){return m.type==="E"||m.t==="E";}).length;
+      const totalRebates=allW.reduce(function(s,w){return s+(w.rebate||0);},0);
+      const netFuelTotal=Math.max(0,totalFuel-totalRebates);// true fuel cost after rebates offset it
+      const fuelPct=tGross>0?netFuelTotal/tGross*100:0;// uses NET fuel cost for accurate margin picture
+      const allEmptyMoves=allMoves.filter(function(m){return m.type==="E"||m.t==="E";});
+      const unpaidEmptyMoves=allEmptyMoves.filter(function(m){return (m.rate||m.rt||0)<=0;});
+      const paidEmptyMoves=allEmptyMoves.filter(function(m){return (m.rate||m.rt||0)>0;});
+      const emptyMoves=unpaidEmptyMoves.length;// only count UNPAID empties as the real issue
       const emptyPct=allMoves.length>0?Math.round(emptyMoves/allMoves.length*100):0;
       const badLoads=allMoves.filter(function(m){const s=scoreMove(m);return s.grade==="D";}).length;
       const lowWks=allW.filter(function(w){return w.net<2500;}).length;
@@ -2793,7 +2852,7 @@ ${pdfText.slice(0,24000)}`}]};
       const hG=hScore>=80?{g:"A",c:"#4ade80",l:"Excellent"}:hScore>=65?{g:"B",c:"#00ffcc",l:"Strong"}:hScore>=50?{g:"C",c:"#fbbf24",l:"Average"}:hScore>=35?{g:"D",c:"#f97316",l:"Needs Work"}:{g:"F",c:"#f87171",l:"Critical"};
 
       const pains=[];
-      if(fuelPct>38)pains.push({icon:"⛽",title:"Fuel Costs Critical",detail:`$${totalFuel.toFixed(0)} — ${fuelPct.toFixed(1)}% of gross goes to fuel. Industry target is under 35%.`,severity:"critical",loss:totalFuel*(fuelPct-35)/fuelPct,color:"#f87171"});
+      if(fuelPct>38)pains.push({icon:"⛽",title:"Fuel Costs Critical",detail:`$${netFuelTotal.toFixed(0)} net of $${totalRebates.toFixed(0)} rebates — ${fuelPct.toFixed(1)}% of gross. Industry target is under 35%.`,severity:"critical",loss:netFuelTotal*(fuelPct-35)/fuelPct,color:"#f87171"});
       if(emptyPct>42)pains.push({icon:"🚗",title:"Too Many Empty Miles",detail:`${emptyPct}% of your runs are empty. Every empty mile costs you money with zero revenue.`,severity:emptyPct>55?"critical":"moderate",loss:0,color:"#fb923c"});
       if(badLoads>0)pains.push({icon:"📉",title:`${badLoads} D-Grade Loads Accepted`,detail:`${badLoads} load${badLoads>1?"s":""} scored D-grade this period. These low-RPM loads drag down your average.`,severity:"moderate",loss:0,color:"#fbbf24"});
       if(+margin<18)pains.push({icon:"💸",title:"Net Margin Below Target",detail:`Your ${margin}% margin is below the 20% target. You're leaving $${Math.round(tGross*0.02).toLocaleString()} on the table each week.`,severity:+margin<12?"critical":"moderate",loss:tGross*0.02,color:"#f87171"});
@@ -2807,6 +2866,10 @@ ${pdfText.slice(0,24000)}`}]};
       if(+avgRPM>=2.5)strengths.push({icon:"📈",title:`$${avgRPM} Average RPM`,detail:"Above $2.50 RPM is excellent for drayage. You're selecting high-value freight consistently.",color:"#fbbf24"});
       if(trendUp&&allW.length>=4)strengths.push({icon:"🚀",title:`Net Pay Up ${trendPct.toFixed(1)}% (Last 4 Weeks)`,detail:"Your recent trend is positive. You're making better decisions than 4 weeks ago.",color:"#4ade80"});
       if(allW.length>=8)strengths.push({icon:"📊",title:`${allW.length} Weeks of Verified Data`,detail:"Lenders and partners trust businesses with consistent financial records. You have a proven track record.",color:"#00ffcc"});
+      if(paidEmptyMoves.length>0){
+        const paidEmptyTotal=paidEmptyMoves.reduce(function(s,m){return s+(m.rate||m.rt||0);},0);
+        if(paidEmptyTotal>0)strengths.push({icon:"🤝",title:`Getting Paid for Repositioning`,detail:`You negotiated pay on ${paidEmptyMoves.length} empty leg${paidEmptyMoves.length!==1?"s":""} totaling $${Math.round(paidEmptyTotal).toLocaleString()} — that's smart negotiation most drivers miss.`,color:"#4ade80"});
+      }
 
       return(
         <div>
@@ -2926,8 +2989,8 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{padding:"12px",display:"flex",flexDirection:"column",gap:10}}>
               {(function(){
                 const steps=[];
-                if(fuelPct>35)steps.push({n:1,icon:"⛽",title:"Fuel Strategy",action:`Cut fuel advances by 15% → save ~$${Math.round(totalFuel*0.15).toLocaleString()}/yr. Use Pilot Flying J Fuel Card for discounts. Pre-plan fuel stops to avoid full-price fills.`,impact:"HIGH"});
-                if(emptyPct>40)steps.push({n:2,icon:"📦",title:"Backhaul Optimization",action:`${emptyPct}% empty rate costs real money. Work your dispatcher for backhauls on every repositioning move. Even $50 empties add up to $${Math.round(emptyMoves*50).toLocaleString()} extra annually.`,impact:"HIGH"});
+                if(fuelPct>35)steps.push({n:1,icon:"⛽",title:"Fuel Strategy",action:`Cut fuel advances by 15% → save ~$${Math.round(netFuelTotal*0.15).toLocaleString()}/yr. Use Pilot Flying J Fuel Card for discounts. Pre-plan fuel stops to avoid full-price fills.`,impact:"HIGH"});
+                if(emptyPct>25)steps.push({n:2,icon:"📦",title:"Unpaid Empty Miles",action:`${emptyPct}% of your moves are UNPAID empty repositioning (${emptyMoves} moves where you drove for free). Work your dispatcher for backhauls or paid repositioning on these routes. Paid empty legs that are part of a round trip do not count here — this only flags truly unpaid miles.`,impact:"HIGH"});
                 steps.push({n:steps.length+1,icon:"📊",title:"Weekly Data Habit",action:`You have ${allW.length} weeks tracked. Drivers who track 52+ weeks earn 23% more annually because they spot trends and negotiate from a position of data — not guesswork.`,impact:"MEDIUM"});
                 if(+margin<20)steps.push({n:steps.length+1,icon:"💰",title:`Close the ${(20-+margin).toFixed(1)}% Margin Gap`,action:`At $${(weeklyAvgGross).toFixed(0)} average weekly gross, every 1% margin improvement = $${(weeklyAvgGross*0.01*52).toFixed(0)}/year extra. Reject D-grade loads and negotiate FSC on every load.`,impact:"HIGH"});
                 steps.push({n:steps.length+1,icon:"🏦",title:"Access Business Capital",action:`Your ${allW.length} weeks of verified income qualifies you for funding. See the institutions below — your $${(monthlyNet).toFixed(0)}/mo net income is real collateral.`,impact:"GAME CHANGER"});
