@@ -1492,7 +1492,7 @@ ${pdfText.slice(0,24000)}`}]};
       <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"13px 16px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:11}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <img src={LOGO_ICON} alt="DrayageIQ" style={{width:34,height:34,borderRadius:9,flexShrink:0,boxShadow:"0 0 12px rgba(0,255,204,0.25)"}}/>
+            <img src={LOGO_ICON} alt="DrayageIQ" style={{width:52,height:52,borderRadius:11,flexShrink:0,boxShadow:"0 0 16px rgba(0,255,204,0.3)"}}/>
             <div>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,fontSize:15,background:"linear-gradient(135deg,#ffffff,#a5f3fc,#c4b5fd)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>DrayageIQ</div>
               <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":demoMode?"Demo Driver":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</div>
@@ -3063,6 +3063,11 @@ ${pdfText.slice(0,24000)}`}]};
   </div>
 )}
 
+      </div>
+
+      {/* LOGO BEFORE LEGAL FOOTER */}
+      <div style={{display:"flex",justifyContent:"center",padding:"24px 16px 8px",background:C.bg}}>
+        <img src={LOGO_HERO} alt="DrayageIQ" style={{width:"100%",maxWidth:280,height:"auto",opacity:0.85}}/>
       </div>
 
       {/* LEGAL FOOTER */}
