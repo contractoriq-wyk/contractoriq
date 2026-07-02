@@ -661,7 +661,16 @@ ${pdfText.slice(0,24000)}`}]};
         const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000,maximumAge:60000}));
         userLat=pos.coords.latitude.toFixed(4);
         userLon=pos.coords.longitude.toFixed(4);
-        locationCtx=`User location: lat ${userLat}, lon ${userLon}.`;
+        try{
+          const geo=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json`);
+          const gd=await geo.json();
+          const city=gd?.address?.city||gd?.address?.town||gd?.address?.village||gd?.address?.county||"";
+          const state=gd?.address?.state||"";
+          const zip=gd?.address?.postcode||"";
+          locationCtx=`User location: ${city}${state?", "+state:""} ${zip} (lat ${userLat}, lon ${userLon}).`;
+        }catch(e){
+          locationCtx=`User location: lat ${userLat}, lon ${userLon}.`;
+        }
       }catch(e){}
 
       // Build intelligence briefing for Smart (Tier 2) users
@@ -1093,7 +1102,13 @@ ${pdfText.slice(0,24000)}`}]};
             <button onClick={()=>setShowFleet(false)} style={{padding:"7px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
           </div>
           <div style={{flex:1,overflowY:"auto",padding:"16px 16px 80px"}}>
-            {[{tier:"Solo Driver",trucks:"1 truck",price:"$19.99",period:"/mo",color:"#00ffcc",tag:"Current Plan",features:["Full settlement analysis","AI chat advisor","PDF scanner","Insurance booking"]},{tier:"Small Fleet",trucks:"2–5 trucks",price:"$49",period:"/mo",color:"#a78bfa",tag:"Popular",features:["Everything in Solo","Multi-unit dashboard","Per-truck performance","Fleet-wide totals"]},{tier:"Growing Fleet",trucks:"6–9 trucks",price:"$89",period:"/mo",color:"#fbbf24",tag:"Best Value",features:["Everything in Small Fleet","Advanced analytics","Quarterly report","Phone support"]},{tier:"Enterprise L99",trucks:"10+ trucks",price:"$149",period:"/mo",color:"#f87171",tag:"🚀 L99",features:["Everything above","Unlimited trucks","White-label option","Dedicated manager"]}].map(p=>(
+            {[
+              {tier:"Standard",trucks:"1 truck",price:"$14.99",period:"/mo",color:"#a78bfa",tag:"Tier 1",url:"https://buy.stripe.com/14A9ATbW1aIU2M2gKq9MY03",features:["Unlimited PDF scans","Load & mile tracking","Earnings dashboard","AI trucking guidance"]},
+              {tier:"Pro Smart",trucks:"1 truck",price:"$24.99",period:"/mo",color:"#00ffcc",tag:"⭐ Most Popular",url:"https://buy.stripe.com/fZu5kDe498AM2M2am29MY04",features:["Everything in Standard","Live diesel prices","Live weather on routes","Smart AI with your real numbers","Load profitability math"]},
+              {tier:"Small Fleet",trucks:"2–5 trucks",price:"$49",period:"/mo",color:"#4ade80",tag:"Fleet",url:"https://wa.me/14438564727?text=Hi%2C+I%27m+interested+in+DrayageIQ+Fleet+pricing+for+2-5+trucks",features:["Everything in Pro Smart","Multi-unit dashboard","Per-truck performance","Fleet-wide totals","Contact for setup"]},
+              {tier:"Growing Fleet",trucks:"6–10 trucks",price:"$89",period:"/mo",color:"#f87171",tag:"Fleet",url:"https://wa.me/14438564727?text=Hi%2C+I%27m+interested+in+DrayageIQ+Fleet+pricing+for+6-10+trucks",features:["Everything in Small Fleet","Advanced fleet analytics","Quarterly performance report","Phone support"]},
+              {tier:"Enterprise",trucks:"11+ trucks",price:"Custom",period:"",color:"#e879f9",tag:"🚀 Enterprise",url:"https://wa.me/14438564727?text=Hi%2C+I%27m+interested+in+DrayageIQ+Enterprise+pricing+for+11%2B+trucks",features:["Everything above","Unlimited trucks","White-label option","Dedicated account manager","Custom integrations"]},
+            ].map(p=>(
               <div key={p.tier} style={{background:C.card,borderRadius:16,padding:"18px",marginBottom:14,border:`2px solid ${p.color}44`,position:"relative",overflow:"hidden"}}>
                 <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:`linear-gradient(90deg,${p.color},${p.color}44)`}}/>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
@@ -1101,6 +1116,7 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{textAlign:"right"}}><div style={{padding:"3px 10px",borderRadius:20,background:`${p.color}20`,border:`1px solid ${p.color}44`,color:p.color,fontSize:9,fontWeight:800,marginBottom:6}}>{p.tag}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:p.color}}>{p.price}<span style={{fontSize:11}}>{p.period}</span></div></div>
                 </div>
                 {p.features.map(feat=><div key={feat} style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}><span style={{color:p.color,fontSize:11,fontWeight:800,flexShrink:0}}>✓</span><span style={{fontSize:11,color:C.sub}}>{feat}</span></div>)}
+                <button onClick={()=>window.open(p.url,"_blank")} style={{width:"100%",marginTop:14,padding:"12px",borderRadius:10,background:`linear-gradient(135deg,${p.color}22,${p.color}11)`,border:`2px solid ${p.color}55`,color:p.color,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.04em"}}>{p.price==="Custom"?"Contact Us →":`Get ${p.tier} →`}</button>
               </div>
             ))}
           </div>
@@ -1714,6 +1730,37 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{display:"flex",gap:10}}>{vendorStats.map(v=><div key={v.key} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:8,height:8,borderRadius:"50%",background:v.color}}/><span style={{fontSize:9,color:C.sub}}>{v.short}</span></div>)}</div>
             </div>
             {helpModal("trend")}
+            <div style={{position:"relative"}}>
+              {/* Trend line SVG overlay */}
+              {allW.length>1&&(()=>{
+                const maxNet=Math.max(...allW.map(x=>x.net));
+                const n=allW.length;
+                const pts=allW.map((w,i)=>{
+                  const xPct=((i+0.5)/n)*100;
+                  const h=Math.max(8,(w.net/maxNet)*68);
+                  const yPx=18+14+(72-h);
+                  return {x:xPct,y:yPx,net:w.net};
+                });
+                const gradId="tg"+Math.random().toString(36).slice(2,8);
+                const pathD=pts.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(2)+","+p.y.toFixed(2)).join(" ");
+                return(
+                  <svg style={{position:"absolute",top:0,left:0,width:"100%",height:"104px",pointerEvents:"none",zIndex:5}} preserveAspectRatio="none" viewBox="0 0 100 104">
+                    <defs>
+                      <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
+                        {pts.map((p,i)=>{
+                          const up=i===0?true:p.net>=pts[i-1].net;
+                          const color=up?"#4ade80":"#f87171";
+                          return <stop key={i} offset={p.x.toFixed(1)+"%"} stopColor={color}/>;
+                        })}
+                      </linearGradient>
+                    </defs>
+                    <path d={pathD} fill="none" stroke={"url(#"+gradId+")"} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" opacity="0.95"/>
+                    {pts.map((p,i)=>(
+                      <circle key={i} cx={p.x} cy={p.y} r="1.6" fill={i===0?"#8fa3c0":(p.net>=pts[i-1].net?"#4ade80":"#f87171")} stroke="#0b0f1c" strokeWidth="0.5"/>
+                    ))}
+                  </svg>
+                );
+              })()}
             <div style={{display:"flex",alignItems:"flex-end",gap:4,height:80,padding:"0 2px"}}>
               {allW.map((w,i)=>{
                 const maxNet=Math.max(...allW.map(x=>x.net));
@@ -1746,14 +1793,15 @@ ${pdfText.slice(0,24000)}`}]};
                         {isSelected&&<div style={{position:"absolute",top:-5,left:"50%",transform:"translateX(-50%)",width:8,height:8,borderRadius:"50%",background:g.c,border:"2px solid "+C.bg,boxShadow:`0 0 6px ${g.c}`}}/>}
                       </div>
                     </div>
-                    {/* Week label */}
-                    <div style={{fontSize:isSelected?8:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?800:400,marginTop:3,lineHeight:1,transition:"all 0.15s"}}>W{w.week}</div>
+                    {/* Week label — hide non-selected on mobile when 14+ weeks to prevent crowding */}
+                    {(wide||allW.length<=10||isSelected)&&<div style={{fontSize:isSelected?8:7,color:isSelected?C.text:C.sub,fontWeight:isSelected?800:400,marginTop:3,lineHeight:1,transition:"all 0.15s"}}>W{w.week}</div>}
                     {/* Selected indicator dot */}
                     {isSelected&&<div style={{width:4,height:4,borderRadius:"50%",background:vc,marginTop:2,boxShadow:`0 0 4px ${vc}`}}/>}
                     <div style={{width:4,height:4,borderRadius:"50%",background:vc,opacity:0.8,marginTop:1}}/>
                   </div>
                 );
               })}
+            </div>
             </div>
             <div style={{fontSize:9,color:C.sub,marginTop:8,textAlign:"center"}}>Tap any bar to sync all cards · W{allW[sD]?.week} selected</div>
           </div>
