@@ -1735,16 +1735,18 @@ ${pdfText.slice(0,24000)}`}]};
               {allW.length>1&&(()=>{
                 const maxNet=Math.max(...allW.map(x=>x.net));
                 const n=allW.length;
+                // Chart container is height:80, bars sit at bottom (alignItems:flex-end)
+                // Bar height h ranges 8-68px within that 80px zone, so bar TOP = 80 - h
                 const pts=allW.map((w,i)=>{
                   const xPct=((i+0.5)/n)*100;
                   const h=Math.max(8,(w.net/maxNet)*68);
-                  const yPx=18+14+(72-h);
+                  const yPx=80-h;
                   return {x:xPct,y:yPx,net:w.net};
                 });
                 const gradId="tg"+Math.random().toString(36).slice(2,8);
                 const pathD=pts.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(2)+","+p.y.toFixed(2)).join(" ");
                 return(
-                  <svg style={{position:"absolute",top:0,left:0,width:"100%",height:"104px",pointerEvents:"none",zIndex:5}} preserveAspectRatio="none" viewBox="0 0 100 104">
+                  <svg style={{position:"absolute",top:0,left:0,width:"100%",height:"80px",pointerEvents:"none",zIndex:5}} preserveAspectRatio="none" viewBox="0 0 100 80">
                     <defs>
                       <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
                         {pts.map((p,i)=>{
