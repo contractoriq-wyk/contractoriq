@@ -126,51 +126,62 @@ function mergeExtraPay(moves){
 function pairRoundTrips(moves){
   const result=[],used=new Set();
 
-  // Group by order number (ord) — this is the ONLY reliable way to detect a round trip.
-  // Multiple legs sharing the same order number are confirmed to be one truck movement.
-  // We do NOT guess based on matching routes/rates — that produces false pairings when
-  // multiple unrelated loads happen to run the same corridor at the same rate.
-  const byOrd={};
-  moves.forEach((m,i)=>{
-    const ord=m.ord||"";
-    if(!ord)return;
-    if(!byOrd[ord])byOrd[ord]=[];
-    byOrd[ord].push(i);
-  });
+  // Parse a date string like "06/23/26" into a comparable day number.
+  // Returns null if unparseable so date-distance falls back safely.
+  function parseDay(dt){
+    if(!dt)return null;
+    const parts=String(dt).split("/");
+    if(parts.length<3)return null;
+    const mo=parseInt(parts[0],10),da=parseInt(parts[1],10),yr=parseInt(parts[2],10);
+    if(isNaN(mo)||isNaN(da)||isNaN(yr))return null;
+    // Days since an arbitrary epoch — good enough for relative distance
+    return (yr*372)+(mo*31)+da;// approximate day index, fine for same-week comparisons
+  }
 
-  Object.keys(byOrd).forEach(ord=>{
-    const idxs=byOrd[ord];
-    if(idxs.length<2)return;// single leg under this order — report as its own move
-    const legs=idxs.map(i=>moves[i]).sort((a,b)=>(a.leg||0)-(b.leg||0));
-    const totalMi=legs.reduce((s,l)=>s+(l.mi||l.miles||0),0);
-    const totalPay=legs.reduce((s,l)=>s+(l.rt||l.rate||0),0);
-    const totalFsc=legs.reduce((s,l)=>s+(l.fc||l.fsc||0),0);
-    const emptyLegs=legs.filter(l=>(l.t||l.type)==="E");
-    const loadedLegs=legs.filter(l=>(l.t||l.type)==="L");
-    const firstLeg=legs[0],lastLeg=legs[legs.length-1];
-    result.push({
-      t:"RT",type:"RT",
-      fr:firstLeg.fr||firstLeg.from||"",
-      to:lastLeg.to||"",
-      mi:totalMi,miles:totalMi,
-      rt:totalPay,rate:totalPay,
-      fc:totalFsc,fsc:totalFsc,
-      extraPay:0,isRoundTrip:true,
-      emptyPay:emptyLegs.reduce((s,l)=>s+(l.rt||l.rate||0),0),
-      loadedPay:loadedLegs.reduce((s,l)=>s+(l.rt||l.rate||0),0),
-      emptyMi:emptyLegs.reduce((s,l)=>s+(l.mi||l.miles||0),0),
-      loadedMi:loadedLegs.reduce((s,l)=>s+(l.mi||l.miles||0),0),
-      legCount:legs.length,ord:ord
-    });
-    idxs.forEach(i=>used.add(i));
-  });
-
-  // Everything else — including all moves with no order number — reports as-is,
-  // individually. No guessing, no route-symmetry matching. Accurate but ungrouped
-  // beats confidently wrong.
+  // Round trip = two moves on the SAME route reversed (A→B paired with B→A).
+  // When multiple candidates exist on the same corridor, prefer the one closest
+  // in date (same day first, then nearest), since a round trip can span into
+  // the next day but should still be the nearest match, not a random one.
   moves.forEach((m,i)=>{
     if(used.has(i))return;
-    result.push(m);
+    const fr=m.fr||m.from||"",to=m.to||"",t=m.t||m.type||"L",myDay=parseDay(m.dt);
+    if(!fr||!to){result.push(m);return;}
+
+    let bestIdx=-1,bestDist=Infinity;
+    moves.forEach((m2,j)=>{
+      if(used.has(j)||j===i)return;
+      const fr2=m2.fr||m2.from||"",to2=m2.to||"",t2=m2.t||m2.type||"L";
+      // Must be the exact reversed route and opposite load status (one E, one L)
+      if(fr===to2&&to===fr2&&t!==t2){
+        const day2=parseDay(m2.dt);
+        const dist=(myDay!=null&&day2!=null)?Math.abs(myDay-day2):999;// unknown dates = low priority but still eligible
+        if(dist<bestDist){bestDist=dist;bestIdx=j;}
+      }
+    });
+
+    if(bestIdx!==-1){
+      const m2=moves[bestIdx],emptyLeg=t==="E"?m:m2,loadedLeg=t==="L"?m:m2;
+      const totalMi=(emptyLeg.mi||emptyLeg.miles||0)+(loadedLeg.mi||loadedLeg.miles||0);
+      const totalPay=(emptyLeg.rt||emptyLeg.rate||0)+(loadedLeg.rt||loadedLeg.rate||0);
+      const totalFsc=(emptyLeg.fc||emptyLeg.fsc||0)+(loadedLeg.fc||loadedLeg.fsc||0);
+      result.push({
+        t:"RT",type:"RT",
+        fr:loadedLeg.fr||loadedLeg.from||"",
+        to:loadedLeg.to||"",
+        mi:totalMi,miles:totalMi,
+        rt:totalPay,rate:totalPay,
+        fc:totalFsc,fsc:totalFsc,
+        extraPay:0,isRoundTrip:true,
+        emptyPay:emptyLeg.rt||emptyLeg.rate||0,
+        loadedPay:loadedLeg.rt||loadedLeg.rate||0,
+        emptyMi:emptyLeg.mi||emptyLeg.miles||0,
+        loadedMi:loadedLeg.mi||loadedLeg.miles||0,
+        legCount:2
+      });
+      used.add(i);used.add(bestIdx);
+    } else {
+      result.push(m);
+    }
   });
 
   return result;
@@ -557,7 +568,7 @@ export default function ContractorIQv26(){
       try{
         // Reuse scanPDF logic inline
         const isImage=file.type.startsWith("image/");
-        const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount, ord=the order number WITHOUT the /001 suffix (e.g. "IBP003369695" not "IBP003369695/001"), leg=the leg number from the Leg# column (1, 2, or 3).\n\nH2. ROUND TRIP DETECTION: If two or more moves share the SAME order number (ord), they are legs of the same round trip — one truck movement that goes out empty/loaded and returns. This is normal and expected. Extract each leg separately with its own ord value so the app can group them later. Do NOT combine them yourself — just tag them with the same ord.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0,"ord":"","leg":1}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
+        const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount, ord=the order number WITHOUT the /001 suffix, leg=the leg number from the Leg# column, dt=the Ship Dtd date for this row exactly as shown (e.g. "06/23/26").\n\nH2. Extract every move individually with its own ord, leg, and dt fields. Do NOT combine or group any moves yourself — the app groups round trips automatically using the from/to/date data you provide. Just extract each row accurately.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0,"ord":"","leg":1,"dt":"MM/DD/YY"}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
         let pdfText="";
         if(!isImage&&window.pdfjsLib){
           try{
@@ -637,7 +648,7 @@ ${pdfText.slice(0,24000)}`}]};
     setScanning(true);setScanResult(null);setScanMsg("");
     try{
       const isImage=fileType==="image"||file.type.startsWith("image/");
-      const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount, ord=the order number WITHOUT the /001 suffix (e.g. "IBP003369695" not "IBP003369695/001"), leg=the leg number from the Leg# column (1, 2, or 3).\n\nH2. ROUND TRIP DETECTION: If two or more moves share the SAME order number (ord), they are legs of the same round trip — one truck movement that goes out empty/loaded and returns. This is normal and expected. Extract each leg separately with its own ord value so the app can group them later. Do NOT combine them yourself — just tag them with the same ord.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0,"ord":"","leg":1}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
+      const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount, ord=the order number WITHOUT the /001 suffix, leg=the leg number from the Leg# column, dt=the Ship Dtd date for this row exactly as shown (e.g. "06/23/26").\n\nH2. Extract every move individually with its own ord, leg, and dt fields. Do NOT combine or group any moves yourself — the app groups round trips automatically using the from/to/date data you provide. Just extract each row accurately.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0,"ord":"","leg":1,"dt":"MM/DD/YY"}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
 
       // For text-based PDFs, extract the actual text first (far more accurate than vision on dense tables)
       let pdfText="";
@@ -746,7 +757,7 @@ ${pdfText.slice(0,24000)}`}]};
 
       // Build system prompt — Tier 1 vs Tier 2
       const isTier2=isSmart;
-      const smartRules="You are an elite AI business advisor for a professional commercial drayage truck driver and owner-operator. You have access to their real settlement data, live diesel prices, and live weather. Your job is to give sharp, data-driven answers that help them make more money, cut costs, and run a smarter operation.\n\nRULES:\n- Always use the driver actual numbers from their settlement data when answering\n- When fuel cost matters, calculate using their actual MPG and today live diesel price\n- For load profitability questions, show the math: gross rate, fuel cost, net, RPM\n- Be direct and specific. They are a professional, not a beginner\n- Flag if a load rate is below their historical average RPM\n- For weather questions, use the live reading above\n- ROUND TRIPS: Many drayage moves are round trips — the truck goes out (often empty) and returns (often loaded), sharing the same order number. When a move has type \"RT\" or a legCount greater than 1, treat it as ONE combined economic unit: total miles = both legs combined, total pay = both legs combined, RPM = total pay / total miles. Never report a round trip as two separate cheap moves — that misrepresents the driver true earnings per mile on that route.\n- Format answers clearly with numbers. Max 200 words unless math requires more.\n"+briefing+"\n"+locationCtx;
+      const smartRules="You are an elite AI business advisor for a professional commercial drayage truck driver and owner-operator. You have access to their real settlement data, live diesel prices, and live weather. Your job is to give sharp, data-driven answers that help them make more money, cut costs, and run a smarter operation.\n\nRULES:\n- Always use the driver actual numbers from their settlement data when answering\n- When fuel cost matters, calculate using their actual MPG and today live diesel price\n- For load profitability questions, show the math: gross rate, fuel cost, net, RPM\n- Be direct and specific. They are a professional, not a beginner\n- Flag if a load rate is below their historical average RPM\n- For weather questions, use the live reading above\n- ROUND TRIPS: Many drayage moves are round trips — the truck goes out (often empty) and returns (often loaded) on the same route reversed. When a move has type \"RT\", it has already been combined by the app: total miles = both legs combined, total pay = both legs combined, RPM = total pay / total miles. Always treat these as ONE trip. Never re-split them or report them as two separate moves.\n- Format answers clearly with numbers. Max 200 words unless math requires more.\n"+briefing+"\n"+locationCtx;
       const tier1Rules="You are a knowledgeable assistant for a commercial truck driver. Answer using general knowledge. Be honest when real-time data would help — suggest they upgrade to Pro Smart for live data. Answer concisely in 150 words or fewer. Use bullet points for lists. "+locationCtx;
       const systemPrompt=isTier2?smartRules:tier1Rules;
 
