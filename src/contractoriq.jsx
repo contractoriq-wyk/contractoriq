@@ -62,29 +62,7 @@ async function ai(msgs,sys){
 function copyText(t){if(navigator.clipboard?.writeText)navigator.clipboard.writeText(t).catch(()=>fbCopy(t));else fbCopy(t);}
 function fbCopy(t){const e=document.createElement("textarea");e.value=t;e.style.cssText="position:fixed;opacity:0";document.body.appendChild(e);e.focus();e.select();document.execCommand("copy");document.body.removeChild(e);}
 
-const W=[
-  {vendor:"CPG",week:"09",label:"Week 09",from:"02/23/2026",to:"03/01/2026",gross:1865.26,net:338.55,totalDeductions:1565.10,rebate:38.39,gallons:255.92,
-   deds:[{l:"Parking Lot/Security",a:40.00},{l:"OCC/ACC Insurance",a:32.64},{l:"Escrow Regular",a:100.00},{l:"Fuel Advance (TA Baltimore)",a:607.32},{l:"ELD Usage Fee",a:10.00},{l:"Event Recorder Fee",a:10.00},{l:"Bobtail Insurance",a:10.61},{l:"License Plate Program",a:55.00},{l:"Physical Damage Insurance",a:33.64},{l:"Fuel Advance (Pilot 179)",a:645.28},{l:"2290 Escrow Fund",a:10.00},{l:"Roadside Assistance Insurance",a:10.61}],
-   moves:[{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:270,fc:37.49},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:37.49},{t:"E",fr:"LANCASPA",to:"DUNDALMD",mi:73,rt:128,fc:35.15},{t:"L",fr:"DUNDALMD",to:"LANCASPA",mi:73,rt:192,fc:35.15},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:37.49},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:37.49}]},
-  {vendor:"CPG",week:"10",label:"Week 10",from:"03/02/2026",to:"03/08/2026",gross:5263.42,net:3014.69,totalDeductions:2311.96,rebate:63.17,gallons:421.14,
-   deds:[{l:"Parking Lot/Security",a:40.00},{l:"Event Recorder Fee",a:10.00},{l:"Physical Damage Insurance",a:33.64},{l:"Fuel Advance (Pilot 179)",a:568.35},{l:"ELD Usage Fee",a:10.00},{l:"Fuel Advance (Pilot Carneys Point)",a:745.00},{l:"2290 Escrow Fund",a:10.00},{l:"License Plate Program",a:55.00},{l:"Roadside Assistance Insurance",a:10.61},{l:"Bobtail Insurance",a:10.61},{l:"Fuel Advance (Pilot 179)",a:686.11},{l:"OCC/ACC Insurance",a:32.64},{l:"Escrow Regular",a:100.00}],
-   moves:[{t:"E",fr:"MIDD1PA",to:"ELIZABNJ",mi:163,rt:326,fc:153.66},{t:"L",fr:"DUNDALMD",to:"MIDD1PA",mi:90,rt:186,fc:0},{t:"L",fr:"ELIZABNJ",to:"DUNDALMD",mi:173,rt:447.71,fc:273.04},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:37.49},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:37.49},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:38.18},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:37.49},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:270,fc:38.18},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:38.18}]},
-  {vendor:"CPG",week:"11",label:"Week 11",from:"03/09/2026",to:"03/15/2026",gross:5070.70,net:2816.36,totalDeductions:2309.91,rebate:55.44,gallons:369.59,
-   deds:[{l:"2290 Escrow Fund",a:10.00},{l:"License Plate Program",a:55.00},{l:"Event Recorder Fee",a:10.00},{l:"Parking Lot/Security",a:40.00},{l:"Escrow Regular",a:100.00},{l:"ELD Usage Fee",a:10.00},{l:"Fuel Advance (Pilot 179)",a:926.30},{l:"Roadside Assistance Insurance",a:10.61},{l:"OCC/ACC Insurance",a:32.64},{l:"Physical Damage Insurance",a:33.64},{l:"Fuel Advance (Pilot 179)",a:276.89},{l:"Fuel Advance (Pilot 150)",a:794.22},{l:"Bobtail Insurance",a:10.61}],
-   moves:[{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:94,rt:202,fc:53.47},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"MIDD1PA",to:"ELIZABNJ",mi:163,rt:326,fc:153.66},{t:"L",fr:"ELIZABNJ",to:"DUNDALMD",mi:173,rt:706.38,fc:189.85},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:94,rt:202,fc:53.47},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"CHAM1PA",to:"BALTIMMD",mi:106,rt:147,fc:61.20},{t:"L",fr:"BALTIMMD",to:"CHAM1PA",mi:106,rt:220,fc:61.20},{t:"E",fr:"GREENCPA",to:"DUNDALMD",mi:94,rt:135,fc:53.47},{t:"L",fr:"DUNDALMD",to:"DUNDALMD",mi:10,rt:100,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0}]},
-  {vendor:"CPG",week:"12",label:"Week 12",from:"03/16/2026",to:"03/22/2026",gross:3479.98,net:1424.28,totalDeductions:2103.24,rebate:47.34,gallons:315.59,
-   deds:[{l:"Fuel Highway Taxes",a:6.56},{l:"2290 Escrow Fund",a:10.00},{l:"Bobtail Insurance",a:10.61},{l:"Escrow Regular",a:100.00},{l:"ELD Usage Fee",a:10.00},{l:"OCC/ACC Insurance",a:32.64},{l:"Physical Damage Insurance",a:33.64},{l:"Fuel Advance (Pilot 179)",a:841.95},{l:"Parking Lot/Security",a:40.00},{l:"Event Recorder Fee",a:10.00},{l:"Fuel Advance (Pilot 179)",a:942.23},{l:"Roadside Assistance Insurance",a:10.61},{l:"License Plate Program",a:55.00}],
-   moves:[{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"SPARROMD",to:"MONROVMD",mi:51,rt:168,fc:32.93},{t:"E",fr:"MONROVMD",to:"DUNDALMD",mi:49,rt:180,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"HAGERSMD",to:"BALTIMMD",mi:72,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"GREENCPA",to:"DUNDALMD",mi:94,rt:135,fc:53.47},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"NEWCASDE",to:"DUNDALMD",mi:67,rt:122,fc:41.92},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:45.95},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:45.95},{t:"L",fr:"DUNDALMD",to:"YORKPA",mi:63,rt:180,fc:38.92},{t:"E",fr:"YORKPA",to:"DUNDALMD",mi:63,rt:120,fc:38.92},{t:"L",fr:"DUNDALMD",to:"NEWCASDE",mi:66,rt:110,fc:41.92}]},
-  {vendor:"CPG",week:"13",label:"Week 13",from:"03/23/2026",to:"03/29/2026",gross:4688.64,net:2857.82,totalDeductions:1870.04,rebate:38.95,gallons:259.64,
-   deds:[{l:"OCC/ACC Insurance",a:32.64},{l:"Fuel Advance (Pilot 179)",a:313.31},{l:"Roadside Assistance Insurance",a:10.61},{l:"Physical Damage Insurance",a:33.64},{l:"Fuel Advance (Pilot 150)",a:843.93},{l:"ELD Usage Fee",a:10.00},{l:"2290 Escrow Fund",a:10.00},{l:"Bobtail Insurance",a:10.61},{l:"Escrow Regular",a:100.00},{l:"Fuel Advance (Pilot 179)",a:400.30},{l:"Event Recorder Fee",a:10.00},{l:"License Plate Program",a:55.00},{l:"Parking Lot/Security",a:40.00}],
-   moves:[{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:300,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"SPARROMD",to:"HAGERSMD",mi:84,rt:298,fc:51.36},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"E",fr:"GREENCPA",to:"DUNDALMD",mi:94,rt:135,fc:57.40},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:200,fc:0},{t:"L",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:48.33},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:270,fc:48.33},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:48.33},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:48.33},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:48.33},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:48.33},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:94,rt:214.50,fc:57.40}]},
-  {vendor:"CPG",week:"14",label:"Week 14",from:"03/30/2026",to:"04/05/2026",gross:3783.73,net:2227.91,totalDeductions:1587.99,rebate:31.83,gallons:212.17,
-   deds:[{l:"Fuel Advance (Pilot 179)",a:910.88},{l:"Event Recorder Fee",a:10.00},{l:"Roadside Assistance Insurance",a:10.61},{l:"License Plate Program",a:55.00},{l:"Fuel Advance (Pilot 179)",a:367.95},{l:"Bobtail Insurance",a:10.15},{l:"OCC/ACC Insurance",a:31.22},{l:"Parking Lot/Security",a:40.00},{l:"2290 Escrow Fund",a:10.00},{l:"Physical Damage Insurance",a:32.18},{l:"Escrow Regular",a:100.00},{l:"ELD Usage Fee",a:10.00}],
-   moves:[{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:245,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:245,fc:52.36},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:200,fc:0},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:245,fc:48.33},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:195,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:52.36}]},
-  {vendor:"CPG",week:"15",label:"Week 15",from:"04/06/2026",to:"04/12/2026",gross:5705.45,net:3000.28,totalDeductions:2764.49,rebate:58.91,gallons:392.70,
-   deds:[{l:"Event Recorder Fee",a:10.00},{l:"ELD Usage Fee",a:10.00},{l:"Parking Lot/Security",a:40.00},{l:"License Plate Program",a:55.00},{l:"Roadside Assistance Insurance",a:10.61},{l:"OCC/ACC Insurance",a:31.22},{l:"Insurance Liability Limiter",a:14.47},{l:"Escrow Regular",a:100.00},{l:"Bobtail Insurance",a:10.15},{l:"Physical Damage Insurance",a:32.18},{l:"2290 Escrow Fund",a:10.00},{l:"Fuel Advance (Pilot 150)",a:253.00},{l:"Fuel Advance (Pilot 179)",a:865.53},{l:"Fuel Advance (Pilot 179)",a:881.87},{l:"Fuel Advance (Pilot 179)",a:440.46}],
-   moves:[{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:132,fc:57.66},{t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:94,rt:202,fc:64.45},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:198,fc:57.66},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:132,fc:57.66},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:132,fc:57.66},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:132,fc:57.66},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:198,fc:57.66},{t:"E",fr:"GREENCPA",to:"DUNDALMD",mi:94,rt:135,fc:62.18},{t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:93,rt:122,fc:0},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:198,fc:57.66},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:132,fc:57.66},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:245,fc:52.36},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:54.27},{t:"E",fr:"GREENCPA",to:"DUNDALMD",mi:94,rt:135,fc:64.45},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:198,fc:57.66},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:162,fc:57.66},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:132,fc:57.66},{t:"L",fr:"BALTIMMD",to:"WILLIAMD",mi:77,rt:245,fc:54.27},{t:"E",fr:"WILLIAMD",to:"BALTIMMD",mi:77,rt:130,fc:54.27},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:198,fc:57.66},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:198,fc:57.66},{t:"E",fr:"HAGERSMD",to:"DUNDALMD",mi:82,rt:132,fc:57.66},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:198,fc:57.66},{t:"L",fr:"DUNDALMD",to:"HAGERSMD",mi:81,rt:198,fc:57.66},{t:"L",fr:"DUNDALMD",to:"GREENCPA",mi:94,rt:202,fc:64.45}]},
-];
+const W=[];// Hardcoded baseline removed — all real data now comes from Supabase (addedW)
 
 const DEMO_W=[
   {vendor:"JDT",week:"01",label:"Week 01",from:"01/06/2025",to:"01/10/2025",gross:4200.00,net:2310.00,totalDeductions:1890.00,rebate:45.00,gallons:280.00,deds:[{l:"Operations Fee",a:840.00},{l:"Fuel Advance",a:750.00},{l:"Insurance",a:200.00},{l:"Escrow",a:100.00}],moves:[{mi:62,rt:210,fc:45,t:"L"},{mi:58,rt:195,fc:42,t:"L"},{mi:71,rt:230,fc:48,t:"L"},{mi:45,rt:150,fc:38,t:"E"},{mi:68,rt:220,fc:46,t:"L"}]},
@@ -537,7 +515,7 @@ export default function ContractorIQv26(){
     return ()=>clearTimeout(t);
   },[addedW,profile,expenses,docs,reviews,user,cloudLoaded]);
 
-  const baseW=ownerDataAvailable?W:[];
+  const baseW=[];// W is empty now — all real data comes from Supabase via addedW, same on every device
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
   const visibleW=allW.filter(w=>{const vk=detectVendor(w);if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;if(hiddenVendors.includes(vk))return false;return true;});
   const safeW=visibleW.length>0?visibleW:(allW.length>0?allW:DEMO_W);
@@ -1786,8 +1764,8 @@ ${pdfText.slice(0,24000)}`}]};
                       <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:20}}>{v.icon}</span><div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,color:v.color}}>{v.name}</div><div style={{fontSize:9,color:C.sub,marginTop:1}}>{v.weeks} week{v.weeks>1?"s":""} · {v.unit||"Multiple units"}</div></div></div>
                       <div style={{padding:"3px 9px",borderRadius:20,background:`${v.color}18`,border:`1px solid ${v.color}44`,fontSize:10,fontWeight:700,color:v.color}}>{v.margin}%</div>
                     </div>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
-                      {[{l:"Gross",val:`$${(v.gross/1000).toFixed(1)}k`,c:v.color},{l:"Net",val:`$${(v.net/1000).toFixed(1)}k`,c:C.green},{l:"Deducted",val:`$${(v.ded/1000).toFixed(1)}k`,c:C.red}].map(s=>(
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:5}}>
+                      {[{l:"Gross",val:`$${(v.gross/1000).toFixed(1)}k`,c:v.color},{l:"Net",val:`$${(v.net/1000).toFixed(1)}k`,c:C.green},{l:"Deducted",val:`$${(v.ded/1000).toFixed(1)}k`,c:C.red},{l:"Return/Spend",val:`1:${(v.ded>0?v.gross/v.ded:0).toFixed(1)}`,c:(v.ded>0?v.gross/v.ded:0)>=3?C.green:(v.ded>0?v.gross/v.ded:0)>=1.5?C.gold:C.red}].map(s=>(
                         <div key={s.l} style={{background:C.bg,borderRadius:7,padding:"7px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:s.c}}>{s.val}</div></div>
                       ))}
                     </div>
@@ -1800,6 +1778,7 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{display:"flex",gap:12,alignItems:"center"}}>
                     <div style={{textAlign:"right"}}><div style={{fontSize:9,color:C.sub}}>Total Net</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.green}}>${tNet.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div>
                     <div style={{padding:"5px 11px",borderRadius:8,background:`${C.green}18`,border:`1px solid ${C.green}44`}}><div style={{fontSize:9,color:C.sub}}>Margin</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.green}}>{margin}%</div></div>
+                    {(()=>{const ytdRatio=tDed>0?tGross/tDed:0;const rc=ytdRatio>=3?C.green:ytdRatio>=1.5?C.gold:C.red;return(<div style={{padding:"5px 11px",borderRadius:8,background:`${rc}18`,border:`1px solid ${rc}44`}}><div style={{fontSize:9,color:C.sub}}>YTD Return/Spend</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:rc}}>1:{ytdRatio.toFixed(1)}</div></div>);})()}
                   </div>
                 </div>
               )}
@@ -2067,30 +2046,35 @@ ${pdfText.slice(0,24000)}`}]};
                       </div>
                     </div>
 
-                    {/* Return on Spend — your $1 in / $X out business ratio */}
+                    {/* Return on Spend — compact, tap to expand */}
                     {(()=>{
                       const netCost=Math.max(0.01,dedSum-(dw.rebate||0));
                       const ratio=dw.gross/netCost;
                       const tier=ratio>=3?{label:"IDEAL",color:C.green,icon:"🚀"}:ratio>=1.5?{label:"SAFE",color:C.gold,icon:"✅"}:{label:"BELOW SAFE",color:C.red,icon:"⚠️"};
                       const profitPerDollar=(ratio-1).toFixed(2);
+                      const isOpen=helpCard==="ros_open";
                       return(
-                        <div style={{padding:"12px",borderRadius:10,background:`${tier.color}0d`,border:`1px solid ${tier.color}33`,marginBottom:14}}>
-                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                            <div style={{fontSize:10,fontWeight:800,color:C.sub,letterSpacing:"0.06em",textTransform:"uppercase",display:"flex",alignItems:"center",gap:5}}>💰 Return on Spend{helpBtn("returnOnSpend")}</div>
-                            <div style={{padding:"2px 9px",borderRadius:20,background:`${tier.color}20`,border:`1px solid ${tier.color}44`,fontSize:9,fontWeight:800,color:tier.color}}>{tier.icon} {tier.label}</div>
+                        <div style={{borderRadius:10,background:`${tier.color}0d`,border:`1px solid ${tier.color}33`,marginBottom:14,overflow:"hidden"}}>
+                          <div onClick={()=>setHelpCard(isOpen?null:"ros_open")} style={{padding:"9px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}>
+                            <div style={{display:"flex",alignItems:"center",gap:7}}>
+                              <span style={{fontSize:11,fontWeight:800,color:C.sub}}>💰 Return on Spend</span>
+                              <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:900,color:tier.color}}>1:{ratio.toFixed(2)}</span>
+                              <span style={{padding:"1px 7px",borderRadius:20,background:`${tier.color}20`,border:`1px solid ${tier.color}44`,fontSize:8,fontWeight:800,color:tier.color}}>{tier.icon} {tier.label}</span>
+                            </div>
+                            <span style={{fontSize:11,color:C.sub}}>{isOpen?"▲":"▼"}</span>
                           </div>
-                          <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:6}}>
-                            <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:900,color:tier.color}}>1 : {ratio.toFixed(2)}</span>
-                            <span style={{fontSize:10,color:C.sub}}>every $1 spent produced ${ratio.toFixed(2)} in revenue</span>
-                          </div>
-                          <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>
-                            {ratio>=3
-                              ? `Excellent — for every $1 you spent running this week, you profited $${profitPerDollar}. That's well above the 1:3 ideal target.`
-                              : ratio>=1.5
-                              ? `Solid — you're profiting $${profitPerDollar} for every $1 spent, within the safe 1:1.5+ range. Push toward 1:3 by cutting variable costs or boosting RPM.`
-                              : `Below the safe threshold — you're only netting $${profitPerDollar} per $1 spent. Review your fuel efficiency, deductions, and load rates this week.`}
-                          </div>
-                          {helpModal("returnOnSpend")}
+                          {isOpen&&(
+                            <div style={{padding:"0 12px 12px"}}>
+                              <div style={{fontSize:10,color:C.sub,marginBottom:6}}>Every $1 spent produced ${ratio.toFixed(2)} in revenue</div>
+                              <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>
+                                {ratio>=3
+                                  ? `Excellent — for every $1 you spent running this week, you profited $${profitPerDollar}. That's well above the 1:3 ideal target.`
+                                  : ratio>=1.5
+                                  ? `Solid — you're profiting $${profitPerDollar} for every $1 spent, within the safe 1:1.5+ range. Push toward 1:3 by cutting variable costs or boosting RPM.`
+                                  : `Below the safe threshold — you're only netting $${profitPerDollar} per $1 spent. Review your fuel efficiency, deductions, and load rates this week.`}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
@@ -3032,12 +3016,18 @@ ${pdfText.slice(0,24000)}`}]};
 
             {/* KPI ROW */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginTop:14,position:"relative",zIndex:1}}>
-              {[
+              {(()=>{
+                const totalRebatesAll=allW.reduce((s,w)=>s+(w.rebate||0),0);
+                const netCostAll=Math.max(0.01,tDed-totalRebatesAll);
+                const monthlyRatio=tGross/netCostAll;// same ratio scales regardless of period since it's proportional
+                const ratioColor=monthlyRatio>=3?"#4ade80":monthlyRatio>=1.5?"#fbbf24":"#f87171";
+                return[
                 {l:"Weekly Net",v:`$${(weeklyAvgNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#4ade80"},
                 {l:"Monthly Est.",v:`$${(monthlyNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#00ffcc"},
                 {l:"Annual Est.",v:`$${(annualNet/1000).toFixed(0)}k`,c:"#a78bfa"},
-                {l:"Net Margin",v:`${margin}%`,c:+margin>=20?"#4ade80":+margin>=15?"#fbbf24":"#f87171"},
-              ].map(function(k){return(
+                {l:"Return/Spend",v:`1:${monthlyRatio.toFixed(2)}`,c:ratioColor},
+                ];
+              })().map(function(k){return(
                 <div key={k.l} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"9px 8px",border:"1px solid rgba(255,255,255,0.07)",textAlign:"center"}}>
                   <div style={{fontSize:8,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{k.l}</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:k.c}}>{k.v}</div>
