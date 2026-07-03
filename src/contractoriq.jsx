@@ -930,6 +930,7 @@ ${pdfText.slice(0,24000)}`}]};
     ded_insurance:{t:"🛡️ Insurance Deductions",b:"These are your recurring insurance premiums deducted weekly: Physical Damage, Bobtail, Occupational Accident, Liability Limiter, and Roadside Assistance. These amounts should be the same every single week. If you see a different number, it may be a billing error — contact your carrier."},
     ded_ops:{t:"⚙️ Operations & Fees",b:"Recurring weekly operational fees: ELD device, Event Recorder, License Plate Program, Parking/Security, and Fuel Highway Taxes. These are mostly fixed costs of running your truck. Monitor these to catch any new fees your carrier adds."},
     ded_escrow:{t:"🏦 Escrow & Savings",b:"Money being held in escrow accounts. ESCROW-REGULAR builds toward your $2,500 target and is returned when you leave the carrier. 2290 ESCROW builds toward your Heavy Highway Vehicle Use Tax. These are YOUR money — they are saved, not spent."},
+    returnOnSpend:{t:"💰 Return on Spend",b:"For every $1 you spend running your truck (all deductions combined, net of any fuel rebate), how much revenue did you generate? A ratio of 1:3 or higher is IDEAL — you're producing $3+ for every dollar spent. A ratio of 1:1.5 is SAFE — you're still profiting 50 cents on every dollar. Below 1:1.5 means your costs are eating too much into your revenue."},
     health:{t:"Performance by Carrier",b:"Green is strong, gold is worth watching, red needs attention."},
     grades:{t:"Weekly Performance Grades",b:"Each week evaluated against your own history. Look for your best weeks and understand what made them different."},
     savings:{t:"Funds Being Held",b:"Funds held for future use — track these so you know what is being set aside."},
@@ -1029,7 +1030,9 @@ ${pdfText.slice(0,24000)}`}]};
                 {icon:"⚠️",step:"When Numbers Don't Match",title:"The Mismatch Warning & Re-scan Button",body:"Sometimes the AI misses a line on a messy or unusual PDF. If the extracted deduction total doesn't match what the document actually shows, you'll see a red warning right in the Deduction Breakdown card for that week — along with a one-tap '🔄 Re-scan This Week' button that jumps straight back to the upload screen.",tip:"💡 This warning exists so you never trust incomplete numbers silently. If you see it, re-scan that week's PDF to fix it.",action:"Next →"},
                 {icon:"🧠",step:"Tab 3 — AI",title:"AI Advisor: Ask Anything",body:"Ask real questions in plain English: 'What were my worst weeks?', 'How much did fuel cost me total?', 'Should I take a Baltimore to Hagerstown load at $200?'. It answers using YOUR actual data — not generic advice. Pro Smart members get an extra edge: every answer factors in today's actual national diesel price and the live weather at your location, so advice like 'is this load worth it' accounts for real conditions right now, not guesses.",tip:"💡 Try the quick-tap buttons for instant insights about your routes, RPM trends, and load profitability.",action:"Next →"},
                 {icon:"🚀",step:"Tab 4 — GROWTH",title:"GROWTH: Build Your Business",body:"Business Health Score grades your overall operation. Weekly Action Plan gives you 2-3 specific things to do THIS week to improve. Offer Scorer tests any load offer instantly. Get Funded shows real lenders who work with 1099 income — based on your actual documented earnings.",tip:"💡 The Get Funded section uses your real YTD earnings to show loan amounts you likely qualify for. Real money to grow your business.",action:"Next →"},
-                {icon:"💡",step:"Smart Insights",title:"Smart Insights: Your Early Warning System",body:"Right in the Deduction Breakdown card, DrayageIQ compares this week's Fuel, Insurance, and Operations spending against your last 7 weeks. If any category jumps or drops more than 15%, you'll see an alert immediately — like 'Fuel up 23% vs your average'. There's also an Escrow Progress bar showing how close you are to your $2,500 target and how many weeks are left at your current pace.",tip:"💡 This catches problems early — a fee that suddenly doubled, or fuel spending that's creeping up — before it becomes a pattern you don't notice.",action:"Next →"},
+                {icon:"💰",step:"Return on Spend",title:"1:3 Ideal, 1:1.5 Safe — Your Business Ratio",body:"Right below your Deduction Breakdown total, DrayageIQ shows a simple ratio: for every $1 you spent running your truck this week, how much revenue did you generate? A ratio of 1:3 or higher is IDEAL — you're producing $3+ per dollar spent. 1:1.5 is SAFE — still profitable, just tighter margins. Below that, your costs are eating too much into your revenue.",tip:"💡 This is the single fastest number to check your business health. If it's dropping week over week, dig into your Deduction Breakdown to find why.",action:"Next →"},
+
+              {icon:"💡",step:"Smart Insights",title:"Smart Insights: Your Early Warning System",body:"Right in the Deduction Breakdown card, DrayageIQ compares this week's Fuel, Insurance, and Operations spending against your last 7 weeks. If any category jumps or drops more than 15%, you'll see an alert immediately — like 'Fuel up 23% vs your average'. There's also an Escrow Progress bar showing how close you are to your $2,500 target and how many weeks are left at your current pace.",tip:"💡 This catches problems early — a fee that suddenly doubled, or fuel spending that's creeping up — before it becomes a pattern you don't notice.",action:"Next →"},
 
               {icon:"🏦",step:"GROWTH — Get Funded",title:"Turn Your Settlements Into Real Funding",body:"Every settlement you upload becomes verified, documented proof of income — the exact thing banks and lenders ask for but drivers rarely have organized. The Get Funded card totals your real YTD earnings and shows actual lenders (equipment loans, working capital, lines of credit) matched to what you likely qualify for, based on YOUR numbers — not a guess. The more weeks you upload, the stronger and more convincing your income history becomes.",tip:"💡 Consistent weekly uploads build a track record. 12+ weeks of clean data makes you a far stronger loan applicant than a driver with no records at all.",action:"Next →"},
 
@@ -2056,13 +2059,41 @@ ${pdfText.slice(0,24000)}`}]};
                     ))}
 
                     {/* Grand total bar */}
-                    <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4,marginBottom:14}}>
+                    <div style={{padding:"10px 12px",background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4,marginBottom:10}}>
                       <div style={{fontSize:11,fontWeight:700,color:C.text}}>Total Deductions</div>
                       <div style={{display:"flex",alignItems:"center",gap:10}}>
                         <div style={{fontSize:9,color:C.sub}}>{dw.gross>0?(dedSum/dw.gross*100).toFixed(1):0}% of gross</div>
                         <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:"#f87171"}}>-${dedSum.toFixed(2)}</div>
                       </div>
                     </div>
+
+                    {/* Return on Spend — your $1 in / $X out business ratio */}
+                    {(()=>{
+                      const netCost=Math.max(0.01,dedSum-(dw.rebate||0));
+                      const ratio=dw.gross/netCost;
+                      const tier=ratio>=3?{label:"IDEAL",color:C.green,icon:"🚀"}:ratio>=1.5?{label:"SAFE",color:C.gold,icon:"✅"}:{label:"BELOW SAFE",color:C.red,icon:"⚠️"};
+                      const profitPerDollar=(ratio-1).toFixed(2);
+                      return(
+                        <div style={{padding:"12px",borderRadius:10,background:`${tier.color}0d`,border:`1px solid ${tier.color}33`,marginBottom:14}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                            <div style={{fontSize:10,fontWeight:800,color:C.sub,letterSpacing:"0.06em",textTransform:"uppercase",display:"flex",alignItems:"center",gap:5}}>💰 Return on Spend{helpBtn("returnOnSpend")}</div>
+                            <div style={{padding:"2px 9px",borderRadius:20,background:`${tier.color}20`,border:`1px solid ${tier.color}44`,fontSize:9,fontWeight:800,color:tier.color}}>{tier.icon} {tier.label}</div>
+                          </div>
+                          <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:6}}>
+                            <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:900,color:tier.color}}>1 : {ratio.toFixed(2)}</span>
+                            <span style={{fontSize:10,color:C.sub}}>every $1 spent produced ${ratio.toFixed(2)} in revenue</span>
+                          </div>
+                          <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>
+                            {ratio>=3
+                              ? `Excellent — for every $1 you spent running this week, you profited $${profitPerDollar}. That's well above the 1:3 ideal target.`
+                              : ratio>=1.5
+                              ? `Solid — you're profiting $${profitPerDollar} for every $1 spent, within the safe 1:1.5+ range. Push toward 1:3 by cutting variable costs or boosting RPM.`
+                              : `Below the safe threshold — you're only netting $${profitPerDollar} per $1 spent. Review your fuel efficiency, deductions, and load rates this week.`}
+                          </div>
+                          {helpModal("returnOnSpend")}
+                        </div>
+                      );
+                    })()}
 
                     {/* Fuel Rebate Banner */}
                     {dw.rebate>0&&(()=>{
