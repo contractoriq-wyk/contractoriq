@@ -62,7 +62,7 @@ async function ai(msgs,sys){
 function copyText(t){if(navigator.clipboard?.writeText)navigator.clipboard.writeText(t).catch(()=>fbCopy(t));else fbCopy(t);}
 function fbCopy(t){const e=document.createElement("textarea");e.value=t;e.style.cssText="position:fixed;opacity:0";document.body.appendChild(e);e.focus();e.select();document.execCommand("copy");document.body.removeChild(e);}
 
-const W=[];// Migrated to Supabase — all real data now lives in addedW, synced via cloud for every device
+const W=[];// Hardcoded baseline removed — all real data now comes from Supabase (addedW)
 
 const DEMO_W=[
   {vendor:"JDT",week:"01",label:"Week 01",from:"01/06/2025",to:"01/10/2025",gross:4200.00,net:2310.00,totalDeductions:1890.00,rebate:45.00,gallons:280.00,deds:[{l:"Operations Fee",a:840.00},{l:"Fuel Advance",a:750.00},{l:"Insurance",a:200.00},{l:"Escrow",a:100.00}],moves:[{mi:62,rt:210,fc:45,t:"L"},{mi:58,rt:195,fc:42,t:"L"},{mi:71,rt:230,fc:48,t:"L"},{mi:45,rt:150,fc:38,t:"E"},{mi:68,rt:220,fc:46,t:"L"}]},
@@ -515,7 +515,7 @@ export default function ContractorIQv26(){
     return ()=>clearTimeout(t);
   },[addedW,profile,expenses,docs,reviews,user,cloudLoaded]);
 
-  const baseW=[];// All real data comes from Supabase via addedW — identical on every device
+  const baseW=[];// W is empty now — all real data comes from Supabase via addedW, same on every device
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
   const visibleW=allW.filter(w=>{const vk=detectVendor(w);if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;if(hiddenVendors.includes(vk))return false;return true;});
   const safeW=visibleW.length>0?visibleW:(allW.length>0?allW:DEMO_W);
@@ -1595,7 +1595,6 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Discover</div>
                   <button onClick={()=>{setShowAbout(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🚛</span><span>About DrayageIQ</span></button>
                   <button onClick={()=>{setOnboardStep(0);setShowOnboarding(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,color:C.accent,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🎓</span><span>How to Use DrayageIQ</span></button>
-
                   <button onClick={()=>{setShowMarket(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>📊</span><span>Market Overview</span></button>
                   <button onClick={()=>{setShowReviews(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⭐</span><span>Customer Reviews</span>{reviews.length>0&&<span style={{marginLeft:"auto",fontSize:9,color:C.gold,fontWeight:700}}>{reviews.length}</span>}</button>
                   <button onClick={()=>{setShowIconKey(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.a3}12`,border:`1px solid ${C.a3}33`,color:C.a3,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🔑</span><span>Icon Guide</span></button>
@@ -1765,8 +1764,8 @@ ${pdfText.slice(0,24000)}`}]};
                       <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:20}}>{v.icon}</span><div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,color:v.color}}>{v.name}</div><div style={{fontSize:9,color:C.sub,marginTop:1}}>{v.weeks} week{v.weeks>1?"s":""} · {v.unit||"Multiple units"}</div></div></div>
                       <div style={{padding:"3px 9px",borderRadius:20,background:`${v.color}18`,border:`1px solid ${v.color}44`,fontSize:10,fontWeight:700,color:v.color}}>{v.margin}%</div>
                     </div>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
-                      {[{l:"Gross",val:`$${(v.gross/1000).toFixed(1)}k`,c:v.color},{l:"Net",val:`$${(v.net/1000).toFixed(1)}k`,c:C.green},{l:"Deducted",val:`$${(v.ded/1000).toFixed(1)}k`,c:C.red}].map(s=>(
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:5}}>
+                      {[{l:"Gross",val:`$${(v.gross/1000).toFixed(1)}k`,c:v.color},{l:"Net",val:`$${(v.net/1000).toFixed(1)}k`,c:C.green},{l:"Deducted",val:`$${(v.ded/1000).toFixed(1)}k`,c:C.red},{l:"Return/Spend",val:`1:${(v.ded>0?v.gross/v.ded:0).toFixed(1)}`,c:(v.ded>0?v.gross/v.ded:0)>=3?C.green:(v.ded>0?v.gross/v.ded:0)>=1.5?C.gold:C.red}].map(s=>(
                         <div key={s.l} style={{background:C.bg,borderRadius:7,padding:"7px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:s.c}}>{s.val}</div></div>
                       ))}
                     </div>
@@ -1779,6 +1778,7 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{display:"flex",gap:12,alignItems:"center"}}>
                     <div style={{textAlign:"right"}}><div style={{fontSize:9,color:C.sub}}>Total Net</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.green}}>${tNet.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div>
                     <div style={{padding:"5px 11px",borderRadius:8,background:`${C.green}18`,border:`1px solid ${C.green}44`}}><div style={{fontSize:9,color:C.sub}}>Margin</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.green}}>{margin}%</div></div>
+                    {(()=>{const ytdRatio=tDed>0?tGross/tDed:0;const rc=ytdRatio>=3?C.green:ytdRatio>=1.5?C.gold:C.red;return(<div style={{padding:"5px 11px",borderRadius:8,background:`${rc}18`,border:`1px solid ${rc}44`}}><div style={{fontSize:9,color:C.sub}}>YTD Return/Spend</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:rc}}>1:{ytdRatio.toFixed(1)}</div></div>);})()}
                   </div>
                 </div>
               )}
@@ -2046,30 +2046,35 @@ ${pdfText.slice(0,24000)}`}]};
                       </div>
                     </div>
 
-                    {/* Return on Spend — your $1 in / $X out business ratio */}
+                    {/* Return on Spend — compact, tap to expand */}
                     {(()=>{
                       const netCost=Math.max(0.01,dedSum-(dw.rebate||0));
                       const ratio=dw.gross/netCost;
                       const tier=ratio>=3?{label:"IDEAL",color:C.green,icon:"🚀"}:ratio>=1.5?{label:"SAFE",color:C.gold,icon:"✅"}:{label:"BELOW SAFE",color:C.red,icon:"⚠️"};
                       const profitPerDollar=(ratio-1).toFixed(2);
+                      const isOpen=helpCard==="ros_open";
                       return(
-                        <div style={{padding:"12px",borderRadius:10,background:`${tier.color}0d`,border:`1px solid ${tier.color}33`,marginBottom:14}}>
-                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                            <div style={{fontSize:10,fontWeight:800,color:C.sub,letterSpacing:"0.06em",textTransform:"uppercase",display:"flex",alignItems:"center",gap:5}}>💰 Return on Spend{helpBtn("returnOnSpend")}</div>
-                            <div style={{padding:"2px 9px",borderRadius:20,background:`${tier.color}20`,border:`1px solid ${tier.color}44`,fontSize:9,fontWeight:800,color:tier.color}}>{tier.icon} {tier.label}</div>
+                        <div style={{borderRadius:10,background:`${tier.color}0d`,border:`1px solid ${tier.color}33`,marginBottom:14,overflow:"hidden"}}>
+                          <div onClick={()=>setHelpCard(isOpen?null:"ros_open")} style={{padding:"9px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}>
+                            <div style={{display:"flex",alignItems:"center",gap:7}}>
+                              <span style={{fontSize:11,fontWeight:800,color:C.sub}}>💰 Return on Spend</span>
+                              <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:900,color:tier.color}}>1:{ratio.toFixed(2)}</span>
+                              <span style={{padding:"1px 7px",borderRadius:20,background:`${tier.color}20`,border:`1px solid ${tier.color}44`,fontSize:8,fontWeight:800,color:tier.color}}>{tier.icon} {tier.label}</span>
+                            </div>
+                            <span style={{fontSize:11,color:C.sub}}>{isOpen?"▲":"▼"}</span>
                           </div>
-                          <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:6}}>
-                            <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:24,fontWeight:900,color:tier.color}}>1 : {ratio.toFixed(2)}</span>
-                            <span style={{fontSize:10,color:C.sub}}>every $1 spent produced ${ratio.toFixed(2)} in revenue</span>
-                          </div>
-                          <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>
-                            {ratio>=3
-                              ? `Excellent — for every $1 you spent running this week, you profited $${profitPerDollar}. That's well above the 1:3 ideal target.`
-                              : ratio>=1.5
-                              ? `Solid — you're profiting $${profitPerDollar} for every $1 spent, within the safe 1:1.5+ range. Push toward 1:3 by cutting variable costs or boosting RPM.`
-                              : `Below the safe threshold — you're only netting $${profitPerDollar} per $1 spent. Review your fuel efficiency, deductions, and load rates this week.`}
-                          </div>
-                          {helpModal("returnOnSpend")}
+                          {isOpen&&(
+                            <div style={{padding:"0 12px 12px"}}>
+                              <div style={{fontSize:10,color:C.sub,marginBottom:6}}>Every $1 spent produced ${ratio.toFixed(2)} in revenue</div>
+                              <div style={{fontSize:9,color:C.sub,lineHeight:1.5}}>
+                                {ratio>=3
+                                  ? `Excellent — for every $1 you spent running this week, you profited $${profitPerDollar}. That's well above the 1:3 ideal target.`
+                                  : ratio>=1.5
+                                  ? `Solid — you're profiting $${profitPerDollar} for every $1 spent, within the safe 1:1.5+ range. Push toward 1:3 by cutting variable costs or boosting RPM.`
+                                  : `Below the safe threshold — you're only netting $${profitPerDollar} per $1 spent. Review your fuel efficiency, deductions, and load rates this week.`}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
@@ -3011,12 +3016,18 @@ ${pdfText.slice(0,24000)}`}]};
 
             {/* KPI ROW */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginTop:14,position:"relative",zIndex:1}}>
-              {[
+              {(()=>{
+                const totalRebatesAll=allW.reduce((s,w)=>s+(w.rebate||0),0);
+                const netCostAll=Math.max(0.01,tDed-totalRebatesAll);
+                const monthlyRatio=tGross/netCostAll;// same ratio scales regardless of period since it's proportional
+                const ratioColor=monthlyRatio>=3?"#4ade80":monthlyRatio>=1.5?"#fbbf24":"#f87171";
+                return[
                 {l:"Weekly Net",v:`$${(weeklyAvgNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#4ade80"},
                 {l:"Monthly Est.",v:`$${(monthlyNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#00ffcc"},
                 {l:"Annual Est.",v:`$${(annualNet/1000).toFixed(0)}k`,c:"#a78bfa"},
-                {l:"Net Margin",v:`${margin}%`,c:+margin>=20?"#4ade80":+margin>=15?"#fbbf24":"#f87171"},
-              ].map(function(k){return(
+                {l:"Return/Spend",v:`1:${monthlyRatio.toFixed(2)}`,c:ratioColor},
+                ];
+              })().map(function(k){return(
                 <div key={k.l} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"9px 8px",border:"1px solid rgba(255,255,255,0.07)",textAlign:"center"}}>
                   <div style={{fontSize:8,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{k.l}</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:k.c}}>{k.v}</div>
