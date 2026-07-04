@@ -2840,12 +2840,21 @@ ${pdfText.slice(0,24000)}`}]};
                   <input type="number" value={fscLinehaul.miles} onChange={e=>setFscLinehaul(p=>({...p,miles:e.target.value}))} placeholder="e.g. 50" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
                 </div>
               </div>
-              <div style={{fontSize:9,color:C.sub}}>Rate: {fscLinehaul.rate} · Miles: {fscLinehaul.miles}</div>
-              <div style={{fontSize:9,color:C.sub,marginTop:6}}>Live diesel: {liveData && liveData.diesel ? liveData.diesel : "not available"}</div>
-              <div style={{padding:"10px 12px",borderRadius:9,background:C.bg,border:"1px solid "+C.border,marginTop:8}}>
-                <div style={{fontSize:9,color:C.sub}}>Rate per mile: {(parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles)).toFixed(2)}</div>
-                <div style={{fontSize:9,color:C.sub,marginTop:4}}>Recommended FSC: {(((( (liveData&&liveData.diesel)||fuelPrice||4.5) - 2.5)/((fuelMPG||5.2)))/(parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles))*100).toFixed(1)}%</div>
+              <div style={{padding:"10px 12px",borderRadius:9,background:C.bg,border:"1px solid "+C.border,marginTop:4}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.sub,marginBottom:6}}>
+                  <span>Live diesel: ${((liveData&&liveData.diesel)||fuelPrice||4.5).toFixed(2)}/gal</span>
+                  <span>Your MPG: {(fuelMPG||5.2).toFixed(1)}</span>
+                </div>
+                {fscLinehaul.rate && fscLinehaul.miles ? (
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span style={{fontSize:10,color:C.text,fontWeight:700}}>Recommended FSC to quote:</span>
+                    <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.green}}>{(((( (liveData&&liveData.diesel)||fuelPrice||4.5) - 2.5)/((fuelMPG||5.2)))/(parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles))*100).toFixed(1)}%</span>
+                  </div>
+                ) : (
+                  <div style={{fontSize:9,color:C.sub,textAlign:"center",padding:"6px 0"}}>Enter linehaul rate and miles above</div>
+                )}
               </div>
+              <div style={{fontSize:8,color:C.sub,marginTop:8,lineHeight:1.5}}>💡 Formula: extra fuel cost per mile (vs $2.50/gal baseline) ÷ your rate per mile.</div>
             </div>
           )}
 
