@@ -39,13 +39,19 @@ function Tag({color,children}){return <span style={{padding:"3px 9px",borderRadi
 function scoreMove(m){
   const miles=m.miles||m.mi||0,rate=m.rate||m.rt||0,fsc=m.fsc||m.fc||0,type=m.type||m.t||"L";
   const rpm=miles>0?(rate+fsc)/miles:0;
-  const isRoundTrip=type==="RT"||m.isRoundTrip===true,isFlatRate=!isRoundTrip&&fsc===0&&rate>=100,hasFSC=fsc>0,isDropHook=isFlatRate&&miles<=30;
+  const isRoundTrip=type==="RT"||m.isRoundTrip===true,isEmpty=type==="E"&&!isRoundTrip,isFlatRate=!isRoundTrip&&fsc===0&&rate>=100,hasFSC=fsc>0,isDropHook=isFlatRate&&miles<=30;
   let s=0,tags=[];
-  if(rpm>=3.5){s+=40;tags.push("💰 Premium RPM");}else if(rpm>=2.5){s+=25;tags.push("✅ Good RPM");}else if(rpm>=2.0){s+=15;tags.push("📊 Fair RPM");}else if(rpm>=1.8){s+=10;tags.push("⚠️ Low RPM");}else tags.push("🚫 Below Cost");
-  if(isRoundTrip){s+=25;tags.push("🔄 Round Trip");}else if(type==="L"){s+=20;tags.push("📦 Loaded");}else{s+=5;tags.push("🔁 Empty");}
+  // RPM is the dominant factor for EVERY move type — a paid empty at the same rate as
+  // a loaded move is NOT worse. Less wear, less fuel burn, less cargo risk, often faster
+  // turnaround. The scoring model no longer penalizes "Empty" as a label — it rewards
+  // actual pay-per-mile, which is what determines whether a move is good for the business.
+  if(rpm>=3.5){s+=45;tags.push("💰 Premium RPM");}else if(rpm>=2.5){s+=32;tags.push("✅ Good RPM");}else if(rpm>=2.0){s+=20;tags.push("📊 Fair RPM");}else if(rpm>=1.8){s+=10;tags.push("⚠️ Low RPM");}else tags.push("🚫 Below Cost");
+  if(isRoundTrip){s+=20;tags.push("🔄 Round Trip");}
+  else if(isEmpty){s+=15;tags.push("🔁 Paid Empty — less wear & fuel");}
+  else{s+=15;tags.push("📦 Loaded");}
   if(hasFSC){s+=15;tags.push("⛽ FSC Included");}else if(isRoundTrip||isFlatRate){s+=15;tags.push("💵 Flat Rate All-In");}
   if(isDropHook){s+=10;tags.push("🪝 Drop & Hook");}else if(miles>=70&&miles<=100){s+=10;tags.push("📍 Sweet Spot");}else if(miles>100){s+=5;tags.push("🛣️ Long Haul");}
-  return{score:s,grade:s>=70?"A":s>=50?"B":s>=30?"C":"D",rpm:rpm.toFixed(2),tags,isRoundTrip,isFlatRate,isDropHook,hasFSC};
+  return{score:s,grade:s>=70?"A":s>=50?"B":s>=30?"C":"D",rpm:rpm.toFixed(2),tags,isRoundTrip,isFlatRate,isDropHook,hasFSC,isEmpty};
 }
 
 async function ai(msgs,sys){
@@ -1007,7 +1013,7 @@ ${pdfText.slice(0,24000)}`}]};
     grades:{t:"Weekly Performance Grades",b:"Each week evaluated against your own history. Look for your best weeks and understand what made them different."},
     savings:{t:"Funds Being Held",b:"Funds held for future use — track these so you know what is being set aside."},
     movePerf:{t:"Route Performance",b:"Every route with a performance rating. Use when evaluating new offers."},
-    offerScorer:{t:"Offer Evaluator",b:"Enter offer details to get an instant read before accepting a load. Takes seconds."},
+    offerScorer:{t:"Offer Evaluator",b:"Enter offer details to get an instant read before accepting a load. The score is based mainly on your real rate-per-mile (RPM) — a well-paid empty leg scores just as well as a loaded move at the same RPM, since empty miles mean less wear, less fuel burn, and less cargo risk."},
     fullHistory:{t:"Complete Route Log",b:"Every route from every week in one place, sorted from most recent."},
     expenses:{t:"Extra Expenses",b:"Track out-of-pocket costs not on your settlement — parts, repairs, tires, labor."},
     kpis:{t:"Business Snapshot",b:"Your running totals across every week shown."},
