@@ -2832,9 +2832,8 @@ ${pdfText.slice(0,24000)}`}]};
               {helpModal("fscCalc")}
               <div style={{fontSize:9,color:C.sub,lineHeight:1.5,marginBottom:12}}>Know exactly what FSC% to quote a client — calculated from today's live diesel price and your real truck MPG. No more guessing.</div>
               {(()=>{
-                const [fscMPG,setFscMPGLocal]=[fuelMPG,setFuelMPG];// reuse existing baseline MPG
-                const livePrice=liveData?.diesel||fuelPrice||4.50;
-                const truckMPG=fscMPG>0?fscMPG:6.0;
+                const livePrice=(liveData&&liveData.diesel)||fuelPrice||4.50;
+                const truckMPG=fuelMPG>0?fuelMPG:6.0;
                 const baselineFuelCost=2.50;// baseline diesel price most linehaul rates assume, industry standard reference point
                 const fuelCostPerMile=livePrice/truckMPG;
                 const baselineCostPerMile=baselineFuelCost/truckMPG;
