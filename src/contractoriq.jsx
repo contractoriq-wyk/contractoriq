@@ -2826,7 +2826,7 @@ ${pdfText.slice(0,24000)}`}]};
           </div>
 
 
-          {/* FSC CALCULATOR — step 2: header + inputs, no calculation yet */}
+          {/* FSC CALCULATOR — confirmed working: inputs + live diesel display */}
           {isSmart&&(
             <div style={K()}>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:12}}>⛽ Fuel Surcharge Calculator</div>
@@ -2840,47 +2840,8 @@ ${pdfText.slice(0,24000)}`}]};
                   <input type="number" value={fscLinehaul.miles} onChange={e=>setFscLinehaul(p=>({...p,miles:e.target.value}))} placeholder="e.g. 50" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
                 </div>
               </div>
-              <div style={{fontSize:9,color:C.sub,lineHeight:1.5,marginBottom:12}}>Know exactly what FSC% to quote a client — calculated from today's live diesel price and your real truck MPG.</div>
-              {(function(){
-                var livePriceVal=4.50;
-                if(liveData&&liveData.diesel){livePriceVal=liveData.diesel;}
-                else if(fuelPrice){livePriceVal=fuelPrice;}
-                var truckMPGVal=6.0;
-                if(fuelMPG&&fuelMPG>0){truckMPGVal=fuelMPG;}
-                var baselinePrice=2.50;
-                var fuelCostPerMile=livePriceVal/truckMPGVal;
-                var baselineCostPerMile=baselinePrice/truckMPGVal;
-                var extraCostPerMile=fuelCostPerMile-baselineCostPerMile;
-                if(extraCostPerMile<0){extraCostPerMile=0;}
-                var rateNum=parseFloat(fscLinehaul.rate);
-                var milesNum=parseFloat(fscLinehaul.miles);
-                var hasValidInput=false;
-                var ratePerMile=0;
-                if(!isNaN(rateNum)&&!isNaN(milesNum)&&milesNum>0){
-                  ratePerMile=rateNum/milesNum;
-                  hasValidInput=true;
-                }
-                var fscPct=0;
-                if(hasValidInput&&ratePerMile>0){
-                  fscPct=(extraCostPerMile/ratePerMile)*100;
-                }
-                return (
-                  <div style={{padding:"10px 12px",borderRadius:9,background:C.bg,border:"1px solid "+C.border,marginTop:4}}>
-                    <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.sub,marginBottom:6}}>
-                      <span>Live diesel: ${livePriceVal.toFixed(2)}/gal</span>
-                      <span>Your MPG: {truckMPGVal.toFixed(1)}</span>
-                    </div>
-                    {hasValidInput ? (
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <span style={{fontSize:10,color:C.text,fontWeight:700}}>Recommended FSC to quote:</span>
-                        <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.green}}>{fscPct.toFixed(1)}%</span>
-                      </div>
-                    ) : (
-                      <div style={{fontSize:9,color:C.sub,textAlign:"center",padding:"6px 0"}}>Enter linehaul rate and miles above</div>
-                    )}
-                  </div>
-                );
-              })()}
+              <div style={{fontSize:9,color:C.sub}}>Rate: {fscLinehaul.rate} · Miles: {fscLinehaul.miles}</div>
+              <div style={{fontSize:9,color:C.sub,marginTop:6}}>Live diesel: {liveData && liveData.diesel ? liveData.diesel : "not available"}</div>
             </div>
           )}
 
