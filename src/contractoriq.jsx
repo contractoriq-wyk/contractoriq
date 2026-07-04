@@ -2826,6 +2826,24 @@ ${pdfText.slice(0,24000)}`}]};
           </div>
 
 
+          {/* FSC CALCULATOR — step 2: header + inputs, no calculation yet */}
+          {isSmart&&(
+            <div style={K()}>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:12}}>⛽ Fuel Surcharge Calculator</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+                <div>
+                  <div style={{fontSize:8,color:C.sub,marginBottom:3}}>LINEHAUL RATE ($)</div>
+                  <input type="number" value={fscLinehaul.rate} onChange={e=>setFscLinehaul(p=>({...p,rate:e.target.value}))} placeholder="e.g. 250" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                </div>
+                <div>
+                  <div style={{fontSize:8,color:C.sub,marginBottom:3}}>MILES</div>
+                  <input type="number" value={fscLinehaul.miles} onChange={e=>setFscLinehaul(p=>({...p,miles:e.target.value}))} placeholder="e.g. 50" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                </div>
+              </div>
+              <div style={{fontSize:9,color:C.sub}}>Rate: {fscLinehaul.rate} · Miles: {fscLinehaul.miles}</div>
+            </div>
+          )}
+
           {/* OFFER SCORER */}
           <div style={{display:"grid",gridTemplateColumns:wide?"1fr 1fr":"1fr",gap:14,marginBottom:16}}>
             <div style={K()}>
