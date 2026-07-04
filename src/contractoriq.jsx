@@ -478,6 +478,7 @@ export default function ContractorIQv26(){
   // Pull cloud data after login
   useEffect(()=>{
     if(!user){ setCloudLoaded(false); return; }
+    setShowWelcome(false);// A real logged-in user should NEVER be stuck on the welcome screen
     const c=getSB(); if(!c) return;
     (async()=>{
       try{
