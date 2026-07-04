@@ -2841,6 +2841,7 @@ ${pdfText.slice(0,24000)}`}]};
                 </div>
               </div>
               <div style={{fontSize:9,color:C.sub}}>Rate: {fscLinehaul.rate} · Miles: {fscLinehaul.miles}</div>
+              <div style={{fontSize:9,color:C.sub,marginTop:6}}>Live diesel: {liveData && liveData.diesel ? liveData.diesel : "not available"}</div>
             </div>
           )}
 
