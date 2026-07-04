@@ -2921,11 +2921,8 @@ ${pdfText.slice(0,24000)}`}]};
                 {[["miles","Miles"],["rate","Rate $"],["fsc","FSC $"]].map(([k,l])=>(
                   <div key={k}><label style={lbl}>{l}</label><input value={offer[k]} onChange={e=>setOffer(p=>({...p,[k]:e.target.value}))} placeholder={l} style={inp}/></div>
                 ))}
-                <div><label style={lbl}>Type</label><select value={offer.type} onChange={e=>setOffer(p=>({...p,type:e.target.value}))} style={{...inp,cursor:"pointer"}}><option value="L">Loaded</option><option value="E">Empty</option></select></div>
+                <div><label style={lbl}>Type</label><select value={combineEmpty?"RT":offer.type} onChange={function(e){if(e.target.value==="RT"){setCombineEmpty(true);}else{setCombineEmpty(false);setOffer(function(p){return {...p,type:e.target.value};});}}} style={{...inp,cursor:"pointer"}}><option value="L">Loaded</option><option value="E">Empty</option><option value="RT">🔄 Round Trip (Combine Empty)</option></select></div>
               </div>
-              <button onClick={function(){setCombineEmpty(function(p){return !p;});}} style={{width:"100%",padding:"9px",borderRadius:8,background:combineEmpty?C.accent+"20":C.raised,border:"1px solid "+(combineEmpty?C.accent:C.border),color:combineEmpty?C.accent:C.sub,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:12}}>
-                {combineEmpty?"🔄 Round Trip mode ON — tap to remove empty leg":"➕ Combine with an Empty Leg (Round Trip)"}
-              </button>
               {combineEmpty&&(
                 <div style={{padding:"10px 11px",borderRadius:9,background:C.bg,border:"1px solid "+C.border,marginBottom:12}}>
                   <div style={{fontSize:9,color:C.sub,marginBottom:8,fontWeight:700}}>EMPTY LEG (the deadhead to get this load)</div>
