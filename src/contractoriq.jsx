@@ -2860,16 +2860,17 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
                 <div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.text}}>📁 My Uploaded Settlements<button onClick={e=>{e.stopPropagation();toggleCard("uploads");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("uploads")?"▶":"▼"}</button></div>
-                  <div style={{fontSize:10,color:C.sub,marginTop:2}}>{addedW.length} uploaded · check box to select · delete selected</div>
+                  <div style={{fontSize:10,color:C.sub,marginTop:2}}>{demoMode?"Demo Mode — sample weeks only":allW.length+" uploaded · check box to select · delete selected"}</div>
                 </div>
                 <div style={{display:"flex",gap:7,flexShrink:0}}>
-                  {addedW.length>0&&<button onClick={function(){if(selWkKeys.size===addedW.length){setSelWkKeys(new Set());}else{setSelWkKeys(new Set(addedW.map(function(w){return w.week+(w.from||"");})));} }} style={{padding:"5px 9px",borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>{selWkKeys.size===addedW.length?"Deselect":"Select All"}</button>}
-                  {selWkKeys.size>0&&<button onClick={function(){if(window.confirm("Delete "+selWkKeys.size+" week"+(selWkKeys.size>1?"s":"")+"?")){setAddedW(function(p){return p.filter(function(w){return !selWkKeys.has(w.week+(w.from||""));});});setSelWkKeys(new Set());}}} style={{padding:"5px 11px",borderRadius:7,background:"#f8717118",border:"2px solid #f87171",color:"#f87171",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>🗑 Delete ({selWkKeys.size})</button>}
+                  {!demoMode&&allW.length>0&&<button onClick={function(){if(selWkKeys.size===allW.length){setSelWkKeys(new Set());}else{setSelWkKeys(new Set(allW.map(function(w){return w.week+(w.from||"");})));} }} style={{padding:"5px 9px",borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>{selWkKeys.size===allW.length?"Deselect":"Select All"}</button>}
+                  {!demoMode&&selWkKeys.size>0&&<button onClick={function(){if(window.confirm("Delete "+selWkKeys.size+" week"+(selWkKeys.size>1?"s":"")+"?")){setAddedW(function(p){return p.filter(function(w){return !selWkKeys.has(w.week+(w.from||""));});});setSelWkKeys(new Set());}}} style={{padding:"5px 11px",borderRadius:7,background:"#f8717118",border:"2px solid #f87171",color:"#f87171",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>🗑 Delete ({selWkKeys.size})</button>}
                 </div>
               </div>
             </div>
             <div style={{padding:"10px 12px",display:isCollapsed("uploads")?"none":"flex",flexDirection:"column",gap:7}}>
-              {addedW.length===0?<div style={{textAlign:"center",padding:"18px",color:C.sub,fontSize:11}}><div style={{fontSize:26,marginBottom:6}}>📭</div><div>No uploads yet — scan a PDF above</div></div>:[...addedW].reverse().map(function(w,i){
+              {demoMode&&<div style={{textAlign:"center",padding:"10px",marginBottom:4,background:C.a3+"12",border:"1px solid "+C.a3+"33",borderRadius:8,fontSize:10,color:C.a3,fontWeight:700}}>👀 Showing sample demo weeks only — your real data is hidden while Demo Mode is on</div>}
+              {allW.length===0?<div style={{textAlign:"center",padding:"18px",color:C.sub,fontSize:11}}><div style={{fontSize:26,marginBottom:6}}>📭</div><div>No uploads yet — scan a PDF above</div></div>:[...allW].reverse().map(function(w,i){
                 const g=wg(w),wKey=w.week+(w.from||""),isSel=selWkKeys.has(wKey);
                 return(
                   <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 11px",background:isSel?"#f8717108":C.bg,borderRadius:10,border:"1px solid "+(isSel?"#f87171":C.a3+"44"),transition:"all 0.15s",boxShadow:isSel?"0 0 8px #f8717120":"none"}}>
@@ -2889,7 +2890,7 @@ ${pdfText.slice(0,24000)}`}]};
                 );
               })}
             </div>
-            {addedW.length>0&&<div style={{padding:"8px 14px",borderTop:"1px solid "+C.border,fontSize:10,color:C.sub,textAlign:"center"}}>☑ Select → <span style={{color:"#f87171",fontWeight:700}}>Delete</span> to remove · rescan PDF to update data</div>}
+            {!demoMode&&allW.length>0&&<div style={{padding:"8px 14px",borderTop:"1px solid "+C.border,fontSize:10,color:C.sub,textAlign:"center"}}>☑ Select → <span style={{color:"#f87171",fontWeight:700}}>Delete</span> to remove · rescan PDF to update data</div>}
           </div>
 
 
@@ -2962,18 +2963,18 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
                 <div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.text,marginBottom:2}}>📋 Manage Saved Weeks<button onClick={e=>{e.stopPropagation();toggleCard("savedWeeks");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("savedWeeks")?"▶":"▼"}</button></div>
-                  <div style={{fontSize:10,color:C.sub}}>{addedW.length} uploaded · {allW.length} total · tap ☑ to select then delete</div>
+                  <div style={{fontSize:10,color:C.sub}}>{demoMode?"Demo Mode — sample weeks only":allW.length+" total · tap ☑ to select then delete"}</div>
                 </div>
                 <div style={{display:"flex",gap:7,flexShrink:0}}>
-                  {addedW.length>0&&(
+                  {!demoMode&&allW.length>0&&(
                     <button onClick={function(){
-                      if(selWkKeys.size===addedW.length){setSelWkKeys(new Set());}
-                      else{setSelWkKeys(new Set(addedW.map(function(w){return w.week+(w.from||"");})));}
+                      if(selWkKeys.size===allW.length){setSelWkKeys(new Set());}
+                      else{setSelWkKeys(new Set(allW.map(function(w){return w.week+(w.from||"");})));}
                     }} style={{padding:"5px 9px",borderRadius:8,background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
-                      {selWkKeys.size===addedW.length?"Deselect":"Select All"}
+                      {selWkKeys.size===allW.length?"Deselect":"Select All"}
                     </button>
                   )}
-                  {selWkKeys.size>0&&(
+                  {!demoMode&&selWkKeys.size>0&&(
                     <button onClick={function(){
                       if(window.confirm("Delete "+selWkKeys.size+" selected week"+(selWkKeys.size>1?"s":"")+"?")){
                         setAddedW(function(p){return p.filter(function(w){return !selWkKeys.has(w.week+(w.from||""));});});
@@ -2989,13 +2990,14 @@ ${pdfText.slice(0,24000)}`}]};
 
             {/* Week list */}
             <div style={{padding:"10px 12px",display:isCollapsed("savedWeeks")?"none":"flex",flexDirection:"column",gap:7,maxHeight:320,overflowY:"auto"}}>
-              {addedW.length===0?(
+              {demoMode&&<div style={{textAlign:"center",padding:"10px",marginBottom:4,background:C.a3+"12",border:"1px solid "+C.a3+"33",borderRadius:8,fontSize:10,color:C.a3,fontWeight:700}}>👀 Showing sample demo weeks only — your real data is hidden while Demo Mode is on</div>}
+              {allW.length===0?(
                 <div style={{textAlign:"center",padding:"20px",color:C.sub,fontSize:11}}>
                   <div style={{fontSize:28,marginBottom:8}}>📭</div>
                   No uploaded weeks yet — scan a PDF above to add your first settlement
                 </div>
               ):(
-                [...addedW].reverse().map(function(w,i){
+                [...allW].reverse().map(function(w,i){
                   const g=wg(w);
                   const wKey=w.week+(w.from||"");
                   const isSelected=selWkKeys.has(wKey);
@@ -3038,7 +3040,7 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
 
             {/* Footer hint */}
-            {addedW.length>0&&(
+            {!demoMode&&allW.length>0&&(
               <div style={{padding:"9px 16px",borderTop:"1px solid "+C.border,fontSize:10,color:C.sub,textAlign:"center"}}>
                 ☑ Check weeks → <span style={{color:"#f87171",fontWeight:700}}>Delete (N)</span> removes selected &nbsp;·&nbsp; Rescan PDF to refresh data
               </div>
