@@ -632,14 +632,27 @@ ${pdfText.slice(0,24000)}`}]};
     const wNum=String(scanResult.week).padStart(2,"0");
     // If week already exists — replace it
     const exists=addedW.find(w=>w.week===wNum);
+    let newIndex=-1;
     if(exists){
-      setAddedW(p=>p.map(w=>w.week===wNum?{...scanResult,vendor:vendorPick,week:wNum,label:`Week ${wNum}`}:w));
+      setAddedW(p=>{
+        const next=p.map(w=>w.week===wNum?{...scanResult,vendor:vendorPick,week:wNum,label:`Week ${wNum}`}:w);
+        newIndex=next.findIndex(w=>w.week===wNum);
+        return next;
+      });
       setScanMsg(`✅ Week ${wNum} updated`);
     }else{
-      setAddedW(p=>[...p,{...scanResult,vendor:vendorPick,week:wNum,label:`Week ${wNum}`}]);
+      setAddedW(p=>{
+        const next=[...p,{...scanResult,vendor:vendorPick,week:wNum,label:`Week ${wNum}`}];
+        newIndex=next.length-1;// newly appended week is always last in addedW
+        return next;
+      });
       setScanMsg(`✅ Week ${wNum} saved`);
     }
     setScanResult(null);
+    // Jump the dashboard to show the week that was JUST scanned, instead of staying on the oldest week
+    if(newIndex>=0){
+      setTimeout(()=>{setSD(newIndex);setSM(newIndex);setSH(newIndex);},50);
+    }
   }
 
   async function scanPDF(file,fileType){
