@@ -1094,9 +1094,8 @@ ${pdfText.slice(0,24000)}`}]};
 
               {icon:"▼",step:"Collapsible Cards",title:"Collapse Any Card to Save Space",body:"Every major card — Deduction Breakdown, Week Grades, Move Performance, Weekly Action Plan, and more — has a small ▼ arrow next to its title. Tap it to collapse the card down to just its header, or tap ▶ to expand it again. This keeps your screen clean and lets you focus on exactly what you need to see right now.",tip:"💡 On mobile especially, collapsing cards you don't need makes scrolling much faster.",action:"Next →"},
 
-              {icon:"💎",step:"Choosing Your Plan",title:"Standard vs Pro Smart — What's the Difference?",body:"Standard ($14.99/mo) covers everything you need to track your business: unlimited PDF scans, Deduction Breakdown, Move Performance, round trip detection, Week Grades, and Manual Fuel Log. Pro Smart ($24.99/mo) adds the intelligence layer: live diesel prices & weather, an AI that uses YOUR real numbers, Smart Insights alerts, Return on Spend ratio, auto-syncing MPG & fuel price, the Fuel Surcharge Calculator, Data Health scanning, and the full Growth tab. Annual saves you 2 months.",tip:"💡 Look for the 🔒 lock icon — it marks Pro Smart features so you always know what's included in your plan.",action:"Next →"},
+              {icon:"💎",step:"Choosing Your Plan",title:"Standard vs Pro Smart — What's the Difference?",body:"Standard ($14.99/mo) covers everything you need to track your business: unlimited PDF scans, Deduction Breakdown, Move Performance, round trip detection, Week Grades, and Manual Fuel Log. Pro Smart ($24.99/mo) adds the intelligence layer: live diesel prices & weather, an AI that uses YOUR real numbers, Smart Insights alerts, Return on Spend ratio, auto-syncing MPG & fuel price, Data Health scanning, and the full Growth tab. Annual saves you 2 months.",tip:"💡 Look for the 🔒 lock icon — it marks Pro Smart features so you always know what's included in your plan.",action:"Next →"},
 
-              {icon:"⛽",step:"Fuel Surcharge Calculator",title:"Know What FSC% to Quote a Client",body:"One of the hardest parts of running your own drayage business is knowing what fuel surcharge to charge when quoting a new client. The FSC Calculator (Pro Smart, in the GROWTH tab) uses today's live diesel price and your real truck MPG to calculate a fair FSC percentage automatically — no more guessing or underquoting.",tip:"💡 Enter the linehaul rate and miles for any load, and it instantly shows the FSC% that covers your actual fuel cost above baseline.",action:"Next →"},
 
               {icon:"🚚",step:"Growing Your Fleet",title:"Fleet Pricing — For Multiple Trucks",body:"Running more than one truck? Tap ≡ Menu → Fleet Pricing to see plans built for small fleets. As you add trucks, DrayageIQ scales with you — each truck's settlements get tracked separately, so you can compare performance across your whole operation, not just one unit.",tip:"💡 Fleet Pricing is marked NEW in the menu — worth a look even if you're solo today and thinking about expanding.",action:"Next →"},
 
@@ -2824,32 +2823,6 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
             {addedW.length>0&&<div style={{padding:"8px 14px",borderTop:"1px solid "+C.border,fontSize:10,color:C.sub,textAlign:"center"}}>☑ Select → <span style={{color:"#f87171",fontWeight:700}}>Delete</span> to remove · rescan PDF to update data</div>}
           </div>
-
-
-          {/* FSC CALCULATOR — safe version: no conditional element swapping */}
-          {isSmart&&(
-            <div style={K()}>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:12}}>⛽ Fuel Surcharge Calculator</div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-                <div>
-                  <div style={{fontSize:8,color:C.sub,marginBottom:3}}>LINEHAUL RATE ($)</div>
-                  <input type="number" value={fscLinehaul.rate} onChange={e=>setFscLinehaul(p=>({...p,rate:e.target.value}))} placeholder="e.g. 250" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
-                </div>
-                <div>
-                  <div style={{fontSize:8,color:C.sub,marginBottom:3}}>MILES</div>
-                  <input type="number" value={fscLinehaul.miles} onChange={e=>setFscLinehaul(p=>({...p,miles:e.target.value}))} placeholder="e.g. 50" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
-                </div>
-              </div>
-              <div style={{padding:"10px 12px",borderRadius:9,background:C.bg,border:"1px solid "+C.border,marginTop:4}}>
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.sub,marginBottom:6}}>
-                  <span>Live diesel: ${((liveData&&liveData.diesel)||fuelPrice||4.5).toFixed(2)}/gal</span>
-                  <span>Your MPG: {(fuelMPG||5.2).toFixed(1)}</span>
-                </div>
-                <div style={{fontSize:9,color:C.sub}}>Rate per mile: {fscLinehaul.rate&&fscLinehaul.miles&&parseFloat(fscLinehaul.miles)>0?(parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles)).toFixed(2):"—"}</div>
-                <div style={{fontSize:14,fontWeight:800,color:C.green,marginTop:6}}>Recommended FSC: {fscLinehaul.rate&&fscLinehaul.miles&&parseFloat(fscLinehaul.miles)>0&&parseFloat(fscLinehaul.rate)>0?(((( (liveData&&liveData.diesel)||fuelPrice||4.5) - 2.5)/((fuelMPG||5.2)))/(parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles))*100).toFixed(1):"0.0"}%</div>
-              </div>
-            </div>
-          )}
 
 
           {/* OFFER SCORER */}
