@@ -1993,12 +1993,15 @@ ${pdfText.slice(0,24000)}`}]};
               {allW.length>1&&(()=>{
                 const maxNet=Math.max(...allW.map(x=>x.net));
                 const n=allW.length;
-                // Chart container is height:80, bars sit at bottom (alignItems:flex-end)
-                // Bar height h ranges 8-68px within that 80px zone, so bar TOP = 80 - h
+                // The bar's OWN inner box is height:72 (not the outer 80px flex container,
+                // which also includes the $X.Xk label above it). Bars are bottom-aligned
+                // inside that 72px box via justifyContent:"flex-end". So bar TOP = 72 - h,
+                // measured from the TOP of that 72px box — which itself starts at y=8 within
+                // the outer 80px SVG viewport (leaving room for the label above).
                 const pts=allW.map((w,i)=>{
                   const xPct=((i+0.5)/n)*100;
                   const h=Math.max(8,(w.net/maxNet)*68);
-                  const yPx=80-h;
+                  const yPx=8+(72-h);
                   return {x:xPct,y:yPx,net:w.net};
                 });
                 const gradId="tg"+Math.random().toString(36).slice(2,8);
