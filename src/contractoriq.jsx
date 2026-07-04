@@ -2842,6 +2842,7 @@ ${pdfText.slice(0,24000)}`}]};
               </div>
               <div style={{fontSize:9,color:C.sub}}>Rate: {fscLinehaul.rate} · Miles: {fscLinehaul.miles}</div>
               <div style={{fontSize:9,color:C.sub,marginTop:6}}>Live diesel: {liveData && liveData.diesel ? liveData.diesel : "not available"}</div>
+              <div style={{fontSize:9,color:C.sub,marginTop:6}}>Rate per mile: {(parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles)).toFixed(2)}</div>
             </div>
           )}
 
