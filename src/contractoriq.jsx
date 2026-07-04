@@ -268,6 +268,8 @@ export default function ContractorIQv26(){
   const [searchLoading,setSearchLoading]=useState(false);
   useState(()=>{try{const key="ciq_visits",visits=JSON.parse(localStorage.getItem(key)||"[]");visits.push({t:Date.now(),ua:navigator.userAgent.slice(0,60),ref:document.referrer.slice(0,80)||"direct"});if(visits.length>100)visits.splice(0,visits.length-100);localStorage.setItem(key,JSON.stringify(visits));}catch(e){}});
   const [offer,setOffer]=useState({miles:"",rate:"",fsc:"",type:"L"});
+  const [combineEmpty,setCombineEmpty]=useState(false);// lets you score a Loaded leg + its paired Empty leg as one Round Trip
+  const [emptyLeg,setEmptyLeg]=useState({miles:"",rate:"",fsc:""});
   const [offerRes,setOfferRes]=useState(null);
   const [showAdd,setShowAdd]=useState(false);
   const [newMove,setNewMove]=useState({type:"L",from:"",to:"",miles:"",rate:"",fsc:""});
@@ -319,6 +321,7 @@ export default function ContractorIQv26(){
   const [hiddenVendors,setHiddenVendors]=useState([]);
   const [hideOwnerName,setHideOwnerName]=useState(false);
   const [hideUnitNum,setHideUnitNum]=useState(false);
+  const [hideEmail,setHideEmail]=useState(false);// "Presenter Mode" — for live demos/screen shares
   const [activeOnlyVendor,setActiveOnlyVendor]=useState(null);
   const [helpCard,setHelpCard]=useState(null);
   const [collapsedCards,setCollapsedCards]=useState(new Set());
@@ -1733,7 +1736,7 @@ ${pdfText.slice(0,24000)}`}]};
                   {/* Account header */}
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
                     <div style={{fontSize:8,color:C.sub,letterSpacing:"0.08em",marginBottom:3}}>SIGNED IN</div>
-                    <div style={{fontSize:11,color:C.text,fontWeight:700,wordBreak:"break-all",marginBottom:4}}>{user?.email||"Dev Mode"}</div>
+                    <div style={{fontSize:11,color:C.text,fontWeight:700,wordBreak:"break-all",marginBottom:4}}>{hideEmail?"●●●●●@●●●●●.com":(user?.email||"Dev Mode")}</div>
                     <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:4}}>
                       {isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#00ffcc",background:"#00ffcc18",border:"1px solid #00ffcc33",borderRadius:20,padding:"1px 7px"}}>★ PRO SMART</span>}
                       {isPro&&!isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#a78bfa",background:"#a78bfa18",border:"1px solid #a78bfa33",borderRadius:20,padding:"1px 7px"}}>★ STANDARD</span>}
@@ -1844,7 +1847,7 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
             <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
               <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Privacy</div>
-              {[{label:"Hide owner name",val:hideOwnerName,set:setHideOwnerName},{label:"Hide unit number",val:hideUnitNum,set:setHideUnitNum}].map(item=>(
+              {[{label:"Hide owner name",val:hideOwnerName,set:setHideOwnerName},{label:"Hide unit number",val:hideUnitNum,set:setHideUnitNum},{label:"Hide login email (Presenter Mode)",val:hideEmail,set:setHideEmail}].map(item=>(
                 <div key={item.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                   <span style={{fontSize:11,color:C.text}}>{item.label}</span>
                   <button onClick={()=>item.set(p=>!p)} style={{width:40,height:20,borderRadius:10,background:item.val?C.accent:C.border,border:"none",cursor:"pointer",position:"relative",flexShrink:0}}><div style={{width:14,height:14,borderRadius:"50%",background:"white",position:"absolute",top:3,left:item.val?23:3,transition:"left 0.15s"}}/></button>
@@ -2914,7 +2917,34 @@ ${pdfText.slice(0,24000)}`}]};
                 ))}
                 <div><label style={lbl}>Type</label><select value={offer.type} onChange={e=>setOffer(p=>({...p,type:e.target.value}))} style={{...inp,cursor:"pointer"}}><option value="L">Loaded</option><option value="E">Empty</option></select></div>
               </div>
-              <button onClick={()=>{if(!hasAccess&&oUses>=FREE_OS){openUpgrade("scorer");return;}setOfferRes(scoreMove({miles:+offer.miles,rate:+offer.rate,fsc:+offer.fsc,type:offer.type}));if(!hasAccess)setOUses(function(p){return p+1;});}} style={{width:"100%",padding:"13px",borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer"}}>{osLocked?"🔒 Unlock Offer Scorer":"Score This Offer"}{!hasAccess&&!osLocked?" ("+(FREE_OS-oUses)+" free left)":""}</button>
+              <button onClick={function(){setCombineEmpty(function(p){return !p;});}} style={{width:"100%",padding:"9px",borderRadius:8,background:combineEmpty?C.accent+"20":C.raised,border:"1px solid "+(combineEmpty?C.accent:C.border),color:combineEmpty?C.accent:C.sub,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:12}}>
+                {combineEmpty?"🔄 Round Trip mode ON — tap to remove empty leg":"➕ Combine with an Empty Leg (Round Trip)"}
+              </button>
+              {combineEmpty&&(
+                <div style={{padding:"10px 11px",borderRadius:9,background:C.bg,border:"1px solid "+C.border,marginBottom:12}}>
+                  <div style={{fontSize:9,color:C.sub,marginBottom:8,fontWeight:700}}>EMPTY LEG (the deadhead to get this load)</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                    <div><label style={lbl}>Miles</label><input value={emptyLeg.miles} onChange={function(e){setEmptyLeg(function(p){return {...p,miles:e.target.value};});}} placeholder="Miles" style={inp}/></div>
+                    <div><label style={lbl}>Rate $</label><input value={emptyLeg.rate} onChange={function(e){setEmptyLeg(function(p){return {...p,rate:e.target.value};});}} placeholder="Rate $" style={inp}/></div>
+                    <div><label style={lbl}>FSC $</label><input value={emptyLeg.fsc} onChange={function(e){setEmptyLeg(function(p){return {...p,fsc:e.target.value};});}} placeholder="FSC $" style={inp}/></div>
+                  </div>
+                </div>
+              )}
+              <button onClick={function(){
+                if(!hasAccess&&oUses>=FREE_OS){openUpgrade("scorer");return;}
+                var combinedMiles=parseFloat(offer.miles)||0;
+                var combinedRate=parseFloat(offer.rate)||0;
+                var combinedFsc=parseFloat(offer.fsc)||0;
+                var moveType=offer.type;
+                if(combineEmpty){
+                  combinedMiles=combinedMiles+(parseFloat(emptyLeg.miles)||0);
+                  combinedRate=combinedRate+(parseFloat(emptyLeg.rate)||0);
+                  combinedFsc=combinedFsc+(parseFloat(emptyLeg.fsc)||0);
+                  moveType="RT";
+                }
+                setOfferRes(scoreMove({miles:combinedMiles,rate:combinedRate,fsc:combinedFsc,type:moveType}));
+                if(!hasAccess)setOUses(function(p){return p+1;});
+              }} style={{width:"100%",padding:"13px",borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:"pointer"}}>{osLocked?"🔒 Unlock Offer Scorer":combineEmpty?"Score Round Trip":"Score This Offer"}{!hasAccess&&!osLocked?" ("+(FREE_OS-oUses)+" free left)":""}</button>
             </div>
             <div style={K({display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12,minHeight:200,border:offerRes?`2px solid ${gc(offerRes.grade)}`:`1px solid ${C.border}`})}>
               {offerRes?(<><div style={{display:"flex",gap:16,alignItems:"center",width:"100%"}}><div style={{width:76,height:76,borderRadius:14,background:`${gc(offerRes.grade)}18`,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${gc(offerRes.grade)}`,flexShrink:0}}><span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:34,fontWeight:900,color:gc(offerRes.grade)}}>{offerRes.grade}</span></div><div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:26,fontWeight:800,color:gc(offerRes.grade)}}>{offerRes.score}/100</div><div style={{fontSize:12,color:C.sub,marginTop:2}}>RPM: <strong style={{color:C.text}}>${offerRes.rpm}/mi</strong></div><div style={{fontSize:13,color:C.text,fontWeight:700,marginTop:4}}>{offerRes.grade==="A"?"🔥 Take it!":offerRes.grade==="B"?"👍 Good offer":offerRes.grade==="C"?"🤔 Marginal":"❌ Pass"}</div></div></div><div style={{display:"flex",flexWrap:"wrap",gap:6,width:"100%"}}>{offerRes.tags.map(t=><Tag key={t} color={C.sub}>{t}</Tag>)}</div></>):(<><div style={{fontSize:38}}>📋</div><div style={{color:C.sub,fontSize:13}}>Enter offer details to score</div><div style={{fontSize:11,color:C.sub}}>A=take it · B=good · C=marginal · D=pass</div></>)}
