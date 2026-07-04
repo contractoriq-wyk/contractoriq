@@ -276,6 +276,10 @@ export default function ContractorIQv26(){
   const [vendorPick,setVendorPick]=useState("CPG");
   const [fuelMPG,setFuelMPG]=useState(5.2);
   const [fuelPrice,setFuelPrice]=useState(6.22);
+  const [mpgAutoSync,setMpgAutoSync]=useState(()=>{try{return localStorage.getItem("ciq_mpg_auto")!=="false";}catch{return true;}});
+  useEffect(()=>{try{localStorage.setItem("ciq_mpg_auto",String(mpgAutoSync));}catch(e){}},[mpgAutoSync]);
+  const [priceAutoSync,setPriceAutoSync]=useState(()=>{try{return localStorage.getItem("ciq_price_auto")!=="false";}catch{return true;}});
+  useEffect(()=>{try{localStorage.setItem("ciq_price_auto",String(priceAutoSync));}catch(e){}},[priceAutoSync]);
   const [milesBuffer,setMilesBuffer]=useState(5);
   const [focusMode,setFocusMode]=useState(false);
   const [showSettings,setShowSettings]=useState(false);
@@ -536,6 +540,42 @@ export default function ContractorIQv26(){
 
   const baseW=[];// W is empty now — all real data comes from Supabase via addedW, same on every device
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
+
+  // Auto-sync Baseline MPG from real settlement data — no more manual weekly adjustment.
+  // Uses your last 4 weeks' actual (miles/gallons) to compute a rolling real average.
+  // User can still override manually by toggling off auto-sync.
+  useEffect(()=>{
+    if(!mpgAutoSync||allW.length===0)return;
+    const recent=[...allW].slice(-4);
+    let totalMiles=0,totalGal=0;
+    recent.forEach(w=>{
+      const wMiles=(w.moves||[]).reduce((s,m)=>s+(m.mi||m.miles||0),0);
+      const wGal=w.gallons>0?w.gallons:0;
+      if(wGal>0){totalMiles+=wMiles;totalGal+=wGal;}
+    });
+    if(totalGal>0){
+      const realAvgMPG=totalMiles/totalGal;
+      const clamped=Math.max(3.5,Math.min(9.0,Math.round(realAvgMPG*10)/10));
+      setFuelMPG(clamped);
+    }
+  },[allW,mpgAutoSync]);// re-run whenever ANY week data changes (was allW.length — missed updates when scanning/editing same-count weeks)
+
+  // Auto-sync Price/Gallon from the currently-selected week's real fuel advance data —
+  // same source as the "Average Fuel Price This Week" card, so both numbers always match.
+  useEffect(()=>{
+    if(!priceAutoSync)return;
+    const dwCheck=allW[sD];
+    if(!dwCheck)return;
+    const weekFuelA=(dwCheck.deds||[]).filter(d=>d&&d.l&&d.l.toLowerCase().includes("fuel advance")&&d.ppg>0);
+    if(weekFuelA.length===0)return;
+    const totalGal=weekFuelA.reduce((s,d)=>s+(d.gal||0),0);
+    const totalCost=weekFuelA.reduce((s,d)=>s+(d.a||0),0);
+    if(totalGal>0){
+      const avgPPG=totalCost/totalGal;
+      const clamped=Math.max(3.5,Math.min(8.0,Math.round(avgPPG*100)/100));
+      setFuelPrice(clamped);
+    }
+  },[allW,sD,priceAutoSync]);// re-run when week selection or data changes
   const visibleW=allW.filter(w=>{const vk=detectVendor(w);if(activeOnlyVendor&&vk!==activeOnlyVendor)return false;if(hiddenVendors.includes(vk))return false;return true;});
   const safeW=visibleW.length>0?visibleW:(allW.length>0?allW:DEMO_W);
   const vendorKeys=Object.keys(VENDORS);
@@ -1319,6 +1359,12 @@ ${pdfText.slice(0,24000)}`}]};
                 </div>
               </button>
 
+              {/* Secondary CTA — for skeptical visitors who want to understand the tool first */}
+              <button onClick={()=>{setOnboardStep(0);setShowOnboarding(true);}} style={{width:"100%",padding:"13px 18px",borderRadius:12,background:"rgba(167,139,250,0.08)",border:"1px solid rgba(167,139,250,0.3)",color:"#c4b5fd",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",marginBottom:wide?18:14,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                <span style={{fontSize:16}}>🎓</span>
+                <span>See How It Works — 2 Minute Tour</span>
+              </button>
+
               {/* Trust strip */}
               <div style={{padding:"8px 14px",background:"rgba(0,255,204,0.05)",borderRadius:9,border:"1px solid rgba(0,255,204,0.2)",marginBottom:wide?18:14,textAlign:"center"}}>
                 <div style={{fontSize:10,fontWeight:700,color:"#8fa3c0"}}>💳 Billed monthly or annually · Cancel anytime · No contracts</div>
@@ -1571,10 +1617,21 @@ ${pdfText.slice(0,24000)}`}]};
             <img src={LOGO_ICON} alt="DrayageIQ" style={{width:52,height:52,borderRadius:11,flexShrink:0,boxShadow:"0 0 16px rgba(0,255,204,0.3)"}}/>
             <div>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,fontSize:15,background:"linear-gradient(135deg,#ffffff,#a5f3fc,#c4b5fd)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>DrayageIQ</div>
-              <div style={{fontSize:10,color:C.sub}}>{hideOwnerName?"●●●●●":demoMode?"Demo Driver":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</div>
+              <div style={{fontSize:10,color:C.sub,display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+                <span>{hideOwnerName?"●●●●●":demoMode?"Demo Driver":(profile.name||"Your Business")} · {allW.length>0?allW.length+" weeks":"No data yet"}</span>
+                {user&&syncStatus==="saved"&&<span style={{color:C.green,fontWeight:700,fontSize:9}}>✅ Data saved{lastSyncTime?" "+lastSyncTime.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""}</span>}
+                {user&&syncStatus==="saving"&&<span style={{color:C.gold,fontWeight:700,fontSize:9}}>⏳ Saving...</span>}
+                {user&&syncStatus==="error"&&<span style={{color:C.red,fontWeight:800,fontSize:9}}>⚠️ NOT SAVED — tap Menu</span>}
+                {!user&&isOwnerMode&&<span style={{color:C.sub,fontWeight:700,fontSize:9}}>⚠️ Dev Mode — no cloud backup</span>}
+              </div>
             </div>
           </div>
-          <div style={{textAlign:"right"}}><div style={{fontSize:10,color:C.sub}}>YTD Gross</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.accent}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div>
+          <div style={{textAlign:"right"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:4,marginBottom:2}}>
+              <div style={{fontSize:10,color:C.sub}}>YTD Gross</div>
+            </div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:800,color:C.accent}}>${tGross.toLocaleString("en-US",{minimumFractionDigits:2})}</div>
+          </div>
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
           <div style={{display:"flex",gap:6,alignItems:"center",overflowX:"auto",scrollbarWidth:"none",flex:1}}>
@@ -2406,34 +2463,39 @@ ${pdfText.slice(0,24000)}`}]};
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
                         <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Baseline MPG</div>
+                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Baseline MPG {mpgAutoSync&&<span style={{fontSize:8,color:C.green,fontWeight:700}}>· AUTO</span>}</div>
                             <div style={{display:"flex",alignItems:"center",gap:8}}>
-                              <button onClick={function(){setFuelMPG(function(p){return Math.max(3.5,Math.round((p-0.1)*10)/10);});}} style={{width:26,height:26,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+                              <button disabled={mpgAutoSync} onClick={function(){setFuelMPG(function(p){return Math.max(3.5,Math.round((p-0.1)*10)/10);});}} style={{width:26,height:26,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:mpgAutoSync?C.sub:C.text,fontSize:14,fontWeight:800,cursor:mpgAutoSync?"not-allowed":"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",opacity:mpgAutoSync?0.4:1}}>−</button>
                               <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:C.accent,minWidth:32,textAlign:"center"}}>{fuelMPG.toFixed(1)}</span>
-                              <button onClick={function(){setFuelMPG(function(p){return Math.min(9.0,Math.round((p+0.1)*10)/10);});}} style={{width:26,height:26,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+                              <button disabled={mpgAutoSync} onClick={function(){setFuelMPG(function(p){return Math.min(9.0,Math.round((p+0.1)*10)/10);});}} style={{width:26,height:26,borderRadius:7,background:C.raised,border:`1px solid ${C.border}`,color:mpgAutoSync?C.sub:C.text,fontSize:14,fontWeight:800,cursor:mpgAutoSync?"not-allowed":"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",opacity:mpgAutoSync?0.4:1}}>+</button>
                             </div>
                           </div>
-                          <input type="range" min="3.5" max="9.0" step="0.1" value={fuelMPG}
+                          <input type="range" min="3.5" max="9.0" step="0.1" value={fuelMPG} disabled={mpgAutoSync}
                             onChange={function(e){setFuelMPG(parseFloat(e.target.value));}}
-                            style={{width:"100%",accentColor:C.accent,cursor:"pointer",marginBottom:4}}/>
-                          <div style={{display:"flex",justifyContent:"space-between",fontSize:8}}>
+                            style={{width:"100%",accentColor:C.accent,cursor:mpgAutoSync?"not-allowed":"pointer",marginBottom:4,opacity:mpgAutoSync?0.5:1}}/>
+                          <div style={{display:"flex",justifyContent:"space-between",fontSize:8,marginBottom:6}}>
                             <span style={{color:"#f87171"}}>3.5 poor</span>
                             <span style={{color:"#4ade80"}}>9.0 great</span>
                           </div>
-                          <div style={{fontSize:8,color:C.sub,marginTop:5,lineHeight:1.4}}>💡 Use +/− buttons for precise 0.1 adjustments, or drag the slider for quick changes.</div>
+                          <button onClick={()=>setMpgAutoSync(p=>!p)} style={{width:"100%",padding:"6px",borderRadius:6,background:mpgAutoSync?`${C.green}15`:`${C.gold}15`,border:`1px solid ${mpgAutoSync?C.green:C.gold}44`,color:mpgAutoSync?C.green:C.gold,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                            {mpgAutoSync?"✅ Auto-syncing from last 4 weeks — tap to set manually":"⚙️ Manual mode — tap to auto-sync from real data"}
+                          </button>
                         </div>
                         <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Price / Gallon</div>
+                            <div style={{fontSize:10,color:C.sub,fontWeight:600}}>Price / Gallon {priceAutoSync&&<span style={{fontSize:8,color:C.green,fontWeight:700}}>· AUTO</span>}</div>
                             <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:16,fontWeight:800,color:fuelPrice>=6?C.red:C.gold}}>${fuelPrice.toFixed(2)}</span>
                           </div>
-                          <input type="range" min="3.50" max="8.00" step="0.01" value={fuelPrice}
+                          <input type="range" min="3.50" max="8.00" step="0.01" value={fuelPrice} disabled={priceAutoSync}
                             onChange={function(e){setFuelPrice(parseFloat(e.target.value));}}
-                            style={{width:"100%",accentColor:C.accent,cursor:"pointer",marginBottom:4}}/>
-                          <div style={{display:"flex",justifyContent:"space-between",fontSize:8}}>
+                            style={{width:"100%",accentColor:C.accent,cursor:priceAutoSync?"not-allowed":"pointer",marginBottom:4,opacity:priceAutoSync?0.5:1}}/>
+                          <div style={{display:"flex",justifyContent:"space-between",fontSize:8,marginBottom:6}}>
                             <span style={{color:"#4ade80"}}>$3.50</span>
                             <span style={{color:"#f87171"}}>$8.00</span>
                           </div>
+                          <button onClick={()=>setPriceAutoSync(p=>!p)} style={{width:"100%",padding:"6px",borderRadius:6,background:priceAutoSync?`${C.green}15`:`${C.gold}15`,border:`1px solid ${priceAutoSync?C.green:C.gold}44`,color:priceAutoSync?C.green:C.gold,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                            {priceAutoSync?"✅ Auto-syncing from this week's fuel advances — tap to set manually":"⚙️ Manual mode — tap to auto-sync from real data"}
+                          </button>
                           <div style={{fontSize:9,color:C.sub,marginTop:5,lineHeight:1.5}}>{hasRealGallons?"Real gallons from settlement":"Match your fuel receipt for accuracy"}</div>
                         </div>
                       </div>
