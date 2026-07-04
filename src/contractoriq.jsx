@@ -1735,7 +1735,13 @@ ${pdfText.slice(0,24000)}`}]};
 
                   {/* Account header */}
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
-                    <div style={{fontSize:8,color:C.sub,letterSpacing:"0.08em",marginBottom:3}}>SIGNED IN</div>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+                      <span style={{fontSize:8,color:C.sub,letterSpacing:"0.08em"}}>SIGNED IN</span>
+                      <button onClick={()=>setHideEmail(p=>!p)} style={{display:"flex",alignItems:"center",gap:4,background:"none",border:"none",cursor:"pointer",padding:0}}>
+                        <span style={{fontSize:8,color:hideEmail?C.accent:C.sub,fontWeight:700}}>{hideEmail?"🙈 Hidden":"👁 Presenter Mode"}</span>
+                        <div style={{width:26,height:14,borderRadius:8,background:hideEmail?C.accent:C.border,position:"relative",flexShrink:0}}><div style={{width:10,height:10,borderRadius:"50%",background:"white",position:"absolute",top:2,left:hideEmail?14:2,transition:"left 0.15s"}}/></div>
+                      </button>
+                    </div>
                     <div style={{fontSize:11,color:C.text,fontWeight:700,wordBreak:"break-all",marginBottom:4}}>{hideEmail?"●●●●●@●●●●●.com":(user?.email||"Dev Mode")}</div>
                     <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:4}}>
                       {isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#00ffcc",background:"#00ffcc18",border:"1px solid #00ffcc33",borderRadius:20,padding:"1px 7px"}}>★ PRO SMART</span>}
@@ -1847,7 +1853,7 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
             <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
               <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Privacy</div>
-              {[{label:"Hide owner name",val:hideOwnerName,set:setHideOwnerName},{label:"Hide unit number",val:hideUnitNum,set:setHideUnitNum},{label:"Hide login email (Presenter Mode)",val:hideEmail,set:setHideEmail}].map(item=>(
+              {[{label:"Hide owner name",val:hideOwnerName,set:setHideOwnerName},{label:"Hide unit number",val:hideUnitNum,set:setHideUnitNum}].map(item=>(
                 <div key={item.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                   <span style={{fontSize:11,color:C.text}}>{item.label}</span>
                   <button onClick={()=>item.set(p=>!p)} style={{width:40,height:20,borderRadius:10,background:item.val?C.accent:C.border,border:"none",cursor:"pointer",position:"relative",flexShrink:0}}><div style={{width:14,height:14,borderRadius:"50%",background:"white",position:"absolute",top:3,left:item.val?23:3,transition:"left 0.15s"}}/></button>
