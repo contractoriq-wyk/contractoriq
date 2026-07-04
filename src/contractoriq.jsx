@@ -504,13 +504,32 @@ export default function ContractorIQv26(){
   },[user]);
 
   // Push to cloud on change (debounced), only after initial pull
+  // Tracks REAL sync state visible to the user — not just a static label.
+  const [syncStatus,setSyncStatus]=useState("idle");// idle | saving | saved | error
+  const [lastSyncTime,setLastSyncTime]=useState(null);
+  const [syncError,setSyncError]=useState("");
   useEffect(()=>{
     if(!user||!cloudLoaded) return;
-    const c=getSB(); if(!c) return;
+    const c=getSB();
+    if(!c){setSyncStatus("error");setSyncError("Cloud connection unavailable");return;}
     const blob={addedW,profile,expenses,docs,reviews};
+    setSyncStatus("saving");
     const t=setTimeout(()=>{
       c.from("user_data").upsert({user_id:user.id,data:blob,updated_at:new Date().toISOString()})
-        .then(({error})=>{ if(error)console.error("cloud push",error.message); });
+        .then(({error})=>{
+          if(error){
+            console.error("cloud push",error.message);
+            setSyncStatus("error");
+            setSyncError(error.message||"Save failed");
+          }else{
+            setSyncStatus("saved");
+            setLastSyncTime(new Date());
+          }
+        })
+        .catch(err=>{
+          setSyncStatus("error");
+          setSyncError(err?.message||"Network error — save failed");
+        });
     },1500);
     return ()=>clearTimeout(t);
   },[addedW,profile,expenses,docs,reviews,user,cloudLoaded]);
@@ -1580,11 +1599,21 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
                     <div style={{fontSize:8,color:C.sub,letterSpacing:"0.08em",marginBottom:3}}>SIGNED IN</div>
                     <div style={{fontSize:11,color:C.text,fontWeight:700,wordBreak:"break-all",marginBottom:4}}>{user?.email||"Dev Mode"}</div>
-                    <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                      <span style={{fontSize:9,color:C.accent}}>☁️ Synced to cloud</span>
+                    <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:4}}>
                       {isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#00ffcc",background:"#00ffcc18",border:"1px solid #00ffcc33",borderRadius:20,padding:"1px 7px"}}>★ PRO SMART</span>}
                       {isPro&&!isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#a78bfa",background:"#a78bfa18",border:"1px solid #a78bfa33",borderRadius:20,padding:"1px 7px"}}>★ STANDARD</span>}
                     </div>
+                    {/* REAL sync status — not a static label. Shows actual save state. */}
+                    {!user&&isOwnerMode&&<div style={{fontSize:9,color:C.gold}}>⚠️ Dev Mode — not connected to your cloud account</div>}
+                    {user&&syncStatus==="saving"&&<div style={{fontSize:9,color:C.sub}}>⏳ Saving...</div>}
+                    {user&&syncStatus==="saved"&&lastSyncTime&&<div style={{fontSize:9,color:C.green}}>✅ Saved to cloud · {lastSyncTime.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</div>}
+                    {user&&syncStatus==="error"&&(
+                      <div style={{fontSize:9,color:C.red,fontWeight:700}}>
+                        ⚠️ Save failed — your data may not be backed up!<br/>
+                        <span style={{fontWeight:400,fontSize:8}}>{syncError}</span>
+                      </div>
+                    )}
+                    {user&&syncStatus==="idle"&&<div style={{fontSize:9,color:C.sub}}>☁️ Connected to cloud</div>}
                   </div>
 
                   {/* ── ACCOUNT ── */}
