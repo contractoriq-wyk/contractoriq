@@ -2826,7 +2826,7 @@ ${pdfText.slice(0,24000)}`}]};
           </div>
 
 
-          {/* FSC CALCULATOR — confirmed working: inputs + live diesel display */}
+          {/* FSC CALCULATOR — safe version: no conditional element swapping */}
           {isSmart&&(
             <div style={K()}>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:12}}>⛽ Fuel Surcharge Calculator</div>
@@ -2845,18 +2845,12 @@ ${pdfText.slice(0,24000)}`}]};
                   <span>Live diesel: ${((liveData&&liveData.diesel)||fuelPrice||4.5).toFixed(2)}/gal</span>
                   <span>Your MPG: {(fuelMPG||5.2).toFixed(1)}</span>
                 </div>
-                {fscLinehaul.rate && fscLinehaul.miles ? (
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <span style={{fontSize:10,color:C.text,fontWeight:700}}>Recommended FSC to quote:</span>
-                    <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.green}}>{(((( (liveData&&liveData.diesel)||fuelPrice||4.5) - 2.5)/((fuelMPG||5.2)))/(parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles))*100).toFixed(1)}%</span>
-                  </div>
-                ) : (
-                  <div style={{fontSize:9,color:C.sub,textAlign:"center",padding:"6px 0"}}>Enter linehaul rate and miles above</div>
-                )}
+                <div style={{fontSize:9,color:C.sub}}>Rate per mile: {fscLinehaul.rate&&fscLinehaul.miles&&parseFloat(fscLinehaul.miles)>0?(parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles)).toFixed(2):"—"}</div>
+                <div style={{fontSize:14,fontWeight:800,color:C.green,marginTop:6}}>Recommended FSC: {fscLinehaul.rate&&fscLinehaul.miles&&parseFloat(fscLinehaul.miles)>0&&parseFloat(fscLinehaul.rate)>0?(((( (liveData&&liveData.diesel)||fuelPrice||4.5) - 2.5)/((fuelMPG||5.2)))/(parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles))*100).toFixed(1):"0.0"}%</div>
               </div>
-              <div style={{fontSize:8,color:C.sub,marginTop:8,lineHeight:1.5}}>💡 Formula: extra fuel cost per mile (vs $2.50/gal baseline) ÷ your rate per mile.</div>
             </div>
           )}
+
 
           {/* OFFER SCORER */}
           <div style={{display:"grid",gridTemplateColumns:wide?"1fr 1fr":"1fr",gap:14,marginBottom:16}}>
