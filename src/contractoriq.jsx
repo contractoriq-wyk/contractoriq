@@ -2825,53 +2825,6 @@ ${pdfText.slice(0,24000)}`}]};
             {addedW.length>0&&<div style={{padding:"8px 14px",borderTop:"1px solid "+C.border,fontSize:10,color:C.sub,textAlign:"center"}}>☑ Select → <span style={{color:"#f87171",fontWeight:700}}>Delete</span> to remove · rescan PDF to update data</div>}
           </div>
 
-          {/* FSC CALCULATOR — Pro Smart only, uses live diesel price */}
-          {isSmart&&(
-            <div style={{...K(),marginBottom:16}}>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>⛽ Fuel Surcharge Calculator{helpBtn("fscCalc")}<span style={{fontSize:8,fontWeight:800,color:"#00ffcc",background:"#00ffcc18",border:"1px solid #00ffcc33",borderRadius:20,padding:"1px 7px"}}>PRO SMART</span></div>
-              {helpModal("fscCalc")}
-              <div style={{fontSize:9,color:C.sub,lineHeight:1.5,marginBottom:12}}>Know exactly what FSC% to quote a client — calculated from today's live diesel price and your real truck MPG. No more guessing.</div>
-              {(()=>{
-                const livePrice=(liveData&&liveData.diesel)||fuelPrice||4.50;
-                const truckMPG=fuelMPG>0?fuelMPG:6.0;
-                const baselineFuelCost=2.50;// baseline diesel price most linehaul rates assume, industry standard reference point
-                const fuelCostPerMile=livePrice/truckMPG;
-                const baselineCostPerMile=baselineFuelCost/truckMPG;
-                const extraCostPerMile=Math.max(0,fuelCostPerMile-baselineCostPerMile);
-                const fscInput=fscLinehaul.rate&&fscLinehaul.miles?parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles):0;
-                const recommendedFSCPct=fscInput>0?(extraCostPerMile/fscInput*100):0;
-                return(
-                  <div>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-                      <div>
-                        <div style={{fontSize:8,color:C.sub,marginBottom:3}}>LINEHAUL RATE ($)</div>
-                        <input type="number" value={fscLinehaul.rate} onChange={e=>setFscLinehaul(p=>({...p,rate:e.target.value}))} placeholder="e.g. 250" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
-                      </div>
-                      <div>
-                        <div style={{fontSize:8,color:C.sub,marginBottom:3}}>MILES</div>
-                        <input type="number" value={fscLinehaul.miles} onChange={e=>setFscLinehaul(p=>({...p,miles:e.target.value}))} placeholder="e.g. 50" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
-                      </div>
-                    </div>
-                    <div style={{padding:"10px 12px",borderRadius:9,background:`${C.accent}0d`,border:`1px solid ${C.accent}33`,marginBottom:8}}>
-                      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.sub,marginBottom:4}}>
-                        <span>Live diesel: ${livePrice.toFixed(2)}/gal</span>
-                        <span>Your MPG: {truckMPG.toFixed(1)}</span>
-                      </div>
-                      {fscInput>0?(
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <span style={{fontSize:10,color:C.text,fontWeight:700}}>Recommended FSC to quote:</span>
-                          <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.green}}>{recommendedFSCPct.toFixed(1)}%</span>
-                        </div>
-                      ):(
-                        <div style={{fontSize:9,color:C.sub,textAlign:"center",padding:"6px 0"}}>Enter linehaul rate and miles above</div>
-                      )}
-                    </div>
-                    <div style={{fontSize:8,color:C.sub,lineHeight:1.5}}>💡 Formula: extra fuel cost per mile (vs $2.50/gal baseline) ÷ your rate per mile. This is the industry-standard way FSC tables are built.</div>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
 
           {/* OFFER SCORER */}
           <div style={{display:"grid",gridTemplateColumns:wide?"1fr 1fr":"1fr",gap:14,marginBottom:16}}>
