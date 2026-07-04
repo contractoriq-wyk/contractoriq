@@ -279,6 +279,7 @@ export default function ContractorIQv26(){
   const [mpgAutoSync,setMpgAutoSync]=useState(()=>{try{return localStorage.getItem("ciq_mpg_auto")!=="false";}catch{return true;}});
   useEffect(()=>{try{localStorage.setItem("ciq_mpg_auto",String(mpgAutoSync));}catch(e){}},[mpgAutoSync]);
   const [priceAutoSync,setPriceAutoSync]=useState(()=>{try{return localStorage.getItem("ciq_price_auto")!=="false";}catch{return true;}});
+  const [fscLinehaul,setFscLinehaul]=useState({rate:"",miles:""});
   useEffect(()=>{try{localStorage.setItem("ciq_price_auto",String(priceAutoSync));}catch(e){}},[priceAutoSync]);
   const [milesBuffer,setMilesBuffer]=useState(5);
   const [focusMode,setFocusMode]=useState(false);
@@ -545,7 +546,7 @@ export default function ContractorIQv26(){
   // Uses your last 4 weeks' actual (miles/gallons) to compute a rolling real average.
   // User can still override manually by toggling off auto-sync.
   useEffect(()=>{
-    if(!mpgAutoSync||allW.length===0)return;
+    if(!isSmart||!mpgAutoSync||allW.length===0)return;// auto-sync is a Pro Smart feature
     const recent=[...allW].slice(-4);
     let totalMiles=0,totalGal=0;
     recent.forEach(w=>{
@@ -563,7 +564,7 @@ export default function ContractorIQv26(){
   // Auto-sync Price/Gallon from the currently-selected week's real fuel advance data —
   // same source as the "Average Fuel Price This Week" card, so both numbers always match.
   useEffect(()=>{
-    if(!priceAutoSync)return;
+    if(!isSmart||!priceAutoSync)return;// auto-sync is a Pro Smart feature
     const dwCheck=allW[sD];
     if(!dwCheck)return;
     const weekFuelA=(dwCheck.deds||[]).filter(d=>d&&d.l&&d.l.toLowerCase().includes("fuel advance")&&d.ppg>0);
@@ -980,6 +981,7 @@ ${pdfText.slice(0,24000)}`}]};
     ded_insurance:{t:"🛡️ Insurance Deductions",b:"These are your recurring insurance premiums deducted weekly: Physical Damage, Bobtail, Occupational Accident, Liability Limiter, and Roadside Assistance. These amounts should be the same every single week. If you see a different number, it may be a billing error — contact your carrier."},
     ded_ops:{t:"⚙️ Operations & Fees",b:"Recurring weekly operational fees: ELD device, Event Recorder, License Plate Program, Parking/Security, and Fuel Highway Taxes. These are mostly fixed costs of running your truck. Monitor these to catch any new fees your carrier adds."},
     ded_escrow:{t:"🏦 Escrow & Savings",b:"Money being held in escrow accounts. ESCROW-REGULAR builds toward your $2,500 target and is returned when you leave the carrier. 2290 ESCROW builds toward your Heavy Highway Vehicle Use Tax. These are YOUR money — they are saved, not spent."},
+    fscCalc:{t:"⛽ Fuel Surcharge Calculator",b:"Calculates a fair FSC percentage to quote a client, based on today's live diesel price and your real truck MPG — compared against a $2.50/gal baseline most linehaul rates assume. Enter the linehaul rate and miles for the load, and it shows the FSC% that fairly covers your actual fuel cost above baseline. This is a Pro Smart feature since it requires live diesel pricing."},
     returnOnSpend:{t:"💰 Return on Spend",b:"For every $1 you spend running your truck (all deductions combined, net of any fuel rebate), how much revenue did you generate? A ratio of 1:3 or higher is IDEAL — you're producing $3+ for every dollar spent. A ratio of 1:1.5 is SAFE — you're still profiting 50 cents on every dollar. Below 1:1.5 means your costs are eating too much into your revenue."},
     health:{t:"Performance by Carrier",b:"Green is strong, gold is worth watching, red needs attention."},
     grades:{t:"Weekly Performance Grades",b:"Each week evaluated against your own history. Look for your best weeks and understand what made them different."},
@@ -1092,7 +1094,9 @@ ${pdfText.slice(0,24000)}`}]};
 
               {icon:"▼",step:"Collapsible Cards",title:"Collapse Any Card to Save Space",body:"Every major card — Deduction Breakdown, Week Grades, Move Performance, Weekly Action Plan, and more — has a small ▼ arrow next to its title. Tap it to collapse the card down to just its header, or tap ▶ to expand it again. This keeps your screen clean and lets you focus on exactly what you need to see right now.",tip:"💡 On mobile especially, collapsing cards you don't need makes scrolling much faster.",action:"Next →"},
 
-              {icon:"💎",step:"Choosing Your Plan",title:"Standard vs Pro Smart — What's the Difference?",body:"Standard ($14.99/mo) gives you unlimited PDF scans, load tracking, and an AI advisor that answers using general trucking knowledge. Pro Smart ($24.99/mo) adds live national diesel prices, live weather at your location, and an AI that factors in YOUR actual settlement numbers for every answer — turning generic advice into decisions based on your real business. Annual saves you 2 months.",tip:"💡 Tap ≡ Menu → View Plans & Pricing anytime to compare or upgrade.",action:"Next →"},
+              {icon:"💎",step:"Choosing Your Plan",title:"Standard vs Pro Smart — What's the Difference?",body:"Standard ($14.99/mo) covers everything you need to track your business: unlimited PDF scans, Deduction Breakdown, Move Performance, round trip detection, Week Grades, and Manual Fuel Log. Pro Smart ($24.99/mo) adds the intelligence layer: live diesel prices & weather, an AI that uses YOUR real numbers, Smart Insights alerts, Return on Spend ratio, auto-syncing MPG & fuel price, the Fuel Surcharge Calculator, Data Health scanning, and the full Growth tab. Annual saves you 2 months.",tip:"💡 Look for the 🔒 lock icon — it marks Pro Smart features so you always know what's included in your plan.",action:"Next →"},
+
+              {icon:"⛽",step:"Fuel Surcharge Calculator",title:"Know What FSC% to Quote a Client",body:"One of the hardest parts of running your own drayage business is knowing what fuel surcharge to charge when quoting a new client. The FSC Calculator (Pro Smart, in the GROWTH tab) uses today's live diesel price and your real truck MPG to calculate a fair FSC percentage automatically — no more guessing or underquoting.",tip:"💡 Enter the linehaul rate and miles for any load, and it instantly shows the FSC% that covers your actual fuel cost above baseline.",action:"Next →"},
 
               {icon:"🚚",step:"Growing Your Fleet",title:"Fleet Pricing — For Multiple Trucks",body:"Running more than one truck? Tap ≡ Menu → Fleet Pricing to see plans built for small fleets. As you add trucks, DrayageIQ scales with you — each truck's settlements get tracked separately, so you can compare performance across your whole operation, not just one unit.",tip:"💡 Fleet Pricing is marked NEW in the menu — worth a look even if you're solo today and thinking about expanding.",action:"Next →"},
 
@@ -1360,10 +1364,11 @@ ${pdfText.slice(0,24000)}`}]};
               </button>
 
               {/* Secondary CTA — for skeptical visitors who want to understand the tool first */}
-              <button onClick={()=>{setOnboardStep(0);setShowOnboarding(true);}} style={{width:"100%",padding:"13px 18px",borderRadius:12,background:"rgba(167,139,250,0.08)",border:"1px solid rgba(167,139,250,0.3)",color:"#c4b5fd",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",marginBottom:wide?18:14,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              <button onClick={()=>{setOnboardStep(0);setShowOnboarding(true);}} style={{width:"100%",padding:"13px 18px",borderRadius:12,background:"rgba(167,139,250,0.08)",border:"1px solid rgba(167,139,250,0.3)",color:"#c4b5fd",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",marginBottom:6,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
                 <span style={{fontSize:16}}>🎓</span>
                 <span>See How It Works — 2 Minute Tour</span>
               </button>
+              <div style={{fontSize:9,color:"#5a7085",textAlign:"center",marginBottom:wide?18:14,lineHeight:1.5}}>Note: many features shown (live data, Smart Insights, Return on Spend, auto-sync) are part of <b style={{color:"#00ffcc"}}>Pro Smart</b>. Standard includes core scanning &amp; tracking.</div>
 
               {/* Trust strip */}
               <div style={{padding:"8px 14px",background:"rgba(0,255,204,0.05)",borderRadius:9,border:"1px solid rgba(0,255,204,0.2)",marginBottom:wide?18:14,textAlign:"center"}}>
@@ -1864,7 +1869,7 @@ ${pdfText.slice(0,24000)}`}]};
                       <div style={{padding:"3px 9px",borderRadius:20,background:`${v.color}18`,border:`1px solid ${v.color}44`,fontSize:10,fontWeight:700,color:v.color}}>{v.margin}%</div>
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:5}}>
-                      {[{l:"Gross",val:`$${(v.gross/1000).toFixed(1)}k`,c:v.color},{l:"Net",val:`$${(v.net/1000).toFixed(1)}k`,c:C.green},{l:"Deducted",val:`$${(v.ded/1000).toFixed(1)}k`,c:C.red},{l:"Return/Spend",val:`1:${(v.ded>0?v.gross/v.ded:0).toFixed(1)}`,c:(v.ded>0?v.gross/v.ded:0)>=3?C.green:(v.ded>0?v.gross/v.ded:0)>=1.5?C.gold:C.red}].map(s=>(
+                      {[{l:"Gross",val:`$${(v.gross/1000).toFixed(1)}k`,c:v.color},{l:"Net",val:`$${(v.net/1000).toFixed(1)}k`,c:C.green},{l:"Deducted",val:`$${(v.ded/1000).toFixed(1)}k`,c:C.red},{l:"Return/Spend",val:isSmart?`1:${(v.ded>0?v.gross/v.ded:0).toFixed(1)}`:"🔒 Pro",c:isSmart?((v.ded>0?v.gross/v.ded:0)>=3?C.green:(v.ded>0?v.gross/v.ded:0)>=1.5?C.gold:C.red):C.sub}].map(s=>(
                         <div key={s.l} style={{background:C.bg,borderRadius:7,padding:"7px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:s.c}}>{s.val}</div></div>
                       ))}
                     </div>
@@ -1877,7 +1882,8 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{display:"flex",gap:12,alignItems:"center"}}>
                     <div style={{textAlign:"right"}}><div style={{fontSize:9,color:C.sub}}>Total Net</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:C.green}}>${tNet.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div>
                     <div style={{padding:"5px 11px",borderRadius:8,background:`${C.green}18`,border:`1px solid ${C.green}44`}}><div style={{fontSize:9,color:C.sub}}>Margin</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.green}}>{margin}%</div></div>
-                    {(()=>{const ytdRatio=tDed>0?tGross/tDed:0;const rc=ytdRatio>=3?C.green:ytdRatio>=1.5?C.gold:C.red;return(<div style={{padding:"5px 11px",borderRadius:8,background:`${rc}18`,border:`1px solid ${rc}44`}}><div style={{fontSize:9,color:C.sub}}>YTD Return/Spend</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:rc}}>1:{ytdRatio.toFixed(1)}</div></div>);})()}
+                    {isSmart&&(()=>{const ytdRatio=tDed>0?tGross/tDed:0;const rc=ytdRatio>=3?C.green:ytdRatio>=1.5?C.gold:C.red;return(<div style={{padding:"5px 11px",borderRadius:8,background:`${rc}18`,border:`1px solid ${rc}44`}}><div style={{fontSize:9,color:C.sub}}>YTD Return/Spend</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:rc}}>1:{ytdRatio.toFixed(1)}</div></div>);})()}
+                    {!isSmart&&<div onClick={()=>openUpgrade("ros")} style={{padding:"5px 11px",borderRadius:8,background:`${C.a3}12`,border:`1px dashed ${C.a3}44`,cursor:"pointer"}}><div style={{fontSize:9,color:C.sub}}>YTD Return/Spend</div><div style={{fontSize:11,fontWeight:700,color:C.accent}}>🔒 Pro Smart</div></div>}
                   </div>
                 </div>
               )}
@@ -2145,8 +2151,14 @@ ${pdfText.slice(0,24000)}`}]};
                       </div>
                     </div>
 
-                    {/* Return on Spend — compact, tap to expand */}
-                    {(()=>{
+                    {/* Return on Spend — Pro Smart only, compact, tap to expand */}
+                    {!isSmart&&(
+                      <div style={{padding:"9px 12px",borderRadius:10,background:`${C.a3}0d`,border:`1px dashed ${C.a3}44`,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}} onClick={()=>openUpgrade("ros")}>
+                        <span style={{fontSize:11,color:C.sub}}>🔒 💰 Return on Spend — Pro Smart</span>
+                        <span style={{fontSize:9,color:C.accent,fontWeight:700}}>Upgrade →</span>
+                      </div>
+                    )}
+                    {isSmart&&(()=>{
                       const netCost=Math.max(0.01,dedSum-(dw.rebate||0));
                       const ratio=dw.gross/netCost;
                       const tier=ratio>=3?{label:"IDEAL",color:C.green,icon:"🚀"}:ratio>=1.5?{label:"SAFE",color:C.gold,icon:"✅"}:{label:"BELOW SAFE",color:C.red,icon:"⚠️"};
@@ -2219,8 +2231,16 @@ ${pdfText.slice(0,24000)}`}]};
                       );
                     })()}
 
-                    {/* Smart Insights */}
-                    {(()=>{
+                    {/* Smart Insights — Pro Smart only */}
+                    {!isSmart&&(
+                      <div style={{padding:"14px",borderRadius:9,background:`${C.a3}0d`,border:`1px dashed ${C.a3}44`,marginBottom:14,textAlign:"center"}}>
+                        <div style={{fontSize:20,marginBottom:4}}>🔒</div>
+                        <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:2}}>Smart Insights — Pro Smart Feature</div>
+                        <div style={{fontSize:9,color:C.sub,marginBottom:8}}>Get automatic alerts when your fuel, insurance, or ops costs jump unusually — before it becomes a pattern.</div>
+                        <button onClick={()=>openUpgrade("insights")} style={{padding:"7px 16px",borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Upgrade to Pro Smart →</button>
+                      </div>
+                    )}
+                    {isSmart&&(()=>{
                       const recentW=allW.slice(Math.max(0,allW.findIndex(w=>w.week===dw.week)-7),allW.findIndex(w=>w.week===dw.week)+1);
                       const histW=recentW.length>1?recentW.slice(0,-1):[];
                       const avgOf=(cat)=>{
@@ -2477,9 +2497,15 @@ ${pdfText.slice(0,24000)}`}]};
                             <span style={{color:"#f87171"}}>3.5 poor</span>
                             <span style={{color:"#4ade80"}}>9.0 great</span>
                           </div>
-                          <button onClick={()=>setMpgAutoSync(p=>!p)} style={{width:"100%",padding:"6px",borderRadius:6,background:mpgAutoSync?`${C.green}15`:`${C.gold}15`,border:`1px solid ${mpgAutoSync?C.green:C.gold}44`,color:mpgAutoSync?C.green:C.gold,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-                            {mpgAutoSync?"✅ Auto-syncing from last 4 weeks — tap to set manually":"⚙️ Manual mode — tap to auto-sync from real data"}
-                          </button>
+                          {isSmart?(
+                            <button onClick={()=>setMpgAutoSync(p=>!p)} style={{width:"100%",padding:"6px",borderRadius:6,background:mpgAutoSync?`${C.green}15`:`${C.gold}15`,border:`1px solid ${mpgAutoSync?C.green:C.gold}44`,color:mpgAutoSync?C.green:C.gold,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                              {mpgAutoSync?"✅ Auto-syncing from last 4 weeks — tap to set manually":"⚙️ Manual mode — tap to auto-sync from real data"}
+                            </button>
+                          ):(
+                            <button onClick={()=>openUpgrade("autosync")} style={{width:"100%",padding:"6px",borderRadius:6,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                              🔒 Auto-sync from real data — Pro Smart feature
+                            </button>
+                          )}
                         </div>
                         <div style={{background:C.bg,borderRadius:9,padding:"10px",border:`1px solid ${C.border}`}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
@@ -2493,9 +2519,15 @@ ${pdfText.slice(0,24000)}`}]};
                             <span style={{color:"#4ade80"}}>$3.50</span>
                             <span style={{color:"#f87171"}}>$8.00</span>
                           </div>
-                          <button onClick={()=>setPriceAutoSync(p=>!p)} style={{width:"100%",padding:"6px",borderRadius:6,background:priceAutoSync?`${C.green}15`:`${C.gold}15`,border:`1px solid ${priceAutoSync?C.green:C.gold}44`,color:priceAutoSync?C.green:C.gold,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-                            {priceAutoSync?"✅ Auto-syncing from this week's fuel advances — tap to set manually":"⚙️ Manual mode — tap to auto-sync from real data"}
-                          </button>
+                          {isSmart?(
+                            <button onClick={()=>setPriceAutoSync(p=>!p)} style={{width:"100%",padding:"6px",borderRadius:6,background:priceAutoSync?`${C.green}15`:`${C.gold}15`,border:`1px solid ${priceAutoSync?C.green:C.gold}44`,color:priceAutoSync?C.green:C.gold,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                              {priceAutoSync?"✅ Auto-syncing from this week's fuel advances — tap to set manually":"⚙️ Manual mode — tap to auto-sync from real data"}
+                            </button>
+                          ):(
+                            <button onClick={()=>openUpgrade("autosync")} style={{width:"100%",padding:"6px",borderRadius:6,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                              🔒 Auto-sync from real data — Pro Smart feature
+                            </button>
+                          )}
                           <div style={{fontSize:9,color:C.sub,marginTop:5,lineHeight:1.5}}>{hasRealGallons?"Real gallons from settlement":"Match your fuel receipt for accuracy"}</div>
                         </div>
                       </div>
@@ -2792,6 +2824,55 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
             {addedW.length>0&&<div style={{padding:"8px 14px",borderTop:"1px solid "+C.border,fontSize:10,color:C.sub,textAlign:"center"}}>☑ Select → <span style={{color:"#f87171",fontWeight:700}}>Delete</span> to remove · rescan PDF to update data</div>}
           </div>
+
+          {/* FSC CALCULATOR — Pro Smart only, uses live diesel price */}
+          {isSmart&&(
+            <div style={{...K(),marginBottom:16}}>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>⛽ Fuel Surcharge Calculator{helpBtn("fscCalc")}<span style={{fontSize:8,fontWeight:800,color:"#00ffcc",background:"#00ffcc18",border:"1px solid #00ffcc33",borderRadius:20,padding:"1px 7px"}}>PRO SMART</span></div>
+              {helpModal("fscCalc")}
+              <div style={{fontSize:9,color:C.sub,lineHeight:1.5,marginBottom:12}}>Know exactly what FSC% to quote a client — calculated from today's live diesel price and your real truck MPG. No more guessing.</div>
+              {(()=>{
+                const [fscMPG,setFscMPGLocal]=[fuelMPG,setFuelMPG];// reuse existing baseline MPG
+                const livePrice=liveData?.diesel||fuelPrice||4.50;
+                const truckMPG=fscMPG>0?fscMPG:6.0;
+                const baselineFuelCost=2.50;// baseline diesel price most linehaul rates assume, industry standard reference point
+                const fuelCostPerMile=livePrice/truckMPG;
+                const baselineCostPerMile=baselineFuelCost/truckMPG;
+                const extraCostPerMile=Math.max(0,fuelCostPerMile-baselineCostPerMile);
+                const fscInput=fscLinehaul.rate&&fscLinehaul.miles?parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles):0;
+                const recommendedFSCPct=fscInput>0?(extraCostPerMile/fscInput*100):0;
+                return(
+                  <div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+                      <div>
+                        <div style={{fontSize:8,color:C.sub,marginBottom:3}}>LINEHAUL RATE ($)</div>
+                        <input type="number" value={fscLinehaul.rate} onChange={e=>setFscLinehaul(p=>({...p,rate:e.target.value}))} placeholder="e.g. 250" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                      </div>
+                      <div>
+                        <div style={{fontSize:8,color:C.sub,marginBottom:3}}>MILES</div>
+                        <input type="number" value={fscLinehaul.miles} onChange={e=>setFscLinehaul(p=>({...p,miles:e.target.value}))} placeholder="e.g. 50" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                      </div>
+                    </div>
+                    <div style={{padding:"10px 12px",borderRadius:9,background:`${C.accent}0d`,border:`1px solid ${C.accent}33`,marginBottom:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.sub,marginBottom:4}}>
+                        <span>Live diesel: ${livePrice.toFixed(2)}/gal</span>
+                        <span>Your MPG: {truckMPG.toFixed(1)}</span>
+                      </div>
+                      {fscInput>0?(
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <span style={{fontSize:10,color:C.text,fontWeight:700}}>Recommended FSC to quote:</span>
+                          <span style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.green}}>{recommendedFSCPct.toFixed(1)}%</span>
+                        </div>
+                      ):(
+                        <div style={{fontSize:9,color:C.sub,textAlign:"center",padding:"6px 0"}}>Enter linehaul rate and miles above</div>
+                      )}
+                    </div>
+                    <div style={{fontSize:8,color:C.sub,lineHeight:1.5}}>💡 Formula: extra fuel cost per mile (vs $2.50/gal baseline) ÷ your rate per mile. This is the industry-standard way FSC tables are built.</div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
 
           {/* OFFER SCORER */}
           <div style={{display:"grid",gridTemplateColumns:wide?"1fr 1fr":"1fr",gap:14,marginBottom:16}}>
@@ -3129,7 +3210,7 @@ ${pdfText.slice(0,24000)}`}]};
                 {l:"Weekly Net",v:`$${(weeklyAvgNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#4ade80"},
                 {l:"Monthly Est.",v:`$${(monthlyNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#00ffcc"},
                 {l:"Annual Est.",v:`$${(annualNet/1000).toFixed(0)}k`,c:"#a78bfa"},
-                {l:"Return/Spend",v:`1:${monthlyRatio.toFixed(2)}`,c:ratioColor},
+                {l:"Return/Spend",v:isSmart?`1:${monthlyRatio.toFixed(2)}`:"🔒 Pro",c:isSmart?ratioColor:C.sub},
                 ];
               })().map(function(k){return(
                 <div key={k.l} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"9px 8px",border:"1px solid rgba(255,255,255,0.07)",textAlign:"center"}}>
