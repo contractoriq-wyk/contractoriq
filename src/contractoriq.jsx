@@ -242,9 +242,9 @@ export default function ContractorIQv26(){
   }
 
   const [tab,setTab]=useState("dashboard");
-  const [sD,setSD]=useState(7);
-  const [sM,setSM]=useState(7);
-  const [sH,setSH]=useState(7);
+  const [sD,setSD]=useState(0);// safe fallback; real default-to-latest-week logic runs once allW loads (see below)
+  const [sM,setSM]=useState(0);
+  const [sH,setSH]=useState(0);
   const [sR,setSR]=useState(7);
   const [wide,setWide]=useState(window.innerWidth>700);
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
@@ -541,6 +541,24 @@ export default function ContractorIQv26(){
 
   const baseW=[];// W is empty now — all real data comes from Supabase via addedW, same on every device
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
+
+  // Default the dashboard to the MOST RECENT week on load/refresh, not the oldest.
+  // sD/sM/sH start at a hardcoded 7 (leftover from old demo data length) — this corrects
+  // it to the real last index the moment real data is available, but only once per data-load
+  // so it doesn't fight with the user manually browsing to an older week afterward.
+  const hasSetInitialWeek=useRef(false);
+  useEffect(()=>{
+    if(hasSetInitialWeek.current)return;
+    // Wait for the REAL data source to settle before locking the initial week.
+    // Without this gate, addedW's localStorage fallback (possibly stale/partial)
+    // fires first, locks in a wrong index, and the later real Supabase data
+    // never gets a chance to correct it — which is why refresh kept landing on Week 16.
+    if(user&&!cloudLoaded)return;// logged in but cloud hasn't finished pulling yet — wait
+    if(allW.length===0)return;
+    const lastIndex=allW.length-1;
+    setSD(lastIndex);setSM(lastIndex);setSH(lastIndex);
+    hasSetInitialWeek.current=true;
+  },[allW.length,cloudLoaded,user]);
 
   // Auto-sync Baseline MPG from real settlement data — no more manual weekly adjustment.
   // Uses your last 4 weeks' actual (miles/gallons) to compute a rolling real average.
