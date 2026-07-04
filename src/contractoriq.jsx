@@ -2843,6 +2843,7 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{fontSize:9,color:C.sub}}>Rate: {fscLinehaul.rate} · Miles: {fscLinehaul.miles}</div>
               <div style={{fontSize:9,color:C.sub,marginTop:6}}>Live diesel: {liveData && liveData.diesel ? liveData.diesel : "not available"}</div>
               <div style={{fontSize:9,color:C.sub,marginTop:6}}>Rate per mile: {(parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles)).toFixed(2)}</div>
+              <div style={{fontSize:9,color:C.sub,marginTop:6}}>Recommended FSC: {(((( (liveData&&liveData.diesel)||fuelPrice||4.5) - 2.5)/((fuelMPG||5.2)))/(parseFloat(fscLinehaul.rate)/parseFloat(fscLinehaul.miles))*100).toFixed(1)}%</div>
             </div>
           )}
 
