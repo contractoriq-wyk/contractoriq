@@ -82,11 +82,13 @@ function FuelSurchargeCalculator(props){
   const validInput=!isNaN(rateNum)&&!isNaN(milesNum)&&milesNum>0&&rateNum>0;
   let ratePerMile=0;
   let fscPct=0;
+  let fscDollar=0;
   if(validInput){
     ratePerMile=rateNum/milesNum;
     const baselinePrice=2.50;
     const extraCostPerMile=Math.max(0,(dieselPrice-baselinePrice)/mpg);
     fscPct=(extraCostPerMile/ratePerMile)*100;
+    fscDollar=extraCostPerMile*milesNum;// the actual $ to add to the quote, not just the %
   }
 
   return (
@@ -123,9 +125,10 @@ function FuelSurchargeCalculator(props){
           <span>Your MPG: {mpg.toFixed(1)}</span>
         </div>
         <div style={styles.rateLine}>Rate per mile: {validInput?ratePerMile.toFixed(2):"—"}</div>
-        <div style={styles.fscLine}>Recommended FSC: {validInput?fscPct.toFixed(1):"0.0"}%</div>
+        <div style={styles.fscLine}>Recommended FSC: {validInput?fscPct.toFixed(1):"0.0"}% <span style={styles.fscDollarStyle}>(${validInput?fscDollar.toFixed(2):"0.00"})</span></div>
+        {validInput&&<div style={styles.totalLine}>Quote total: ${rateNum.toFixed(2)} + ${fscDollar.toFixed(2)} FSC = <span style={{fontWeight:800,color:"#e5ecf5"}}>${(rateNum+fscDollar).toFixed(2)}</span></div>}
       </div>
-      <div style={styles.footnote}>💡 Formula: extra fuel cost per mile (vs $2.50/gal baseline) ÷ your rate per mile.</div>
+      <div style={styles.footnote}>💡 This accounts for today's diesel price and your real truck efficiency — private to your account.</div>
     </div>
   );
 }
@@ -3069,6 +3072,8 @@ ${pdfText.slice(0,24000)}`}]};
                     resultRow:{display:"flex",justifyContent:"space-between",fontSize:9,color:C.sub,marginBottom:6},
                     rateLine:{fontSize:9,color:C.sub,marginBottom:4},
                     fscLine:{fontSize:14,fontWeight:800,color:C.green},
+                    fscDollarStyle:{fontSize:11,fontWeight:600,color:C.sub},
+                    totalLine:{fontSize:10,color:C.sub,marginTop:6,paddingTop:6,borderTop:"1px solid "+C.border},
                     footnote:{fontSize:8,color:C.sub,marginTop:8,lineHeight:1.5}
                   }}
                 />
@@ -3141,9 +3146,25 @@ ${pdfText.slice(0,24000)}`}]};
             {helpModal("fullHistory")}
             <div style={{display:isCollapsed("fullHist")?"none":"block",overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
-                <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Wk","Vendor","Type","Route","Mi","Rate","FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 6px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
+                <thead><tr style={{borderBottom:`2px solid ${C.border}`,background:C.raised}}>{["Wk","Vendor","Type","Route","Mi","Rate","FSC Paid","True FSC","Total","RPM","Grade"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 6px",color:C.sub,fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",position:"sticky",top:0,background:C.raised,zIndex:2}}>{h}</th>)}</tr></thead>
                 <tbody>{allMoves.slice().reverse().map((m,i)=>{
                   const s=scoreMove(m),vk=allW.find(w=>w.week===m.wk)?detectVendor(allW.find(w=>w.week===m.wk)):"CPG",vc=VENDORS[vk]?.color||C.accent;
+                  // TRUE FSC — the fair-market FSC this move SHOULD have paid, using the
+                  // same live-diesel-price formula as the FSC Calculator. Compare this
+                  // against what was actually paid to spot if a vendor is lowballing FSC.
+                  const liveDieselForCheck=(liveData&&liveData.diesel)||fuelPrice||4.50;
+                  const mpgForCheck=fuelMPG||5.2;
+                  let trueFscPct=0,trueFscDollar=0,fscDiff=0;
+                  if(m.miles>0&&m.rate>0){
+                    const rpmCheck=m.rate/m.miles;
+                    const baselinePriceCheck=2.50;
+                    const extraCostCheck=Math.max(0,(liveDieselForCheck-baselinePriceCheck)/mpgForCheck);
+                    trueFscPct=(extraCostCheck/rpmCheck)*100;
+                    trueFscDollar=extraCostCheck*m.miles;
+                    fscDiff=m.fsc-trueFscDollar;
+                  }
+                  const fscIsFair=Math.abs(fscDiff)<=5;// within $5 of fair-market, call it fair
+                  const fscColor=fscIsFair?C.green:fscDiff<0?C.red:C.gold;
                   return(<tr key={i} style={{borderBottom:`1px solid ${C.border}`,background:m.isRoundTrip?`${C.a3}10`:i%2?`${C.border}30`:"transparent"}}>
                     <td style={{padding:"8px 6px",color:C.sub,fontWeight:600}}>W{m.wk}</td>
                     <td style={{padding:"8px 6px"}}><span style={{padding:"2px 7px",borderRadius:5,fontSize:9,fontWeight:700,background:`${vc}22`,color:vc}}>{vk}</span></td>
@@ -3152,6 +3173,7 @@ ${pdfText.slice(0,24000)}`}]};
                     <td style={{padding:"8px 6px",color:C.text}}>{m.miles}</td>
                     <td style={{padding:"8px 6px",color:C.text}}>${m.rate.toFixed(2)}</td>
                     <td style={{padding:"8px 6px",color:m.fsc>0?C.accent:C.sub}}>{m.fsc>0?`$${m.fsc.toFixed(2)}`:"—"}</td>
+                    <td style={{padding:"8px 6px",color:fscColor,fontWeight:700}}>{m.miles>0&&m.rate>0?`$${trueFscDollar.toFixed(2)} (${trueFscPct.toFixed(1)}%)`:"—"}</td>
                     <td style={{padding:"8px 6px",color:C.text,fontWeight:600}}>${(m.rate+m.fsc).toFixed(2)}</td>
                     <td style={{padding:"8px 6px",color:+s.rpm>=2.5?C.green:+s.rpm>=2.0?C.gold:C.red,fontWeight:700}}>${s.rpm}</td>
                     <td style={{padding:"8px 6px"}}><Tag color={gc(s.grade)}>{s.grade}</Tag></td>
