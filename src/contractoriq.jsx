@@ -460,7 +460,14 @@ export default function ContractorIQv26(){
   const [docScanMsg,setDocScanMsg]=useState("");
   const [isPro,setIsPro]=useState(()=>{if(typeof window!=="undefined"&&window.location.hostname.includes("navy"))return true;try{return localStorage.getItem("ciq_pro")==="true";}catch{return false;}});
   const [trialStart,setTrialStart]=useState(()=>{try{const t=localStorage.getItem("ciq_trial_start");return t?parseInt(t):null;}catch{return null;}});
-  const [isSmart,setIsSmart]=useState(()=>{if(typeof window!=="undefined"&&(window.location.hostname.includes("navy")||window.location.search.includes("owner=true")))return true;try{return localStorage.getItem("ciq_smart")==="true";}catch{return false;}});
+  const [realIsSmart,setIsSmart]=useState(()=>{if(typeof window!=="undefined"&&(window.location.hostname.includes("navy")||window.location.search.includes("owner=true")))return true;try{return localStorage.getItem("ciq_smart")==="true";}catch{return false;}});
+
+  // Dev/testing-only preview toggle — lets a real Pro Smart account temporarily
+  // SEE the Standard-tier locked view without touching the actual subscription.
+  // Never persisted to Supabase or localStorage on purpose — always resets on reload.
+  const [previewAsStandard,setPreviewAsStandard]=useState(false);
+  const isSmart=previewAsStandard?false:realIsSmart;// every existing isSmart check in the app automatically respects the preview toggle
+
 
   // ═══ PRO SMART FEATURE TOKENS ═══
   // Standard-tier users get ONE free use of each Pro Smart feature every 31 days.
@@ -1944,7 +1951,13 @@ ${pdfText.slice(0,24000)}`}]};
                     <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:4}}>
                       {isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#00ffcc",background:"#00ffcc18",border:"1px solid #00ffcc33",borderRadius:20,padding:"1px 7px"}}>★ PRO SMART</span>}
                       {isPro&&!isSmart&&<span style={{fontSize:8,fontWeight:800,color:"#a78bfa",background:"#a78bfa18",border:"1px solid #a78bfa33",borderRadius:20,padding:"1px 7px"}}>★ STANDARD</span>}
+                      {previewAsStandard&&<span style={{fontSize:8,fontWeight:800,color:"#fbbf24",background:"#fbbf2418",border:"1px solid #fbbf2444",borderRadius:20,padding:"1px 7px"}}>👁 PREVIEWING STANDARD</span>}
                     </div>
+                    {isOwnerMode&&realIsSmart&&(
+                      <button onClick={function(){setPreviewAsStandard(function(p){return !p;});}} style={{width:"100%",padding:"6px 10px",borderRadius:7,background:previewAsStandard?"#fbbf2422":C.raised,border:"1px solid "+(previewAsStandard?"#fbbf2455":C.border),color:previewAsStandard?"#fbbf24":C.sub,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:4}}>
+                        {previewAsStandard?"👁 Previewing Standard — tap to return to Pro Smart view":"🔍 Dev: Preview as Standard tier"}
+                      </button>
+                    )}
                     {/* REAL sync status — not a static label. Shows actual save state. */}
                     {!user&&isOwnerMode&&<div style={{fontSize:9,color:C.gold}}>⚠️ Dev Mode — not connected to your cloud account</div>}
                     {user&&syncStatus==="saving"&&<div style={{fontSize:9,color:C.sub}}>⏳ Saving...</div>}
