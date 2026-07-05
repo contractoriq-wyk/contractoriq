@@ -722,7 +722,7 @@ export default function ContractorIQv26(){
   // Uses your last 4 weeks' actual (miles/gallons) to compute a rolling real average.
   // User can still override manually by toggling off auto-sync.
   useEffect(()=>{
-    if(!isSmart||!mpgAutoSync||allW.length===0)return;// auto-sync is a Pro Smart feature
+    if((!isSmart&&!featureTrialActive.mpgAutoSync)||!mpgAutoSync||allW.length===0)return;// auto-sync is a Pro Smart feature (or active free trial)
     const recent=[...allW].slice(-4);
     let totalMiles=0,totalGal=0;
     recent.forEach(w=>{
@@ -740,7 +740,7 @@ export default function ContractorIQv26(){
   // Auto-sync Price/Gallon from the currently-selected week's real fuel advance data —
   // same source as the "Average Fuel Price This Week" card, so both numbers always match.
   useEffect(()=>{
-    if(!isSmart||!priceAutoSync)return;// auto-sync is a Pro Smart feature
+    if((!isSmart&&!featureTrialActive.priceAutoSync)||!priceAutoSync)return;// auto-sync is a Pro Smart feature (or active free trial)
     const dwCheck=allW[sD];
     if(!dwCheck)return;
     const weekFuelA=(dwCheck.deds||[]).filter(d=>d&&d.l&&d.l.toLowerCase().includes("fuel advance")&&d.ppg>0);
@@ -2149,7 +2149,7 @@ ${pdfText.slice(0,24000)}`}]};
                       <div style={{padding:"3px 9px",borderRadius:20,background:`${v.color}18`,border:`1px solid ${v.color}44`,fontSize:10,fontWeight:700,color:v.color}}>{v.margin}%</div>
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:5}}>
-                      {[{l:"Gross",val:`$${(v.gross/1000).toFixed(1)}k`,c:v.color},{l:"Net",val:`$${(v.net/1000).toFixed(1)}k`,c:C.green},{l:"Deducted",val:`$${(v.ded/1000).toFixed(1)}k`,c:C.red},{l:"Return/Spend",val:isSmart?`1:${(v.ded>0?v.gross/v.ded:0).toFixed(1)}`:"🔒 Pro",c:isSmart?((v.ded>0?v.gross/v.ded:0)>=3?C.green:(v.ded>0?v.gross/v.ded:0)>=1.5?C.gold:C.red):C.sub}].map(s=>(
+                      {[{l:"Gross",val:`$${(v.gross/1000).toFixed(1)}k`,c:v.color},{l:"Net",val:`$${(v.net/1000).toFixed(1)}k`,c:C.green},{l:"Deducted",val:`$${(v.ded/1000).toFixed(1)}k`,c:C.red},{l:"Return/Spend",val:(isSmart||featureTrialActive.returnOnSpend)?`1:${(v.ded>0?v.gross/v.ded:0).toFixed(1)}`:"🔒 Pro",c:(isSmart||featureTrialActive.returnOnSpend)?((v.ded>0?v.gross/v.ded:0)>=3?C.green:(v.ded>0?v.gross/v.ded:0)>=1.5?C.gold:C.red):C.sub}].map(s=>(
                         <div key={s.l} style={{background:C.bg,borderRadius:7,padding:"7px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:s.c}}>{s.val}</div></div>
                       ))}
                     </div>
@@ -2439,14 +2439,18 @@ ${pdfText.slice(0,24000)}`}]};
                       </div>
                     </div>
 
-                    {/* Return on Spend — Pro Smart only, compact, tap to expand */}
-                    {!isSmart&&(
-                      <div style={{padding:"9px 12px",borderRadius:10,background:`${C.a3}0d`,border:`1px dashed ${C.a3}44`,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}} onClick={()=>openUpgrade("ros")}>
+                    {/* Return on Spend — Pro Smart, with one free use every 31 days */}
+                    {!isSmart&&!featureTrialActive.returnOnSpend&&(
+                      <div style={{padding:"9px 12px",borderRadius:10,background:`${C.a3}0d`,border:`1px dashed ${C.a3}44`,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                         <span style={{fontSize:11,color:C.sub}}>🔒 💰 Return on Spend — Pro Smart</span>
-                        <span style={{fontSize:9,color:C.accent,fontWeight:700}}>Upgrade →</span>
+                        {canUseFeatureFree("returnOnSpend")?(
+                          <button onClick={function(){useFeatureToken("returnOnSpend");setFeatureTrialActive(function(p){return {...p,returnOnSpend:true};});}} style={{padding:"4px 10px",borderRadius:7,background:"#4ade8022",border:"1px solid #4ade8055",color:"#4ade80",fontSize:9,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>🎁 Try Free</button>
+                        ):(
+                          <span onClick={()=>openUpgrade("ros")} style={{fontSize:9,color:C.accent,fontWeight:700,cursor:"pointer"}}>Upgrade →</span>
+                        )}
                       </div>
                     )}
-                    {isSmart&&(()=>{
+                    {(isSmart||featureTrialActive.returnOnSpend)&&(()=>{
                       const netCost=Math.max(0.01,dedSum-(dw.rebate||0));
                       const ratio=dw.gross/netCost;
                       const tier=ratio>=3?{label:"IDEAL",color:C.green,icon:"🚀"}:ratio>=1.5?{label:"SAFE",color:C.gold,icon:"✅"}:{label:"BELOW SAFE",color:C.red,icon:"⚠️"};
@@ -2519,16 +2523,26 @@ ${pdfText.slice(0,24000)}`}]};
                       );
                     })()}
 
-                    {/* Smart Insights — Pro Smart only */}
-                    {!isSmart&&(
+                    {/* Smart Insights — Pro Smart, with one free use every 31 days */}
+                    {!isSmart&&!featureTrialActive.smartInsights&&(
                       <div style={{padding:"14px",borderRadius:9,background:`${C.a3}0d`,border:`1px dashed ${C.a3}44`,marginBottom:14,textAlign:"center"}}>
                         <div style={{fontSize:20,marginBottom:4}}>🔒</div>
                         <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:2}}>Smart Insights — Pro Smart Feature</div>
                         <div style={{fontSize:9,color:C.sub,marginBottom:8}}>Get automatic alerts when your fuel, insurance, or ops costs jump unusually — before it becomes a pattern.</div>
-                        <button onClick={()=>openUpgrade("insights")} style={{padding:"7px 16px",borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Upgrade to Pro Smart →</button>
+                        {canUseFeatureFree("smartInsights")?(
+                          <div>
+                            <button onClick={function(){useFeatureToken("smartInsights");setFeatureTrialActive(function(p){return {...p,smartInsights:true};});}} style={{padding:"7px 14px",borderRadius:8,background:"linear-gradient(135deg,#4ade80,#22c55e)",border:"none",color:"#000",fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",marginRight:6}}>🎁 Use My Free Trial</button>
+                            <button onClick={()=>openUpgrade("insights")} style={{padding:"7px 14px",borderRadius:8,background:"transparent",border:`1px solid ${C.a3}55`,color:C.a3,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Upgrade Instead →</button>
+                          </div>
+                        ):(
+                          <div>
+                            <div style={{fontSize:9,color:C.sub,marginBottom:6}}>Free trial used — available again in {daysUntilFeatureFree("smartInsights")} day{daysUntilFeatureFree("smartInsights")===1?"":"s"}.</div>
+                            <button onClick={()=>openUpgrade("insights")} style={{padding:"7px 16px",borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Upgrade to Pro Smart →</button>
+                          </div>
+                        )}
                       </div>
                     )}
-                    {isSmart&&(()=>{
+                    {(isSmart||featureTrialActive.smartInsights)&&(()=>{
                       const recentW=allW.slice(Math.max(0,allW.findIndex(w=>w.week===dw.week)-7),allW.findIndex(w=>w.week===dw.week)+1);
                       const histW=recentW.length>1?recentW.slice(0,-1):[];
                       const avgOf=(cat)=>{
@@ -2785,13 +2799,17 @@ ${pdfText.slice(0,24000)}`}]};
                             <span style={{color:"#f87171"}}>3.5 poor</span>
                             <span style={{color:"#4ade80"}}>9.0 great</span>
                           </div>
-                          {isSmart?(
+                          {(isSmart||featureTrialActive.mpgAutoSync)?(
                             <button onClick={()=>setMpgAutoSync(p=>!p)} style={{width:"100%",padding:"6px",borderRadius:6,background:mpgAutoSync?`${C.green}15`:`${C.gold}15`,border:`1px solid ${mpgAutoSync?C.green:C.gold}44`,color:mpgAutoSync?C.green:C.gold,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
                               {mpgAutoSync?"✅ Auto-syncing from last 4 weeks — tap to set manually":"⚙️ Manual mode — tap to auto-sync from real data"}
                             </button>
+                          ):canUseFeatureFree("mpgAutoSync")?(
+                            <button onClick={function(){useFeatureToken("mpgAutoSync");setFeatureTrialActive(function(p){return {...p,mpgAutoSync:true};});setMpgAutoSync(true);}} style={{width:"100%",padding:"6px",borderRadius:6,background:"#4ade8022",border:"1px solid #4ade8055",color:"#4ade80",fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                              🎁 Try free — 1 use every 31 days
+                            </button>
                           ):(
                             <button onClick={()=>openUpgrade("autosync")} style={{width:"100%",padding:"6px",borderRadius:6,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-                              🔒 Auto-sync from real data — Pro Smart feature
+                              🔒 Trial used — upgrade for unlimited access
                             </button>
                           )}
                         </div>
@@ -2807,13 +2825,17 @@ ${pdfText.slice(0,24000)}`}]};
                             <span style={{color:"#4ade80"}}>$3.50</span>
                             <span style={{color:"#f87171"}}>$8.00</span>
                           </div>
-                          {isSmart?(
+                          {(isSmart||featureTrialActive.priceAutoSync)?(
                             <button onClick={()=>setPriceAutoSync(p=>!p)} style={{width:"100%",padding:"6px",borderRadius:6,background:priceAutoSync?`${C.green}15`:`${C.gold}15`,border:`1px solid ${priceAutoSync?C.green:C.gold}44`,color:priceAutoSync?C.green:C.gold,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
                               {priceAutoSync?"✅ Auto-syncing from this week's fuel advances — tap to set manually":"⚙️ Manual mode — tap to auto-sync from real data"}
                             </button>
+                          ):canUseFeatureFree("priceAutoSync")?(
+                            <button onClick={function(){useFeatureToken("priceAutoSync");setFeatureTrialActive(function(p){return {...p,priceAutoSync:true};});setPriceAutoSync(true);}} style={{width:"100%",padding:"6px",borderRadius:6,background:"#4ade8022",border:"1px solid #4ade8055",color:"#4ade80",fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                              🎁 Try free — 1 use every 31 days
+                            </button>
                           ):(
                             <button onClick={()=>openUpgrade("autosync")} style={{width:"100%",padding:"6px",borderRadius:6,background:`${C.a3}15`,border:`1px solid ${C.a3}44`,color:C.a3,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-                              🔒 Auto-sync from real data — Pro Smart feature
+                              🔒 Trial used — upgrade for unlimited access
                             </button>
                           )}
                           <div style={{fontSize:9,color:C.sub,marginTop:5,lineHeight:1.5}}>{hasRealGallons?"Real gallons from settlement":"Match your fuel receipt for accuracy"}</div>
@@ -3522,7 +3544,7 @@ ${pdfText.slice(0,24000)}`}]};
                 {l:"Weekly Net",v:`$${(weeklyAvgNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#4ade80"},
                 {l:"Monthly Est.",v:`$${(monthlyNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#00ffcc"},
                 {l:"Annual Est.",v:`$${(annualNet/1000).toFixed(0)}k`,c:"#a78bfa"},
-                {l:"Return/Spend",v:isSmart?`1:${monthlyRatio.toFixed(2)}`:"🔒 Pro",c:isSmart?ratioColor:C.sub},
+                {l:"Return/Spend",v:(isSmart||featureTrialActive.returnOnSpend)?`1:${monthlyRatio.toFixed(2)}`:"🔒 Pro",c:(isSmart||featureTrialActive.returnOnSpend)?ratioColor:C.sub},
                 ];
               })().map(function(k){return(
                 <div key={k.l} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"9px 8px",border:"1px solid rgba(255,255,255,0.07)",textAlign:"center"}}>
