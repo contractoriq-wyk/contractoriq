@@ -236,7 +236,7 @@ function TVTickerTape({symbols}){
           showSymbolLogo:true,
           colorTheme:"dark",
           isTransparent:true,
-          displayMode:"adaptive",
+          displayMode:"regular",
           locale:"en"
         }))}
         style={{width:"100%",height:46,border:"none",display:"block"}}
@@ -529,6 +529,7 @@ export default function ContractorIQv26(){
           if(d.expenses)setExpenses(d.expenses);
           if(d.docs)setDocs(d.docs);
           if(d.reviews)setReviews(d.reviews);
+          if(d.fuelFillups)setFuelFillups(d.fuelFillups);// was localStorage-only — meant fill-ups logged on one device never showed on another
         }
         // Set tier from Supabase plan column
         const plan=data?.plan||"free";
@@ -557,7 +558,7 @@ export default function ContractorIQv26(){
     if(!user||!cloudLoaded) return;
     const c=getSB();
     if(!c){setSyncStatus("error");setSyncError("Cloud connection unavailable");return;}
-    const blob={addedW,profile,expenses,docs,reviews};
+    const blob={addedW,profile,expenses,docs,reviews,fuelFillups};
     setSyncStatus("saving");
     const t=setTimeout(()=>{
       c.from("user_data").upsert({user_id:user.id,data:blob,updated_at:new Date().toISOString()})
@@ -577,7 +578,7 @@ export default function ContractorIQv26(){
         });
     },1500);
     return ()=>clearTimeout(t);
-  },[addedW,profile,expenses,docs,reviews,user,cloudLoaded]);
+  },[addedW,profile,expenses,docs,reviews,fuelFillups,user,cloudLoaded]);
 
   const baseW=[];// W is empty now — all real data comes from Supabase via addedW, same on every device
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
@@ -2056,10 +2057,15 @@ ${pdfText.slice(0,24000)}`}]};
                 // inside that 72px box via justifyContent:"flex-end". So bar TOP = 72 - h,
                 // measured from the TOP of that 72px box — which itself starts at y=8 within
                 // the outer 80px SVG viewport (leaving room for the label above).
+                // The outer column container is height:80 with alignItems:"flex-end" —
+                // meaning content is anchored to the BOTTOM of the 80px zone, not the top.
+                // The bar itself sits inside a height:72 inner wrapper, also bottom-aligned.
+                // So the bar's visual TOP, measured from the top of the 80px SVG viewport, is:
+                // 80 (full height) - 72 (inner wrapper height) + (72 - h) = 80 - h
                 const pts=allW.map((w,i)=>{
                   const xPct=((i+0.5)/n)*100;
                   const h=Math.max(8,(w.net/maxNet)*68);
-                  const yPx=8+(72-h);
+                  const yPx=80-h;
                   return {x:xPct,y:yPx,net:w.net};
                 });
                 const gradId="tg"+Math.random().toString(36).slice(2,8);
