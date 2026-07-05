@@ -3867,7 +3867,7 @@ ${pdfText.slice(0,24000)}`}]};
             <a href="/privacy.html" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>Privacy Policy</a>
             <a href="/terms.html" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>Terms of Service</a>
             <a href="/faq.html" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>FAQ</a>
-            <a href="mailto:support@getdrayageiq.com" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>Contact Support</a>
+            <a href="mailto:hello@getdrayageiq.com" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>Contact Support</a>
           </div>
           <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid "+C.border,fontSize:8,color:C.border}}>© {new Date().getFullYear()} DrayageIQ · All Rights Reserved · getdrayageiq.com</div>
         </div>
