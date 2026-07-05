@@ -55,6 +55,10 @@ const PRICING={
   fleetUrl:"https://buy.stripe.com/9B64gz4tz5oA4Ua1Pw9MY06",
   fleetPrice:"$39.99",
   fleetNote:"Everything in Pro Smart · Up to 5 trucks · One flat rate",
+  // Growing Fleet ($89/mo, 6-10 trucks)
+  growingFleetUrl:"https://buy.stripe.com/6oU4gz8JP3gs2M279Q9MY07",
+  growingFleetPrice:"$89",
+  growingFleetNote:"Everything in Fleet Pro Smart · 6-10 trucks · Advanced analytics & phone support",
   // Legacy (kept for reference)
   trialUrl:"https://buy.stripe.com/aFa8wP7FLbMY4Ua0Ls9MY00",
   trialPrice:"$1",
@@ -535,11 +539,14 @@ export default function ContractorIQv26(){
   });
   const isOwnerMode=typeof window!=="undefined"&&(window.location.hostname.includes("navy")||window.location.search.includes("owner=true"));
   const [showUpgradeWelcome,setShowUpgradeWelcome]=useState(false);
+  const [upgradedTier,setUpgradedTier]=useState(null);// "fleet" | "growingfleet" — which plan they just bought
   useEffect(function(){
     if(typeof window==="undefined")return;
     const params=new URLSearchParams(window.location.search);
-    if(params.get("upgraded")==="fleet"){
+    const upgraded=params.get("upgraded");
+    if(upgraded==="fleet"||upgraded==="growingfleet"){
       setShowUpgradeWelcome(true);
+      setUpgradedTier(upgraded);
       // Clean the URL so refreshing doesn't re-trigger this
       const cleanUrl=window.location.pathname;
       window.history.replaceState({},"",cleanUrl);
@@ -1545,7 +1552,7 @@ ${pdfText.slice(0,24000)}`}]};
               {tier:"Standard",trucks:"1 truck",price:"$14.99",period:"/mo",color:"#a78bfa",tag:"Tier 1",url:"https://buy.stripe.com/14A9ATbW1aIU2M2gKq9MY03",features:["Unlimited PDF scans","Load & mile tracking","Earnings dashboard","AI trucking guidance"]},
               {tier:"Pro Smart",trucks:"1 truck",price:"$24.99",period:"/mo",color:"#00ffcc",tag:"⭐ Most Popular",url:"https://buy.stripe.com/fZu5kDe498AM2M2am29MY04",features:["Everything in Standard","Live diesel prices","Live weather on routes","Smart AI with your real numbers","Load profitability math"]},
               {tier:"Fleet Pro Smart",trucks:"Up to 5 trucks",price:PRICING.fleetPrice,period:"/mo",color:"#4ade80",tag:"⭐ Best Value",url:PRICING.fleetUrl,features:["Everything in Pro Smart","Multi-unit dashboard","Per-truck performance","Fleet-wide totals","One flat rate — no per-truck math"]},
-              {tier:"Growing Fleet",trucks:"6–10 trucks",price:"$89",period:"/mo",color:"#f87171",tag:"Fleet",url:"https://wa.me/14438564727?text=Hi%2C+I%27m+interested+in+DrayageIQ+Fleet+pricing+for+6-10+trucks",features:["Everything in Fleet Pro Smart","Advanced fleet analytics","Quarterly performance report","Phone support"]},
+              {tier:"Growing Fleet",trucks:"6–10 trucks",price:PRICING.growingFleetPrice,period:"/mo",color:"#f87171",tag:"Fleet",url:PRICING.growingFleetUrl,features:["Everything in Fleet Pro Smart","Advanced fleet analytics","Quarterly performance report","Phone support"]},
               {tier:"Enterprise",trucks:"11+ trucks",price:"Custom",period:"",color:"#e879f9",tag:"🚀 Enterprise",url:"https://wa.me/14438564727?text=Hi%2C+I%27m+interested+in+DrayageIQ+Enterprise+pricing+for+11%2B+trucks",features:["Everything above","Unlimited trucks","White-label option","Dedicated account manager","Custom integrations"]},
             ].map(p=>(
               <div key={p.tier} style={{background:C.card,borderRadius:16,padding:"18px",marginBottom:14,border:`2px solid ${p.color}44`,position:"relative",overflow:"hidden"}}>
@@ -1779,7 +1786,10 @@ ${pdfText.slice(0,24000)}`}]};
       {/* FLEET UPGRADE WELCOME — shown once after successful Stripe checkout redirect */}
       {showUpgradeWelcome&&(
         <div style={{background:"linear-gradient(135deg,#4ade8022,#00ffcc18)",borderBottom:"1px solid #4ade8055",padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
-          <div><div style={{fontSize:12,color:"#4ade80",fontWeight:800}}>🎉 Welcome to Fleet Pro Smart!</div><div style={{fontSize:10,color:C.sub,marginTop:2}}>Your fleet tools are now unlocked — track up to 5 trucks separately.</div></div>
+          <div>
+            <div style={{fontSize:12,color:"#4ade80",fontWeight:800}}>🎉 Welcome to {upgradedTier==="growingfleet"?"Growing Fleet":"Fleet Pro Smart"}!</div>
+            <div style={{fontSize:10,color:C.sub,marginTop:2}}>{upgradedTier==="growingfleet"?"Your fleet tools are now unlocked — track up to 10 trucks with advanced analytics and phone support.":"Your fleet tools are now unlocked — track up to 5 trucks separately."}</div>
+          </div>
           <button onClick={()=>setShowUpgradeWelcome(false)} style={{padding:"5px 11px",borderRadius:7,background:"#4ade8022",border:"1px solid #4ade8055",color:"#4ade80",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,flexShrink:0}}>Got it →</button>
         </div>
       )}
