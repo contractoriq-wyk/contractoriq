@@ -2168,8 +2168,8 @@ ${pdfText.slice(0,24000)}`}]};
                       <div style={{padding:"3px 9px",borderRadius:20,background:`${v.color}18`,border:`1px solid ${v.color}44`,fontSize:10,fontWeight:700,color:v.color}}>{v.margin}%</div>
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:5}}>
-                      {[{l:"Gross",val:`$${(v.gross/1000).toFixed(1)}k`,c:v.color},{l:"Net",val:`$${(v.net/1000).toFixed(1)}k`,c:C.green},{l:"Deducted",val:`$${(v.ded/1000).toFixed(1)}k`,c:C.red},{l:"Return/Spend",val:(isSmart||featureTrialActive.returnOnSpend)?`1:${(v.ded>0?v.gross/v.ded:0).toFixed(1)}`:"🔒 Pro",c:(isSmart||featureTrialActive.returnOnSpend)?((v.ded>0?v.gross/v.ded:0)>=3?C.green:(v.ded>0?v.gross/v.ded:0)>=1.5?C.gold:C.red):C.sub}].map(s=>(
-                        <div key={s.l} style={{background:C.bg,borderRadius:7,padding:"7px 8px",border:`1px solid ${C.border}`,textAlign:"center"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:s.c}}>{s.val}</div></div>
+                      {[{l:"Gross",val:`$${(v.gross/1000).toFixed(1)}k`,c:v.color,locked:false},{l:"Net",val:`$${(v.net/1000).toFixed(1)}k`,c:C.green,locked:false},{l:"Deducted",val:`$${(v.ded/1000).toFixed(1)}k`,c:C.red,locked:false},{l:"Return/Spend",val:(isSmart||featureTrialActive.returnOnSpend)?`1:${(v.ded>0?v.gross/v.ded:0).toFixed(1)}`:(canUseFeatureFree("returnOnSpend")?"🎁 Try":"🔒 Pro"),c:(isSmart||featureTrialActive.returnOnSpend)?((v.ded>0?v.gross/v.ded:0)>=3?C.green:(v.ded>0?v.gross/v.ded:0)>=1.5?C.gold:C.red):(canUseFeatureFree("returnOnSpend")?"#4ade80":C.sub),locked:!isSmart&&!featureTrialActive.returnOnSpend}].map(s=>(
+                        <div key={s.l} onClick={s.locked?function(){if(canUseFeatureFree("returnOnSpend")){useFeatureToken("returnOnSpend");setFeatureTrialActive(function(p){return {...p,returnOnSpend:true};});}else{openUpgrade("ros");}}:undefined} style={{background:C.bg,borderRadius:7,padding:"7px 8px",border:`1px solid ${C.border}`,textAlign:"center",cursor:s.locked?"pointer":"default"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{s.l}</div><div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,color:s.c}}>{s.val}</div></div>
                       ))}
                     </div>
                   </div>
@@ -3559,14 +3559,15 @@ ${pdfText.slice(0,24000)}`}]};
                 const netCostAll=Math.max(0.01,tDed-totalRebatesAll);
                 const monthlyRatio=tGross/netCostAll;// same ratio scales regardless of period since it's proportional
                 const ratioColor=monthlyRatio>=3?"#4ade80":monthlyRatio>=1.5?"#fbbf24":"#f87171";
+                const rosLocked=!isSmart&&!featureTrialActive.returnOnSpend;
                 return[
-                {l:"Weekly Net",v:`$${(weeklyAvgNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#4ade80"},
-                {l:"Monthly Est.",v:`$${(monthlyNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#00ffcc"},
-                {l:"Annual Est.",v:`$${(annualNet/1000).toFixed(0)}k`,c:"#a78bfa"},
-                {l:"Return/Spend",v:(isSmart||featureTrialActive.returnOnSpend)?`1:${monthlyRatio.toFixed(2)}`:"🔒 Pro",c:(isSmart||featureTrialActive.returnOnSpend)?ratioColor:C.sub},
+                {l:"Weekly Net",v:`$${(weeklyAvgNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#4ade80",locked:false},
+                {l:"Monthly Est.",v:`$${(monthlyNet).toLocaleString("en-US",{maximumFractionDigits:0})}`,c:"#00ffcc",locked:false},
+                {l:"Annual Est.",v:`$${(annualNet/1000).toFixed(0)}k`,c:"#a78bfa",locked:false},
+                {l:"Return/Spend",v:(isSmart||featureTrialActive.returnOnSpend)?`1:${monthlyRatio.toFixed(2)}`:(canUseFeatureFree("returnOnSpend")?"🎁 Try":"🔒 Pro"),c:(isSmart||featureTrialActive.returnOnSpend)?ratioColor:(canUseFeatureFree("returnOnSpend")?"#4ade80":C.sub),locked:rosLocked},
                 ];
               })().map(function(k){return(
-                <div key={k.l} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"9px 8px",border:"1px solid rgba(255,255,255,0.07)",textAlign:"center"}}>
+                <div key={k.l} onClick={k.locked?function(){if(canUseFeatureFree("returnOnSpend")){useFeatureToken("returnOnSpend");setFeatureTrialActive(function(p){return {...p,returnOnSpend:true};});}else{openUpgrade("ros");}}:undefined} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"9px 8px",border:"1px solid rgba(255,255,255,0.07)",textAlign:"center",cursor:k.locked?"pointer":"default"}}>
                   <div style={{fontSize:8,color:C.sub,textTransform:"uppercase",marginBottom:3}}>{k.l}</div>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:k.c}}>{k.v}</div>
                 </div>
