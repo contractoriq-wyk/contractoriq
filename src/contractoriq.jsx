@@ -2096,7 +2096,7 @@ ${pdfText.slice(0,24000)}`}]};
                 const isSelected=sD===i;
                 const g=wg(w);
                 return(
-                  <div key={w.week+i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",maxWidth:44,position:"relative"}}
+                  <div key={w.week+i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:0,cursor:"pointer",position:"relative"}}
                     onClick={()=>{
                       const ki=allW.findIndex(function(x){return x.week===w.week&&(x.from||"")===(w.from||"");});
                       const ni=ki>=0?ki:i;
