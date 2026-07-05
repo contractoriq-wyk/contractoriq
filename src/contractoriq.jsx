@@ -461,6 +461,29 @@ export default function ContractorIQv26(){
   const [isPro,setIsPro]=useState(()=>{if(typeof window!=="undefined"&&window.location.hostname.includes("navy"))return true;try{return localStorage.getItem("ciq_pro")==="true";}catch{return false;}});
   const [trialStart,setTrialStart]=useState(()=>{try{const t=localStorage.getItem("ciq_trial_start");return t?parseInt(t):null;}catch{return null;}});
   const [isSmart,setIsSmart]=useState(()=>{if(typeof window!=="undefined"&&(window.location.hostname.includes("navy")||window.location.search.includes("owner=true")))return true;try{return localStorage.getItem("ciq_smart")==="true";}catch{return false;}});
+
+  // ═══ PRO SMART FEATURE TOKENS ═══
+  // Standard-tier users get ONE free use of each Pro Smart feature every 31 days.
+  // Synced to Supabase (not localStorage) so the same token cycle applies across
+  // every device — a device switch should never grant an extra free use.
+  const [featureTokens,setFeatureTokens]=useState({});// { featureKey: "2026-07-05T12:00:00.000Z" }
+  const FEATURE_TRIAL_DAYS=31;
+  function canUseFeatureFree(featureKey){
+    if(isSmart)return true;// already has full access, tokens are irrelevant
+    const lastUsed=featureTokens[featureKey];
+    if(!lastUsed)return true;// never used — free token available
+    const daysSince=(Date.now()-new Date(lastUsed).getTime())/(1000*60*60*24);
+    return daysSince>=FEATURE_TRIAL_DAYS;
+  }
+  function daysUntilFeatureFree(featureKey){
+    const lastUsed=featureTokens[featureKey];
+    if(!lastUsed)return 0;
+    const daysSince=(Date.now()-new Date(lastUsed).getTime())/(1000*60*60*24);
+    return Math.max(0,Math.ceil(FEATURE_TRIAL_DAYS-daysSince));
+  }
+  function useFeatureToken(featureKey){
+    setFeatureTokens(function(p){return {...p,[featureKey]:new Date().toISOString()};});
+  }
   const [liveData,setLiveData]=useState({diesel:null,weather:null,dieselPeriod:null});
   const [showUpgrade,setShowUpgrade]=useState(false);
   const [upgradeSrc,setUpgradeSrc]=useState("");
@@ -623,6 +646,7 @@ export default function ContractorIQv26(){
           if(d.docs)setDocs(d.docs);
           if(d.reviews)setReviews(d.reviews);
           if(d.fuelFillups)setFuelFillups(d.fuelFillups);// was localStorage-only — meant fill-ups logged on one device never showed on another
+          if(d.featureTokens)setFeatureTokens(d.featureTokens);// Pro Smart free-trial tokens, synced so switching devices can't reset the 31-day cycle
         }
         // Set tier from Supabase plan column
         const plan=data?.plan||"free";
@@ -651,7 +675,7 @@ export default function ContractorIQv26(){
     if(!user||!cloudLoaded) return;
     const c=getSB();
     if(!c){setSyncStatus("error");setSyncError("Cloud connection unavailable");return;}
-    const blob={addedW,profile,expenses,docs,reviews,fuelFillups};
+    const blob={addedW,profile,expenses,docs,reviews,fuelFillups,featureTokens};
     setSyncStatus("saving");
     const t=setTimeout(()=>{
       c.from("user_data").upsert({user_id:user.id,data:blob,updated_at:new Date().toISOString()})
@@ -671,7 +695,7 @@ export default function ContractorIQv26(){
         });
     },1500);
     return ()=>clearTimeout(t);
-  },[addedW,profile,expenses,docs,reviews,fuelFillups,user,cloudLoaded]);
+  },[addedW,profile,expenses,docs,reviews,fuelFillups,featureTokens,user,cloudLoaded]);
 
   const baseW=[];// W is empty now — all real data comes from Supabase via addedW, same on every device
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
@@ -1158,6 +1182,40 @@ ${pdfText.slice(0,24000)}`}]};
   const aiLocked=!hasAccess&&aiUses>=FREE_AI;
   const osLocked=!hasAccess&&oUses>=FREE_OS;
   const openUpgrade=(src)=>{setUpgradeSrc(src);setShowUpgrade(true);};
+
+  // ═══ Reusable "try Pro Smart free" gate ═══
+  // featureTrialActive: tracks which features have been unlocked THIS SESSION
+  // (after using the free token) so the unlocked view stays visible without
+  // re-checking on every render — separate from featureTokens, which is the
+  // permanent 31-day cloud-synced record of when each token was last spent.
+  const [featureTrialActive,setFeatureTrialActive]=useState({});
+  // featureKey: unique id for this specific feature's token cycle
+  // label: human-readable name shown in the lock prompt
+  // renderContent: function that renders the REAL feature UI once unlocked
+  function renderWithFreeTrial(featureKey,label,renderContent){
+    if(isSmart)return renderContent();
+    if(featureTrialActive[featureKey])return renderContent();
+    const canTry=canUseFeatureFree(featureKey);
+    const daysLeft=daysUntilFeatureFree(featureKey);
+    return(
+      <div style={{padding:"16px",borderRadius:12,background:C.a3+"0d",border:"1px dashed "+C.a3+"44",textAlign:"center"}}>
+        <div style={{fontSize:22,marginBottom:6}}>🔒</div>
+        <div style={{fontSize:12,fontWeight:700,color:C.text,marginBottom:4}}>{label} — Pro Smart Feature</div>
+        {canTry?(
+          <div>
+            <div style={{fontSize:10,color:C.sub,marginBottom:10}}>You get one free use of this every 31 days.</div>
+            <button onClick={function(){useFeatureToken(featureKey);setFeatureTrialActive(function(p){return {...p,[featureKey]:true};});}} style={{padding:"8px 18px",borderRadius:8,background:"linear-gradient(135deg,#4ade80,#22c55e)",border:"none",color:"#000",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",marginRight:8}}>🎁 Use My Free Trial</button>
+            <button onClick={function(){openUpgrade(featureKey);}} style={{padding:"8px 18px",borderRadius:8,background:"transparent",border:"1px solid "+C.a3+"55",color:C.a3,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Upgrade Instead →</button>
+          </div>
+        ):(
+          <div>
+            <div style={{fontSize:10,color:C.sub,marginBottom:10}}>You already used this month's free trial. Available again in {daysLeft} day{daysLeft===1?"":"s"}.</div>
+            <button onClick={function(){openUpgrade(featureKey);}} style={{padding:"8px 18px",borderRadius:8,background:"linear-gradient(135deg,"+C.accent+","+C.a3+")",border:"none",color:"#000",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Upgrade to Pro Smart →</button>
+          </div>
+        )}
+      </div>
+    );
+  }
   const storedFp=()=>{try{return localStorage.getItem("ciq_device_fp");}catch{return null;}};
   const deviceMismatch=(isPro||trialStart)&&storedFp()&&storedFp()!==deviceFp;
 
@@ -1256,6 +1314,8 @@ ${pdfText.slice(0,24000)}`}]};
 
               {icon:"💎",step:"Choosing Your Plan",path:"all",title:"Standard vs Pro Smart — What's the Difference?",body:"Standard ($14.99/mo) covers everything you need to track your business: unlimited PDF scans, Deduction Breakdown, Move Performance, round trip detection, Week Grades, and Manual Fuel Log. Pro Smart ($24.99/mo) adds the intelligence layer: live diesel prices & weather, an AI that uses YOUR real numbers, Smart Insights alerts, Return on Spend ratio, auto-syncing MPG & fuel price, the Fuel Surcharge Calculator with True FSC vendor auditing, Data Health scanning, and the full Growth tab. Annual saves you 2 months.",tip:"💡 Look for the 🔒 lock icon — it marks Pro Smart features so you always know what's included in your plan.",action:"Next →"},
 
+              {icon:"🎁",step:"Try Any Pro Smart Feature Free",path:"all",title:"One Free Trial Every 31 Days — Per Feature",body:"Every Pro Smart feature is fully visible on Standard, never hidden. Tap any locked feature and you'll see '🎁 Use My Free Trial' — one free use, no card required, no commitment. Each feature has its own independent 31-day cycle, so trying the Fuel Surcharge Calculator today doesn't use up your trial for Return on Spend.",tip:"💡 This isn't a countdown trial that expires — it renews every 31 days, forever, feature by feature. Use it whenever it's useful to you.",action:"Next →"},
+
 
               {icon:"🚚",step:"Growing Your Fleet",path:"fleet",title:"Fleet Pricing — For Multiple Trucks",body:"Running more than one truck? Tap ≡ Menu → Fleet Pricing to see plans built for small fleets. As you add trucks, DrayageIQ scales with you — each truck's settlements get tracked separately, so you can compare performance across your whole operation, not just one unit.",tip:"💡 Fleet Pricing is marked NEW in the menu — worth a look even if you're solo today and thinking about expanding.",action:"Next →"},
 
@@ -1279,26 +1339,23 @@ ${pdfText.slice(0,24000)}`}]};
               // ═══ PATH PICKER — shown first, before any tour step ═══
               if(onboardPath===null){
                 const pathOptions=[
-                  {key:"standard",icon:"📋",name:"Standard",price:"$14.99/mo",desc:"Core tracking: unlimited scans, deductions, move performance, fuel log.",color:C.a3},
-                  {key:"smart",icon:"🧠",name:"Pro Smart",price:"$24.99/mo",desc:"Everything in Standard, PLUS live data, AI insights, Return on Spend, and the Growth tab.",color:"#00ffcc"},
-                  {key:"fleet",icon:"🚚",name:"Fleet Pro Smart",price:"Custom",desc:"Everything in Pro Smart, PLUS multi-truck fleet tools and reporting.",color:"#fbbf24"},
+                  {key:"standard",icon:"📋",name:"Standard",desc:"Core tracking: unlimited scans, deductions, move performance, fuel log.",color:C.a3},
+                  {key:"smart",icon:"🧠",name:"Pro Smart",desc:"Everything in Standard, PLUS live data, AI insights, Return on Spend, and the Growth tab.",color:"#00ffcc"},
+                  {key:"fleet",icon:"🚚",name:"Fleet Pro Smart",desc:"Everything in Pro Smart, PLUS multi-truck fleet tools and reporting.",color:"#fbbf24"},
                 ];
                 return(
                   <div>
                     <div style={{textAlign:"center",marginBottom:16}}>
                       <div style={{fontSize:28,marginBottom:8}}>🧭</div>
                       <div style={{fontSize:16,fontWeight:800,color:C.text,marginBottom:6}}>Choose Your Path</div>
-                      <div style={{fontSize:11,color:C.sub,lineHeight:1.5}}>Pick the plan that matches you — we'll only show you what's relevant.</div>
+                      <div style={{fontSize:11,color:C.sub,lineHeight:1.5}}>Pick what matches how you work — we'll only show you what's relevant. Every feature is visible either way, with a free monthly trial on anything locked.</div>
                     </div>
                     {pathOptions.map(function(p){
                       return(
                         <div key={p.key} onClick={()=>{setOnboardPath(p.key);setOnboardStep(0);}} style={{padding:"14px",borderRadius:12,background:p.color+"0d",border:"1px solid "+p.color+"44",marginBottom:10,cursor:"pointer"}}>
-                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                            <div style={{display:"flex",alignItems:"center",gap:8}}>
-                              <span style={{fontSize:18}}>{p.icon}</span>
-                              <span style={{fontSize:13,fontWeight:800,color:C.text}}>{p.name}</span>
-                            </div>
-                            <span style={{fontSize:12,fontWeight:800,color:p.color}}>{p.price}</span>
+                          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                            <span style={{fontSize:18}}>{p.icon}</span>
+                            <span style={{fontSize:13,fontWeight:800,color:C.text}}>{p.name}</span>
                           </div>
                           <div style={{fontSize:10,color:C.sub,lineHeight:1.5}}>{p.desc}</div>
                         </div>
@@ -3058,32 +3115,34 @@ ${pdfText.slice(0,24000)}`}]};
           </div>
 
 
-          {/* FUEL SURCHARGE CALCULATOR — Pro Smart only, isolated component + error boundary */}
-          {isSmart&&(
-            <FSCErrorBoundary>
-              <div style={{marginBottom:16}}>
-                <FuelSurchargeCalculator
-                  dieselPrice={Number((liveData&&liveData.diesel)||fuelPrice||4.50)}
-                  mpg={Number(fuelMPG||5.2)}
-                  styles={{
-                    card:K(),
-                    title:{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6,color:C.text},
-                    subtitle:{fontSize:9,color:C.sub,lineHeight:1.5,marginBottom:12},
-                    grid:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12},
-                    label:{fontSize:8,color:C.sub,marginBottom:3},
-                    input:{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"},
-                    resultBox:{padding:"10px 12px",borderRadius:9,background:C.bg,border:"1px solid "+C.border},
-                    resultRow:{display:"flex",justifyContent:"space-between",fontSize:9,color:C.sub,marginBottom:6},
-                    rateLine:{fontSize:9,color:C.sub,marginBottom:4},
-                    fscLine:{fontSize:14,fontWeight:800,color:C.green},
-                    fscDollarStyle:{fontSize:11,fontWeight:600,color:C.sub},
-                    totalLine:{fontSize:10,color:C.sub,marginTop:6,paddingTop:6,borderTop:"1px solid "+C.border},
-                    footnote:{fontSize:8,color:C.sub,marginTop:8,lineHeight:1.5}
-                  }}
-                />
-              </div>
-            </FSCErrorBoundary>
-          )}
+          {/* FUEL SURCHARGE CALCULATOR — Pro Smart, with one free use every 31 days for Standard */}
+          <div style={{marginBottom:16}}>
+            {renderWithFreeTrial("fscCalculator","Fuel Surcharge Calculator",function(){
+              return(
+                <FSCErrorBoundary>
+                  <FuelSurchargeCalculator
+                    dieselPrice={Number((liveData&&liveData.diesel)||fuelPrice||4.50)}
+                    mpg={Number(fuelMPG||5.2)}
+                    styles={{
+                      card:K(),
+                      title:{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6,color:C.text},
+                      subtitle:{fontSize:9,color:C.sub,lineHeight:1.5,marginBottom:12},
+                      grid:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12},
+                      label:{fontSize:8,color:C.sub,marginBottom:3},
+                      input:{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"},
+                      resultBox:{padding:"10px 12px",borderRadius:9,background:C.bg,border:"1px solid "+C.border},
+                      resultRow:{display:"flex",justifyContent:"space-between",fontSize:9,color:C.sub,marginBottom:6},
+                      rateLine:{fontSize:9,color:C.sub,marginBottom:4},
+                      fscLine:{fontSize:14,fontWeight:800,color:C.green},
+                      fscDollarStyle:{fontSize:11,fontWeight:600,color:C.sub},
+                      totalLine:{fontSize:10,color:C.sub,marginTop:6,paddingTop:6,borderTop:"1px solid "+C.border},
+                      footnote:{fontSize:8,color:C.sub,marginTop:8,lineHeight:1.5}
+                    }}
+                  />
+                </FSCErrorBoundary>
+              );
+            })}
+          </div>
 
           {/* OFFER SCORER */}
           <div style={{display:"grid",gridTemplateColumns:wide?"1fr 1fr":"1fr",gap:14,marginBottom:16}}>
