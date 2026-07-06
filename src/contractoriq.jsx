@@ -150,36 +150,44 @@ function FuelSurchargeCalculator(props){
             onClick={function(){
               if(!showShareFeature)return;
               const canvas=document.createElement("canvas");
-              canvas.width=1080;canvas.height=1080;
+              canvas.width=1080;canvas.height=1200;
               const ctx=canvas.getContext("2d");
-              // Background
-              const grad=ctx.createLinearGradient(0,0,1080,1080);
-              grad.addColorStop(0,"#080c16");grad.addColorStop(1,"#111827");
-              ctx.fillStyle=grad;ctx.fillRect(0,0,1080,1080);
-              // Brand
-              ctx.fillStyle="#00ffcc";ctx.font="bold 48px sans-serif";ctx.textAlign="center";
-              ctx.fillText("⛽ DrayageIQ",540,140);
-              ctx.fillStyle="#8fa3c0";ctx.font="28px sans-serif";
-              ctx.fillText("Fuel Surcharge Calculator",540,190);
-              // Big FSC number
-              ctx.fillStyle="#4ade80";ctx.font="bold 140px sans-serif";
-              ctx.fillText(fscPct.toFixed(1)+"%",540,480);
-              ctx.fillStyle="#e5ecf5";ctx.font="bold 60px sans-serif";
-              ctx.fillText("$"+fscDollar.toFixed(2)+" FSC",540,560);
-              // Details
-              ctx.fillStyle="#8fa3c0";ctx.font="32px sans-serif";
-              ctx.fillText("Rate: $"+rateNum.toFixed(2)+" · "+milesNum+" miles",540,680);
-              ctx.fillText("Live diesel: $"+dieselPrice.toFixed(2)+"/gal · "+mpg.toFixed(1)+" MPG",540,730);
-              // Website banner — bold, high-contrast, unmissable even if cropped/screenshotted
-              ctx.fillStyle="rgba(0,255,204,0.12)";
-              ctx.fillRect(0,860,1080,140);
-              ctx.strokeStyle="#00ffcc";ctx.lineWidth=2;
-              ctx.strokeRect(0,860,1080,140);
-              ctx.fillStyle="#8fa3c0";ctx.font="26px sans-serif";
-              ctx.fillText("Know your numbers at",540,910);
-              ctx.fillStyle="#00ffcc";ctx.font="bold 52px sans-serif";
-              ctx.fillText("getdrayageiq.com",540,970);
-              setShareImgUrl(canvas.toDataURL("image/png"));
+              const logoImg=new window.Image();
+              logoImg.onload=function(){
+                // Background
+                const grad=ctx.createLinearGradient(0,0,1080,1200);
+                grad.addColorStop(0,"#080c16");grad.addColorStop(1,"#111827");
+                ctx.fillStyle=grad;ctx.fillRect(0,0,1080,1200);
+                ctx.textAlign="center";
+                // Real logo image at top, sized proportionally
+                const logoW=520;
+                const logoH=logoW*(logoImg.height/logoImg.width);
+                ctx.drawImage(logoImg,540-logoW/2,50,logoW,logoH);
+                // Slogan right under the logo
+                ctx.fillStyle="#a78bfa";ctx.font="bold 30px sans-serif";
+                ctx.fillText("Settlement analysis made effortless",540,logoH+95);
+                // Big FSC number
+                ctx.fillStyle="#4ade80";ctx.font="bold 140px sans-serif";
+                ctx.fillText(fscPct.toFixed(1)+"%",540,logoH+280);
+                ctx.fillStyle="#e5ecf5";ctx.font="bold 60px sans-serif";
+                ctx.fillText("$"+fscDollar.toFixed(2)+" FSC",540,logoH+360);
+                // Details
+                ctx.fillStyle="#8fa3c0";ctx.font="32px sans-serif";
+                ctx.fillText("Rate: $"+rateNum.toFixed(2)+" · "+milesNum+" miles",540,logoH+470);
+                ctx.fillText("Live diesel: $"+dieselPrice.toFixed(2)+"/gal · "+mpg.toFixed(1)+" MPG",540,logoH+520);
+                // Website banner — bold, high-contrast, unmissable even if cropped/screenshotted
+                const bannerY=logoH+600;
+                ctx.fillStyle="rgba(251,191,36,0.12)";
+                ctx.fillRect(0,bannerY,1080,140);
+                ctx.strokeStyle="#fbbf24";ctx.lineWidth=2;
+                ctx.strokeRect(0,bannerY,1080,140);
+                ctx.fillStyle="#8fa3c0";ctx.font="26px sans-serif";
+                ctx.fillText("Know your numbers at",540,bannerY+50);
+                ctx.fillStyle="#fbbf24";ctx.font="bold 52px sans-serif";
+                ctx.fillText("getdrayageiq.com",540,bannerY+112);
+                setShareImgUrl(canvas.toDataURL("image/png"));
+              };
+              logoImg.src=LOGO_HERO;
             }}
             style={{width:"100%",padding:"10px",borderRadius:8,background:showShareFeature?"linear-gradient(135deg,#fbbf24,#f59e0b)":"#1f2937",border:showShareFeature?"none":"1px solid #333",color:showShareFeature?"#000":"#6a7a8f",fontSize:11,fontWeight:800,cursor:showShareFeature?"pointer":"not-allowed",fontFamily:"inherit"}}
           >{showShareFeature?"📸 Generate Shareable Result":"🔒 Generate Shareable Result"}</button>
