@@ -170,9 +170,15 @@ function FuelSurchargeCalculator(props){
               ctx.fillStyle="#8fa3c0";ctx.font="32px sans-serif";
               ctx.fillText("Rate: $"+rateNum.toFixed(2)+" · "+milesNum+" miles",540,680);
               ctx.fillText("Live diesel: $"+dieselPrice.toFixed(2)+"/gal · "+mpg.toFixed(1)+" MPG",540,730);
-              // CTA
-              ctx.fillStyle="#a78bfa";ctx.font="bold 36px sans-serif";
-              ctx.fillText("Know your numbers. getdrayageiq.com",540,950);
+              // Website banner — bold, high-contrast, unmissable even if cropped/screenshotted
+              ctx.fillStyle="rgba(0,255,204,0.12)";
+              ctx.fillRect(0,860,1080,140);
+              ctx.strokeStyle="#00ffcc";ctx.lineWidth=2;
+              ctx.strokeRect(0,860,1080,140);
+              ctx.fillStyle="#8fa3c0";ctx.font="26px sans-serif";
+              ctx.fillText("Know your numbers at",540,910);
+              ctx.fillStyle="#00ffcc";ctx.font="bold 52px sans-serif";
+              ctx.fillText("getdrayageiq.com",540,970);
               setShareImgUrl(canvas.toDataURL("image/png"));
             }}
             style={{width:"100%",padding:"10px",borderRadius:8,background:showShareFeature?"linear-gradient(135deg,#fbbf24,#f59e0b)":"#1f2937",border:showShareFeature?"none":"1px solid #333",color:showShareFeature?"#000":"#6a7a8f",fontSize:11,fontWeight:800,cursor:showShareFeature?"pointer":"not-allowed",fontFamily:"inherit"}}
