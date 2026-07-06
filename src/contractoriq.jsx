@@ -368,6 +368,37 @@ export default function ContractorIQv26(){
   }
 
   const [tab,setTab]=useState("dashboard");
+  const TAB_ORDER=["dashboard","loads","ai","growth"];
+  const swipeStartRef=useRef(null);
+  function handleSwipeStart(e){
+    if(e.touches&&e.touches.length===1){
+      swipeStartRef.current={x:e.touches[0].clientX,y:e.touches[0].clientY,time:Date.now()};
+    }else{
+      swipeStartRef.current=null;// ignore multi-touch (pinch-zoom) so it never gets mistaken for a swipe
+    }
+  }
+  function handleSwipeEnd(e){
+    if(!swipeStartRef.current)return;
+    const start=swipeStartRef.current;
+    swipeStartRef.current=null;
+    if(!e.changedTouches||e.changedTouches.length!==1)return;
+    const dx=e.changedTouches[0].clientX-start.x;
+    const dy=e.changedTouches[0].clientY-start.y;
+    const elapsed=Date.now()-start.time;
+    // Require a deliberate, fast, mostly-horizontal gesture — this avoids
+    // accidentally triggering during normal vertical scrolling or slow drags.
+    const isHorizontal=Math.abs(dx)>Math.abs(dy)*1.5;
+    const isFarEnough=Math.abs(dx)>70;
+    const isFastEnough=elapsed<600;
+    if(!isHorizontal||!isFarEnough||!isFastEnough)return;
+    const currentIndex=TAB_ORDER.indexOf(tab);
+    if(currentIndex===-1)return;
+    if(dx<0&&currentIndex<TAB_ORDER.length-1){
+      setTab(TAB_ORDER[currentIndex+1]);// swipe left → next tab
+    }else if(dx>0&&currentIndex>0){
+      setTab(TAB_ORDER[currentIndex-1]);// swipe right → previous tab
+    }
+  }
   const [sD,setSD]=useState(0);// safe fallback; real default-to-latest-week logic runs once allW loads (see below)
   const [sM,setSM]=useState(0);
   const [sH,setSH]=useState(0);
@@ -2138,7 +2169,7 @@ ${pdfText.slice(0,24000)}`}]};
         </div>
       )}
 
-      <div style={{padding:"16px",maxWidth:1100,margin:"0 auto"}}>
+      <div onTouchStart={handleSwipeStart} onTouchEnd={handleSwipeEnd} style={{padding:"16px",maxWidth:1100,margin:"0 auto"}}>
 
       {/* ══ DASHBOARD TAB ═══════════════════════════════════════════════════ */}
       {tab==="dashboard"&&(
