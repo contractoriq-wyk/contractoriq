@@ -83,8 +83,10 @@ function FuelSurchargeCalculator(props){
   const dieselPrice=props.dieselPrice;
   const mpg=props.mpg;
   const styles=props.styles;
+  const showShareFeature=props.showShareFeature;// V4 growth feature — dev-only until approved for release
   const [rate,setRate]=useState("");
   const [miles,setMiles]=useState("");
+  const [shareImgUrl,setShareImgUrl]=useState(null);
 
   const rateNum=parseFloat(rate);
   const milesNum=parseFloat(miles);
@@ -138,6 +140,51 @@ function FuelSurchargeCalculator(props){
         {validInput&&<div style={styles.totalLine}>Quote total: ${rateNum.toFixed(2)} + ${fscDollar.toFixed(2)} FSC = <span style={{fontWeight:800,color:"#e5ecf5"}}>${(rateNum+fscDollar).toFixed(2)}</span></div>}
       </div>
       <div style={styles.footnote}>💡 This accounts for today's diesel price and your real truck efficiency — private to your account.</div>
+      {validInput&&(
+        <div style={{marginTop:12,paddingTop:12,borderTop:"1px dashed "+ (styles.shareBorder||"#333")}}>
+          {!showShareFeature&&(
+            <div style={{fontSize:9,color:"#fbbf24",fontWeight:700,marginBottom:8,textAlign:"center"}}>🔒 Coming Soon — Share Your Result</div>
+          )}
+          <button
+            disabled={!showShareFeature}
+            onClick={function(){
+              if(!showShareFeature)return;
+              const canvas=document.createElement("canvas");
+              canvas.width=1080;canvas.height=1080;
+              const ctx=canvas.getContext("2d");
+              // Background
+              const grad=ctx.createLinearGradient(0,0,1080,1080);
+              grad.addColorStop(0,"#080c16");grad.addColorStop(1,"#111827");
+              ctx.fillStyle=grad;ctx.fillRect(0,0,1080,1080);
+              // Brand
+              ctx.fillStyle="#00ffcc";ctx.font="bold 48px sans-serif";ctx.textAlign="center";
+              ctx.fillText("⛽ DrayageIQ",540,140);
+              ctx.fillStyle="#8fa3c0";ctx.font="28px sans-serif";
+              ctx.fillText("Fuel Surcharge Calculator",540,190);
+              // Big FSC number
+              ctx.fillStyle="#4ade80";ctx.font="bold 140px sans-serif";
+              ctx.fillText(fscPct.toFixed(1)+"%",540,480);
+              ctx.fillStyle="#e5ecf5";ctx.font="bold 60px sans-serif";
+              ctx.fillText("$"+fscDollar.toFixed(2)+" FSC",540,560);
+              // Details
+              ctx.fillStyle="#8fa3c0";ctx.font="32px sans-serif";
+              ctx.fillText("Rate: $"+rateNum.toFixed(2)+" · "+milesNum+" miles",540,680);
+              ctx.fillText("Live diesel: $"+dieselPrice.toFixed(2)+"/gal · "+mpg.toFixed(1)+" MPG",540,730);
+              // CTA
+              ctx.fillStyle="#a78bfa";ctx.font="bold 36px sans-serif";
+              ctx.fillText("Know your numbers. getdrayageiq.com",540,950);
+              setShareImgUrl(canvas.toDataURL("image/png"));
+            }}
+            style={{width:"100%",padding:"10px",borderRadius:8,background:showShareFeature?"linear-gradient(135deg,#fbbf24,#f59e0b)":"#1f2937",border:showShareFeature?"none":"1px solid #333",color:showShareFeature?"#000":"#6a7a8f",fontSize:11,fontWeight:800,cursor:showShareFeature?"pointer":"not-allowed",fontFamily:"inherit"}}
+          >{showShareFeature?"📸 Generate Shareable Result":"🔒 Generate Shareable Result"}</button>
+          {shareImgUrl&&showShareFeature&&(
+            <div style={{marginTop:10,textAlign:"center"}}>
+              <img src={shareImgUrl} style={{width:"100%",borderRadius:10,marginBottom:8}}/>
+              <a href={shareImgUrl} download="drayageiq-fsc-result.png" style={{display:"inline-block",padding:"8px 16px",borderRadius:8,background:"#4ade8022",border:"1px solid #4ade8055",color:"#4ade80",fontSize:10,fontWeight:700,textDecoration:"none"}}>⬇️ Download to Share</a>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -3205,6 +3252,7 @@ ${pdfText.slice(0,24000)}`}]};
                   <FuelSurchargeCalculator
                     dieselPrice={Number((liveData&&liveData.diesel)||fuelPrice||4.50)}
                     mpg={Number(fuelMPG||5.2)}
+                    showShareFeature={isOwnerMode}
                     styles={{
                       card:K(),
                       title:{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6,color:C.text},
