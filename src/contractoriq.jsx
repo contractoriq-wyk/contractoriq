@@ -1715,6 +1715,12 @@ ${pdfText.slice(0,24000)}`}]};
                 </p>
               </div>
 
+              {/* Proof-point callout — the real differentiator, visible above the fold */}
+              <div style={{padding:"10px 14px",background:"rgba(251,191,36,0.06)",borderRadius:10,border:"1px solid rgba(251,191,36,0.25)",marginBottom:wide?20:16,display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:18,flexShrink:0}}>🔎</span>
+                <div style={{fontSize:11,color:"#fbbf24",fontWeight:700,lineHeight:1.5}}>Find out if your carrier is lowballing your fuel surcharge — in 30 seconds. No one else checks this for you.</div>
+              </div>
+
               {/* Primary Upload CTA */}
               <button onClick={()=>{
                 try{localStorage.setItem("ciq_welcome_done","true");localStorage.setItem("ciq_demo","false");}catch(e){}
@@ -1735,8 +1741,30 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{fontSize:9,color:"#5a7085",textAlign:"center",marginBottom:wide?18:14,lineHeight:1.5}}>Note: many features shown (live data, Smart Insights, Return on Spend, auto-sync) are part of <b style={{color:"#00ffcc"}}>Pro Smart</b>. Standard includes core scanning &amp; tracking.</div>
 
               {/* Trust strip */}
-              <div style={{padding:"8px 14px",background:"rgba(0,255,204,0.05)",borderRadius:9,border:"1px solid rgba(0,255,204,0.2)",marginBottom:wide?18:14,textAlign:"center"}}>
+              <div style={{padding:"8px 14px",background:"rgba(0,255,204,0.05)",borderRadius:9,border:"1px solid rgba(0,255,204,0.2)",marginBottom:wide?12:10,textAlign:"center"}}>
                 <div style={{fontSize:10,fontWeight:700,color:"#8fa3c0"}}>💳 Billed monthly or annually · Cancel anytime · No contracts</div>
+              </div>
+
+              {/* Social proof — real reviews from Supabase, or honest early-adopter framing if none yet */}
+              <div style={{marginBottom:wide?18:14}}>
+                {reviews&&reviews.length>0?(
+                  <div style={{padding:"12px 14px",background:"rgba(255,255,255,0.03)",borderRadius:10,border:"1px solid rgba(255,255,255,0.08)"}}>
+                    <div style={{fontSize:9,fontWeight:700,color:"#6a8099",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>⭐ What Drivers Are Saying ({reviews.length})</div>
+                    {reviews.slice(0,1).map(function(r,i){
+                      return(
+                        <div key={i}>
+                          <div style={{fontSize:11,color:"#c8d4e6",fontStyle:"italic",lineHeight:1.6,marginBottom:6}}>"{r.text}"</div>
+                          <div style={{fontSize:10,color:"#8fa3c0"}}>— {r.name}{r.role?", "+r.role:""} {"⭐".repeat(r.stars||5)}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ):(
+                  <div style={{padding:"12px 14px",background:"rgba(167,139,250,0.05)",borderRadius:10,border:"1px dashed rgba(167,139,250,0.3)",textAlign:"center"}}>
+                    <div style={{fontSize:11,color:"#c4b5fd",fontWeight:700,marginBottom:2}}>🚀 Be one of our first drivers</div>
+                    <div style={{fontSize:9,color:"#6a8099"}}>DrayageIQ is brand new — early users get to shape what we build next.</div>
+                  </div>
+                )}
               </div>
 
               {/* Plan grid 2×2 */}
