@@ -217,6 +217,44 @@ function computeFSC(rate,miles,dieselPrice,mpg){
   return {valid:true,ratePerMile:ratePerMile,fscPct:fscPct};
 }
 
+// Builds a CSV export of Return on Spend + True FSC data for every move.
+// Pro Smart feature — lets a driver hand real numbers to a broker or lawyer
+// during a rate negotiation, or keep records for their own accounting.
+function buildFSCReportCSV(allMoves,scoreMoveFn,liveDieselPrice,baselineMPG){
+  const headers=["Week","Vendor","Type","Route","Miles","Rate","FSC Paid","True FSC ($)","True FSC (%)","FSC Gap ($)","Total","RPM","Grade"];
+  const rows=[headers.join(",")];
+  allMoves.forEach(function(m){
+    const s=scoreMoveFn(m);
+    let trueFscDollar=0,trueFscPct=0,fscGap=0;
+    if(m.miles>0&&m.rate>0){
+      const rpmCheck=m.rate/m.miles;
+      const baselinePriceCheck=2.50;
+      const extraCostCheck=Math.max(0,(liveDieselPrice-baselinePriceCheck)/baselineMPG);
+      trueFscPct=(extraCostCheck/rpmCheck)*100;
+      trueFscDollar=extraCostCheck*m.miles;
+      fscGap=m.fsc-trueFscDollar;
+    }
+    const route=(m.from||"")+" to "+(m.to||"");
+    const row=[
+      "W"+m.wk,
+      m.vendor||"",
+      m.isRoundTrip?"RT":m.type,
+      '"'+route+'"',
+      m.miles,
+      m.rate.toFixed(2),
+      m.fsc.toFixed(2),
+      trueFscDollar.toFixed(2),
+      trueFscPct.toFixed(1),
+      fscGap.toFixed(2),
+      (m.rate+m.fsc).toFixed(2),
+      s.rpm,
+      s.grade
+    ];
+    rows.push(row.join(","));
+  });
+  return rows.join("\n");
+}
+
 function scoreMove(m){
   const miles=m.miles||m.mi||0,rate=m.rate||m.rt||0,fsc=m.fsc||m.fc||0,type=m.type||m.t||"L";
   const rpm=miles>0?(rate+fsc)/miles:0;
@@ -504,6 +542,8 @@ export default function ContractorIQv26(){
   const [milesBuffer,setMilesBuffer]=useState(5);
   const [focusMode,setFocusMode]=useState(false);
   const [showSettings,setShowSettings]=useState(false);
+  const [showDigestModal,setShowDigestModal]=useState(false);
+  const [showRoadmap,setShowRoadmap]=useState(false);
   const [showMenu,setShowMenu]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
   const [showInsurance,setShowInsurance]=useState(false);
@@ -549,6 +589,11 @@ export default function ContractorIQv26(){
   const [newFillup,setNewFillup]=useState({date:"",odometer:"",gallons:"",cost:""});
   const [showProfile,setShowProfile]=useState(false);
   const [profile,setProfile]=useState(()=>{try{const s=localStorage.getItem("ciq_profile");return s?JSON.parse(s):{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}catch{return{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}});
+  // Weekly WhatsApp/SMS digest preferences — Pro Smart feature, upcoming V4 release.
+  // Storing the opt-in and phone number now so the preference is ready the moment
+  // the backend sending service (Twilio or similar) is wired up.
+  const [digestOptIn,setDigestOptIn]=useState(false);
+  const [digestPhone,setDigestPhone]=useState("");
   const [expenses,setExpenses]=useState(()=>{try{const s=localStorage.getItem("ciq_expenses");return s?JSON.parse(s):[];}catch{return[];}});
   const [showExpenseForm,setShowExpenseForm]=useState(false);
   const [expForm,setExpForm]=useState({date:"",category:"Parts",desc:"",amount:"",note:"",weekRef:""});
@@ -758,6 +803,8 @@ export default function ContractorIQv26(){
           if(d.reviews)setReviews(d.reviews);
           if(d.fuelFillups)setFuelFillups(d.fuelFillups);// was localStorage-only — meant fill-ups logged on one device never showed on another
           if(d.featureTokens)setFeatureTokens(d.featureTokens);// Pro Smart free-trial tokens, synced so switching devices can't reset the 31-day cycle
+          if(d.digestOptIn!==undefined)setDigestOptIn(d.digestOptIn);
+          if(d.digestPhone)setDigestPhone(d.digestPhone);
         }
         // Set tier from Supabase plan column
         const plan=data?.plan||"free";
@@ -786,7 +833,7 @@ export default function ContractorIQv26(){
     if(!user||!cloudLoaded) return;
     const c=getSB();
     if(!c){setSyncStatus("error");setSyncError("Cloud connection unavailable");return;}
-    const blob={addedW,profile,expenses,docs,reviews,fuelFillups,featureTokens};
+    const blob={addedW,profile,expenses,docs,reviews,fuelFillups,featureTokens,digestOptIn,digestPhone};
     setSyncStatus("saving");
     const t=setTimeout(()=>{
       c.from("user_data").upsert({user_id:user.id,data:blob,updated_at:new Date().toISOString()})
@@ -806,7 +853,7 @@ export default function ContractorIQv26(){
         });
     },1500);
     return ()=>clearTimeout(t);
-  },[addedW,profile,expenses,docs,reviews,fuelFillups,featureTokens,user,cloudLoaded]);
+  },[addedW,profile,expenses,docs,reviews,fuelFillups,featureTokens,digestOptIn,digestPhone,user,cloudLoaded]);
 
   const baseW=[];// W is empty now — all real data comes from Supabase via addedW, same on every device
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
@@ -1424,6 +1471,12 @@ ${pdfText.slice(0,24000)}`}]};
               {icon:"▼",step:"Collapsible Cards",path:"all",title:"Collapse Any Card to Save Space",body:"Every major card — Deduction Breakdown, Week Grades, Move Performance, Weekly Action Plan, and more — has a small ▼ arrow next to its title. Tap it to collapse the card down to just its header, or tap ▶ to expand it again. This keeps your screen clean and lets you focus on exactly what you need to see right now.",tip:"💡 On mobile especially, collapsing cards you don't need makes scrolling much faster.",action:"Next →"},
 
               {icon:"💎",step:"Choosing Your Plan",path:"all",title:"Standard vs Pro Smart — What's the Difference?",body:"Standard ($14.99/mo) covers everything you need to track your business: unlimited PDF scans, Deduction Breakdown, Move Performance, round trip detection, Week Grades, and Manual Fuel Log. Pro Smart ($24.99/mo) adds the intelligence layer: live diesel prices & weather, an AI that uses YOUR real numbers, Smart Insights alerts, Return on Spend ratio, auto-syncing MPG & fuel price, the Fuel Surcharge Calculator with True FSC vendor auditing, Data Health scanning, and the full Growth tab. Annual saves you 2 months.",tip:"💡 Look for the 🔒 lock icon — it marks Pro Smart features so you always know what's included in your plan.",action:"Next →"},
+
+              {icon:"📊",step:"Export Your Reports",path:"smart",title:"Download Your Return on Spend + True FSC Report",body:"In the Full History table (Document Analyzer tab), tap 'Export Return on Spend + True FSC Report (CSV)' to download every move you've ever recorded — with fair-market FSC comparisons built in. Open it in Excel or Google Sheets, hand it to a broker during a rate negotiation, or keep it for your own accounting.",tip:"💡 This is live right now, not a future promise — try it after scanning a few weeks of settlements.",action:"Next →"},
+
+              {icon:"💬",step:"Weekly Digest — Coming Soon",path:"smart",title:"Your Numbers, Sent Straight to Your Phone",body:"In Menu → Weekly Digest, Pro Smart users can already turn this on and save a phone number. Once fully live, you'll get a short WhatsApp or SMS message every week with your net pay, RPM, and any True FSC gap worth knowing — no need to open the app to stay on top of your numbers.",tip:"🔒 This feature is in active development. Your preference is saved now and will activate automatically the moment it launches — no extra setup needed later.",action:"Next →"},
+
+              {icon:"🗺️",step:"See What's Coming Next",path:"all",title:"We Build in the Open",body:"Tap ≡ Menu → What's Coming Next anytime to see a live roadmap of features we're actively building — what's already shipped, what's in testing, and what's planned. We'd rather show you the real progress than surprise you with a locked feature you didn't know was coming.",tip:"💡 Have an idea for what we should build next? Message us on WhatsApp Support — we read every suggestion.",action:"Next →"},
 
               {icon:"🎁",step:"Try Any Pro Smart Feature Free",path:"all",title:"One Free Trial Every 31 Days — Per Feature",body:"Every Pro Smart feature is fully visible on Standard, never hidden. Tap any locked feature and you'll see '🎁 Use My Free Trial' — one free use, no card required, no commitment. Each feature has its own independent 31-day cycle, so trying the Fuel Surcharge Calculator today doesn't use up your trial for Return on Spend.",tip:"💡 This isn't a countdown trial that expires — it renews every 31 days, forever, feature by feature. Use it whenever it's useful to you.",action:"Next →"},
 
@@ -2120,6 +2173,7 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>App</div>
                   <button onClick={()=>{setDarkMode(p=>!p);try{localStorage.setItem("ciq_theme",darkMode?"light":"dark");}catch(e){}}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>{darkMode?"☀️":"🌙"}</span><span>{darkMode?"Light Mode":"Dark Mode"}</span></button>
                   <button onClick={()=>{setShowSettings(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⚙️</span><span>Display Settings</span></button>
+                  <button onClick={()=>{setShowDigestModal(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",justifyContent:"space-between",fontWeight:600}}><span style={{display:"flex",alignItems:"center",gap:8}}><span>💬</span><span>Weekly Digest (WhatsApp/SMS)</span></span><span style={{fontSize:8,fontWeight:800,color:"#fbbf24",background:"#fbbf2418",border:"1px solid #fbbf2444",borderRadius:20,padding:"1px 7px"}}>NEW</span></button>
 
                   {/* Divider */}
                   <div style={{height:1,background:C.border,margin:"8px 6px"}}/>
@@ -2128,6 +2182,7 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Discover</div>
                   <button onClick={()=>{setShowAbout(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🚛</span><span>About DrayageIQ</span></button>
                   <button onClick={()=>{setOnboardStep(0);setOnboardPath(null);setShowOnboarding(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,color:C.accent,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🎓</span><span>How to Use DrayageIQ</span></button>
+                  <button onClick={()=>{setShowRoadmap(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"#a78bfa10",border:"1px solid #a78bfa25",color:"#a78bfa",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",justifyContent:"space-between",fontWeight:600}}><span style={{display:"flex",alignItems:"center",gap:8}}><span>🗺️</span><span>What's Coming Next</span></span><span style={{fontSize:8,fontWeight:800,color:"#fbbf24",background:"#fbbf2418",border:"1px solid #fbbf2444",borderRadius:20,padding:"1px 7px"}}>ROADMAP</span></button>
                   <button onClick={()=>{setShowMarket(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.green}12`,border:`1px solid ${C.green}33`,color:C.green,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>📊</span><span>Market Overview</span></button>
                   <button onClick={()=>{setShowReviews(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.gold}12`,border:`1px solid ${C.gold}33`,color:C.gold,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⭐</span><span>Customer Reviews</span>{reviews.length>0&&<span style={{marginLeft:"auto",fontSize:9,color:C.gold,fontWeight:700}}>{reviews.length}</span>}</button>
                   <button onClick={()=>{setShowIconKey(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.a3}12`,border:`1px solid ${C.a3}33`,color:C.a3,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🔑</span><span>Icon Guide</span></button>
@@ -2212,6 +2267,74 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{fontSize:11,color:visibleW.length===allW.length?C.sub:C.gold,marginBottom:6}}>{visibleW.length===allW.length?"✓ All weeks visible":"⚠️ "+visibleW.length+" of "+allW.length+" weeks shown"}</div>
               <button onClick={()=>{setHiddenVendors([]);setActiveOnlyVendor(null);setHideOwnerName(false);setHideUnitNum(false);}} style={{width:"100%",marginTop:10,padding:"6px",borderRadius:6,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Reset All</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* WEEKLY DIGEST — Pro Smart feature, visible to Standard with padlock */}
+      {showDigestModal&&(
+        <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div><div style={{fontSize:12,fontWeight:700,color:C.text}}>💬 Weekly Digest (WhatsApp/SMS)</div><div style={{fontSize:10,color:C.sub,marginTop:2}}>Get your weekly net, RPM, and True FSC gap sent automatically</div></div>
+            <button onClick={()=>setShowDigestModal(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
+          </div>
+          <div style={{background:C.card,borderRadius:11,padding:"14px",border:`1px solid ${C.border}`,maxWidth:420}}>
+            {isSmart?(
+              <div>
+                <div style={{fontSize:10,color:C.sub,lineHeight:1.6,marginBottom:12}}>Every week, we'll send a short message with your net pay, RPM, and any True FSC gap worth knowing about — straight to your phone, no need to open the app.</div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                  <span style={{fontSize:11,color:C.text,fontWeight:700}}>Enable Weekly Digest</span>
+                  <button onClick={()=>setDigestOptIn(p=>!p)} style={{width:40,height:20,borderRadius:10,background:digestOptIn?C.accent:C.border,border:"none",cursor:"pointer",position:"relative",flexShrink:0}}><div style={{width:14,height:14,borderRadius:"50%",background:"white",position:"absolute",top:3,left:digestOptIn?23:3,transition:"left 0.15s"}}/></button>
+                </div>
+                {digestOptIn&&(
+                  <div>
+                    <div style={{fontSize:9,color:C.sub,marginBottom:4}}>PHONE NUMBER (WhatsApp or SMS)</div>
+                    <input type="tel" value={digestPhone} onChange={function(e){setDigestPhone(e.target.value);}} placeholder="+1 (443) 555-0100" style={{width:"100%",padding:"9px 10px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box",marginBottom:8}}/>
+                    <div style={{fontSize:9,color:"#fbbf24",fontWeight:700}}>🧪 Coming in V4 — your preference is saved and ready the moment this launches.</div>
+                  </div>
+                )}
+              </div>
+            ):(
+              <div style={{textAlign:"center",padding:"8px 4px"}}>
+                <div style={{fontSize:22,marginBottom:6}}>🔒</div>
+                <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:4}}>Weekly Digest — Pro Smart Feature</div>
+                <div style={{fontSize:9,color:C.sub,marginBottom:10}}>Automatic weekly summaries sent to your phone, so you always know your numbers without opening the app.</div>
+                <button onClick={()=>openUpgrade("digest")} style={{padding:"7px 16px",borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Upgrade to Pro Smart →</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ROADMAP — public "what's coming next" transparency page */}
+      {showRoadmap&&(
+        <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div><div style={{fontSize:12,fontWeight:700,color:C.text}}>🗺️ What's Coming Next</div><div style={{fontSize:10,color:C.sub,marginTop:2}}>Built in the open — here's what we're actively working on</div></div>
+            <button onClick={()=>setShowRoadmap(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:10,maxWidth:520}}>
+            {[
+              {icon:"📸",title:"Shareable Results Card",tier:"Pro Smart",status:"In Testing",desc:"Turn any Fuel Surcharge Calculator result into a clean, branded image to post or share — proof of your real numbers, ready in one tap."},
+              {icon:"📊",title:"CSV Export — Return on Spend + True FSC",tier:"Pro Smart",status:"Live Now",desc:"Download your full move history with fair-market FSC comparisons — hand it to a broker, lawyer, or your own records.",live:true},
+              {icon:"💬",title:"Weekly Digest (WhatsApp/SMS)",tier:"Pro Smart",status:"In Development",desc:"Your weekly net, RPM, and True FSC gap sent straight to your phone automatically — no need to open the app to stay informed."},
+              {icon:"🚀",title:"Referral Rewards",tier:"All Tiers",status:"Planned",desc:"Invite another driver, you both get a free month — rewarding the community that helps DrayageIQ grow."},
+              {icon:"🏢",title:"Enterprise Fleet (11+ trucks)",tier:"Fleet",status:"Available on Request",desc:"Custom pricing and dedicated support for larger fleet operations. Message us directly to discuss your setup."},
+            ].map(function(item,i){
+              return(
+                <div key={i} style={{background:C.card,borderRadius:11,padding:"12px 14px",border:`1px solid ${item.live?C.green+"44":C.border}`}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:16}}>{item.icon}</span>
+                      <span style={{fontSize:12,fontWeight:700,color:C.text}}>{item.title}</span>
+                    </div>
+                    <span style={{fontSize:8,fontWeight:800,color:item.live?C.green:"#fbbf24",background:(item.live?C.green:"#fbbf24")+"18",border:"1px solid "+(item.live?C.green:"#fbbf24")+"44",borderRadius:20,padding:"2px 8px",whiteSpace:"nowrap"}}>{item.status}</span>
+                  </div>
+                  <div style={{fontSize:10,color:C.sub,lineHeight:1.5,marginBottom:6}}>{item.desc}</div>
+                  <div style={{fontSize:9,color:C.a3,fontWeight:700}}>{item.tier}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -3378,6 +3501,26 @@ ${pdfText.slice(0,24000)}`}]};
           {/* FULL HISTORY */}
           <div style={K()}>
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>📁 Full History — {allMoves.length} moves · {allW.length} weeks{helpBtn("fullHistory")}<button onClick={e=>{e.stopPropagation();toggleCard("fullHist");}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 4px",lineHeight:1,fontFamily:"inherit"}}>{isCollapsed("fullHist")?"▶":"▼"}</button></div>
+
+            {/* CSV EXPORT — Pro Smart feature, visible to Standard with padlock */}
+            <div style={{marginBottom:10}}>
+              {isSmart?(
+                <button onClick={function(){
+                  const dieselForExport=(liveData&&liveData.diesel)||fuelPrice||4.50;
+                  const mpgForExport=fuelMPG||5.2;
+                  const csv=buildFSCReportCSV(allMoves,scoreMove,dieselForExport,mpgForExport);
+                  const blob=new Blob([csv],{type:"text/csv"});
+                  const url=URL.createObjectURL(blob);
+                  const a=document.createElement("a");
+                  a.href=url;
+                  a.download="drayageiq-return-on-spend-fsc-report.csv";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }} style={{padding:"7px 14px",borderRadius:8,background:"linear-gradient(135deg,#4ade80,#22c55e)",border:"none",color:"#000",fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>📊 Export Return on Spend + True FSC Report (CSV)</button>
+              ):(
+                <button disabled style={{padding:"7px 14px",borderRadius:8,background:"#1f2937",border:"1px solid #333",color:"#6a7a8f",fontSize:10,fontWeight:700,cursor:"not-allowed",fontFamily:"inherit"}}>🔒 Export Return on Spend + True FSC Report (CSV) — Pro Smart</button>
+              )}
+            </div>
             {helpModal("fullHistory")}
             <div style={{display:isCollapsed("fullHist")?"none":"block",overflowX:"auto",overflowY:"auto",maxHeight:420,borderRadius:8,border:`1px solid ${C.border}`}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
