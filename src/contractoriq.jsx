@@ -1761,8 +1761,7 @@ ${pdfText.slice(0,24000)}`}]};
         <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",backdropFilter:"blur(4px)"}}>
           <div style={{background:C.card,borderRadius:24,padding:"28px 22px",maxWidth:420,width:"100%",border:`1px solid ${C.border}`,boxShadow:"0 32px 80px rgba(0,0,0,0.9)"}}>
             <div style={{textAlign:"center",marginBottom:20}}>
-              <div style={{fontSize:40,marginBottom:12}}>💰</div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:22,fontWeight:800,color:C.text,marginBottom:8}}>About DrayageIQ</div>
+              <img src={LOGO_BANNER} alt="DrayageIQ" style={{width:"100%",maxWidth:360,height:"auto",borderRadius:10,marginBottom:14}}/>
               <div style={{fontSize:11,color:C.sub,lineHeight:1.8,marginBottom:10}}>Your personal profit analyst — built for every gig worker who deserves to know the truth about their business.</div>
               <div style={{display:"inline-block",padding:"4px 12px",borderRadius:20,background:C.accent+"15",border:"1px solid "+C.accent+"33",fontSize:10,fontWeight:700,color:C.accent}}>Version {APP_VERSION} · {APP_VERSION_DATE}</div>
             </div>
