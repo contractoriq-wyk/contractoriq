@@ -544,6 +544,8 @@ export default function ContractorIQv26(){
   const [showSettings,setShowSettings]=useState(false);
   const [showDigestModal,setShowDigestModal]=useState(false);
   const [showRoadmap,setShowRoadmap]=useState(false);
+  const [showReferrals,setShowReferrals]=useState(false);
+  const [referralCopied,setReferralCopied]=useState(false);
   const [showMenu,setShowMenu]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
   const [showInsurance,setShowInsurance]=useState(false);
@@ -594,6 +596,13 @@ export default function ContractorIQv26(){
   // the backend sending service (Twilio or similar) is wired up.
   const [digestOptIn,setDigestOptIn]=useState(false);
   const [digestPhone,setDigestPhone]=useState("");
+  // Referral system — generates a stable code per user, tracked in Supabase.
+  // Actually GRANTING the free month on Stripe requires a server-side webhook
+  // (when a referred signup converts to paid), which is backend work beyond
+  // this file — the code below builds the code, link, and tracking UI, ready
+  // for that backend to plug into once built.
+  const [referralCode,setReferralCode]=useState("");
+  const [referredSignups,setReferredSignups]=useState([]);// [{email, signupDate, status:"trial"|"paid"|"expired"}]
   const [expenses,setExpenses]=useState(()=>{try{const s=localStorage.getItem("ciq_expenses");return s?JSON.parse(s):[];}catch{return[];}});
   const [showExpenseForm,setShowExpenseForm]=useState(false);
   const [expForm,setExpForm]=useState({date:"",category:"Parts",desc:"",amount:"",note:"",weekRef:""});
@@ -805,6 +814,14 @@ export default function ContractorIQv26(){
           if(d.featureTokens)setFeatureTokens(d.featureTokens);// Pro Smart free-trial tokens, synced so switching devices can't reset the 31-day cycle
           if(d.digestOptIn!==undefined)setDigestOptIn(d.digestOptIn);
           if(d.digestPhone)setDigestPhone(d.digestPhone);
+          if(d.referralCode)setReferralCode(d.referralCode);
+          if(d.referredSignups)setReferredSignups(d.referredSignups);
+        }
+        // Generate a stable referral code if this user doesn't have one yet.
+        // Format: first 6 chars of their user ID, uppercased — short, unique, easy to share.
+        if(!(d&&d.referralCode)){
+          const generatedCode=user.id.replace(/-/g,"").slice(0,6).toUpperCase();
+          setReferralCode(generatedCode);
         }
         // Set tier from Supabase plan column
         const plan=data?.plan||"free";
@@ -833,7 +850,7 @@ export default function ContractorIQv26(){
     if(!user||!cloudLoaded) return;
     const c=getSB();
     if(!c){setSyncStatus("error");setSyncError("Cloud connection unavailable");return;}
-    const blob={addedW,profile,expenses,docs,reviews,fuelFillups,featureTokens,digestOptIn,digestPhone};
+    const blob={addedW,profile,expenses,docs,reviews,fuelFillups,featureTokens,digestOptIn,digestPhone,referralCode,referredSignups};
     setSyncStatus("saving");
     const t=setTimeout(()=>{
       c.from("user_data").upsert({user_id:user.id,data:blob,updated_at:new Date().toISOString()})
@@ -853,7 +870,7 @@ export default function ContractorIQv26(){
         });
     },1500);
     return ()=>clearTimeout(t);
-  },[addedW,profile,expenses,docs,reviews,fuelFillups,featureTokens,digestOptIn,digestPhone,user,cloudLoaded]);
+  },[addedW,profile,expenses,docs,reviews,fuelFillups,featureTokens,digestOptIn,digestPhone,referralCode,referredSignups,user,cloudLoaded]);
 
   const baseW=[];// W is empty now — all real data comes from Supabase via addedW, same on every device
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
@@ -1477,6 +1494,8 @@ ${pdfText.slice(0,24000)}`}]};
               {icon:"💬",step:"Weekly Digest — Coming Soon",path:"smart",title:"Your Numbers, Sent Straight to Your Phone",body:"In Menu → Weekly Digest, Pro Smart users can already turn this on and save a phone number. Once fully live, you'll get a short WhatsApp or SMS message every week with your net pay, RPM, and any True FSC gap worth knowing — no need to open the app to stay on top of your numbers.",tip:"🔒 This feature is in active development. Your preference is saved now and will activate automatically the moment it launches — no extra setup needed later.",action:"Next →"},
 
               {icon:"🗺️",step:"See What's Coming Next",path:"all",title:"We Build in the Open",body:"Tap ≡ Menu → What's Coming Next anytime to see a live roadmap of features we're actively building — what's already shipped, what's in testing, and what's planned. We'd rather show you the real progress than surprise you with a locked feature you didn't know was coming.",tip:"💡 Have an idea for what we should build next? Message us on WhatsApp Support — we read every suggestion.",action:"Next →"},
+
+              {icon:"🚀",step:"Invite a Driver",path:"all",title:"Get a Free Month — Share DrayageIQ",body:"In Menu → Invite a Driver, you'll find your own personal referral link. Share it with another driver — when they sign up, they get a free month of Pro Smart. Once they subscribe to any paid plan, YOU get a free month of your current plan too.",tip:"🔒 Automatic reward crediting is still in development — your link works and referrals are tracked now, but the free month is applied manually for the moment. Full automation is coming soon.",action:"Next →"},
 
               {icon:"🎁",step:"Try Any Pro Smart Feature Free",path:"all",title:"One Free Trial Every 31 Days — Per Feature",body:"Every Pro Smart feature is fully visible on Standard, never hidden. Tap any locked feature and you'll see '🎁 Use My Free Trial' — one free use, no card required, no commitment. Each feature has its own independent 31-day cycle, so trying the Fuel Surcharge Calculator today doesn't use up your trial for Return on Spend.",tip:"💡 This isn't a countdown trial that expires — it renews every 31 days, forever, feature by feature. Use it whenever it's useful to you.",action:"Next →"},
 
@@ -2163,6 +2182,7 @@ ${pdfText.slice(0,24000)}`}]};
                   {/* ── ACCOUNT ── */}
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Account</div>
                   <button onClick={()=>{setShowProfile(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>👤</span><span>My Profile</span></button>
+                  <button onClick={()=>{setShowReferrals(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"linear-gradient(135deg,#4ade8015,#00ffcc15)",border:"1px solid #4ade8044",color:"#4ade80",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",justifyContent:"space-between",fontWeight:700}}><span style={{display:"flex",alignItems:"center",gap:8}}><span>🚀</span><span>Invite a Driver — Get a Free Month</span></span></button>
                   <button onClick={()=>{setShowWelcome(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(0,255,204,0.08)",border:"1px solid rgba(0,255,204,0.25)",color:"#00ffcc",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700}}><span>💎</span><span>View Plans & Pricing</span></button>
                   <button onClick={()=>{doLogout();setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:`${C.red}12`,border:`1px solid ${C.red}33`,color:C.red,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🚪</span><span>Sign Out</span></button>
 
@@ -2271,6 +2291,52 @@ ${pdfText.slice(0,24000)}`}]};
         </div>
       )}
 
+      {/* REFERRAL SYSTEM — visible to ALL tiers, per your original plan */}
+      {showReferrals&&(
+        <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div><div style={{fontSize:12,fontWeight:700,color:C.text}}>🚀 Invite a Driver</div><div style={{fontSize:10,color:C.sub,marginTop:2}}>Both of you get a free month when they subscribe</div></div>
+            <button onClick={()=>setShowReferrals(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
+          </div>
+          <div style={{background:C.card,borderRadius:11,padding:"14px",border:`1px solid ${C.border}`,maxWidth:480}}>
+            {user?(
+              <div>
+                <div style={{padding:"10px 12px",borderRadius:9,background:"linear-gradient(135deg,#4ade8012,#00ffcc12)",border:"1px solid #4ade8033",marginBottom:12}}>
+                  <div style={{fontSize:9,color:C.sub,marginBottom:6}}>HOW IT WORKS</div>
+                  <div style={{fontSize:10,color:C.text,lineHeight:1.6}}>1. Share your link below with another driver<br/>2. They sign up and get <strong style={{color:"#4ade80"}}>1 free month of Pro Smart</strong><br/>3. Once they subscribe to any paid plan, you get <strong style={{color:"#4ade80"}}>1 free month of your current plan</strong></div>
+                </div>
+                <div style={{fontSize:9,color:C.sub,marginBottom:4}}>YOUR REFERRAL LINK</div>
+                <div style={{display:"flex",gap:6,marginBottom:12}}>
+                  <input readOnly value={"getdrayageiq.com/?ref="+referralCode} style={{flex:1,padding:"9px 10px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"monospace"}}/>
+                  <button onClick={function(){
+                    navigator.clipboard.writeText("https://getdrayageiq.com/?ref="+referralCode).then(function(){
+                      setReferralCopied(true);
+                      setTimeout(function(){setReferralCopied(false);},2500);
+                    });
+                  }} style={{padding:"9px 16px",borderRadius:7,background:referralCopied?"#4ade8022":C.accent+"22",border:"1px solid "+(referralCopied?"#4ade80":C.accent)+"55",color:referralCopied?"#4ade80":C.accent,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>{referralCopied?"✓ Copied!":"Copy Link"}</button>
+                </div>
+                <div style={{fontSize:9,color:C.sub,marginBottom:8}}>YOUR REFERRALS ({referredSignups.length})</div>
+                {referredSignups.length===0?(
+                  <div style={{textAlign:"center",padding:"16px",color:C.sub,fontSize:10}}>No referrals yet — share your link above to get started</div>
+                ):(
+                  referredSignups.map(function(r,i){
+                    return(
+                      <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:C.bg,borderRadius:7,border:`1px solid ${C.border}`,marginBottom:6}}>
+                        <span style={{fontSize:10,color:C.text}}>{r.email}</span>
+                        <span style={{fontSize:9,fontWeight:700,color:r.status==="paid"?"#4ade80":r.status==="trial"?"#fbbf24":C.sub}}>{r.status==="paid"?"✅ Paid — reward earned":r.status==="trial"?"⏳ On free trial":"Expired"}</span>
+                      </div>
+                    );
+                  })
+                )}
+                <div style={{fontSize:8,color:"#fbbf24",fontWeight:700,marginTop:10,textAlign:"center"}}>🧪 Reward crediting is in active development — your link and referrals are tracked now and ready the moment it fully launches.</div>
+              </div>
+            ):(
+              <div style={{textAlign:"center",padding:"12px 4px",color:C.sub,fontSize:11}}>Sign in to get your personal referral link.</div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* WEEKLY DIGEST — Pro Smart feature, visible to Standard with padlock */}
       {showDigestModal&&(
         <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px"}}>
@@ -2318,7 +2384,7 @@ ${pdfText.slice(0,24000)}`}]};
               {icon:"📸",title:"Shareable Results Card",tier:"Pro Smart",status:"In Testing",desc:"Turn any Fuel Surcharge Calculator result into a clean, branded image to post or share — proof of your real numbers, ready in one tap."},
               {icon:"📊",title:"CSV Export — Return on Spend + True FSC",tier:"Pro Smart",status:"Live Now",desc:"Download your full move history with fair-market FSC comparisons — hand it to a broker, lawyer, or your own records.",live:true},
               {icon:"💬",title:"Weekly Digest (WhatsApp/SMS)",tier:"Pro Smart",status:"In Development",desc:"Your weekly net, RPM, and True FSC gap sent straight to your phone automatically — no need to open the app to stay informed."},
-              {icon:"🚀",title:"Referral Rewards",tier:"All Tiers",status:"Planned",desc:"Invite another driver, you both get a free month — rewarding the community that helps DrayageIQ grow."},
+              {icon:"🚀",title:"Referral Rewards",tier:"All Tiers",status:"In Development",desc:"Invite another driver, you both get a free month — your unique link and referral tracking are live now in Menu → Invite a Driver. Automatic reward crediting is coming next."},
               {icon:"🏢",title:"Enterprise Fleet (11+ trucks)",tier:"Fleet",status:"Available on Request",desc:"Custom pricing and dedicated support for larger fleet operations. Message us directly to discuss your setup."},
             ].map(function(item,i){
               return(
