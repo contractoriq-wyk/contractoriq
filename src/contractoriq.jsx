@@ -752,6 +752,13 @@ export default function ContractorIQv26(){
 
   // ═══ AUTH + CLOUD SYNC ═══
   const [user,setUser]=useState(null);
+  // ═══ DEV MODE AUTO-LOGIN ═══
+  // On the navy dev domain only, silently sign into a FIXED dedicated dev
+  // account so testing data gets real cloud backup with zero login friction.
+  // This never runs on the real production site — isOwnerMode gates it.
+  const DEV_ACCOUNT_EMAIL="dev-testing@getdrayageiq.com";
+  const DEV_ACCOUNT_PASSWORD="DrayageIQ-Dev-2026-Internal-Testing-Only";
+  const [devAutoLoginTried,setDevAutoLoginTried]=useState(false);
   const [authChecked,setAuthChecked]=useState(false);
   const [authEmail,setAuthEmail]=useState("");
   const [authSent,setAuthSent]=useState(false);
@@ -794,6 +801,34 @@ export default function ContractorIQv26(){
     try{localStorage.removeItem("ciq_welcome_done");}catch(e){}
     setShowWelcome(true);
   };
+
+  // Dev Mode auto-login effect — signs into the fixed dev account silently,
+  // so dev/navy testing gets real Supabase cloud backup with no login step.
+  // Runs once per session; if the account doesn't exist yet, creates it.
+  useEffect(function(){
+    if(!isOwnerMode)return;// production users NEVER trigger this
+    if(user)return;// already logged in (e.g. real account for other testing)
+    if(devAutoLoginTried)return;
+    const c=getSB();
+    if(!c)return;
+    setDevAutoLoginTried(true);
+    (async function(){
+      try{
+        const {data,error}=await c.auth.signInWithPassword({email:DEV_ACCOUNT_EMAIL,password:DEV_ACCOUNT_PASSWORD});
+        if(error){
+          // Account may not exist yet on first-ever dev session — create it once.
+          const {error:signUpErr}=await c.auth.signUp({email:DEV_ACCOUNT_EMAIL,password:DEV_ACCOUNT_PASSWORD});
+          if(!signUpErr){
+            await c.auth.signInWithPassword({email:DEV_ACCOUNT_EMAIL,password:DEV_ACCOUNT_PASSWORD});
+          }else{
+            console.error("Dev auto-login: could not create dev account",signUpErr.message);
+          }
+        }
+      }catch(e){
+        console.error("Dev auto-login failed",e);
+      }
+    })();
+  },[isOwnerMode,user,devAutoLoginTried]);
 
   // Pull cloud data after login
   useEffect(()=>{
@@ -2115,7 +2150,7 @@ ${pdfText.slice(0,24000)}`}]};
                 {user&&syncStatus==="saved"&&<span style={{color:C.green,fontWeight:700,fontSize:9}}>✅ Data saved{lastSyncTime?" "+lastSyncTime.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""}</span>}
                 {user&&syncStatus==="saving"&&<span style={{color:C.gold,fontWeight:700,fontSize:9}}>⏳ Saving...</span>}
                 {user&&syncStatus==="error"&&<span style={{color:C.red,fontWeight:800,fontSize:9}}>⚠️ NOT SAVED — tap Menu</span>}
-                {!user&&isOwnerMode&&<span style={{color:C.sub,fontWeight:700,fontSize:9}}>⚠️ Dev Mode — no cloud backup</span>}
+                {!user&&isOwnerMode&&<span style={{color:C.gold,fontWeight:700,fontSize:9}}>⏳ Dev Mode — connecting cloud backup...</span>}
               </div>
             </div>
           </div>
