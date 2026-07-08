@@ -803,41 +803,18 @@ export default function ContractorIQv26(){
     setShowWelcome(true);
   };
 
-  // Dev Mode auto-login effect — signs into the fixed dev account silently,
-  // so dev/navy testing gets real Supabase cloud backup with no login step.
-  // Runs once per session; if the account doesn't exist yet, creates it.
+  // Dev Mode cloud backup — NO Supabase Auth involved at all (avoids the
+  // email rate-limits and confirmation requirements we hit trying auth-based
+  // login). Instead, dev sessions write directly to user_data using a FIXED,
+  // constant user_id string. This is not a security-sensitive path — it only
+  // ever activates on the navy dev domain, and the "account" is a synthetic
+  // object, never a real Supabase Auth session.
+  const DEV_FIXED_USER_ID="00000000-0000-0000-0000-000000000dev";
   useEffect(function(){
     if(!isOwnerMode)return;// production users NEVER trigger this
-    if(user)return;// already logged in (e.g. real account for other testing)
-    if(devAutoLoginTried)return;
-    const c=getSB();
-    if(!c)return;
-    setDevAutoLoginTried(true);
-    (async function(){
-      try{
-        const {data,error}=await c.auth.signInWithPassword({email:DEV_ACCOUNT_EMAIL,password:DEV_ACCOUNT_PASSWORD});
-        if(error){
-          setDevAutoLoginError("Sign-in failed: "+error.message);
-          // Account may not exist yet on first-ever dev session — create it once.
-          const {error:signUpErr}=await c.auth.signUp({email:DEV_ACCOUNT_EMAIL,password:DEV_ACCOUNT_PASSWORD});
-          if(!signUpErr){
-            const {error:retryErr}=await c.auth.signInWithPassword({email:DEV_ACCOUNT_EMAIL,password:DEV_ACCOUNT_PASSWORD});
-            if(retryErr){
-              setDevAutoLoginError("Sign-in after signup failed: "+retryErr.message);
-            }else{
-              setDevAutoLoginError("");
-            }
-          }else{
-            setDevAutoLoginError("Signup failed: "+signUpErr.message);
-          }
-        }else{
-          setDevAutoLoginError("");
-        }
-      }catch(e){
-        setDevAutoLoginError("Exception: "+(e&&e.message?e.message:String(e)));
-      }
-    })();
-  },[isOwnerMode,user,devAutoLoginTried]);
+    if(user)return;// a real logged-in account takes priority if present
+    setUser({id:DEV_FIXED_USER_ID,email:"Dev Mode (local testing account)"});
+  },[isOwnerMode,user]);
 
   // Pull cloud data after login
   useEffect(()=>{
