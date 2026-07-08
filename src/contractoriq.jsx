@@ -756,7 +756,7 @@ export default function ContractorIQv26(){
   // On the navy dev domain only, silently sign into a FIXED dedicated dev
   // account so testing data gets real cloud backup with zero login friction.
   // This never runs on the real production site — isOwnerMode gates it.
-  const DEV_ACCOUNT_EMAIL="dev-testing@getdrayageiq.com";
+  const DEV_ACCOUNT_EMAIL="hello+devtest@getdrayageiq.com";
   const DEV_ACCOUNT_PASSWORD="DrayageIQ-Dev-2026-Internal-Testing-Only";
   const [devAutoLoginTried,setDevAutoLoginTried]=useState(false);
   const [devAutoLoginError,setDevAutoLoginError]=useState("");
