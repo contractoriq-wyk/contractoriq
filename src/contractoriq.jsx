@@ -759,7 +759,6 @@ export default function ContractorIQv26(){
   const DEV_ACCOUNT_EMAIL="hello+devtest@getdrayageiq.com";
   const DEV_ACCOUNT_PASSWORD="DrayageIQ-Dev-2026-Internal-Testing-Only";
   const [devAutoLoginTried,setDevAutoLoginTried]=useState(false);
-  const [devAutoLoginError,setDevAutoLoginError]=useState("");
   const [authChecked,setAuthChecked]=useState(false);
   const [authEmail,setAuthEmail]=useState("");
   const [authSent,setAuthSent]=useState(false);
@@ -811,18 +810,14 @@ export default function ContractorIQv26(){
     setShowWelcome(true);
   };
 
-  // Dev Mode cloud backup — NO Supabase Auth involved at all (avoids the
-  // email rate-limits and confirmation requirements we hit trying auth-based
-  // login). Instead, dev sessions write directly to user_data using a FIXED,
-  // constant user_id string. This is not a security-sensitive path — it only
-  // ever activates on the navy dev domain, and the "account" is a synthetic
-  // object, never a real Supabase Auth session.
-  const DEV_FIXED_USER_ID="00000000-0000-0000-0000-000000000001";// valid UUID format (hex digits only) — required by Postgres uuid column type
-  useEffect(function(){
-    if(!isOwnerMode)return;// production users NEVER trigger this
-    if(user)return;// a real logged-in account takes priority if present
-    setUser({id:DEV_FIXED_USER_ID,email:"Dev Mode (local testing account)"});
-  },[isOwnerMode,user]);
+  // Dev Mode: intentionally stays localStorage-only, no cloud backup.
+  // We tried a fixed synthetic user_id to enable cloud sync without login,
+  // but Supabase's Row-Level Security correctly rejects writes without a
+  // genuine authenticated session — and we decided NOT to weaken that
+  // security just for dev convenience. Dev-mode data safely persists in
+  // the browser's localStorage exactly as it always has; just remember to
+  // periodically export or re-enter important test data, since it has no
+  // cloud redundancy the way a real logged-in account does.
 
   // Pull cloud data after login
   useEffect(()=>{
@@ -2144,11 +2139,7 @@ ${pdfText.slice(0,24000)}`}]};
                 {user&&syncStatus==="saved"&&<span style={{color:C.green,fontWeight:700,fontSize:9}}>✅ Data saved{lastSyncTime?" "+lastSyncTime.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""}</span>}
                 {user&&syncStatus==="saving"&&<span style={{color:C.gold,fontWeight:700,fontSize:9}}>⏳ Saving...</span>}
                 {user&&syncStatus==="error"&&<span style={{color:C.red,fontWeight:800,fontSize:9}}>⚠️ NOT SAVED — tap Menu</span>}
-                {!user&&isOwnerMode&&(
-                  <span style={{color:devAutoLoginError?C.red:C.gold,fontWeight:700,fontSize:9}}>
-                    {devAutoLoginError?"⚠️ "+devAutoLoginError:"⏳ Dev Mode — connecting cloud backup..."}
-                  </span>
-                )}
+                {!user&&isOwnerMode&&<span style={{color:C.sub,fontWeight:700,fontSize:9}}>⚠️ Dev Mode — no cloud backup</span>}
               </div>
             </div>
           </div>
