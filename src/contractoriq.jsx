@@ -777,8 +777,16 @@ export default function ContractorIQv26(){
   useEffect(()=>{
     const c=getSB();
     if(!c){ setAuthChecked(true); return; }
-    c.auth.getSession().then(({data})=>{ setUser(data.session?.user||null); setAuthChecked(true); });
-    const {data:sub}=c.auth.onAuthStateChange((_e,session)=>{ setUser(session?.user||null); });
+    c.auth.getSession().then(({data})=>{
+      // Only overwrite with null if we're NOT in owner/dev mode — otherwise
+      // this would stomp on the synthetic dev user the moment the page loads,
+      // since Supabase always reports "no session" for the fake dev account.
+      if(data.session?.user||!isOwnerMode)setUser(data.session?.user||null);
+      setAuthChecked(true);
+    });
+    const {data:sub}=c.auth.onAuthStateChange((_e,session)=>{
+      if(session?.user||!isOwnerMode)setUser(session?.user||null);
+    });
     return ()=>{ try{sub.subscription.unsubscribe();}catch(e){} };
   },[]);
 
