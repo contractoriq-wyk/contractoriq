@@ -817,7 +817,7 @@ export default function ContractorIQv26(){
   // constant user_id string. This is not a security-sensitive path — it only
   // ever activates on the navy dev domain, and the "account" is a synthetic
   // object, never a real Supabase Auth session.
-  const DEV_FIXED_USER_ID="00000000-0000-0000-0000-000000000dev";
+  const DEV_FIXED_USER_ID="00000000-0000-0000-0000-000000000001";// valid UUID format (hex digits only) — required by Postgres uuid column type
   useEffect(function(){
     if(!isOwnerMode)return;// production users NEVER trigger this
     if(user)return;// a real logged-in account takes priority if present
