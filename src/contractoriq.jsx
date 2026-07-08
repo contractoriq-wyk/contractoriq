@@ -759,6 +759,7 @@ export default function ContractorIQv26(){
   const DEV_ACCOUNT_EMAIL="dev-testing@getdrayageiq.com";
   const DEV_ACCOUNT_PASSWORD="DrayageIQ-Dev-2026-Internal-Testing-Only";
   const [devAutoLoginTried,setDevAutoLoginTried]=useState(false);
+  const [devAutoLoginError,setDevAutoLoginError]=useState("");
   const [authChecked,setAuthChecked]=useState(false);
   const [authEmail,setAuthEmail]=useState("");
   const [authSent,setAuthSent]=useState(false);
@@ -816,16 +817,24 @@ export default function ContractorIQv26(){
       try{
         const {data,error}=await c.auth.signInWithPassword({email:DEV_ACCOUNT_EMAIL,password:DEV_ACCOUNT_PASSWORD});
         if(error){
+          setDevAutoLoginError("Sign-in failed: "+error.message);
           // Account may not exist yet on first-ever dev session — create it once.
           const {error:signUpErr}=await c.auth.signUp({email:DEV_ACCOUNT_EMAIL,password:DEV_ACCOUNT_PASSWORD});
           if(!signUpErr){
-            await c.auth.signInWithPassword({email:DEV_ACCOUNT_EMAIL,password:DEV_ACCOUNT_PASSWORD});
+            const {error:retryErr}=await c.auth.signInWithPassword({email:DEV_ACCOUNT_EMAIL,password:DEV_ACCOUNT_PASSWORD});
+            if(retryErr){
+              setDevAutoLoginError("Sign-in after signup failed: "+retryErr.message);
+            }else{
+              setDevAutoLoginError("");
+            }
           }else{
-            console.error("Dev auto-login: could not create dev account",signUpErr.message);
+            setDevAutoLoginError("Signup failed: "+signUpErr.message);
           }
+        }else{
+          setDevAutoLoginError("");
         }
       }catch(e){
-        console.error("Dev auto-login failed",e);
+        setDevAutoLoginError("Exception: "+(e&&e.message?e.message:String(e)));
       }
     })();
   },[isOwnerMode,user,devAutoLoginTried]);
@@ -2150,7 +2159,11 @@ ${pdfText.slice(0,24000)}`}]};
                 {user&&syncStatus==="saved"&&<span style={{color:C.green,fontWeight:700,fontSize:9}}>✅ Data saved{lastSyncTime?" "+lastSyncTime.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""}</span>}
                 {user&&syncStatus==="saving"&&<span style={{color:C.gold,fontWeight:700,fontSize:9}}>⏳ Saving...</span>}
                 {user&&syncStatus==="error"&&<span style={{color:C.red,fontWeight:800,fontSize:9}}>⚠️ NOT SAVED — tap Menu</span>}
-                {!user&&isOwnerMode&&<span style={{color:C.gold,fontWeight:700,fontSize:9}}>⏳ Dev Mode — connecting cloud backup...</span>}
+                {!user&&isOwnerMode&&(
+                  <span style={{color:devAutoLoginError?C.red:C.gold,fontWeight:700,fontSize:9}}>
+                    {devAutoLoginError?"⚠️ "+devAutoLoginError:"⏳ Dev Mode — connecting cloud backup..."}
+                  </span>
+                )}
               </div>
             </div>
           </div>
