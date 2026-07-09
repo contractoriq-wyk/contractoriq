@@ -544,18 +544,6 @@ export default function ContractorIQv26(){
   const [showSettings,setShowSettings]=useState(false);
   const [showDigestModal,setShowDigestModal]=useState(false);
   const [showRoadmap,setShowRoadmap]=useState(false);
-  // TEMPORARY diagnostic panel — read-only inspection of localStorage to
-  // recover data that may still be sitting locally after a login overwrote
-  // the in-memory state. Only activates with ?debug=fuellog in the URL.
-  const showDebugPanel=typeof window!=="undefined"&&window.location.search.includes("debug=fuellog");
-  const [debugRawFuelLog]=useState(function(){
-    try{
-      const raw=localStorage.getItem("ciq_fuel_fillups");
-      return raw||"(nothing found in localStorage under this key)";
-    }catch(e){
-      return "Error reading localStorage: "+e.message;
-    }
-  });
   const [showReferrals,setShowReferrals]=useState(false);
   const [showDevSignIn,setShowDevSignIn]=useState(false);// dev-mode only — lets you check your REAL account from the testing site
   const [referralCopied,setReferralCopied]=useState(false);
@@ -2008,14 +1996,6 @@ ${pdfText.slice(0,24000)}`}]};
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* TEMPORARY DEBUG PANEL — shows raw localStorage fuel log data, read-only */}
-      {showDebugPanel&&(
-        <div style={{background:"#000",border:"3px solid #f87171",padding:"14px",margin:"10px",borderRadius:10}}>
-          <div style={{color:"#f87171",fontWeight:800,fontSize:13,marginBottom:8}}>🔍 DEBUG: Raw localStorage "ciq_fuel_fillups" content</div>
-          <div style={{color:"#4ade80",fontSize:10,fontFamily:"monospace",whiteSpace:"pre-wrap",wordBreak:"break-all",maxHeight:300,overflowY:"auto",background:"#111",padding:10,borderRadius:6}}>{debugRawFuelLog}</div>
         </div>
       )}
 
