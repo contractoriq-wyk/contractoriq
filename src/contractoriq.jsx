@@ -29,7 +29,7 @@ class FSCErrorBoundary extends React.Component {
 
 // ═══ BRAND ASSETS (DrayageIQ) ═══
 const LOGO_HERO="/images/logo-hero.png";
-const LOGO_BANNER="/images/logo-banner.jpg";
+const LOGO_BANNER="/images/logo-banner.png";
 const LOGO_ICON="/images/logo-icon.png";
 
 // ═══ PRICING (swap these at launch — single source of truth) ═══
@@ -2139,7 +2139,7 @@ ${pdfText.slice(0,24000)}`}]};
       <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"13px 16px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:11}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <img src={LOGO_ICON} alt="DrayageIQ" style={{width:52,height:52,borderRadius:11,flexShrink:0,boxShadow:"0 0 16px rgba(0,255,204,0.3)"}}/>
+            <img src={LOGO_ICON} alt="DrayageIQ" style={{width:52,height:52,flexShrink:0,filter:"drop-shadow(0 0 8px rgba(0,255,204,0.4))"}}/>
             <div>
               <div style={{fontFamily:"'Space Grotesk',sans-serif",fontWeight:800,fontSize:15,background:"linear-gradient(135deg,#ffffff,#a5f3fc,#c4b5fd)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>DrayageIQ</div>
               <div style={{fontSize:10,color:C.sub,display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
