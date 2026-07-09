@@ -87,17 +87,25 @@ function FuelSurchargeCalculator(props){
   const [rate,setRate]=useState("");
   const [miles,setMiles]=useState("");
   const [shareImgUrl,setShareImgUrl]=useState(null);
+  // Baseline diesel price is now ADJUSTABLE, not hardcoded, and SHARED with
+  // the True FSC audit column (Full History table) via props — so setting
+  // it once here keeps everything consistent app-wide. Different carriers
+  // use different baselines in their own FSC formulas (confirmed by comparing
+  // against a real carrier's published FSC table, which used a materially
+  // different methodology than a fixed $2.50 assumption).
+  const baselinePrice=String(props.sharedBaseline);
+  const setBaselinePrice=function(v){props.setSharedBaseline(parseFloat(v)||0);};
 
   const rateNum=parseFloat(rate);
   const milesNum=parseFloat(miles);
-  const validInput=!isNaN(rateNum)&&!isNaN(milesNum)&&milesNum>0&&rateNum>0;
+  const baselineNum=parseFloat(baselinePrice);
+  const validInput=!isNaN(rateNum)&&!isNaN(milesNum)&&milesNum>0&&rateNum>0&&!isNaN(baselineNum)&&baselineNum>=0;
   let ratePerMile=0;
   let fscPct=0;
   let fscDollar=0;
   if(validInput){
     ratePerMile=rateNum/milesNum;
-    const baselinePrice=2.50;
-    const extraCostPerMile=Math.max(0,(dieselPrice-baselinePrice)/mpg);
+    const extraCostPerMile=Math.max(0,(dieselPrice-baselineNum)/mpg);
     fscPct=(extraCostPerMile/ratePerMile)*100;
     fscDollar=extraCostPerMile*milesNum;// the actual $ to add to the quote, not just the %
   }
@@ -130,6 +138,18 @@ function FuelSurchargeCalculator(props){
           />
         </div>
       </div>
+      <div style={{marginBottom:10}}>
+        <div style={styles.label}>BASELINE DIESEL PRICE ($/gal)</div>
+        <input
+          type="text"
+          inputMode="decimal"
+          value={baselinePrice}
+          onChange={function(e){setBaselinePrice(e.target.value);}}
+          placeholder="2.50"
+          style={styles.input}
+        />
+        <div style={{fontSize:8,color:"#8fa3c0",marginTop:4,lineHeight:1.5}}>💡 Every carrier sets their own baseline in their FSC contract. Check your carrier's FSC schedule (often emailed or posted by your terminal) and enter their exact baseline here for the most accurate comparison. Defaults to $2.50 if you don't know it.</div>
+      </div>
       <div style={styles.resultBox}>
         <div style={styles.resultRow}>
           <span>Live diesel: ${dieselPrice.toFixed(2)}/gal</span>
@@ -139,7 +159,7 @@ function FuelSurchargeCalculator(props){
         <div style={styles.fscLine}>Recommended FSC: {validInput?fscPct.toFixed(1):"0.0"}% <span style={styles.fscDollarStyle}>(${validInput?fscDollar.toFixed(2):"0.00"})</span></div>
         {validInput&&<div style={styles.totalLine}>Quote total: ${rateNum.toFixed(2)} + ${fscDollar.toFixed(2)} FSC = <span style={{fontWeight:800,color:"#e5ecf5"}}>${(rateNum+fscDollar).toFixed(2)}</span></div>}
       </div>
-      <div style={styles.footnote}>💡 This accounts for today's diesel price and your real truck efficiency — private to your account.</div>
+      <div style={styles.footnote}>💡 This is an independent estimate based on live diesel price and your real MPG — a useful benchmark, but your carrier's own FSC table may use a different formula and won't always match exactly.</div>
       {validInput&&(
         <div style={{marginTop:12,paddingTop:12,borderTop:"1px dashed "+ (styles.shareBorder||"#333")}}>
           {!showShareFeature&&(
@@ -533,6 +553,12 @@ export default function ContractorIQv26(){
   const [scanForm,setScanForm]=useState({week:"",from:"",to:"",gross:"",net:"",deds:"",moves:""});
   const [vendorPick,setVendorPick]=useState("CPG");
   const [fuelMPG,setFuelMPG]=useState(5.2);
+  // Shared FSC baseline diesel price — adjustable, since every carrier sets
+  // their own baseline in their contract (confirmed against a real carrier's
+  // published FSC table, which used a materially different methodology than
+  // a fixed $2.50 assumption). Persisted so it's remembered across sessions.
+  const [fscBaselinePrice,setFscBaselinePrice]=useState(()=>{try{const s=localStorage.getItem("ciq_fsc_baseline");return s?parseFloat(s):2.50;}catch{return 2.50;}});
+  useEffect(()=>{try{localStorage.setItem("ciq_fsc_baseline",String(fscBaselinePrice));}catch(e){}},[fscBaselinePrice]);
   const [fuelPrice,setFuelPrice]=useState(6.22);
   const [mpgAutoSync,setMpgAutoSync]=useState(()=>{try{return localStorage.getItem("ciq_mpg_auto")!=="false";}catch{return true;}});
   useEffect(()=>{try{localStorage.setItem("ciq_mpg_auto",String(mpgAutoSync));}catch(e){}},[mpgAutoSync]);
@@ -1357,7 +1383,7 @@ ${pdfText.slice(0,24000)}`}]};
     ded_insurance:{t:"🛡️ Insurance Deductions",b:"These are your recurring insurance premiums deducted weekly: Physical Damage, Bobtail, Occupational Accident, Liability Limiter, and Roadside Assistance. These amounts should be the same every single week. If you see a different number, it may be a billing error — contact your carrier."},
     ded_ops:{t:"⚙️ Operations & Fees",b:"Recurring weekly operational fees: ELD device, Event Recorder, License Plate Program, Parking/Security, and Fuel Highway Taxes. These are mostly fixed costs of running your truck. Monitor these to catch any new fees your carrier adds."},
     ded_escrow:{t:"🏦 Escrow & Savings",b:"Money being held in escrow accounts. ESCROW-REGULAR builds toward your $2,500 target and is returned when you leave the carrier. 2290 ESCROW builds toward your Heavy Highway Vehicle Use Tax. These are YOUR money — they are saved, not spent."},
-    fscCalc:{t:"⛽ Fuel Surcharge Calculator",b:"Calculates a fair FSC percentage to quote a client, based on today's live diesel price and your real truck MPG — compared against a $2.50/gal baseline most linehaul rates assume. Enter the linehaul rate and miles for the load, and it shows the FSC% that fairly covers your actual fuel cost above baseline. This is a Pro Smart feature since it requires live diesel pricing."},
+    fscCalc:{t:"⛽ Fuel Surcharge Calculator",b:"Calculates an independent FSC benchmark based on today's live diesel price, your real truck MPG, and an adjustable baseline diesel price (defaults to $2.50, but you can change it to match your carrier's own baseline if you know it). This is an estimate for your own use — your carrier's actual FSC table may use a different formula and won't always match exactly. This is a Pro Smart feature since it requires live diesel pricing."},
     returnOnSpend:{t:"💰 Return on Spend",b:"For every $1 you spend running your truck (all deductions combined, net of any fuel rebate), how much revenue did you generate? A ratio of 1:3 or higher is IDEAL — you're producing $3+ for every dollar spent. A ratio of 1:1.5 is SAFE — you're still profiting 50 cents on every dollar. Below 1:1.5 means your costs are eating too much into your revenue."},
     health:{t:"Performance by Carrier",b:"Green is strong, gold is worth watching, red needs attention."},
     grades:{t:"Weekly Performance Grades",b:"Each week evaluated against your own history. Look for your best weeks and understand what made them different."},
@@ -1506,7 +1532,7 @@ ${pdfText.slice(0,24000)}`}]};
 
               {icon:"🩺",step:"GROWTH — Data Health",path:"smart",title:"Data Health: Trust Your Numbers",body:"At the top of the GROWTH tab, Data Health automatically scans EVERY week you've ever uploaded — not just the one you're viewing — checking if the extracted deduction totals match the settlement document. Shows '✅ All Clear' when everything's accurate, or lists exactly which weeks need attention and by how much.",tip:"💡 This is your safety net. Before you show your numbers to a lender or make a big decision based on your data, check Data Health first.",action:"Next →"},
 
-              {icon:"⛽",step:"Fuel Surcharge Calculator",path:"smart",title:"Quote FSC With Confidence — No Math Required",body:"In the Document Analyzer tab, enter any linehaul rate and miles for a load you're considering — even work outside your regular carrier. The calculator instantly shows the fair FSC% AND the actual dollar amount to add, plus your full quote total ready to say out loud to a client. It factors in today's live diesel price and your real truck MPG, so you're never stuck quoting a stale number as fuel prices move.",tip:"💡 This is for work you book yourself — direct clients, brokers, side loads. Your carrier settlements already show what they paid; this tool helps you set YOUR price with confidence.",action:"Next →"},
+              {icon:"⛽",step:"Fuel Surcharge Calculator",path:"smart",title:"Quote FSC With Confidence — No Math Required",body:"In the Document Analyzer tab, enter any linehaul rate and miles for a load you're considering — even work outside your regular carrier. The calculator instantly shows the fair FSC% AND the actual dollar amount to add, plus your full quote total ready to say out loud to a client. It factors in today's live diesel price, your real truck MPG, and a baseline diesel price you can adjust to match your own carrier's contract.",tip:"💡 Every carrier sets their own FSC baseline — check your carrier's FSC schedule and enter it in the calculator for the closest match. This tool gives you an independent, honest benchmark, not a guaranteed match to any specific carrier's table.",action:"Next →"},
 
               {icon:"🔎",step:"True FSC — Audit Your Vendor",path:"smart",title:"See If You're Being Paid Fairly",body:"In the Full History table (Document Analyzer tab), every move now shows two FSC columns: 'FSC Paid' (what your carrier actually gave you) and 'True FSC' (what a fair-market calculation says it should be, using the same live-diesel-price logic as the Calculator). Green means fair or generous. Red means you were underpaid on that specific move.",tip:"💡 Scroll through your history and look for patterns. If a route or vendor consistently shows red, that's real evidence to bring to a rate negotiation — or a signal to walk away from that lane.",action:"Next →"},
 
@@ -3547,6 +3573,8 @@ ${pdfText.slice(0,24000)}`}]};
                     dieselPrice={Number((liveData&&liveData.diesel)||fuelPrice||4.50)}
                     mpg={Number(fuelMPG||5.2)}
                     showShareFeature={isOwnerMode}
+                    sharedBaseline={fscBaselinePrice}
+                    setSharedBaseline={setFscBaselinePrice}
                     styles={{
                       card:K(),
                       title:{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6,color:C.text},
@@ -3664,8 +3692,7 @@ ${pdfText.slice(0,24000)}`}]};
                   let trueFscPct=0,trueFscDollar=0,fscDiff=0;
                   if(m.miles>0&&m.rate>0){
                     const rpmCheck=m.rate/m.miles;
-                    const baselinePriceCheck=2.50;
-                    const extraCostCheck=Math.max(0,(liveDieselForCheck-baselinePriceCheck)/mpgForCheck);
+                    const extraCostCheck=Math.max(0,(liveDieselForCheck-fscBaselinePrice)/mpgForCheck);
                     trueFscPct=(extraCostCheck/rpmCheck)*100;
                     trueFscDollar=extraCostCheck*m.miles;
                     fscDiff=m.fsc-trueFscDollar;
