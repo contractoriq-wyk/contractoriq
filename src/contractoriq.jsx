@@ -545,6 +545,7 @@ export default function ContractorIQv26(){
   const [showDigestModal,setShowDigestModal]=useState(false);
   const [showRoadmap,setShowRoadmap]=useState(false);
   const [showReferrals,setShowReferrals]=useState(false);
+  const [showDevSignIn,setShowDevSignIn]=useState(false);// dev-mode only — lets you check your REAL account from the testing site
   const [referralCopied,setReferralCopied]=useState(false);
   const [showMenu,setShowMenu]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
@@ -1998,6 +1999,13 @@ ${pdfText.slice(0,24000)}`}]};
         </div>
       )}
 
+      {/* DEV MODE BANNER — unmissable visual distinction from the real production site */}
+      {isOwnerMode&&(
+        <div style={{background:"repeating-linear-gradient(45deg,#fbbf24,#fbbf24 10px,#000 10px,#000 20px)",padding:"4px 0",textAlign:"center"}}>
+          <span style={{background:"#000",color:"#fbbf24",fontSize:10,fontWeight:800,padding:"2px 14px",borderRadius:20,letterSpacing:"0.05em"}}>🧪 DEV / TESTING SITE — not your real account</span>
+        </div>
+      )}
+
       {/* FLEET UPGRADE WELCOME — shown once after successful Stripe checkout redirect */}
       {showUpgradeWelcome&&(
         <div style={{background:"linear-gradient(135deg,#4ade8022,#00ffcc18)",borderBottom:"1px solid #4ade8055",padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
@@ -2187,6 +2195,11 @@ ${pdfText.slice(0,24000)}`}]};
                     {isOwnerMode&&realIsSmart&&(
                       <button onClick={function(){setPreviewAsStandard(function(p){return !p;});}} style={{width:"100%",padding:"6px 10px",borderRadius:7,background:previewAsStandard?"#fbbf2422":C.raised,border:"1px solid "+(previewAsStandard?"#fbbf2455":C.border),color:previewAsStandard?"#fbbf24":C.sub,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:4}}>
                         {previewAsStandard?"👁 Previewing Standard — tap to return to Pro Smart view":"🔍 Dev: Preview as Standard tier"}
+                      </button>
+                    )}
+                    {isOwnerMode&&!user&&(
+                      <button onClick={function(){setShowDevSignIn(true);}} style={{width:"100%",padding:"6px 10px",borderRadius:7,background:"#00ffcc12",border:"1px solid #00ffcc33",color:"#00ffcc",fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:4}}>
+                        🔑 Sign in to check my real account
                       </button>
                     )}
                     {/* REAL sync status — not a static label. Shows actual save state. */}
@@ -2389,6 +2402,33 @@ ${pdfText.slice(0,24000)}`}]};
                 <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:4}}>Weekly Digest — Pro Smart Feature</div>
                 <div style={{fontSize:9,color:C.sub,marginBottom:10}}>Automatic weekly summaries sent to your phone, so you always know your numbers without opening the app.</div>
                 <button onClick={()=>openUpgrade("digest")} style={{padding:"7px 16px",borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Upgrade to Pro Smart →</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* DEV SIGN-IN — lets you check your REAL account without leaving the testing site */}
+      {showDevSignIn&&(
+        <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div><div style={{fontSize:12,fontWeight:700,color:C.text}}>🔑 Sign In to Your Real Account</div><div style={{fontSize:10,color:C.sub,marginTop:2}}>Check your actual data from this testing site</div></div>
+            <button onClick={()=>setShowDevSignIn(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
+          </div>
+          <div style={{background:C.card,borderRadius:11,padding:"14px",border:`1px solid ${C.border}`,maxWidth:420}}>
+            <div style={{fontSize:9,color:"#fbbf24",fontWeight:700,marginBottom:10,padding:"8px 10px",background:"#fbbf2412",borderRadius:7,border:"1px solid #fbbf2433"}}>⚠️ You're still on the DEV/testing site. Signing in here shows your real cloud data for checking purposes, but stay aware this is not the production site your real customers use.</div>
+            {!authSent?(
+              <div>
+                <input value={authEmail} onChange={e=>setAuthEmail(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")sendMagicLink();}} placeholder="you@email.com" type="email" autoComplete="email" style={{width:"100%",padding:"12px",borderRadius:9,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:13,boxSizing:"border-box",fontFamily:"inherit",outline:"none",marginBottom:10,textAlign:"center"}}/>
+                <button onClick={sendMagicLink} disabled={authBusy} style={{width:"100%",padding:"13px",borderRadius:9,background:"linear-gradient(135deg,#00ffcc,#00d4aa)",color:"#000",fontWeight:800,fontSize:13,border:"none",cursor:authBusy?"default":"pointer",fontFamily:"inherit",opacity:authBusy?0.6:1}}>{authBusy?"Sending…":"Email me a sign-in link →"}</button>
+                {authMsg&&<div style={{fontSize:11,color:authMsg.startsWith("Error")?"#f87171":C.sub,marginTop:8,textAlign:"center"}}>{authMsg}</div>}
+              </div>
+            ):(
+              <div style={{textAlign:"center",padding:"10px 0"}}>
+                <div style={{fontSize:24,marginBottom:8}}>📬</div>
+                <div style={{fontSize:12,fontWeight:700,color:"#00ffcc",marginBottom:6}}>Check your email!</div>
+                <div style={{fontSize:11,color:C.sub,lineHeight:1.6,marginBottom:12}}>Sent a link to <b style={{color:C.text}}>{authEmail}</b> — open it on THIS device to sign in here.</div>
+                <button onClick={()=>{setAuthSent(false);setAuthMsg("");}} style={{padding:"8px 16px",borderRadius:8,background:"transparent",border:"1px solid "+C.border,color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>← Try different email</button>
               </div>
             )}
           </div>
