@@ -95,6 +95,17 @@ function FuelSurchargeCalculator(props){
   // different methodology than a fixed $2.50 assumption).
   const baselinePrice=String(props.sharedBaseline);
   const setBaselinePrice=function(v){props.setSharedBaseline(parseFloat(v)||0);};
+  // Reverse-check: enter what the vendor ACTUALLY paid in FSC dollars, and
+  // instantly see the equivalent percentage — answers "vendor paid $51.19
+  // FSC on a $195/77mi run, what % is that?" without any manual math.
+  const [vendorFscPaid,setVendorFscPaid]=useState("");
+  // +/- stepper helper — nudges any numeric field up/down by a fixed amount,
+  // building the value as a string so the input stays fully editable too.
+  function stepValue(currentStr,delta,decimals,min){
+    const current=parseFloat(currentStr)||0;
+    const next=Math.max(min!==undefined?min:0,current+delta);
+    return next.toFixed(decimals);
+  }
 
   const rateNum=parseFloat(rate);
   const milesNum=parseFloat(miles);
@@ -110,6 +121,16 @@ function FuelSurchargeCalculator(props){
     fscDollar=extraCostPerMile*milesNum;// the actual $ to add to the quote, not just the %
   }
 
+  // Reverse-check: given what the vendor ACTUALLY paid in FSC dollars,
+  // what percentage of the linehaul rate does that represent? This answers
+  // "vendor paid $51.19 FSC on a $195 rate — what % is that?" instantly.
+  const vendorFscPaidNum=parseFloat(vendorFscPaid);
+  const vendorCheckValid=validInput&&!isNaN(vendorFscPaidNum)&&vendorFscPaidNum>=0;
+  let vendorFscPct=0;
+  if(vendorCheckValid){
+    vendorFscPct=(vendorFscPaidNum/rateNum)*100;
+  }
+
   return (
     <div style={styles.card}>
       <div style={styles.title}>⛽ Fuel Surcharge Calculator</div>
@@ -117,38 +138,72 @@ function FuelSurchargeCalculator(props){
       <div style={styles.grid}>
         <div>
           <div style={styles.label}>LINEHAUL RATE ($)</div>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={rate}
-            onChange={function(e){setRate(e.target.value);}}
-            placeholder="e.g. 250"
-            style={styles.input}
-          />
+          <div style={{display:"flex",gap:4,alignItems:"center"}}>
+            <button type="button" onClick={function(){setRate(stepValue(rate,-5,2,0));}} style={styles.stepBtn}>−</button>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={rate}
+              onChange={function(e){setRate(e.target.value);}}
+              placeholder="e.g. 250"
+              style={{...styles.input,textAlign:"center"}}
+            />
+            <button type="button" onClick={function(){setRate(stepValue(rate,5,2,0));}} style={styles.stepBtn}>+</button>
+          </div>
         </div>
         <div>
           <div style={styles.label}>MILES</div>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={miles}
-            onChange={function(e){setMiles(e.target.value);}}
-            placeholder="e.g. 50"
-            style={styles.input}
-          />
+          <div style={{display:"flex",gap:4,alignItems:"center"}}>
+            <button type="button" onClick={function(){setMiles(stepValue(miles,-1,0,0));}} style={styles.stepBtn}>−</button>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={miles}
+              onChange={function(e){setMiles(e.target.value);}}
+              placeholder="e.g. 50"
+              style={{...styles.input,textAlign:"center"}}
+            />
+            <button type="button" onClick={function(){setMiles(stepValue(miles,1,0,0));}} style={styles.stepBtn}>+</button>
+          </div>
         </div>
       </div>
       <div style={{marginBottom:10}}>
         <div style={styles.label}>BASELINE DIESEL PRICE ($/gal)</div>
-        <input
-          type="text"
-          inputMode="decimal"
-          value={baselinePrice}
-          onChange={function(e){setBaselinePrice(e.target.value);}}
-          placeholder="2.50"
-          style={styles.input}
-        />
+        <div style={{display:"flex",gap:4,alignItems:"center"}}>
+          <button type="button" onClick={function(){setBaselinePrice(stepValue(baselinePrice,-0.05,2,0));}} style={styles.stepBtn}>−</button>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={baselinePrice}
+            onChange={function(e){setBaselinePrice(e.target.value);}}
+            placeholder="2.50"
+            style={{...styles.input,textAlign:"center"}}
+          />
+          <button type="button" onClick={function(){setBaselinePrice(stepValue(baselinePrice,0.05,2,0));}} style={styles.stepBtn}>+</button>
+        </div>
         <div style={{fontSize:8,color:"#8fa3c0",marginTop:4,lineHeight:1.5}}>💡 Every carrier sets their own baseline in their FSC contract. Check your carrier's FSC schedule (often emailed or posted by your terminal) and enter their exact baseline here for the most accurate comparison. Defaults to $2.50 if you don't know it.</div>
+      </div>
+      <div style={{marginBottom:10,padding:"10px 12px",borderRadius:9,background:"rgba(167,139,250,0.06)",border:"1px solid rgba(167,139,250,0.25)"}}>
+        <div style={{...styles.label,color:"#a78bfa"}}>🔎 CHECK A VENDOR'S FSC — What % Did They Actually Pay?</div>
+        <div style={{display:"flex",gap:4,alignItems:"center",marginTop:4}}>
+          <button type="button" onClick={function(){setVendorFscPaid(stepValue(vendorFscPaid,-1,2,0));}} style={styles.stepBtn}>−</button>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={vendorFscPaid}
+            onChange={function(e){setVendorFscPaid(e.target.value);}}
+            placeholder="e.g. 51.19"
+            style={{...styles.input,textAlign:"center"}}
+          />
+          <button type="button" onClick={function(){setVendorFscPaid(stepValue(vendorFscPaid,1,2,0));}} style={styles.stepBtn}>+</button>
+        </div>
+        {vendorCheckValid&&(
+          <div style={{marginTop:8,textAlign:"center"}}>
+            <span style={{fontSize:9,color:"#8fa3c0"}}>Vendor's FSC = </span>
+            <span style={{fontSize:16,fontWeight:800,color:"#a78bfa"}}>{vendorFscPct.toFixed(1)}%</span>
+            <span style={{fontSize:9,color:"#8fa3c0"}}> of your rate</span>
+          </div>
+        )}
       </div>
       <div style={styles.resultBox}>
         <div style={styles.resultRow}>
@@ -3588,7 +3643,8 @@ ${pdfText.slice(0,24000)}`}]};
                       fscLine:{fontSize:14,fontWeight:800,color:C.green},
                       fscDollarStyle:{fontSize:11,fontWeight:600,color:C.sub},
                       totalLine:{fontSize:10,color:C.sub,marginTop:6,paddingTop:6,borderTop:"1px solid "+C.border},
-                      footnote:{fontSize:8,color:C.sub,marginTop:8,lineHeight:1.5}
+                      footnote:{fontSize:8,color:C.sub,marginTop:8,lineHeight:1.5},
+                      stepBtn:{width:32,height:38,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:16,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}
                     }}
                   />
                 </FSCErrorBoundary>
