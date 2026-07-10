@@ -4334,12 +4334,6 @@ ${pdfText.slice(0,24000)}`}]};
 
   </div>
 )}
-
-      </div>
-
-      {/* LOGO BEFORE LEGAL FOOTER */}
-      <div style={{display:"flex",justifyContent:"center",padding:"24px 16px 8px",background:C.bg}}>
-        <img src={LOGO_HERO} alt="DrayageIQ" style={{width:"100%",maxWidth:280,height:"auto",opacity:0.85}}/>
       {/* ══ OFFICE TAB — receipts, expenses, and True Net ══════════════════════ */}
       {tab==="office"&&(function(){
         const totalExpenses=expenses.reduce(function(sum,e){return sum+(parseFloat(e.amount)||0);},0);
@@ -4462,6 +4456,12 @@ ${pdfText.slice(0,24000)}`}]};
         </div>
         );
       })()}
+
+      </div>
+
+      {/* LOGO BEFORE LEGAL FOOTER */}
+      <div style={{display:"flex",justifyContent:"center",padding:"24px 16px 8px",background:C.bg}}>
+        <img src={LOGO_HERO} alt="DrayageIQ" style={{width:"100%",maxWidth:280,height:"auto",opacity:0.85}}/>
 
       </div>
 
