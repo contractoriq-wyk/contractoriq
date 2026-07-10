@@ -4337,24 +4337,6 @@ ${pdfText.slice(0,24000)}`}]};
       {/* LOGO BEFORE LEGAL FOOTER */}
       <div style={{display:"flex",justifyContent:"center",padding:"24px 16px 8px",background:C.bg}}>
         <img src={LOGO_HERO} alt="DrayageIQ" style={{width:"100%",maxWidth:280,height:"auto",opacity:0.85}}/>
-      </div>
-
-      {/* LEGAL FOOTER */}
-      <div style={{background:C.bg,borderTop:"1px solid "+C.border,padding:"14px 16px"}}>
-        <div style={{fontSize:9,color:C.sub,lineHeight:1.8,textAlign:"center",maxWidth:600,margin:"0 auto"}}>
-          <div style={{fontWeight:700,color:C.sub,marginBottom:6,fontSize:10,letterSpacing:"0.05em",textTransform:"uppercase"}}>⚖️ Legal Disclaimer</div>
-          <div style={{marginBottom:6}}><strong style={{color:C.sub}}>Not Financial or Legal Advice.</strong> DrayageIQ is an informational tool only. Nothing on this platform — including AI output and funding suggestions — constitutes financial, legal, tax, or professional business advice. Always consult a qualified professional before making business decisions.</div>
-          <div style={{marginBottom:6}}><strong style={{color:C.sub}}>Your Data Is Securely Stored.</strong> Your settlement data is encrypted and stored in our secure cloud database (Supabase) so it syncs safely across your devices. When you use AI features, the content you submit is sent securely to our AI provider for processing only. We never sell your data. See our Privacy Policy for details.</div>
-          <div style={{display:"flex",gap:14,justifyContent:"center",marginTop:8,flexWrap:"wrap"}}>
-            <a href="/privacy.html" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>Privacy Policy</a>
-            <a href="/terms.html" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>Terms of Service</a>
-            <a href="/faq.html" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>FAQ</a>
-            <a href="mailto:hello@getdrayageiq.com" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>Contact Support</a>
-          </div>
-          <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid "+C.border,fontSize:8,color:C.border}}>© {new Date().getFullYear()} DrayageIQ · All Rights Reserved · getdrayageiq.com</div>
-        </div>
-      </div>
-
       {/* ══ OFFICE TAB — receipts, expenses, and True Net ══════════════════════ */}
       {tab==="office"&&(function(){
         const totalExpenses=expenses.reduce(function(sum,e){return sum+(parseFloat(e.amount)||0);},0);
@@ -4453,6 +4435,26 @@ ${pdfText.slice(0,24000)}`}]};
         </div>
         );
       })()}
+
+      </div>
+
+      {/* LEGAL FOOTER */}
+      <div style={{background:C.bg,borderTop:"1px solid "+C.border,padding:"14px 16px"}}>
+        <div style={{fontSize:9,color:C.sub,lineHeight:1.8,textAlign:"center",maxWidth:600,margin:"0 auto"}}>
+          <div style={{fontWeight:700,color:C.sub,marginBottom:6,fontSize:10,letterSpacing:"0.05em",textTransform:"uppercase"}}>⚖️ Legal Disclaimer</div>
+          <div style={{marginBottom:6}}><strong style={{color:C.sub}}>Not Financial or Legal Advice.</strong> DrayageIQ is an informational tool only. Nothing on this platform — including AI output and funding suggestions — constitutes financial, legal, tax, or professional business advice. Always consult a qualified professional before making business decisions.</div>
+          <div style={{marginBottom:6}}><strong style={{color:C.sub}}>Your Data Is Securely Stored.</strong> Your settlement data is encrypted and stored in our secure cloud database (Supabase) so it syncs safely across your devices. When you use AI features, the content you submit is sent securely to our AI provider for processing only. We never sell your data. See our Privacy Policy for details.</div>
+          <div style={{display:"flex",gap:14,justifyContent:"center",marginTop:8,flexWrap:"wrap"}}>
+            <a href="/privacy.html" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>Privacy Policy</a>
+            <a href="/terms.html" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>Terms of Service</a>
+            <a href="/faq.html" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>FAQ</a>
+            <a href="mailto:hello@getdrayageiq.com" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>Contact Support</a>
+          </div>
+          <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid "+C.border,fontSize:8,color:C.border}}>© {new Date().getFullYear()} DrayageIQ · All Rights Reserved · getdrayageiq.com</div>
+        </div>
+      </div>
+
+
 
       {/* BOTTOM NAV */}
       <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:C.surf,borderTop:"1px solid "+C.border,display:"flex",alignItems:"stretch",height:58,boxShadow:"0 -4px 20px rgba(0,0,0,0.4)"}}>
