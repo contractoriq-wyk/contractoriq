@@ -1603,6 +1603,8 @@ ${pdfText.slice(0,24000)}`}]};
 
               {icon:"🚀",step:"Invite a Driver",path:"all",title:"Get a Free Month — Share DrayageIQ",body:"In Menu → Invite a Driver, you'll find your own personal referral link. Share it with another driver — when they sign up, they get a free month of Pro Smart. Once they subscribe to any paid plan, YOU get a free month of your current plan too.",tip:"🔒 Automatic reward crediting is still in development — your link works and referrals are tracked now, but the free month is applied manually for the moment. Full automation is coming soon.",action:"Next →"},
 
+              {icon:"🏢",step:"The Office",path:"smart",title:"Your Back-Office — Receipts & True Net",body:"The Office tab (bottom nav) is a dedicated workspace for the paperwork side of your business. Scan a receipt photo and AI reads the date, vendor, amount, and category automatically. Every expense you track gets subtracted from your settlement net pay to show your True Net — what you actually keep after real out-of-pocket costs like repairs, parts, and permits.",tip:"🔒 This is a Pro Smart feature currently in testing ahead of our next version release. Standard tier sees a preview with an upgrade option.",action:"Next →"},
+
               {icon:"🎁",step:"Try Any Pro Smart Feature Free",path:"all",title:"One Free Trial Every 31 Days — Per Feature",body:"Every Pro Smart feature is fully visible on Standard, never hidden. Tap any locked feature and you'll see '🎁 Use My Free Trial' — one free use, no card required, no commitment. Each feature has its own independent 31-day cycle, so trying the Fuel Surcharge Calculator today doesn't use up your trial for Return on Spend.",tip:"💡 This isn't a countdown trial that expires — it renews every 31 days, forever, feature by feature. Use it whenever it's useful to you.",action:"Next →"},
 
 
@@ -2535,6 +2537,7 @@ ${pdfText.slice(0,24000)}`}]};
               {icon:"📊",title:"CSV Export — Return on Spend + True FSC",tier:"Pro Smart",status:"Live Now",desc:"Download your full move history with fair-market FSC comparisons — hand it to a broker, lawyer, or your own records.",live:true},
               {icon:"💬",title:"Weekly Digest (WhatsApp/SMS)",tier:"Pro Smart",status:"In Development",desc:"Your weekly net, RPM, and True FSC gap sent straight to your phone automatically — no need to open the app to stay informed."},
               {icon:"🚀",title:"Referral Rewards",tier:"All Tiers",status:"In Development",desc:"Invite another driver, you both get a free month — your unique link and referral tracking are live now in Menu → Invite a Driver. Automatic reward crediting is coming next."},
+              {icon:"🏢",title:"The Office — Receipts & True Net",tier:"Pro Smart",status:"In Testing",desc:"A dedicated back-office tab: scan receipts, track real out-of-pocket expenses, and see your True Net — what you actually keep after every real business cost. Already visible in the app now with a preview lock."},
               {icon:"🏢",title:"Enterprise Fleet (11+ trucks)",tier:"Fleet",status:"Available on Request",desc:"Custom pricing and dedicated support for larger fleet operations. Message us directly to discuss your setup."},
             ].map(function(item,i){
               return(
@@ -4342,6 +4345,30 @@ ${pdfText.slice(0,24000)}`}]};
         const totalExpenses=expenses.reduce(function(sum,e){return sum+(parseFloat(e.amount)||0);},0);
         const ytdNetFromWeeks=allW.reduce(function(sum,w){return sum+(w.net||0);},0);
         const trueNet=ytdNetFromWeeks-totalExpenses;
+
+        // The Office is a Pro Smart feature, coming in the next version release.
+        // Visible to everyone so people know it's coming, but locked for
+        // Standard tier — matching the pattern used across other upcoming features.
+        if(!isSmart){
+          return(
+            <div style={{padding:"16px",maxWidth:1100,margin:"0 auto"}}>
+              <div style={{textAlign:"center",marginBottom:6}}>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:C.text}}>🏢 The Office</div>
+                <div style={{fontSize:11,color:C.sub,marginTop:2}}>Receipts, expenses, and your True Net — after real out-of-pocket costs</div>
+              </div>
+              <div style={K({textAlign:"center",padding:"40px 20px",marginTop:20})}>
+                <div style={{fontSize:40,marginBottom:14}}>🔒</div>
+                <div style={{fontSize:14,fontWeight:800,color:C.text,marginBottom:8}}>The Office — Pro Smart Feature</div>
+                <div style={{fontSize:11,color:C.sub,lineHeight:1.7,maxWidth:400,margin:"0 auto 16px"}}>Scan receipts, track real out-of-pocket expenses, and see your True Net — what you actually keep after fuel, repairs, and every real business cost, not just what the settlement shows.</div>
+                <div style={{display:"inline-block",padding:"6px 16px",borderRadius:20,background:"#fbbf2418",border:"1px solid #fbbf2444",fontSize:10,fontWeight:800,color:"#fbbf24",marginBottom:16}}>🧪 Coming in the Next Version Release</div>
+                <div>
+                  <button onClick={function(){openUpgrade("office");}} style={{padding:"10px 22px",borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Upgrade to Pro Smart →</button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
         return(
         <div style={{padding:"16px",maxWidth:1100,margin:"0 auto"}}>
 
