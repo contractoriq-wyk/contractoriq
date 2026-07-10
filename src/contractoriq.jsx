@@ -542,7 +542,7 @@ export default function ContractorIQv26(){
   }
 
   const [tab,setTab]=useState("dashboard");
-  const TAB_ORDER=["dashboard","loads","ai","growth"];
+  const TAB_ORDER=["dashboard","loads","ai","growth","office"];
   const swipeStartRef=useRef(null);
   function handleSwipeStart(e){
     if(e.touches&&e.touches.length===1){
@@ -2258,6 +2258,11 @@ ${pdfText.slice(0,24000)}`}]};
                 <div style={{position:"fixed",inset:0,zIndex:9998}} onClick={()=>setShowMenu(false)}/>
                 <div style={{position:"fixed",top:58,right:8,bottom:60,width:Math.min(window.innerWidth-16,300),background:C.card,border:`1px solid ${C.border}`,borderRadius:16,zIndex:9999,boxShadow:"0 8px 40px rgba(0,0,0,0.8)",display:"flex",flexDirection:"column",overflow:"hidden"}}><div style={{flex:1,minHeight:0,height:0,overflowY:"scroll",WebkitOverflowScrolling:"touch",padding:"8px 6px 20px"}}>
 
+                  {/* Brand banner — shown at top of menu when opened */}
+                  <div style={{padding:"4px 2px 10px"}}>
+                    <img src={LOGO_BANNER} alt="DrayageIQ" style={{width:"100%",height:"auto",borderRadius:8,display:"block"}}/>
+                  </div>
+
                   {/* Account header */}
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
@@ -2331,6 +2336,7 @@ ${pdfText.slice(0,24000)}`}]};
                   {/* ── SUPPORT ── */}
                   <div style={{fontSize:8,fontWeight:800,color:C.sub,letterSpacing:"0.1em",textTransform:"uppercase",padding:"4px 12px 6px"}}>Support</div>
                   <a href="https://whatsapp.com/channel/0029VazNGCd0bIdZvxjLIB2L" target="_blank" rel="noreferrer" style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700,textDecoration:"none",boxSizing:"border-box"}}><span>💬</span><div style={{flex:1}}><div>WhatsApp Support</div><div style={{fontSize:9,fontWeight:400,color:C.sub,marginTop:1}}>Join our channel · Get help fast</div></div><span style={{fontSize:8,fontWeight:800,color:"#080c16",background:"#25D366",borderRadius:20,padding:"2px 7px"}}>LIVE</span></a>
+                  <a href="https://whatsapp.com/channel/0029VbDOskDBA1esSRzm6w2T" target="_blank" rel="noreferrer" style={{width:"100%",padding:"10px 12px",borderRadius:8,background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:700,textDecoration:"none",boxSizing:"border-box"}}><span>📹</span><div style={{flex:1}}><div>Video Tips</div><div style={{fontSize:9,fontWeight:400,color:C.sub,marginTop:1}}>Quick how-to videos</div></div></a>
                 </div>
                 </div>
                 </>
@@ -4349,37 +4355,108 @@ ${pdfText.slice(0,24000)}`}]};
         </div>
       </div>
 
-      {/* FLOATING WHATSAPP SUPPORT BUTTON */}
-      <a href="https://whatsapp.com/channel/0029VbDOskDBA1esSRzm6w2T"
-        target="_blank" rel="noopener noreferrer"
-        style={{
-          position:"fixed",
-          bottom:72,
-          left:16,
-          zIndex:199,
-          display:"flex",
-          alignItems:"center",
-          gap:8,
-          padding:"10px 14px",
-          borderRadius:50,
-          background:"linear-gradient(135deg,#25D366,#128C7E)",
-          boxShadow:"0 4px 20px #25D36655",
-          textDecoration:"none",
-          color:"#fff",
-          fontSize:12,
-          fontWeight:700,
-          fontFamily:"inherit",
-          animation:"pulse-glow 2.5s ease-in-out infinite",
-        }}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-        </svg>
-        <span>📹 Video Tips</span>
-      </a>
+      {/* ══ OFFICE TAB — receipts, expenses, and True Net ══════════════════════ */}
+      {tab==="office"&&(function(){
+        const totalExpenses=expenses.reduce(function(sum,e){return sum+(parseFloat(e.amount)||0);},0);
+        const ytdNetFromWeeks=allW.reduce(function(sum,w){return sum+(w.net||0);},0);
+        const trueNet=ytdNetFromWeeks-totalExpenses;
+        return(
+        <div style={{padding:"16px",maxWidth:1100,margin:"0 auto"}}>
+
+          <div style={{textAlign:"center",marginBottom:6}}>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:C.text}}>🏢 The Office</div>
+            <div style={{fontSize:11,color:C.sub,marginTop:2}}>Receipts, expenses, and your True Net — after real out-of-pocket costs</div>
+          </div>
+
+          {/* TRUE NET SUMMARY */}
+          <div style={{display:"grid",gridTemplateColumns:wide?"1fr 1fr 1fr":"1fr 1fr",gap:12,marginBottom:16,marginTop:14}}>
+            <div style={K({textAlign:"center"})}>
+              <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>YTD Net (Settlements)</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.accent}}>${ytdNetFromWeeks.toLocaleString("en-US",{maximumFractionDigits:0})}</div>
+            </div>
+            <div style={K({textAlign:"center"})}>
+              <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>Tracked Expenses</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.red}}>−${totalExpenses.toLocaleString("en-US",{maximumFractionDigits:0})}</div>
+            </div>
+            <div style={K({textAlign:"center",gridColumn:wide?"auto":"span 2"})}>
+              <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>💰 True Net</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:trueNet>=0?C.green:C.red}}>${trueNet.toLocaleString("en-US",{maximumFractionDigits:0})}</div>
+            </div>
+          </div>
+
+          {/* RECEIPT SCAN / ADD EXPENSE */}
+          <div style={K({marginBottom:16})}>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:12}}>📸 Scan a Receipt</div>
+            <div style={{fontSize:9,color:C.sub,marginBottom:10,lineHeight:1.5}}>Snap or upload a photo of any receipt — parts, tires, maintenance, permits, or other business costs. AI reads it and fills in the details below for you to review.</div>
+            <label style={{display:"block",width:"100%",padding:"13px",borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:13,textAlign:"center",cursor:"pointer",fontFamily:"inherit"}}>
+              {expScan?"⏳ "+expScanMsg:"📸 Upload Receipt Photo"}
+              <input type="file" accept="image/*,application/pdf" style={{display:"none"}} onChange={function(e){if(e.target.files&&e.target.files[0])readReceipt(e.target.files[0]);}}/>
+            </label>
+            {!expScan&&expScanMsg&&<div style={{fontSize:10,color:expScanMsg.startsWith("Could not")?C.red:C.green,marginTop:8,textAlign:"center"}}>{expScanMsg}</div>}
+
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14}}>
+              <div>
+                <div style={{fontSize:8,color:C.sub,marginBottom:3}}>DATE</div>
+                <input type="text" value={expForm.date} onChange={function(e){setExpForm(function(p){return {...p,date:e.target.value};});}} placeholder="MM/DD/YYYY" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
+              </div>
+              <div>
+                <div style={{fontSize:8,color:C.sub,marginBottom:3}}>CATEGORY</div>
+                <select value={expForm.category} onChange={function(e){setExpForm(function(p){return {...p,category:e.target.value};});}} style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box",cursor:"pointer"}}>
+                  {["Parts","Labor","Tires","Maintenance","Fuel","Permits","Other"].map(function(c){return <option key={c} value={c}>{c}</option>;})}
+                </select>
+              </div>
+            </div>
+            <div style={{marginTop:8}}>
+              <div style={{fontSize:8,color:C.sub,marginBottom:3}}>DESCRIPTION</div>
+              <input type="text" value={expForm.desc} onChange={function(e){setExpForm(function(p){return {...p,desc:e.target.value};});}} placeholder="e.g. Brake pads, front" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
+            </div>
+            <div style={{marginTop:8}}>
+              <div style={{fontSize:8,color:C.sub,marginBottom:3}}>AMOUNT ($)</div>
+              <input type="text" inputMode="decimal" value={expForm.amount} onChange={function(e){setExpForm(function(p){return {...p,amount:e.target.value};});}} placeholder="e.g. 89.99" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
+            </div>
+            <button onClick={function(){
+              const amt=parseFloat(expForm.amount);
+              if(!expForm.date||!amt||amt<=0){setExpScanMsg("Please fill in date and a valid amount");return;}
+              setExpenses(function(p){return [...p,{...expForm,amount:amt,id:Date.now()}];});
+              setExpForm({date:"",category:"Parts",desc:"",amount:"",note:"",weekRef:""});
+              setExpScanMsg("✅ Expense saved");
+              setTimeout(function(){setExpScanMsg("");},3000);
+            }} style={{width:"100%",padding:"11px",borderRadius:9,background:C.green,color:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",marginTop:12}}>💾 Save Expense</button>
+          </div>
+
+          {/* EXPENSE HISTORY */}
+          <div style={K()}>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:10}}>📋 Expense History ({expenses.length})</div>
+            {expenses.length===0?(
+              <div style={{textAlign:"center",padding:"20px",color:C.sub,fontSize:11}}>
+                <div style={{fontSize:26,marginBottom:6}}>🧾</div>
+                No expenses tracked yet — scan a receipt above to get started
+              </div>
+            ):(
+              [...expenses].reverse().map(function(e,i){
+                return(
+                  <div key={e.id||i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",background:C.bg,borderRadius:8,border:"1px solid "+C.border,marginBottom:8}}>
+                    <div>
+                      <div style={{fontSize:11,color:C.text,fontWeight:700}}>{e.desc||e.category}</div>
+                      <div style={{fontSize:9,color:C.sub,marginTop:2}}>{e.date} · {e.category}{e.note?" · "+e.note:""}</div>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:13,fontWeight:800,color:C.red}}>${parseFloat(e.amount).toFixed(2)}</span>
+                      <button onClick={function(){setExpenses(function(p){return p.filter(function(x){return x.id!==e.id;});});}} style={{background:"none",border:"none",color:C.sub,fontSize:14,cursor:"pointer",padding:"0 4px"}}>×</button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+        </div>
+        );
+      })()}
 
       {/* BOTTOM NAV */}
       <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:C.surf,borderTop:"1px solid "+C.border,display:"flex",alignItems:"stretch",height:58,boxShadow:"0 -4px 20px rgba(0,0,0,0.4)"}}>
-        {[{t:"dashboard",icon:"📊",label:"Dash"},{t:"loads",icon:"📋",label:"Analyzer"},{t:"ai",icon:"🧠",label:"AI"},{t:"growth",icon:"🚀",label:"Growth"}].map(item=>(
+        {[{t:"dashboard",icon:"📊",label:"Dash"},{t:"loads",icon:"📋",label:"Analyzer"},{t:"ai",icon:"🧠",label:"AI"},{t:"growth",icon:"🚀",label:"Growth"},{t:"office",icon:"🏢",label:"Office"}].map(item=>(
           <button key={item.t} onClick={()=>{setTab(item.t);window.scrollTo({top:0,behavior:"smooth"});}} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",padding:"6px 0",borderTop:"2px solid "+(tab===item.t?C.accent:"transparent"),transition:"border-color 0.15s"}}>
             <span style={{fontSize:18,lineHeight:1}}>{item.icon}</span>
             <span style={{fontSize:9,fontWeight:700,letterSpacing:"0.05em",textTransform:"uppercase",color:tab===item.t?C.accent:C.sub}}>{item.label}</span>
