@@ -697,7 +697,7 @@ export default function ContractorIQv26(){
   const [docScanMsg,setDocScanMsg]=useState("");
   const [isPro,setIsPro]=useState(()=>{if(typeof window!=="undefined"&&window.location.hostname.includes("navy"))return true;try{return localStorage.getItem("ciq_pro")==="true";}catch{return false;}});
   const [trialStart,setTrialStart]=useState(()=>{try{const t=localStorage.getItem("ciq_trial_start");return t?parseInt(t):null;}catch{return null;}});
-  const [realIsSmart,setIsSmart]=useState(()=>{if(typeof window!=="undefined"&&(window.location.hostname.includes("navy")||window.location.search.includes("owner=true")))return true;try{return localStorage.getItem("ciq_smart")==="true";}catch{return false;}});
+  const [realIsSmart,setIsSmart]=useState(()=>{if(typeof window!=="undefined"&&window.location.hostname.includes("navy"))return true;try{return localStorage.getItem("ciq_smart")==="true";}catch{return false;}});
 
   // Dev/testing-only preview toggle — lets a real Pro Smart account temporarily
   // SEE the Standard-tier locked view without touching the actual subscription.
@@ -765,7 +765,7 @@ export default function ContractorIQv26(){
     if(typeof window!=="undefined"&&window.location.hostname.includes("navy"))return false;
     try{const d=localStorage.getItem("ciq_demo"),hasWeeks=localStorage.getItem("ciq_addedWeeks"),added=hasWeeks?JSON.parse(hasWeeks):[];if(d==="false"&&added.length>0)return false;return true;}catch{return true;}
   });
-  const isOwnerMode=typeof window!=="undefined"&&(window.location.hostname.includes("navy")||window.location.search.includes("owner=true"));
+  const isOwnerMode=typeof window!=="undefined"&&window.location.hostname.includes("navy");
   const [showUpgradeWelcome,setShowUpgradeWelcome]=useState(false);
   const [upgradedTier,setUpgradedTier]=useState(null);// "fleet" | "growingfleet" — which plan they just bought
   useEffect(function(){
@@ -834,14 +834,23 @@ export default function ContractorIQv26(){
 
   // ═══ AUTH + CLOUD SYNC ═══
   const [user,setUser]=useState(null);
-  // ═══ DEV MODE AUTO-LOGIN ═══
-  // On the navy dev domain only, silently sign into a FIXED dedicated dev
-  // account so testing data gets real cloud backup with zero login friction.
-  // This never runs on the real production site — isOwnerMode gates it.
-  const DEV_ACCOUNT_EMAIL="hello+devtest@getdrayageiq.com";
-  const DEV_ACCOUNT_PASSWORD="DrayageIQ-Dev-2026-Internal-Testing-Only";
-  const [devAutoLoginTried,setDevAutoLoginTried]=useState(false);
   const [authChecked,setAuthChecked]=useState(false);
+  // ═══ ENTITLEMENT REVOCATION GUARD (audit fix #3) ═══
+  // localStorage is a CACHE, not a granter. The initializer reads it only to
+  // avoid a "Standard flash" for real paying customers while their session
+  // loads. But once the auth check completes, anyone WITHOUT a real session
+  // on production gets stripped back to free and the stale keys are cleared —
+  // this evicts poisoned values (e.g. from the old ?owner=true bypass or a
+  // DevTools localStorage edit). Logged-in users are separately corrected by
+  // the Supabase plan pull, which is the single source of truth.
+  useEffect(()=>{
+    if(!authChecked)return;// wait until we actually know the session state
+    if(isOwnerMode)return;// navy dev domain keeps its auto-grant
+    if(user)return;// logged-in users: Supabase plan column governs, not this
+    setIsPro(false);setIsSmart(false);
+    try{localStorage.removeItem("ciq_pro");localStorage.removeItem("ciq_smart");}catch(e){}
+  },[authChecked,user]);
+
   const [authEmail,setAuthEmail]=useState("");
   const [authSent,setAuthSent]=useState(false);
   const [authBusy,setAuthBusy]=useState(false);
