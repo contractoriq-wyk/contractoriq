@@ -1428,16 +1428,53 @@ ${pdfText.slice(0,24000)}`}]};
     setTimeout(()=>setAddMsg(""),4000);
   }
 
+  // Compress camera photos before upload — phone cameras produce 3-12MB
+  // images, and base64-encoding pushes the request past the serverless body
+  // limit (~4.5MB), which is why direct camera captures errored. Downscaling
+  // to 1600px JPEG brings a 10MB photo to ~300KB with text still readable.
+  function compressImage(file){
+    return new Promise(function(res,rej){
+      const img=new Image();
+      const url=URL.createObjectURL(file);
+      img.onload=function(){
+        try{
+          const maxDim=1600;
+          let w=img.width,h=img.height;
+          if(w>maxDim||h>maxDim){const scale=maxDim/Math.max(w,h);w=Math.round(w*scale);h=Math.round(h*scale);}
+          const canvas=document.createElement("canvas");
+          canvas.width=w;canvas.height=h;
+          canvas.getContext("2d").drawImage(img,0,0,w,h);
+          URL.revokeObjectURL(url);
+          res(canvas.toDataURL("image/jpeg",0.8).split(",")[1]);
+        }catch(e){rej(e);}
+      };
+      img.onerror=function(){URL.revokeObjectURL(url);rej(new Error("Could not load image"));};
+      img.src=url;
+    });
+  }
+
   async function readReceipt(file){
     setExpScan(true);setExpScanMsg("Reading receipt...");
     try{
-      const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
-      const isImg=file.type.startsWith("image/");const block=isImg?{type:"image",source:{type:"base64",media_type:file.type||"image/jpeg",data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
+      const isImg=file.type.startsWith("image/");
+      const b64=isImg
+        ?await compressImage(file)// camera photos get downscaled so they fit the upload limit
+        :await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+      const block=isImg?{type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
       const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:400,messages:[{role:"user",content:[block,{type:"text",text:'Read this receipt. Return ONLY valid JSON: {"date":"MM/DD/YYYY","vendor":"store name","amount":0.00,"category":"Parts|Labor|Tires|Maintenance|Fuel|Permits|Other","desc":"what was purchased"}'}]}]})});
       const d=await resp.json();const raw=d.content?.map(b=>b.text||"").join("")||"{}";
       const parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());
-      setExpForm(p=>({...p,date:parsed.date||p.date,category:parsed.category||"Parts",desc:parsed.desc||"",amount:parsed.amount?.toString()||"",note:"From: "+(parsed.vendor||"")}));
-      setExpScanMsg("Receipt read — review and save");
+      // Clamp AI output before it touches the form (audit fix #7) — reject
+      // negative/absurd amounts, non-whitelisted categories, malformed dates.
+      const VALID_CATS=["Parts","Labor","Tires","Maintenance","Fuel","Permits","Other"];
+      const amtNum=parseFloat(parsed.amount);
+      const safeAmount=(!isNaN(amtNum)&&amtNum>0&&amtNum<100000)?amtNum.toFixed(2):"";
+      const safeCat=VALID_CATS.includes(parsed.category)?parsed.category:"Other";
+      const safeDate=(typeof parsed.date==="string"&&/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(parsed.date))?parsed.date:"";
+      const safeDesc=typeof parsed.desc==="string"?parsed.desc.slice(0,120):"";
+      const safeVendor=typeof parsed.vendor==="string"?parsed.vendor.slice(0,60):"";
+      setExpForm(p=>({...p,date:safeDate||p.date,category:safeCat,desc:safeDesc,amount:safeAmount,note:safeVendor?"From: "+safeVendor:""}));
+      setExpScanMsg(safeAmount?"Receipt read — review and save":"Read partially — please check the amount");
     }catch(e){setExpScanMsg("Could not read — enter manually");}
     setExpScan(false);
   }
@@ -1445,8 +1482,9 @@ ${pdfText.slice(0,24000)}`}]};
   async function readDoc(file){
     setDocScan(true);setDocScanMsg("Reading...");
     try{
-      var b64=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result.split(",")[1]);};r.onerror=rej;r.readAsDataURL(file);});
-      var isImg=file.type.startsWith("image/");var block=isImg?{type:"image",source:{type:"base64",media_type:file.type||"image/jpeg",data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
+      var isImg=file.type.startsWith("image/");
+      var b64=isImg?await compressImage(file):await new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result.split(",")[1]);};r.onerror=rej;r.readAsDataURL(file);});
+      var block=isImg?{type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
       var resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:300,messages:[{role:"user",content:[block,{type:"text",text:'Read this. Return ONLY JSON: {"date":"MM/DD/YYYY","title":"document title","category":"Maintenance|Inspection|Insurance|Registration|Medical|Permit|Other","note":"brief summary"}'}]}]})});
       var d=await resp.json();var parsed=JSON.parse((d.content?d.content.map(function(b){return b.text||"";}).join(""):"{}").replace(/```json|```/g,"").trim());
       setDocForm(function(p){return {...p,date:parsed.date||p.date,title:parsed.title||"",category:parsed.category||"Maintenance",note:parsed.note||""};});setDocScanMsg("Read — review and save");
@@ -4383,7 +4421,18 @@ ${pdfText.slice(0,24000)}`}]};
 )}
       {/* ══ OFFICE TAB — receipts, expenses, and True Net ══════════════════════ */}
       {tab==="office"&&(function(){
-        const totalExpenses=expenses.reduce(function(sum,e){return sum+(parseFloat(e.amount)||0);},0);
+        // True Net must NEVER mix demo sample money with real expenses (audit
+        // fix #6). Instead of showing an empty Office to demo users, demo mode
+        // gets a fully consistent fake world: demo weeks + demo sample expenses,
+        // clearly labeled. The user's REAL expenses stay hidden until they
+        // switch to My Data mode — so numbers always come from one world only.
+        const DEMO_EXPENSES=[
+          {id:"demo1",date:"06/18/2026",category:"Tires",desc:"2 steer tires — Road Ready Tire Shop",amount:"612.00",note:"From: Road Ready Tire"},
+          {id:"demo2",date:"06/27/2026",category:"Maintenance",desc:"PM service + oil change",amount:"289.50",note:"From: FleetCare Baltimore"},
+          {id:"demo3",date:"07/03/2026",category:"Permits",desc:"Port ID renewal",amount:"75.00",note:"From: Port Authority"},
+        ];
+        const officeExpenses=demoMode?DEMO_EXPENSES:expenses;
+        const totalExpenses=officeExpenses.reduce(function(sum,e){return sum+(parseFloat(e.amount)||0);},0);
         const ytdNetFromWeeks=allW.reduce(function(sum,w){return sum+(w.net||0);},0);
         const trueNet=ytdNetFromWeeks-totalExpenses;
 
@@ -4476,14 +4525,14 @@ ${pdfText.slice(0,24000)}`}]};
 
           {/* EXPENSE HISTORY */}
           <div style={K()}>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:10}}>📋 Expense History ({expenses.length})</div>
-            {expenses.length===0?(
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:10}}>📋 Expense History ({officeExpenses.length}){demoMode&&<span style={{fontSize:8,fontWeight:800,color:C.a3,background:C.a3+"18",border:"1px solid "+C.a3+"44",borderRadius:20,padding:"2px 8px",marginLeft:8}}>👀 SAMPLE DATA</span>}</div>
+            {officeExpenses.length===0?(
               <div style={{textAlign:"center",padding:"20px",color:C.sub,fontSize:11}}>
                 <div style={{fontSize:26,marginBottom:6}}>🧾</div>
                 No expenses tracked yet — scan a receipt above to get started
               </div>
             ):(
-              [...expenses].reverse().map(function(e,i){
+              [...officeExpenses].reverse().map(function(e,i){
                 return(
                   <div key={e.id||i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",background:C.bg,borderRadius:8,border:"1px solid "+C.border,marginBottom:8}}>
                     <div>
@@ -4492,7 +4541,7 @@ ${pdfText.slice(0,24000)}`}]};
                     </div>
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
                       <span style={{fontSize:13,fontWeight:800,color:C.red}}>${parseFloat(e.amount).toFixed(2)}</span>
-                      <button onClick={function(){setExpenses(function(p){return p.filter(function(x){return x.id!==e.id;});});}} style={{background:"none",border:"none",color:C.sub,fontSize:14,cursor:"pointer",padding:"0 4px"}}>×</button>
+                      {!demoMode&&<button onClick={function(){setExpenses(function(p){return p.filter(function(x){return x.id!==e.id;});});}} style={{background:"none",border:"none",color:C.sub,fontSize:14,cursor:"pointer",padding:"0 4px"}}>×</button>}
                     </div>
                   </div>
                 );
