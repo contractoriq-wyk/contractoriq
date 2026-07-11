@@ -70,8 +70,11 @@ const LOGO_ICON="/images/logo-icon.png";
 // ═══ PRICING (swap these at launch — single source of truth) ═══
 // App version — bump this with every meaningful release so customers can
 // see the product is actively improving. Format: MAJOR.MINOR.PATCH
-const APP_VERSION="3.10.1";
-const APP_VERSION_DATE="July 2026";
+// Version scheme: MAJOR.MONTH.DAY — bump on EVERY file delivery so you can
+// verify at a glance that the deployed site is running the file you just
+// uploaded (check the version chip in the Menu or the legal footer).
+const APP_VERSION="3.7.11";
+const APP_VERSION_DATE="Jul 11 · build 15:20";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -2353,7 +2356,7 @@ ${pdfText.slice(0,24000)}`}]};
                   {/* Account header */}
                   <div style={{padding:"10px 12px",marginBottom:8,background:`${C.accent}10`,border:`1px solid ${C.accent}25`,borderRadius:10,margin:"0 2px 8px"}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
-                      <span style={{fontSize:8,color:C.sub,letterSpacing:"0.08em"}}>SIGNED IN</span>
+                      <span style={{fontSize:8,color:C.sub,letterSpacing:"0.08em"}}>SIGNED IN</span><span style={{fontSize:8,color:C.sub,marginLeft:6,opacity:0.7}}>v{APP_VERSION}</span>
                       <button onClick={()=>setHideEmail(p=>!p)} style={{display:"flex",alignItems:"center",gap:4,background:"none",border:"none",cursor:"pointer",padding:0}}>
                         <span style={{fontSize:8,color:hideEmail?C.accent:C.sub,fontWeight:700}}>{hideEmail?"🙈 Hidden":"👁 Presenter Mode"}</span>
                         <div style={{width:26,height:14,borderRadius:8,background:hideEmail?C.accent:C.border,position:"relative",flexShrink:0}}><div style={{width:10,height:10,borderRadius:"50%",background:"white",position:"absolute",top:2,left:hideEmail?14:2,transition:"left 0.15s"}}/></div>
@@ -4290,7 +4293,8 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
           </div>
 
-          {/* GET FUNDED */}
+          {/* GET FUNDED — Pro Smart only; teaser shown to Standard to make the upgrade worth it */}
+          {isSmart?(
           <div style={{borderRadius:14,overflow:"hidden",border:"1px solid #fbbf2444",marginBottom:14}}>
             <div style={{padding:"14px 16px",background:"linear-gradient(135deg,#fbbf2415,#f59e0b08)",borderBottom:"1px solid #fbbf2422"}}>
               <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:8}}>
@@ -4387,6 +4391,14 @@ ${pdfText.slice(0,24000)}`}]};
               );})}
             </div>
           </div>
+          ):(
+          <div style={{borderRadius:14,border:"1px solid #fbbf2444",marginBottom:14,padding:"18px 16px",background:"linear-gradient(135deg,#fbbf2410,#f59e0b06)",textAlign:"center"}}>
+            <div style={{fontSize:28,marginBottom:8}}>🏦</div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:14,fontWeight:800,color:"#fbbf24",marginBottom:6}}>🔒 Get Funded — Institutions That Trust Your Data</div>
+            <div style={{fontSize:11,color:C.sub,lineHeight:1.7,maxWidth:400,margin:"0 auto 14px"}}>Your uploaded settlements become verified proof of income — the exact thing lenders ask for. Pro Smart matches your real YTD earnings against SBA loans, equipment financing, factoring, and lines of credit you likely qualify for.</div>
+            <button onClick={function(){openUpgrade("funded");}} style={{padding:"10px 22px",borderRadius:9,background:"linear-gradient(135deg,#fbbf24,#f59e0b)",border:"none",color:"#000",fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Unlock with Pro Smart →</button>
+          </div>
+          )}
 
           {/* QUICK ADD SETTLEMENT */}
           <div style={{...K(),border:`1px solid ${C.accent}33`}}>
@@ -4576,7 +4588,7 @@ ${pdfText.slice(0,24000)}`}]};
             <a href="/faq.html" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>FAQ</a>
             <a href="mailto:hello@getdrayageiq.com" style={{color:C.accent,fontSize:10,textDecoration:"none",fontWeight:600}}>Contact Support</a>
           </div>
-          <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid "+C.border,fontSize:8,color:C.border}}>© {new Date().getFullYear()} DrayageIQ · All Rights Reserved · getdrayageiq.com</div>
+          <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid "+C.border,fontSize:8,color:C.border}}>© {new Date().getFullYear()} DrayageIQ · All Rights Reserved · getdrayageiq.com · v{APP_VERSION} ({APP_VERSION_DATE})</div>
         </div>
       </div>
 
