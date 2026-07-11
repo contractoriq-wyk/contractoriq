@@ -27,6 +27,41 @@ class FSCErrorBoundary extends React.Component {
   }
 }
 
+// ═══ APP-LEVEL ERROR BOUNDARY (audit fix #8) ═══
+// Catches ANY render crash anywhere in the app (malformed cloud data, an
+// unexpected null, a bad deploy) and shows a friendly recovery screen instead
+// of the blank white page — the exact failure mode that once took down the
+// Mama JJJ site. Data is untouched: a reload almost always recovers.
+class AppErrorBoundary extends React.Component {
+  constructor(props){
+    super(props);
+    this.state={hasError:false,errorMsg:""};
+  }
+  static getDerivedStateFromError(error){
+    return {hasError:true,errorMsg:(error&&error.message)||"Unknown error"};
+  }
+  componentDidCatch(error,info){
+    console.error("App crashed:",error,info);
+  }
+  render(){
+    if(this.state.hasError){
+      return (
+        <div style={{minHeight:"100vh",background:"#0b0f1c",display:"flex",alignItems:"center",justifyContent:"center",padding:24,fontFamily:"'IBM Plex Mono',monospace"}}>
+          <div style={{maxWidth:400,textAlign:"center"}}>
+            <div style={{fontSize:44,marginBottom:14}}>🔧</div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:19,fontWeight:800,color:"#f0f6ff",marginBottom:10}}>Something hiccupped</div>
+            <div style={{fontSize:12,color:"#8fa3c0",lineHeight:1.7,marginBottom:18}}>Don't worry — your data is safe in the cloud. A quick reload usually fixes this.</div>
+            <button onClick={function(){window.location.reload();}} style={{padding:"12px 28px",borderRadius:10,background:"linear-gradient(135deg,#00ffcc,#00d4aa)",border:"none",color:"#000",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>↻ Reload App</button>
+            <div style={{fontSize:9,color:"#2c3a52",marginTop:16,fontFamily:"monospace",wordBreak:"break-all"}}>{this.state.errorMsg}</div>
+            <div style={{fontSize:9,color:"#8fa3c0",marginTop:8}}>Still stuck? Email <a href="mailto:hello@getdrayageiq.com" style={{color:"#00ffcc"}}>hello@getdrayageiq.com</a></div>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ═══ BRAND ASSETS (DrayageIQ) ═══
 const LOGO_HERO="/images/logo-hero.png";
 const LOGO_BANNER="/images/logo-banner.png";
@@ -525,6 +560,9 @@ function TVTickerTape({symbols}){
 
 
 export default function ContractorIQv26(){
+  return (<AppErrorBoundary><ContractorIQInner/></AppErrorBoundary>);
+}
+function ContractorIQInner(){
 
   if(typeof document!=='undefined'&&!document.getElementById('ciq-elite-css')){
     const s=document.createElement('style');s.id='ciq-elite-css';
