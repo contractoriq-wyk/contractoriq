@@ -4431,7 +4431,7 @@ ${pdfText.slice(0,24000)}`}]};
           {id:"demo2",date:"06/27/2026",category:"Maintenance",desc:"PM service + oil change",amount:"289.50",note:"From: FleetCare Baltimore"},
           {id:"demo3",date:"07/03/2026",category:"Permits",desc:"Port ID renewal",amount:"75.00",note:"From: Port Authority"},
         ];
-        const officeExpenses=demoMode?DEMO_EXPENSES:expenses;
+        const officeExpenses=demoMode?DEMO_EXPENSES:expenses;// demo = consistent sample world; real expenses stay hidden + protected
         const totalExpenses=officeExpenses.reduce(function(sum,e){return sum+(parseFloat(e.amount)||0);},0);
         const ytdNetFromWeeks=allW.reduce(function(sum,w){return sum+(w.net||0);},0);
         const trueNet=ytdNetFromWeeks-totalExpenses;
@@ -4466,6 +4466,9 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:C.text}}>🏢 The Office</div>
             <div style={{fontSize:11,color:C.sub,marginTop:2}}>Receipts, expenses, and your True Net — after real out-of-pocket costs</div>
           </div>
+          {demoMode&&(
+            <div style={{padding:"10px 12px",borderRadius:9,background:C.a3+"18",border:"1px solid "+C.a3+"44",fontSize:10,color:C.a3,textAlign:"center",marginTop:12,lineHeight:1.5}}>👀 Demo Mode — these are sample settlement numbers and sample expenses. Switch to <b>My Data Mode</b> (banner up top) to see your real True Net with your tracked expenses.</div>
+          )}
 
           {/* TRUE NET SUMMARY */}
           <div style={{display:"grid",gridTemplateColumns:wide?"1fr 1fr 1fr":"1fr 1fr",gap:12,marginBottom:16,marginTop:14}}>
