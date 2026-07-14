@@ -73,8 +73,8 @@ const LOGO_ICON="/images/logo-icon.png";
 // Version scheme: MAJOR.MONTH.DAY — bump on EVERY file delivery so you can
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
-const APP_VERSION="3.7.11";
-const APP_VERSION_DATE="Jul 11 · build 15:20";
+const APP_VERSION="3.7.11";// bumped builds same-day get a new time stamp below
+const APP_VERSION_DATE="Jul 11 · build 16:05";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -857,7 +857,7 @@ function ContractorIQInner(){
         let wd=null;
         try{
           const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:5000,maximumAge:300000}));
-          const wr=await fetch(`/api/weather?lat=${pos.coords.latitude.toFixed(4)}&lon=${pos.coords.longitude.toFixed(4)}`);
+          const wr=await fetch(`/api/weather?lat=${pos.coords.latitude.toFixed(2)}&lon=${pos.coords.longitude.toFixed(2)}`);
           if(wr.ok)wd=await wr.json();
         }catch(e){}
         setLiveData({
@@ -1278,17 +1278,17 @@ ${pdfText.slice(0,24000)}`}]};
       let userLat=null,userLon=null;
       try{
         const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:4000,maximumAge:60000}));
-        userLat=pos.coords.latitude.toFixed(4);
-        userLon=pos.coords.longitude.toFixed(4);
+        userLat=pos.coords.latitude.toFixed(2);
+        userLon=pos.coords.longitude.toFixed(2);
         try{
           const geo=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json`);
           const gd=await geo.json();
           const city=gd?.address?.city||gd?.address?.town||gd?.address?.village||gd?.address?.county||"";
           const state=gd?.address?.state||"";
           const zip=gd?.address?.postcode||"";
-          locationCtx=`User location: ${city}${state?", "+state:""} ${zip} (lat ${userLat}, lon ${userLon}).`;
+          locationCtx=`User location: ${city}${state?", "+state:""} ${zip}.`;// city-level only — raw coordinates never go into the AI prompt (privacy)
         }catch(e){
-          locationCtx=`User location: lat ${userLat}, lon ${userLon}.`;
+          locationCtx=`User location: near lat ${userLat}, lon ${userLon} (approximate, ~1km).`;
         }
       }catch(e){}
 
@@ -1384,7 +1384,7 @@ ${pdfText.slice(0,24000)}`}]};
           let weatherQ="/api/weather?city=Columbia,MD";
           try{
             const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:3000,maximumAge:120000}));
-            weatherQ=`/api/weather?lat=${pos.coords.latitude.toFixed(4)}&lon=${pos.coords.longitude.toFixed(4)}`;
+            weatherQ=`/api/weather?lat=${pos.coords.latitude.toFixed(2)}&lon=${pos.coords.longitude.toFixed(2)}`;
           }catch(e){}
           const [dieselRes,wxRes]=await Promise.allSettled([
             fetch("/api/diesel").then(r=>r.json()),
@@ -1669,7 +1669,7 @@ ${pdfText.slice(0,24000)}`}]};
 
               {icon:"💡",step:"Smart Insights",path:"smart",title:"Smart Insights: Your Early Warning System",body:"Right in the Deduction Breakdown card, DrayageIQ compares this week's Fuel, Insurance, and Operations spending against your last 7 weeks. If any category jumps or drops more than 15%, you'll see an alert immediately — like 'Fuel up 23% vs your average'. There's also an Escrow Progress bar showing how close you are to your $2,500 target and how many weeks are left at your current pace.",tip:"💡 This catches problems early — a fee that suddenly doubled, or fuel spending that's creeping up — before it becomes a pattern you don't notice.",action:"Next →"},
 
-              {icon:"🏦",step:"GROWTH — Get Funded",path:"smart",title:"Turn Your Settlements Into Real Funding",body:"Every settlement you upload becomes verified, documented proof of income — the exact thing banks and lenders ask for but drivers rarely have organized. The Get Funded card totals your real YTD earnings and shows actual lenders (equipment loans, working capital, lines of credit) matched to what you likely qualify for, based on YOUR numbers — not a guess. The more weeks you upload, the stronger and more convincing your income history becomes.",tip:"💡 Consistent weekly uploads build a track record. 12+ weeks of clean data makes you a far stronger loan applicant than a driver with no records at all.",action:"Next →"},
+              {icon:"🏦",step:"GROWTH — Get Funded",path:"all",title:"Turn Your Settlements Into Real Funding",body:"Every settlement you upload becomes verified, documented proof of income — the exact thing banks and lenders ask for but drivers rarely have organized. The Get Funded card (Growth tab) totals your real YTD earnings and shows actual lenders (equipment loans, working capital, lines of credit) matched to what you likely qualify for, based on YOUR numbers — not a guess. The more weeks you upload, the stronger your income history becomes.",tip:"🔒 Get Funded is a Pro Smart feature. Standard still gets the full Growth toolkit — Health Score, Weekly Action Plan, and Offer Scorer — and can upgrade anytime to unlock lender matching.",action:"Next →"},
 
               {icon:"📑",step:"GROWTH — Easier Paperwork",path:"smart",title:"DrayageIQ Does the Paperwork For You",body:"Lenders, factoring companies, and even new carriers often ask for proof of earnings, expense history, or a business summary. Instead of digging through old PDFs, DrayageIQ already has your gross, net, deductions, and mileage organized by week. Your data is ready to reference or export whenever someone asks 'show me your numbers' — no scrambling, no missing paperwork.",tip:"💡 Keeping every settlement scanned in DrayageIQ means you're always one tap away from proof of income, whether it's for a loan, an apartment, or a new carrier application.",action:"Next →"},
 
@@ -2568,7 +2568,8 @@ ${pdfText.slice(0,24000)}`}]};
                 {digestOptIn&&(
                   <div>
                     <div style={{fontSize:9,color:C.sub,marginBottom:4}}>PHONE NUMBER (WhatsApp or SMS)</div>
-                    <input type="tel" value={digestPhone} onChange={function(e){setDigestPhone(e.target.value);}} placeholder="+1 (443) 555-0100" style={{width:"100%",padding:"9px 10px",borderRadius:7,background:C.bg,border:`1px solid ${C.border}`,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box",marginBottom:8}}/>
+                    <input type="tel" value={digestPhone} onChange={function(e){setDigestPhone(e.target.value.replace(/[^0-9+()\-\s]/g,"").slice(0,20));}} placeholder="+1 (443) 555-0100" style={{width:"100%",padding:"9px 10px",borderRadius:7,background:C.bg,border:"1px solid "+(digestPhone&&!(digestPhone.replace(/\D/g,"").length>=10&&digestPhone.replace(/\D/g,"").length<=15)?C.red:C.border),color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box",marginBottom:4}}/>
+                    {digestPhone&&!(digestPhone.replace(/\D/g,"").length>=10&&digestPhone.replace(/\D/g,"").length<=15)&&<div style={{fontSize:9,color:C.red,marginBottom:8}}>Enter a full phone number with area code (10–15 digits)</div>}
                     <div style={{fontSize:9,color:"#fbbf24",fontWeight:700}}>🧪 Coming in V4 — your preference is saved and ready the moment this launches.</div>
                   </div>
                 )}
