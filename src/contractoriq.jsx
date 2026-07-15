@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.14";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 14 · build C";
+const APP_VERSION_DATE="Jul 14 · build D";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -1547,7 +1547,7 @@ ${pdfText.slice(0,24000)}`}]};
     ded_insurance:{t:"🛡️ Insurance Deductions",b:"These are your recurring insurance premiums deducted weekly: Physical Damage, Bobtail, Occupational Accident, Liability Limiter, and Roadside Assistance. These amounts should be the same every single week. If you see a different number, it may be a billing error — contact your carrier."},
     ded_ops:{t:"⚙️ Operations & Fees",b:"Recurring weekly operational fees: ELD device, Event Recorder, License Plate Program, Parking/Security, and Fuel Highway Taxes. These are mostly fixed costs of running your truck. Monitor these to catch any new fees your carrier adds."},
     ded_escrow:{t:"🏦 Escrow & Savings",b:"Money being held in escrow accounts. ESCROW-REGULAR builds toward your $2,500 target and is returned when you leave the carrier. 2290 ESCROW builds toward your Heavy Highway Vehicle Use Tax. These are YOUR money — they are saved, not spent."},
-    hotDays:{t:"🔥 Hot Days",b:"Shows your average revenue per active day for each weekday, computed from the real ship dates on your scanned moves. 'Per active day' means: total revenue earned on, say, Tuesdays ÷ the number of Tuesdays you actually worked — so a day you took off doesn't unfairly drag its average down. Use the 4-week/12-week/All filters to see if your pattern is shifting. Pro Smart feature."},
+    hotDays:{t:"🔥 Hot Days",b:"THE FORMULA: for each weekday, we take every move whose ship date falls on that weekday, sum its GROSS pay (linehaul rate + FSC — before any deductions), then divide by the number of DISTINCT dates you actually worked that weekday. Example: two Tuesdays worked, earning $640 total → Tuesday = $320/day. A Tuesday you took off is NOT counted as a zero, so days off never drag the average down. Why gross and not net? Deductions (insurance, escrow, fees) arrive as one weekly lump on your settlement — there's no honest way to split them across individual days, so a per-day 'net' would be a made-up number. Gross per day is the true, comparable measure of which days bring in work. 🔥 = highest average, 🧊 = lowest."},
     fscCalc:{t:"⛽ Fuel Surcharge Calculator",b:"Calculates an independent FSC benchmark based on today's live diesel price, your real truck MPG, and an adjustable baseline diesel price (defaults to $2.50, but you can change it to match your carrier's own baseline if you know it). This is an estimate for your own use — your carrier's actual FSC table may use a different formula and won't always match exactly. This is a Pro Smart feature since it requires live diesel pricing."},
     returnOnSpend:{t:"💰 Return on Spend",b:"For every $1 you spend running your truck (all deductions combined, net of any fuel rebate), how much revenue did you generate? A ratio of 1:3 or higher is IDEAL — you're producing $3+ for every dollar spent. A ratio of 1:1.5 is SAFE — you're still profiting 50 cents on every dollar. Below 1:1.5 means your costs are eating too much into your revenue."},
     health:{t:"Performance by Carrier",b:"Green is strong, gold is worth watching, red needs attention."},
@@ -2795,6 +2795,7 @@ ${pdfText.slice(0,24000)}`}]};
                     })}
                   </div>
                 </div>
+                {helpModal("hotDays")}
                 {!isSmart?(
                   <div style={{textAlign:"center",padding:"14px 8px"}}>
                     <div style={{fontSize:11,color:C.sub,lineHeight:1.6,marginBottom:10}}>🔒 See exactly which weekdays pay you the most — push hard on hot days, rest easy on slow ones. Based on your real move dates.</div>
@@ -2802,7 +2803,7 @@ ${pdfText.slice(0,24000)}`}]};
                   </div>
                 ):(
                   <div>
-                    <div style={{fontSize:10,color:C.sub,marginBottom:10}}>Average revenue per <i>active</i> day, from your real move dates ({dated.length} dated moves)</div>
+                    <div style={{fontSize:10,color:C.sub,marginBottom:10}}>Average GROSS revenue (rate + FSC, before deductions) per <i>active</i> day · {dated.length} dated moves</div>
                     {rows.map(function(r){
                       const isBest=r.day===best.day,isWorst=r.day===worst.day&&rows.length>2;
                       return(
