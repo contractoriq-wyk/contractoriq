@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.11";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 11 · build 16:05";
+const APP_VERSION_DATE="Jul 11 · build 17:10";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -2189,7 +2189,7 @@ ${pdfText.slice(0,24000)}`}]};
       )}
 
       {/* DEVICE MISMATCH */}
-      {deviceMismatch&&(<div style={{background:C.red+"18",borderBottom:"1px solid "+C.red+"44",padding:"10px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{fontSize:11,color:"#f87171",fontWeight:700}}>⚠️ Account detected on new device — please re-verify your subscription</div><button onClick={()=>window.open("https://buy.stripe.com/fZufZh2lr2co3Q6am29MY01","_blank")} style={{padding:"4px 10px",borderRadius:6,background:C.red+"22",border:"1px solid "+C.red+"55",color:"#f87171",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Verify</button></div>)}
+      {deviceMismatch&&!user&&(<div style={{background:C.accent+"12",borderBottom:"1px solid "+C.accent+"33",padding:"10px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}><div style={{fontSize:11,color:C.accent,fontWeight:700}}>👋 New device? Sign in with your email to restore your subscription — takes 10 seconds.</div><button onClick={()=>{setShowWelcome(true);}} style={{padding:"5px 12px",borderRadius:6,background:C.accent+"22",border:"1px solid "+C.accent+"55",color:C.accent,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700,whiteSpace:"nowrap"}}>Sign In</button></div>)}
 
       {/* DATA MODE TOGGLE */}
       <div style={{background:demoMode?"linear-gradient(135deg,"+C.a3+"22,"+C.accent+"12)":C.bg,borderBottom:"1px solid "+(demoMode?C.a3+"44":C.border),padding:"9px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
