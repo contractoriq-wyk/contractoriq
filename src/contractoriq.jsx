@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.14";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 14 · build B";
+const APP_VERSION_DATE="Jul 14 · build C";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -663,6 +663,7 @@ function ContractorIQInner(){
   useEffect(()=>{try{localStorage.setItem("ciq_price_auto",String(priceAutoSync));}catch(e){}},[priceAutoSync]);
   const [milesBuffer,setMilesBuffer]=useState(5);
   const [focusMode,setFocusMode]=useState(false);
+  const [hotDaysRange,setHotDaysRange]=useState("all");// "4w" | "12w" | "all"
   const [showSettings,setShowSettings]=useState(false);
   const [showDigestModal,setShowDigestModal]=useState(false);
   const [showRoadmap,setShowRoadmap]=useState(false);
@@ -1108,7 +1109,7 @@ function ContractorIQInner(){
   const safeW=visibleW.length>0?visibleW:(allW.length>0?allW:DEMO_W);
   const vendorKeys=Object.keys(VENDORS);
   const vendorStats=vendorKeys.map(vk=>{const vw=allW.filter(w=>detectVendor(w)===vk);if(!vw.length)return null;const vGross=vw.reduce((s,w)=>s+w.gross,0),vNet=vw.reduce((s,w)=>s+w.net,0),vDed=vw.reduce((s,w)=>s+w.totalDeductions,0);return{...VENDORS[vk],key:vk,weeks:vw.length,gross:vGross,net:vNet,ded:vDed,margin:vGross>0?(vNet/vGross*100).toFixed(1):"0.0"};}).filter(Boolean);
-  const allMoves=allW.flatMap(w=>pairRoundTrips(mergeExtraPay(w.moves||[])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0,emptyMi:m.emptyMi||0,loadedMi:m.loadedMi||0,wk:w.week})));
+  const allMoves=allW.flatMap(w=>pairRoundTrips(mergeExtraPay(w.moves||[])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0,emptyMi:m.emptyMi||0,loadedMi:m.loadedMi||0,dt:m.dt||"",wk:w.week})));
   const tGross=allW.reduce((s,w)=>s+w.gross,0),tNet=allW.reduce((s,w)=>s+w.net,0),tDed=allW.reduce((s,w)=>s+w.totalDeductions,0);
   const tMi=allMoves.reduce((s,m)=>s+m.miles,0);
   const avgRPM=tMi>0?(allMoves.reduce((s,m)=>s+m.rate+m.fsc,0)/tMi).toFixed(2):"0.00";
@@ -1546,6 +1547,7 @@ ${pdfText.slice(0,24000)}`}]};
     ded_insurance:{t:"🛡️ Insurance Deductions",b:"These are your recurring insurance premiums deducted weekly: Physical Damage, Bobtail, Occupational Accident, Liability Limiter, and Roadside Assistance. These amounts should be the same every single week. If you see a different number, it may be a billing error — contact your carrier."},
     ded_ops:{t:"⚙️ Operations & Fees",b:"Recurring weekly operational fees: ELD device, Event Recorder, License Plate Program, Parking/Security, and Fuel Highway Taxes. These are mostly fixed costs of running your truck. Monitor these to catch any new fees your carrier adds."},
     ded_escrow:{t:"🏦 Escrow & Savings",b:"Money being held in escrow accounts. ESCROW-REGULAR builds toward your $2,500 target and is returned when you leave the carrier. 2290 ESCROW builds toward your Heavy Highway Vehicle Use Tax. These are YOUR money — they are saved, not spent."},
+    hotDays:{t:"🔥 Hot Days",b:"Shows your average revenue per active day for each weekday, computed from the real ship dates on your scanned moves. 'Per active day' means: total revenue earned on, say, Tuesdays ÷ the number of Tuesdays you actually worked — so a day you took off doesn't unfairly drag its average down. Use the 4-week/12-week/All filters to see if your pattern is shifting. Pro Smart feature."},
     fscCalc:{t:"⛽ Fuel Surcharge Calculator",b:"Calculates an independent FSC benchmark based on today's live diesel price, your real truck MPG, and an adjustable baseline diesel price (defaults to $2.50, but you can change it to match your carrier's own baseline if you know it). This is an estimate for your own use — your carrier's actual FSC table may use a different formula and won't always match exactly. This is a Pro Smart feature since it requires live diesel pricing."},
     returnOnSpend:{t:"💰 Return on Spend",b:"For every $1 you spend running your truck (all deductions combined, net of any fuel rebate), how much revenue did you generate? A ratio of 1:3 or higher is IDEAL — you're producing $3+ for every dollar spent. A ratio of 1:1.5 is SAFE — you're still profiting 50 cents on every dollar. Below 1:1.5 means your costs are eating too much into your revenue."},
     health:{t:"Performance by Carrier",b:"Green is strong, gold is worth watching, red needs attention."},
@@ -1696,6 +1698,8 @@ ${pdfText.slice(0,24000)}`}]};
               {icon:"🩺",step:"GROWTH — Data Health",path:"smart",title:"Data Health: Trust Your Numbers",body:"At the top of the GROWTH tab, Data Health automatically scans EVERY week you've ever uploaded — not just the one you're viewing — checking if the extracted deduction totals match the settlement document. Shows '✅ All Clear' when everything's accurate, or lists exactly which weeks need attention and by how much.",tip:"💡 This is your safety net. Before you show your numbers to a lender or make a big decision based on your data, check Data Health first.",action:"Next →"},
 
               {icon:"⛽",step:"Fuel Surcharge Calculator",path:"smart",title:"Quote FSC With Confidence — No Math Required",body:"In the Document Analyzer tab, enter any linehaul rate and miles for a load you're considering — even work outside your regular carrier. The calculator instantly shows the fair FSC% AND the actual dollar amount to add, plus your full quote total ready to say out loud to a client. It factors in today's live diesel price, your real truck MPG, and a baseline diesel price you can adjust to match your own carrier's contract.",tip:"💡 Every carrier sets their own FSC baseline — check your carrier's FSC schedule and enter it in the calculator for the closest match. This tool gives you an independent, honest benchmark, not a guaranteed match to any specific carrier's table.",action:"Next →"},
+
+              {icon:"🔥",step:"Hot Days",path:"smart",title:"Know Your Best Money Days",body:"The Hot Days card (Dashboard) reads the real ship dates on every move you've scanned and shows your average revenue per active day, for each day of the week. Your hottest day gets the 🔥 — push hard on those. Your slowest gets the 🧊 — that's your safest day to rest, do maintenance, or handle office work without leaving real money on the table. Filter by 4 weeks, 12 weeks, or all time to spot shifts.",tip:"💡 Patterns are personal — port schedules, your carrier's dispatch habits, and your own routine all shape them. Check after every few weeks of new data.",action:"Next →"},
 
               {icon:"🔎",step:"True FSC — Audit Your Vendor",path:"smart",title:"See If You're Being Paid Fairly",body:"In the Full History table (Document Analyzer tab), every move now shows two FSC columns: 'FSC Paid' (what your carrier actually gave you) and 'True FSC' (what a fair-market calculation says it should be, using the same live-diesel-price logic as the Calculator). Green means fair or generous. Red means you were underpaid on that specific move.",tip:"💡 Scroll through your history and look for patterns. If a route or vendor consistently shows red, that's real evidence to bring to a rate negotiation — or a signal to walk away from that lane.",action:"Next →"},
 
@@ -2738,6 +2742,83 @@ ${pdfText.slice(0,24000)}`}]};
           })()}
 
           {focusMode&&(<div style={{padding:"10px 14px",background:`${C.gold}12`,borderRadius:9,border:`1px solid ${C.gold}33`,fontSize:11,color:"#fbbf24",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}><span>⚡ <strong>Focus Mode ON</strong> — Key numbers only.</span><button onClick={()=>setFocusMode(false)} style={{padding:"4px 10px",borderRadius:6,background:"transparent",border:`1px solid ${C.gold}55`,color:"#fbbf24",fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,marginLeft:10}}>Show All</button></div>)}
+
+          {/* 🔥 HOT DAYS — which weekdays actually make you money (Pro Smart) */}
+          {!focusMode&&(function(){
+            const DAY_NAMES=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+            function parseDt(dt){
+              if(!dt)return null;
+              const p=String(dt).split("/");
+              if(p.length<3)return null;
+              let yr=parseInt(p[2],10);if(isNaN(yr))return null;
+              if(yr<100)yr+=2000;
+              const d=new Date(yr,parseInt(p[0],10)-1,parseInt(p[1],10));
+              return isNaN(d.getTime())?null:d;
+            }
+            // Filter moves to the selected range using each move's own date
+            const now=new Date();
+            const cutoff=hotDaysRange==="4w"?new Date(now.getTime()-28*864e5):hotDaysRange==="12w"?new Date(now.getTime()-84*864e5):null;
+            const dated=allMoves.map(function(m){return {m:m,d:parseDt(m.dt)};}).filter(function(x){return x.d&&(!cutoff||x.d>=cutoff);});
+            if(dated.length<5){
+              return(
+                <div style={K({marginBottom:16,textAlign:"center",padding:"18px"})}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>🔥 Hot Days — Your Best Money Days</div>
+                  <div style={{fontSize:10,color:C.sub,lineHeight:1.6}}>{demoMode?"Switch to My Data Mode and scan settlements to unlock your real day-by-day revenue pattern.":"Not enough dated moves yet in this range — scan more settlements (or widen the filter) and this fills in automatically."}</div>
+                </div>
+              );
+            }
+            // Aggregate: revenue + distinct active dates per weekday
+            const agg={};// day -> {rev, dates:Set, count}
+            dated.forEach(function(x){
+              const day=x.d.getDay();
+              if(!agg[day])agg[day]={rev:0,dates:new Set(),count:0};
+              agg[day].rev+=(x.m.rate||0)+(x.m.fsc||0);
+              agg[day].dates.add(x.d.toDateString());
+              agg[day].count++;
+            });
+            const rows=Object.keys(agg).map(function(k){
+              const a=agg[k];
+              return {day:+k,name:DAY_NAMES[+k],rev:a.rev,perDay:a.rev/a.dates.size,activeDays:a.dates.size,count:a.count};
+            }).sort(function(a,b){return a.day-b.day;});
+            const maxPerDay=Math.max.apply(null,rows.map(function(r){return r.perDay;}));
+            const best=rows.reduce(function(a,b){return b.perDay>a.perDay?b:a;});
+            const worst=rows.reduce(function(a,b){return b.perDay<a.perDay?b:a;});
+            const avgAll=rows.reduce(function(s,r){return s+r.perDay;},0)/rows.length;
+            const bestLift=avgAll>0?((best.perDay-avgAll)/avgAll*100).toFixed(0):0;
+            return(
+              <div style={K({marginBottom:16})}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:6}}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔥 Hot Days — Your Best Money Days{helpBtn("hotDays")}</div>
+                  <div style={{display:"flex",gap:4}}>
+                    {[["4w","4 wks"],["12w","12 wks"],["all","All"]].map(function(opt){
+                      return <button key={opt[0]} onClick={function(){setHotDaysRange(opt[0]);}} style={{padding:"3px 9px",borderRadius:14,background:hotDaysRange===opt[0]?C.accent+"22":"transparent",border:"1px solid "+(hotDaysRange===opt[0]?C.accent+"66":C.border),color:hotDaysRange===opt[0]?C.accent:C.sub,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{opt[1]}</button>;
+                    })}
+                  </div>
+                </div>
+                {!isSmart?(
+                  <div style={{textAlign:"center",padding:"14px 8px"}}>
+                    <div style={{fontSize:11,color:C.sub,lineHeight:1.6,marginBottom:10}}>🔒 See exactly which weekdays pay you the most — push hard on hot days, rest easy on slow ones. Based on your real move dates.</div>
+                    <button onClick={function(){openUpgrade("hotdays");}} style={{padding:"8px 18px",borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Unlock with Pro Smart →</button>
+                  </div>
+                ):(
+                  <div>
+                    <div style={{fontSize:10,color:C.sub,marginBottom:10}}>Average revenue per <i>active</i> day, from your real move dates ({dated.length} dated moves)</div>
+                    {rows.map(function(r){
+                      const isBest=r.day===best.day,isWorst=r.day===worst.day&&rows.length>2;
+                      return(
+                        <div key={r.day} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+                          <span style={{fontSize:10,fontWeight:700,color:isBest?C.green:isWorst?C.red:C.text,width:30,flexShrink:0}}>{r.name}</span>
+                          <div style={{flex:1}}><Bar pct={maxPerDay>0?(r.perDay/maxPerDay*100):0} color={isBest?C.green:isWorst?C.red:C.accent} h={10}/></div>
+                          <span style={{fontSize:10,fontWeight:800,color:isBest?C.green:isWorst?C.red:C.text,width:62,textAlign:"right",flexShrink:0}}>${r.perDay.toFixed(0)}{isBest?" 🔥":isWorst?" 🧊":""}</span>
+                        </div>
+                      );
+                    })}
+                    <div style={{marginTop:10,padding:"9px 11px",borderRadius:8,background:C.green+"12",border:"1px solid "+C.green+"33",fontSize:10,color:C.green,lineHeight:1.5}}>💡 <b>{DAY_NAMES[best.day]}s</b> are your hottest day — averaging <b>${best.perDay.toFixed(0)}/day</b>, {bestLift}% above your typical day. {rows.length>2?`${DAY_NAMES[worst.day]}s run slowest ($${worst.perDay.toFixed(0)}) — a safer day to rest or handle maintenance.`:""}</div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* VENDOR CARDS */}
           {vendorStats.length>0&&(
