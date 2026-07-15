@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.14";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 14 · build E";
+const APP_VERSION_DATE="Jul 14 · build G";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -665,6 +665,7 @@ function ContractorIQInner(){
   const [milesBuffer,setMilesBuffer]=useState(5);
   const [focusMode,setFocusMode]=useState(false);
   const [hotDaysRange,setHotDaysRange]=useState("all");// "4w" | "12w" | "all"
+  const [routesRange,setRoutesRange]=useState("all");// Best Routes card filter
   const [showSettings,setShowSettings]=useState(false);
   const [showDigestModal,setShowDigestModal]=useState(false);
   const [showRoadmap,setShowRoadmap]=useState(false);
@@ -1548,6 +1549,8 @@ ${pdfText.slice(0,24000)}`}]};
     ded_insurance:{t:"🛡️ Insurance Deductions",b:"These are your recurring insurance premiums deducted weekly: Physical Damage, Bobtail, Occupational Accident, Liability Limiter, and Roadside Assistance. These amounts should be the same every single week. If you see a different number, it may be a billing error — contact your carrier."},
     ded_ops:{t:"⚙️ Operations & Fees",b:"Recurring weekly operational fees: ELD device, Event Recorder, License Plate Program, Parking/Security, and Fuel Highway Taxes. These are mostly fixed costs of running your truck. Monitor these to catch any new fees your carrier adds."},
     ded_escrow:{t:"🏦 Escrow & Savings",b:"Money being held in escrow accounts. ESCROW-REGULAR builds toward your $2,500 target and is returned when you leave the carrier. 2290 ESCROW builds toward your Heavy Highway Vehicle Use Tax. These are YOUR money — they are saved, not spent."},
+    bestRoutes:{t:"🛣️ Best Routes",b:"Ranks the lanes you actually run by how well they pay for the miles they demand, using your real settlement history. The 🔥 lane is your proven money-maker — protect it, ask for more of it. The 🧊 lane is your weakest repeated route — worth questioning next time dispatch offers it. Only routes you've run at least twice are ranked, so one lucky (or unlucky) load never skews the picture. Round-trip lanes show with a ⇄. Figures are gross, before weekly deductions."},
+    bestRoutes:{t:"🛣️ Best Routes",b:"Ranks the lanes you actually run by how well they pay for the miles they cost you. Both directions of the same corridor are pooled together, and a lane only appears once you've run it at least twice — so one lucky load can't crown a route. 🔥 lanes are your proven winners: accept them every time dispatch offers. 🧊 lanes pay the least for your miles — worth a second thought, or a rate conversation. Figures are gross (rate + FSC, before weekly deductions)."},
     hotDays:{t:"🔥 Hot Days",b:"Reveals which days of the week actually bring you the most work, using the real ship dates on your scanned settlements. The 🔥 marks your consistently strongest day — the one to protect and push hard on. The 🧊 marks your slowest — the safest day to rest, schedule maintenance, or handle office work without leaving real money on the road. Figures are gross (rate + FSC, before weekly deductions), and days you took off never count against a day's standing. Use the time filters to see whether your pattern is shifting with the seasons."},
     fscCalc:{t:"⛽ Fuel Surcharge Calculator",b:"Calculates an independent FSC benchmark based on today's live diesel price, your real truck MPG, and an adjustable baseline diesel price (defaults to $2.50, but you can change it to match your carrier's own baseline if you know it). This is an estimate for your own use — your carrier's actual FSC table may use a different formula and won't always match exactly. This is a Pro Smart feature since it requires live diesel pricing."},
     returnOnSpend:{t:"💰 Return on Spend",b:"For every $1 you spend running your truck (all deductions combined, net of any fuel rebate), how much revenue did you generate? A ratio of 1:3 or higher is IDEAL — you're producing $3+ for every dollar spent. A ratio of 1:1.5 is SAFE — you're still profiting 50 cents on every dollar. Below 1:1.5 means your costs are eating too much into your revenue."},
@@ -1701,6 +1704,10 @@ ${pdfText.slice(0,24000)}`}]};
               {icon:"⛽",step:"Fuel Surcharge Calculator",path:"smart",title:"Quote FSC With Confidence — No Math Required",body:"In the Document Analyzer tab, enter any linehaul rate and miles for a load you're considering — even work outside your regular carrier. The calculator instantly shows the fair FSC% AND the actual dollar amount to add, plus your full quote total ready to say out loud to a client. It factors in today's live diesel price, your real truck MPG, and a baseline diesel price you can adjust to match your own carrier's contract.",tip:"💡 Every carrier sets their own FSC baseline — check your carrier's FSC schedule and enter it in the calculator for the closest match. This tool gives you an independent, honest benchmark, not a guaranteed match to any specific carrier's table.",action:"Next →"},
 
               {icon:"🔥",step:"Hot Days",path:"smart",title:"Know Your Best Money Days",body:"The Hot Days card (Dashboard) reads the real ship dates on every move you've scanned and shows your average revenue per active day, for each day of the week. Your hottest day gets the 🔥 — push hard on those. Your slowest gets the 🧊 — that's your safest day to rest, do maintenance, or handle office work without leaving real money on the table. Filter by 4 weeks, 12 weeks, or all time to spot shifts.",tip:"💡 Patterns are personal — port schedules, your carrier's dispatch habits, and your own routine all shape them. Check after every few weeks of new data.",action:"Next →"},
+
+              {icon:"🛣️",step:"Best Routes",path:"smart",title:"Know Which Lanes Deserve a Yes",body:"The Best Routes card (Office tab) ranks every lane you've run 2+ times by gross pay per mile — the honest way to compare a short port shuttle against a long highway run. Your 🔥 lanes are proven winners: take them every time. Your 🧊 lanes pay the least for the same wear, fuel, and hours — the ones worth declining or renegotiating. Both directions of a corridor count as one lane, so round trips are judged fairly.",tip:"💡 Pay-per-mile beats total pay for choosing between offers — a $400 load can be worse than a $250 one if it eats twice the miles.",action:"Next →"},
+
+              {icon:"🛣️",step:"Best Routes",path:"smart",title:"Know Your Money Lanes",body:"Best Routes (Office tab) ranks every lane you've run 2+ times by real pay-per-mile from your settlements. Your 🔥 lane is proven profit — fight to keep it on your schedule. Your 🧊 lane is your weakest repeat route — now you can push back on it with your own numbers instead of a feeling. Same time filters as Hot Days: 4 weeks, 40 days, 100 days, or your full history.",tip:"💡 Hot Days tells you WHEN to run hard. Best Routes tells you WHERE. Together they turn your settlement pile into a game plan.",action:"Next →"},
 
               {icon:"🔎",step:"True FSC — Audit Your Vendor",path:"smart",title:"See If You're Being Paid Fairly",body:"In the Full History table (Document Analyzer tab), every move now shows two FSC columns: 'FSC Paid' (what your carrier actually gave you) and 'True FSC' (what a fair-market calculation says it should be, using the same live-diesel-price logic as the Calculator). Green means fair or generous. Red means you were underpaid on that specific move.",tip:"💡 Scroll through your history and look for patterns. If a route or vendor consistently shows red, that's real evidence to bring to a rate negotiation — or a signal to walk away from that lane.",action:"Next →"},
 
@@ -4588,6 +4595,163 @@ ${pdfText.slice(0,24000)}`}]};
                     <div style={{marginTop:10,padding:"9px 11px",borderRadius:8,background:C.green+"12",border:"1px solid "+C.green+"33",fontSize:10,color:C.green,lineHeight:1.5}}>💡 <b>{DAY_NAMES[best.day]}s</b> are your hottest day — averaging <b>${best.perDay.toFixed(0)}/day</b>, {bestLift}% above your typical day. {rows.length>2?`${DAY_NAMES[worst.day]}s run slowest ($${worst.perDay.toFixed(0)}) — a safer day to rest or handle maintenance.`:""}</div>
                   </div>
                 )}
+              </div>
+            );
+          })()}
+
+          {/* 🛣️ BEST ROUTES — which lanes actually pay (Pro Smart) */}
+          {(function(){
+            function parseDt2(dt){
+              if(!dt)return null;
+              const p=String(dt).split("/");
+              if(p.length<3)return null;
+              let yr=parseInt(p[2],10);if(isNaN(yr))return null;
+              if(yr<100)yr+=2000;
+              const d=new Date(yr,parseInt(p[0],10)-1,parseInt(p[1],10));
+              return isNaN(d.getTime())?null:d;
+            }
+            const now=new Date();
+            const cutoff=routesRange==="4w"?new Date(now.getTime()-28*864e5):routesRange==="40d"?new Date(now.getTime()-40*864e5):routesRange==="100d"?new Date(now.getTime()-100*864e5):null;
+            const eligible=allMoves.filter(function(m){
+              if(!(m.miles>0&&(m.rate+m.fsc)>0))return false;
+              if(!cutoff)return true;
+              const d=parseDt2(m.dt);
+              return d&&d>=cutoff;
+            });
+            // Group by corridor (A ⇄ B counts as one lane regardless of direction,
+            // so out-legs and back-legs of the same lane pool together honestly)
+            const lanes={};
+            eligible.forEach(function(m){
+              const a=(m.from||"?").trim(),b=(m.to||"?").trim();
+              const key=[a,b].sort().join(" ⇄ ");
+              if(!lanes[key])lanes[key]={rev:0,mi:0,runs:0,label:key};
+              lanes[key].rev+=(m.rate+m.fsc);
+              lanes[key].mi+=m.miles;
+              lanes[key].runs++;
+            });
+            const rows=Object.keys(lanes).map(function(k){
+              const L=lanes[k];
+              return {label:L.label,rpm:L.mi>0?L.rev/L.mi:0,avgPay:L.rev/L.runs,runs:L.runs,rev:L.rev};
+            }).filter(function(r){return r.runs>=2;}).sort(function(a,b){return b.rpm-a.rpm;});
+            if(rows.length<3){
+              return(
+                <div style={K({marginBottom:16,textAlign:"center",padding:"18px"})}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>🛣️ Best Routes — Your Highest-Paying Lanes</div>
+                  <div style={{fontSize:10,color:C.sub,lineHeight:1.6}}>{demoMode?"Switch to My Data Mode and scan settlements to see which of your real lanes pay best.":"Not enough repeated routes in this range yet — this needs lanes you've run at least twice. Widen the filter or keep scanning settlements."}</div>
+                </div>
+              );
+            }
+            const top=rows.slice(0,5);
+            const flop=rows.length>6?rows.slice(-3).reverse():[];
+            const maxRpm=top[0].rpm;
+            function laneRow(r,hot){
+              return(
+                <div key={r.label} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:10,fontWeight:700,color:hot?C.text:C.sub,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.label}</div>
+                    <div style={{marginTop:3}}><Bar pct={maxRpm>0?(r.rpm/maxRpm*100):0} color={hot?C.green:C.red} h={7}/></div>
+                  </div>
+                  <div style={{textAlign:"right",flexShrink:0,width:86}}>
+                    <div style={{fontSize:11,fontWeight:800,color:hot?C.green:C.red}}>${r.rpm.toFixed(2)}/mi</div>
+                    <div style={{fontSize:8,color:C.sub}}>${r.avgPay.toFixed(0)}/run · ×{r.runs}</div>
+                  </div>
+                </div>
+              );
+            }
+            return(
+              <div style={K({marginBottom:16})}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:6}}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🛣️ Best Routes — Your Highest-Paying Lanes{helpBtn("bestRoutes")}</div>
+                  <div style={{display:"flex",gap:4}}>
+                    {[["4w","4 wks"],["40d","40 days"],["100d","100 days"],["all","Full"]].map(function(opt){
+                      return <button key={opt[0]} onClick={function(){setRoutesRange(opt[0]);}} style={{padding:"3px 9px",borderRadius:14,background:routesRange===opt[0]?C.accent+"22":"transparent",border:"1px solid "+(routesRange===opt[0]?C.accent+"66":C.border),color:routesRange===opt[0]?C.accent:C.sub,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{opt[1]}</button>;
+                    })}
+                  </div>
+                </div>
+                {helpModal("bestRoutes")}
+                <div style={{fontSize:10,color:C.sub,marginBottom:10}}>Gross pay per mile (rate + FSC) by lane · both directions pooled · lanes run 2+ times</div>
+                <div style={{fontSize:9,fontWeight:800,color:C.green,letterSpacing:"0.06em",marginBottom:7}}>🔥 TAKE THESE EVERY TIME</div>
+                {top.map(function(r){return laneRow(r,true);})}
+                {flop.length>0&&(
+                  <div style={{marginTop:12}}>
+                    <div style={{fontSize:9,fontWeight:800,color:C.red,letterSpacing:"0.06em",marginBottom:7}}>🧊 THINK TWICE — LOWEST PAY PER MILE</div>
+                    {flop.map(function(r){return laneRow(r,false);})}
+                  </div>
+                )}
+                <div style={{marginTop:10,padding:"9px 11px",borderRadius:8,background:C.green+"12",border:"1px solid "+C.green+"33",fontSize:10,color:C.green,lineHeight:1.5}}>💡 Your best lane <b>{top[0].label}</b> pays <b>${top[0].rpm.toFixed(2)}/mile</b>{flop.length>0?` — ${(top[0].rpm/Math.max(0.01,flop[0].rpm)).toFixed(1)}× your weakest repeated lane. When dispatch offers a choice, this list is your answer.`:". When dispatch offers a choice, this list is your answer."}</div>
+              </div>
+            );
+          })()}
+
+          {/* 🛣️ BEST ROUTES — which lanes actually pay (Pro Smart) */}
+          {(function(){
+            function parseDt2(dt){
+              if(!dt)return null;
+              const p=String(dt).split("/");
+              if(p.length<3)return null;
+              let yr=parseInt(p[2],10);if(isNaN(yr))return null;
+              if(yr<100)yr+=2000;
+              const d=new Date(yr,parseInt(p[0],10)-1,parseInt(p[1],10));
+              return isNaN(d.getTime())?null:d;
+            }
+            const now2=new Date();
+            const cutoff2=routesRange==="4w"?new Date(now2.getTime()-28*864e5):routesRange==="40d"?new Date(now2.getTime()-40*864e5):routesRange==="100d"?new Date(now2.getTime()-100*864e5):null;
+            const eligible=allMoves.filter(function(m){
+              if(!m.from||!m.to||!(m.miles>0))return false;
+              if(!cutoff2)return true;
+              const d=parseDt2(m.dt);
+              return d&&d>=cutoff2;
+            });
+            const byRoute={};
+            eligible.forEach(function(m){
+              const key=m.isRoundTrip?(m.from+" ⇄ "+m.to):(m.from+" → "+m.to);
+              if(!byRoute[key])byRoute[key]={pay:0,miles:0,runs:0};
+              byRoute[key].pay+=(m.rate||0)+(m.fsc||0);
+              byRoute[key].miles+=m.miles;
+              byRoute[key].runs++;
+            });
+            const routes=Object.keys(byRoute).map(function(k){
+              const r=byRoute[k];
+              return {name:k,runs:r.runs,rpm:r.miles>0?r.pay/r.miles:0,perRun:r.pay/r.runs,totalPay:r.pay};
+            }).filter(function(r){return r.runs>=2;})// 2+ runs required — one-off loads aren't a pattern
+              .sort(function(a,b){return b.rpm-a.rpm;});
+            if(routes.length<2){
+              return(
+                <div style={K({marginBottom:16,textAlign:"center",padding:"18px"})}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>🛣️ Best Routes — Your Highest-Paying Lanes</div>
+                  <div style={{fontSize:10,color:C.sub,lineHeight:1.6}}>{demoMode?"Switch to My Data Mode and scan settlements to see which of your real lanes pay best.":"Not enough repeated routes in this range yet — routes need 2+ runs to rank. Widen the filter or scan more settlements."}</div>
+                </div>
+              );
+            }
+            const shown=routes.slice(0,8);
+            const maxRpm=shown[0].rpm;
+            const best=routes[0],worst=routes[routes.length-1];
+            return(
+              <div style={K({marginBottom:16})}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:6}}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🛣️ Best Routes — Your Highest-Paying Lanes{helpBtn("bestRoutes")}</div>
+                  <div style={{display:"flex",gap:4}}>
+                    {[["4w","4 wks"],["40d","40 days"],["100d","100 days"],["all","Full"]].map(function(opt){
+                      return <button key={opt[0]} onClick={function(){setRoutesRange(opt[0]);}} style={{padding:"3px 9px",borderRadius:14,background:routesRange===opt[0]?C.accent+"22":"transparent",border:"1px solid "+(routesRange===opt[0]?C.accent+"66":C.border),color:routesRange===opt[0]?C.accent:C.sub,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{opt[1]}</button>;
+                    })}
+                  </div>
+                </div>
+                {helpModal("bestRoutes")}
+                <div style={{fontSize:10,color:C.sub,marginBottom:10}}>Ranked by gross pay per mile (rate + FSC) · routes with 2+ runs · top {shown.length} shown</div>
+                {shown.map(function(r,i){
+                  const isBest=i===0,isWorst=r.name===worst.name&&shown.length>2;
+                  return(
+                    <div key={r.name} style={{marginBottom:9}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3,gap:8}}>
+                        <span style={{fontSize:10,fontWeight:700,color:isBest?C.green:isWorst?C.red:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{isBest?"🔥 ":isWorst?"🧊 ":""}{r.name}</span>
+                        <span style={{fontSize:10,fontWeight:800,color:isBest?C.green:isWorst?C.red:C.text,flexShrink:0}}>${r.rpm.toFixed(2)}/mi</span>
+                      </div>
+                      <Bar pct={maxRpm>0?(r.rpm/maxRpm*100):0} color={isBest?C.green:isWorst?C.red:C.accent} h={8}/>
+                      <div style={{fontSize:8,color:C.sub,marginTop:2}}>{r.runs} runs · avg ${r.perRun.toFixed(0)}/run · ${r.totalPay.toFixed(0)} total</div>
+                    </div>
+                  );
+                })}
+                <div style={{marginTop:10,padding:"9px 11px",borderRadius:8,background:C.green+"12",border:"1px solid "+C.green+"33",fontSize:10,color:C.green,lineHeight:1.5}}>💡 <b>{best.name}</b> is your money lane at <b>${best.rpm.toFixed(2)}/mi</b>. {routes.length>2?`When dispatch offers ${worst.name} ($${worst.rpm.toFixed(2)}/mi), you now know exactly what you're trading away.`:""}</div>
               </div>
             );
           })()}
