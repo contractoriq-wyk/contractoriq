@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.14";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 14 · build D";
+const APP_VERSION_DATE="Jul 14 · build E";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -488,6 +488,7 @@ function pairRoundTrips(moves){
         rt:totalPay,rate:totalPay,
         fc:totalFsc,fsc:totalFsc,
         extraPay:0,isRoundTrip:true,
+        dt:loadedLeg.dt||emptyLeg.dt||"",// keep the ship date — without this, round trips vanished from date-based analytics and Hot Days undercounted badly
         emptyPay:emptyLeg.rt||emptyLeg.rate||0,
         loadedPay:loadedLeg.rt||loadedLeg.rate||0,
         emptyMi:emptyLeg.mi||emptyLeg.miles||0,
@@ -1547,7 +1548,7 @@ ${pdfText.slice(0,24000)}`}]};
     ded_insurance:{t:"🛡️ Insurance Deductions",b:"These are your recurring insurance premiums deducted weekly: Physical Damage, Bobtail, Occupational Accident, Liability Limiter, and Roadside Assistance. These amounts should be the same every single week. If you see a different number, it may be a billing error — contact your carrier."},
     ded_ops:{t:"⚙️ Operations & Fees",b:"Recurring weekly operational fees: ELD device, Event Recorder, License Plate Program, Parking/Security, and Fuel Highway Taxes. These are mostly fixed costs of running your truck. Monitor these to catch any new fees your carrier adds."},
     ded_escrow:{t:"🏦 Escrow & Savings",b:"Money being held in escrow accounts. ESCROW-REGULAR builds toward your $2,500 target and is returned when you leave the carrier. 2290 ESCROW builds toward your Heavy Highway Vehicle Use Tax. These are YOUR money — they are saved, not spent."},
-    hotDays:{t:"🔥 Hot Days",b:"THE FORMULA: for each weekday, we take every move whose ship date falls on that weekday, sum its GROSS pay (linehaul rate + FSC — before any deductions), then divide by the number of DISTINCT dates you actually worked that weekday. Example: two Tuesdays worked, earning $640 total → Tuesday = $320/day. A Tuesday you took off is NOT counted as a zero, so days off never drag the average down. Why gross and not net? Deductions (insurance, escrow, fees) arrive as one weekly lump on your settlement — there's no honest way to split them across individual days, so a per-day 'net' would be a made-up number. Gross per day is the true, comparable measure of which days bring in work. 🔥 = highest average, 🧊 = lowest."},
+    hotDays:{t:"🔥 Hot Days",b:"Reveals which days of the week actually bring you the most work, using the real ship dates on your scanned settlements. The 🔥 marks your consistently strongest day — the one to protect and push hard on. The 🧊 marks your slowest — the safest day to rest, schedule maintenance, or handle office work without leaving real money on the road. Figures are gross (rate + FSC, before weekly deductions), and days you took off never count against a day's standing. Use the time filters to see whether your pattern is shifting with the seasons."},
     fscCalc:{t:"⛽ Fuel Surcharge Calculator",b:"Calculates an independent FSC benchmark based on today's live diesel price, your real truck MPG, and an adjustable baseline diesel price (defaults to $2.50, but you can change it to match your carrier's own baseline if you know it). This is an estimate for your own use — your carrier's actual FSC table may use a different formula and won't always match exactly. This is a Pro Smart feature since it requires live diesel pricing."},
     returnOnSpend:{t:"💰 Return on Spend",b:"For every $1 you spend running your truck (all deductions combined, net of any fuel rebate), how much revenue did you generate? A ratio of 1:3 or higher is IDEAL — you're producing $3+ for every dollar spent. A ratio of 1:1.5 is SAFE — you're still profiting 50 cents on every dollar. Below 1:1.5 means your costs are eating too much into your revenue."},
     health:{t:"Performance by Carrier",b:"Green is strong, gold is worth watching, red needs attention."},
@@ -2742,84 +2743,6 @@ ${pdfText.slice(0,24000)}`}]};
           })()}
 
           {focusMode&&(<div style={{padding:"10px 14px",background:`${C.gold}12`,borderRadius:9,border:`1px solid ${C.gold}33`,fontSize:11,color:"#fbbf24",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}><span>⚡ <strong>Focus Mode ON</strong> — Key numbers only.</span><button onClick={()=>setFocusMode(false)} style={{padding:"4px 10px",borderRadius:6,background:"transparent",border:`1px solid ${C.gold}55`,color:"#fbbf24",fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,marginLeft:10}}>Show All</button></div>)}
-
-          {/* 🔥 HOT DAYS — which weekdays actually make you money (Pro Smart) */}
-          {!focusMode&&(function(){
-            const DAY_NAMES=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-            function parseDt(dt){
-              if(!dt)return null;
-              const p=String(dt).split("/");
-              if(p.length<3)return null;
-              let yr=parseInt(p[2],10);if(isNaN(yr))return null;
-              if(yr<100)yr+=2000;
-              const d=new Date(yr,parseInt(p[0],10)-1,parseInt(p[1],10));
-              return isNaN(d.getTime())?null:d;
-            }
-            // Filter moves to the selected range using each move's own date
-            const now=new Date();
-            const cutoff=hotDaysRange==="4w"?new Date(now.getTime()-28*864e5):hotDaysRange==="12w"?new Date(now.getTime()-84*864e5):null;
-            const dated=allMoves.map(function(m){return {m:m,d:parseDt(m.dt)};}).filter(function(x){return x.d&&(!cutoff||x.d>=cutoff);});
-            if(dated.length<5){
-              return(
-                <div style={K({marginBottom:16,textAlign:"center",padding:"18px"})}>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>🔥 Hot Days — Your Best Money Days</div>
-                  <div style={{fontSize:10,color:C.sub,lineHeight:1.6}}>{demoMode?"Switch to My Data Mode and scan settlements to unlock your real day-by-day revenue pattern.":"Not enough dated moves yet in this range — scan more settlements (or widen the filter) and this fills in automatically."}</div>
-                </div>
-              );
-            }
-            // Aggregate: revenue + distinct active dates per weekday
-            const agg={};// day -> {rev, dates:Set, count}
-            dated.forEach(function(x){
-              const day=x.d.getDay();
-              if(!agg[day])agg[day]={rev:0,dates:new Set(),count:0};
-              agg[day].rev+=(x.m.rate||0)+(x.m.fsc||0);
-              agg[day].dates.add(x.d.toDateString());
-              agg[day].count++;
-            });
-            const rows=Object.keys(agg).map(function(k){
-              const a=agg[k];
-              return {day:+k,name:DAY_NAMES[+k],rev:a.rev,perDay:a.rev/a.dates.size,activeDays:a.dates.size,count:a.count};
-            }).sort(function(a,b){return a.day-b.day;});
-            const maxPerDay=Math.max.apply(null,rows.map(function(r){return r.perDay;}));
-            const best=rows.reduce(function(a,b){return b.perDay>a.perDay?b:a;});
-            const worst=rows.reduce(function(a,b){return b.perDay<a.perDay?b:a;});
-            const avgAll=rows.reduce(function(s,r){return s+r.perDay;},0)/rows.length;
-            const bestLift=avgAll>0?((best.perDay-avgAll)/avgAll*100).toFixed(0):0;
-            return(
-              <div style={K({marginBottom:16})}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:6}}>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔥 Hot Days — Your Best Money Days{helpBtn("hotDays")}</div>
-                  <div style={{display:"flex",gap:4}}>
-                    {[["4w","4 wks"],["12w","12 wks"],["all","All"]].map(function(opt){
-                      return <button key={opt[0]} onClick={function(){setHotDaysRange(opt[0]);}} style={{padding:"3px 9px",borderRadius:14,background:hotDaysRange===opt[0]?C.accent+"22":"transparent",border:"1px solid "+(hotDaysRange===opt[0]?C.accent+"66":C.border),color:hotDaysRange===opt[0]?C.accent:C.sub,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{opt[1]}</button>;
-                    })}
-                  </div>
-                </div>
-                {helpModal("hotDays")}
-                {!isSmart?(
-                  <div style={{textAlign:"center",padding:"14px 8px"}}>
-                    <div style={{fontSize:11,color:C.sub,lineHeight:1.6,marginBottom:10}}>🔒 See exactly which weekdays pay you the most — push hard on hot days, rest easy on slow ones. Based on your real move dates.</div>
-                    <button onClick={function(){openUpgrade("hotdays");}} style={{padding:"8px 18px",borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Unlock with Pro Smart →</button>
-                  </div>
-                ):(
-                  <div>
-                    <div style={{fontSize:10,color:C.sub,marginBottom:10}}>Average GROSS revenue (rate + FSC, before deductions) per <i>active</i> day · {dated.length} dated moves</div>
-                    {rows.map(function(r){
-                      const isBest=r.day===best.day,isWorst=r.day===worst.day&&rows.length>2;
-                      return(
-                        <div key={r.day} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
-                          <span style={{fontSize:10,fontWeight:700,color:isBest?C.green:isWorst?C.red:C.text,width:30,flexShrink:0}}>{r.name}</span>
-                          <div style={{flex:1}}><Bar pct={maxPerDay>0?(r.perDay/maxPerDay*100):0} color={isBest?C.green:isWorst?C.red:C.accent} h={10}/></div>
-                          <span style={{fontSize:10,fontWeight:800,color:isBest?C.green:isWorst?C.red:C.text,width:62,textAlign:"right",flexShrink:0}}>${r.perDay.toFixed(0)}{isBest?" 🔥":isWorst?" 🧊":""}</span>
-                        </div>
-                      );
-                    })}
-                    <div style={{marginTop:10,padding:"9px 11px",borderRadius:8,background:C.green+"12",border:"1px solid "+C.green+"33",fontSize:10,color:C.green,lineHeight:1.5}}>💡 <b>{DAY_NAMES[best.day]}s</b> are your hottest day — averaging <b>${best.perDay.toFixed(0)}/day</b>, {bestLift}% above your typical day. {rows.length>2?`${DAY_NAMES[worst.day]}s run slowest ($${worst.perDay.toFixed(0)}) — a safer day to rest or handle maintenance.`:""}</div>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
 
           {/* VENDOR CARDS */}
           {vendorStats.length>0&&(
@@ -4587,6 +4510,87 @@ ${pdfText.slice(0,24000)}`}]};
           {demoMode&&(
             <div style={{padding:"10px 12px",borderRadius:9,background:C.a3+"18",border:"1px solid "+C.a3+"44",fontSize:10,color:C.a3,textAlign:"center",marginTop:12,lineHeight:1.5}}>👀 Demo Mode — these are sample settlement numbers and sample expenses. Switch to <b>My Data Mode</b> (banner up top) to see your real True Net with your tracked expenses.</div>
           )}
+
+
+
+
+          {/* 🔥 HOT DAYS — which weekdays actually make you money */}
+          {(function(){
+            const DAY_NAMES=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+            function parseDt(dt){
+              if(!dt)return null;
+              const p=String(dt).split("/");
+              if(p.length<3)return null;
+              let yr=parseInt(p[2],10);if(isNaN(yr))return null;
+              if(yr<100)yr+=2000;
+              const d=new Date(yr,parseInt(p[0],10)-1,parseInt(p[1],10));
+              return isNaN(d.getTime())?null:d;
+            }
+            // Filter moves to the selected range using each move's own date
+            const now=new Date();
+            const cutoff=hotDaysRange==="4w"?new Date(now.getTime()-28*864e5):hotDaysRange==="40d"?new Date(now.getTime()-40*864e5):hotDaysRange==="100d"?new Date(now.getTime()-100*864e5):null;
+            const dated=allMoves.map(function(m){return {m:m,d:parseDt(m.dt)};}).filter(function(x){return x.d&&(!cutoff||x.d>=cutoff);});
+            if(dated.length<5){
+              return(
+                <div style={K({marginBottom:16,textAlign:"center",padding:"18px"})}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>🔥 Hot Days — Your Best Money Days</div>
+                  <div style={{fontSize:10,color:C.sub,lineHeight:1.6}}>{demoMode?"Switch to My Data Mode and scan settlements to unlock your real day-by-day revenue pattern.":"Not enough dated moves yet in this range — scan more settlements (or widen the filter) and this fills in automatically."}</div>
+                </div>
+              );
+            }
+            // Aggregate: revenue + distinct active dates per weekday
+            const agg={};// day -> {rev, dates:Set, count}
+            dated.forEach(function(x){
+              const day=x.d.getDay();
+              if(!agg[day])agg[day]={rev:0,dates:new Set(),count:0};
+              agg[day].rev+=(x.m.rate||0)+(x.m.fsc||0);
+              agg[day].dates.add(x.d.toDateString());
+              agg[day].count++;
+            });
+            const rows=Object.keys(agg).map(function(k){
+              const a=agg[k];
+              return {day:+k,name:DAY_NAMES[+k],rev:a.rev,perDay:a.rev/a.dates.size,activeDays:a.dates.size,count:a.count};
+            }).sort(function(a,b){return a.day-b.day;});
+            const maxPerDay=Math.max.apply(null,rows.map(function(r){return r.perDay;}));
+            const best=rows.reduce(function(a,b){return b.perDay>a.perDay?b:a;});
+            const worst=rows.reduce(function(a,b){return b.perDay<a.perDay?b:a;});
+            const avgAll=rows.reduce(function(s,r){return s+r.perDay;},0)/rows.length;
+            const bestLift=avgAll>0?((best.perDay-avgAll)/avgAll*100).toFixed(0):0;
+            return(
+              <div style={K({marginBottom:16})}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:6}}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔥 Hot Days — Your Best Money Days{helpBtn("hotDays")}</div>
+                  <div style={{display:"flex",gap:4}}>
+                    {[["4w","4 wks"],["40d","40 days"],["100d","100 days"],["all","Full"]].map(function(opt){
+                      return <button key={opt[0]} onClick={function(){setHotDaysRange(opt[0]);}} style={{padding:"3px 9px",borderRadius:14,background:hotDaysRange===opt[0]?C.accent+"22":"transparent",border:"1px solid "+(hotDaysRange===opt[0]?C.accent+"66":C.border),color:hotDaysRange===opt[0]?C.accent:C.sub,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{opt[1]}</button>;
+                    })}
+                  </div>
+                </div>
+                {helpModal("hotDays")}
+                {!isSmart?(
+                  <div style={{textAlign:"center",padding:"14px 8px"}}>
+                    <div style={{fontSize:11,color:C.sub,lineHeight:1.6,marginBottom:10}}>🔒 See exactly which weekdays pay you the most — push hard on hot days, rest easy on slow ones. Based on your real move dates.</div>
+                    <button onClick={function(){openUpgrade("hotdays");}} style={{padding:"8px 18px",borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Unlock with Pro Smart →</button>
+                  </div>
+                ):(
+                  <div>
+                    <div style={{fontSize:10,color:C.sub,marginBottom:10}}>Average GROSS revenue (rate + FSC, before deductions) per <i>active</i> day · {dated.length} dated moves</div>
+                    {rows.map(function(r){
+                      const isBest=r.day===best.day,isWorst=r.day===worst.day&&rows.length>2;
+                      return(
+                        <div key={r.day} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+                          <span style={{fontSize:10,fontWeight:700,color:isBest?C.green:isWorst?C.red:C.text,width:30,flexShrink:0}}>{r.name}</span>
+                          <div style={{flex:1}}><Bar pct={maxPerDay>0?(r.perDay/maxPerDay*100):0} color={isBest?C.green:isWorst?C.red:C.accent} h={10}/></div>
+                          <span style={{fontSize:10,fontWeight:800,color:isBest?C.green:isWorst?C.red:C.text,width:62,textAlign:"right",flexShrink:0}}>${r.perDay.toFixed(0)}{isBest?" 🔥":isWorst?" 🧊":""}</span>
+                        </div>
+                      );
+                    })}
+                    <div style={{marginTop:10,padding:"9px 11px",borderRadius:8,background:C.green+"12",border:"1px solid "+C.green+"33",fontSize:10,color:C.green,lineHeight:1.5}}>💡 <b>{DAY_NAMES[best.day]}s</b> are your hottest day — averaging <b>${best.perDay.toFixed(0)}/day</b>, {bestLift}% above your typical day. {rows.length>2?`${DAY_NAMES[worst.day]}s run slowest ($${worst.perDay.toFixed(0)}) — a safer day to rest or handle maintenance.`:""}</div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* TRUE NET SUMMARY */}
           <div style={{display:"grid",gridTemplateColumns:wide?"1fr 1fr 1fr":"1fr 1fr",gap:12,marginBottom:16,marginTop:14}}>
