@@ -73,8 +73,8 @@ const LOGO_ICON="/images/logo-icon.png";
 // Version scheme: MAJOR.MONTH.DAY — bump on EVERY file delivery so you can
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
-const APP_VERSION="3.7.11";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 11 · build 17:10";
+const APP_VERSION="3.7.14";// bumped builds same-day get a new time stamp below
+const APP_VERSION_DATE="Jul 14 · build A";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -306,7 +306,7 @@ function FuelSurchargeCalculator(props){
           >{showShareFeature?"📸 Generate Shareable Result":"🔒 Generate Shareable Result"}</button>
           {shareImgUrl&&showShareFeature&&(
             <div style={{marginTop:10,textAlign:"center"}}>
-              <img src={shareImgUrl} style={{width:"100%",borderRadius:10,marginBottom:8}}/>
+              <img src={shareImgUrl} alt="Shareable FSC result card" style={{width:"100%",borderRadius:10,marginBottom:8}}/>
               <a href={shareImgUrl} download="drayageiq-fsc-result.png" style={{display:"inline-block",padding:"8px 16px",borderRadius:8,background:"#4ade8022",border:"1px solid #4ade8055",color:"#4ade80",fontSize:10,fontWeight:700,textDecoration:"none"}}>⬇️ Download to Share</a>
             </div>
           )}
@@ -988,8 +988,28 @@ function ContractorIQInner(){
           setIsPro(true);setIsSmart(false);setDarkMode(false);
           try{localStorage.setItem("ciq_pro","true");localStorage.setItem("ciq_smart","false");localStorage.setItem("ciq_theme","light");}catch(e){}
         }else{
-          setIsPro(false);setIsSmart(false);
-          try{localStorage.setItem("ciq_pro","false");localStorage.setItem("ciq_smart","false");}catch(e){}
+          // Plan says free — but did they PAY before creating this account?
+          // (Stripe webhook parks pay-first purchases in pending_plans by email;
+          // this claims it onto their account via the secure server endpoint.)
+          let claimed=null;
+          try{
+            const {data:sess}=await c.auth.getSession();
+            const tok=sess&&sess.session&&sess.session.access_token;
+            if(tok){
+              const cr=await fetch("/api/claim-plan",{method:"POST",headers:{Authorization:"Bearer "+tok}});
+              if(cr.ok){const cj=await cr.json();claimed=cj&&cj.plan;}
+            }
+          }catch(e){}
+          if(claimed==="tier2"){
+            setIsPro(true);setIsSmart(true);setDarkMode(true);
+            try{localStorage.setItem("ciq_pro","true");localStorage.setItem("ciq_smart","true");}catch(e){}
+          }else if(claimed==="tier1"){
+            setIsPro(true);setIsSmart(false);
+            try{localStorage.setItem("ciq_pro","true");localStorage.setItem("ciq_smart","false");}catch(e){}
+          }else{
+            setIsPro(false);setIsSmart(false);
+            try{localStorage.setItem("ciq_pro","false");localStorage.setItem("ciq_smart","false");}catch(e){}
+          }
         }
       }catch(e){ console.error("cloud pull",e&&e.message); }
       setCloudLoaded(true);
