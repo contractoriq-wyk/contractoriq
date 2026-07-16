@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.14";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 14 · build G";
+const APP_VERSION_DATE="Jul 14 · build H";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -4535,7 +4535,7 @@ ${pdfText.slice(0,24000)}`}]};
             }
             // Filter moves to the selected range using each move's own date
             const now=new Date();
-            const cutoff=hotDaysRange==="4w"?new Date(now.getTime()-28*864e5):hotDaysRange==="40d"?new Date(now.getTime()-40*864e5):hotDaysRange==="100d"?new Date(now.getTime()-100*864e5):null;
+            const cutoff=hotDaysRange==="7d"?new Date(now.getTime()-7*864e5):hotDaysRange==="4w"?new Date(now.getTime()-28*864e5):hotDaysRange==="40d"?new Date(now.getTime()-40*864e5):hotDaysRange==="100d"?new Date(now.getTime()-100*864e5):null;
             const dated=allMoves.map(function(m){return {m:m,d:parseDt(m.dt)};}).filter(function(x){return x.d&&(!cutoff||x.d>=cutoff);});
             if(dated.length<5){
               return(
@@ -4568,7 +4568,7 @@ ${pdfText.slice(0,24000)}`}]};
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:6}}>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🔥 Hot Days — Your Best Money Days{helpBtn("hotDays")}</div>
                   <div style={{display:"flex",gap:4}}>
-                    {[["4w","4 wks"],["40d","40 days"],["100d","100 days"],["all","Full"]].map(function(opt){
+                    {[["7d","7 days"],["4w","4 wks"],["40d","40 days"],["100d","100 days"],["all","Full"]].map(function(opt){
                       return <button key={opt[0]} onClick={function(){setHotDaysRange(opt[0]);}} style={{padding:"3px 9px",borderRadius:14,background:hotDaysRange===opt[0]?C.accent+"22":"transparent",border:"1px solid "+(hotDaysRange===opt[0]?C.accent+"66":C.border),color:hotDaysRange===opt[0]?C.accent:C.sub,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{opt[1]}</button>;
                     })}
                   </div>
@@ -4611,7 +4611,7 @@ ${pdfText.slice(0,24000)}`}]};
               return isNaN(d.getTime())?null:d;
             }
             const now=new Date();
-            const cutoff=routesRange==="4w"?new Date(now.getTime()-28*864e5):routesRange==="40d"?new Date(now.getTime()-40*864e5):routesRange==="100d"?new Date(now.getTime()-100*864e5):null;
+            const cutoff=routesRange==="7d"?new Date(now.getTime()-7*864e5):routesRange==="4w"?new Date(now.getTime()-28*864e5):routesRange==="40d"?new Date(now.getTime()-40*864e5):routesRange==="100d"?new Date(now.getTime()-100*864e5):null;
             const eligible=allMoves.filter(function(m){
               if(!(m.miles>0&&(m.rate+m.fsc)>0))return false;
               if(!cutoff)return true;
@@ -4663,7 +4663,7 @@ ${pdfText.slice(0,24000)}`}]};
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:6}}>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🛣️ Best Routes — Your Highest-Paying Lanes{helpBtn("bestRoutes")}</div>
                   <div style={{display:"flex",gap:4}}>
-                    {[["4w","4 wks"],["40d","40 days"],["100d","100 days"],["all","Full"]].map(function(opt){
+                    {[["7d","7 days"],["4w","4 wks"],["40d","40 days"],["100d","100 days"],["all","Full"]].map(function(opt){
                       return <button key={opt[0]} onClick={function(){setRoutesRange(opt[0]);}} style={{padding:"3px 9px",borderRadius:14,background:routesRange===opt[0]?C.accent+"22":"transparent",border:"1px solid "+(routesRange===opt[0]?C.accent+"66":C.border),color:routesRange===opt[0]?C.accent:C.sub,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{opt[1]}</button>;
                     })}
                   </div>
@@ -4683,78 +4683,6 @@ ${pdfText.slice(0,24000)}`}]};
             );
           })()}
 
-          {/* 🛣️ BEST ROUTES — which lanes actually pay (Pro Smart) */}
-          {(function(){
-            function parseDt2(dt){
-              if(!dt)return null;
-              const p=String(dt).split("/");
-              if(p.length<3)return null;
-              let yr=parseInt(p[2],10);if(isNaN(yr))return null;
-              if(yr<100)yr+=2000;
-              const d=new Date(yr,parseInt(p[0],10)-1,parseInt(p[1],10));
-              return isNaN(d.getTime())?null:d;
-            }
-            const now2=new Date();
-            const cutoff2=routesRange==="4w"?new Date(now2.getTime()-28*864e5):routesRange==="40d"?new Date(now2.getTime()-40*864e5):routesRange==="100d"?new Date(now2.getTime()-100*864e5):null;
-            const eligible=allMoves.filter(function(m){
-              if(!m.from||!m.to||!(m.miles>0))return false;
-              if(!cutoff2)return true;
-              const d=parseDt2(m.dt);
-              return d&&d>=cutoff2;
-            });
-            const byRoute={};
-            eligible.forEach(function(m){
-              const key=m.isRoundTrip?(m.from+" ⇄ "+m.to):(m.from+" → "+m.to);
-              if(!byRoute[key])byRoute[key]={pay:0,miles:0,runs:0};
-              byRoute[key].pay+=(m.rate||0)+(m.fsc||0);
-              byRoute[key].miles+=m.miles;
-              byRoute[key].runs++;
-            });
-            const routes=Object.keys(byRoute).map(function(k){
-              const r=byRoute[k];
-              return {name:k,runs:r.runs,rpm:r.miles>0?r.pay/r.miles:0,perRun:r.pay/r.runs,totalPay:r.pay};
-            }).filter(function(r){return r.runs>=2;})// 2+ runs required — one-off loads aren't a pattern
-              .sort(function(a,b){return b.rpm-a.rpm;});
-            if(routes.length<2){
-              return(
-                <div style={K({marginBottom:16,textAlign:"center",padding:"18px"})}>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:6}}>🛣️ Best Routes — Your Highest-Paying Lanes</div>
-                  <div style={{fontSize:10,color:C.sub,lineHeight:1.6}}>{demoMode?"Switch to My Data Mode and scan settlements to see which of your real lanes pay best.":"Not enough repeated routes in this range yet — routes need 2+ runs to rank. Widen the filter or scan more settlements."}</div>
-                </div>
-              );
-            }
-            const shown=routes.slice(0,8);
-            const maxRpm=shown[0].rpm;
-            const best=routes[0],worst=routes[routes.length-1];
-            return(
-              <div style={K({marginBottom:16})}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:6}}>
-                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700}}>🛣️ Best Routes — Your Highest-Paying Lanes{helpBtn("bestRoutes")}</div>
-                  <div style={{display:"flex",gap:4}}>
-                    {[["4w","4 wks"],["40d","40 days"],["100d","100 days"],["all","Full"]].map(function(opt){
-                      return <button key={opt[0]} onClick={function(){setRoutesRange(opt[0]);}} style={{padding:"3px 9px",borderRadius:14,background:routesRange===opt[0]?C.accent+"22":"transparent",border:"1px solid "+(routesRange===opt[0]?C.accent+"66":C.border),color:routesRange===opt[0]?C.accent:C.sub,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{opt[1]}</button>;
-                    })}
-                  </div>
-                </div>
-                {helpModal("bestRoutes")}
-                <div style={{fontSize:10,color:C.sub,marginBottom:10}}>Ranked by gross pay per mile (rate + FSC) · routes with 2+ runs · top {shown.length} shown</div>
-                {shown.map(function(r,i){
-                  const isBest=i===0,isWorst=r.name===worst.name&&shown.length>2;
-                  return(
-                    <div key={r.name} style={{marginBottom:9}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3,gap:8}}>
-                        <span style={{fontSize:10,fontWeight:700,color:isBest?C.green:isWorst?C.red:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{isBest?"🔥 ":isWorst?"🧊 ":""}{r.name}</span>
-                        <span style={{fontSize:10,fontWeight:800,color:isBest?C.green:isWorst?C.red:C.text,flexShrink:0}}>${r.rpm.toFixed(2)}/mi</span>
-                      </div>
-                      <Bar pct={maxRpm>0?(r.rpm/maxRpm*100):0} color={isBest?C.green:isWorst?C.red:C.accent} h={8}/>
-                      <div style={{fontSize:8,color:C.sub,marginTop:2}}>{r.runs} runs · avg ${r.perRun.toFixed(0)}/run · ${r.totalPay.toFixed(0)} total</div>
-                    </div>
-                  );
-                })}
-                <div style={{marginTop:10,padding:"9px 11px",borderRadius:8,background:C.green+"12",border:"1px solid "+C.green+"33",fontSize:10,color:C.green,lineHeight:1.5}}>💡 <b>{best.name}</b> is your money lane at <b>${best.rpm.toFixed(2)}/mi</b>. {routes.length>2?`When dispatch offers ${worst.name} ($${worst.rpm.toFixed(2)}/mi), you now know exactly what you're trading away.`:""}</div>
-              </div>
-            );
-          })()}
 
           {/* TRUE NET SUMMARY */}
           <div style={{display:"grid",gridTemplateColumns:wide?"1fr 1fr 1fr":"1fr 1fr",gap:12,marginBottom:16,marginTop:14}}>
