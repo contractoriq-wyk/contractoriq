@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.16";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 16 · build J";
+const APP_VERSION_DATE="Jul 16 · build K";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -301,23 +301,17 @@ function FuelSurchargeCalculator(props){
   );
 }
 
-function computeFSC(rate,miles,dieselPrice,mpg){
-  const rateNum=parseFloat(rate);
-  const milesNum=parseFloat(miles);
-  const validInput=!isNaN(rateNum)&&!isNaN(milesNum)&&milesNum>0&&rateNum>0;
-  if(!validInput){
-    return {valid:false,ratePerMile:0,fscPct:0};
-  }
-  const ratePerMile=rateNum/milesNum;
-  const baselinePrice=2.50;
-  const extraCostPerMile=Math.max(0,(dieselPrice-baselinePrice)/mpg);
-  const fscPct=(extraCostPerMile/ratePerMile)*100;
-  return {valid:true,ratePerMile:ratePerMile,fscPct:fscPct};
-}
 
 // Builds a CSV export of Return on Spend + True FSC data for every move.
 // Pro Smart feature — lets a driver hand real numbers to a broker or lawyer
 // during a rate negotiation, or keep records for their own accounting.
+function csvCell(v){
+  // Spreadsheet-safe cell: quote-wrap, double internal quotes, and neutralize
+  // formula injection (a value starting with = + - @ would execute in Excel).
+  let s=String(v==null?"":v);
+  if(/^[=+\-@]/.test(s))s="'"+s;
+  return '"'+s.replace(/"/g,'""')+'"';
+}
 function buildFSCReportCSV(allMoves,scoreMoveFn,liveDieselPrice,baselineMPG,fscBaseline){
   const headers=["Week","Date","Customer","Vendor","Type","Route","Miles","Rate","FSC Paid","True FSC ($)","True FSC (%)","FSC Gap ($)","Total","RPM","Grade"];
   const rows=[headers.join(",")];
@@ -334,12 +328,12 @@ function buildFSCReportCSV(allMoves,scoreMoveFn,liveDieselPrice,baselineMPG,fscB
     }
     const route=(m.from||"")+" to "+(m.to||"");
     const row=[
-      "W"+m.wk,
-      m.dt||"",
-      '"'+String(m.customer||"").replace(/"/g,"")+'"',
-      m.vendor||"",
+      csvCell("W"+m.wk),
+      csvCell(m.dt||""),
+      csvCell(m.customer||""),
+      csvCell(m.vendor||""),
       m.isRoundTrip?"RT":m.type,
-      '"'+route+'"',
+      csvCell(route),
       m.miles,
       m.rate.toFixed(2),
       m.fsc.toFixed(2),
@@ -607,7 +601,7 @@ function ContractorIQInner(){
   const [sM,setSM]=useState(0);
   const [sH,setSH]=useState(0);
   const [sR,setSR]=useState(7);
-  const [wide,setWide]=useState(window.innerWidth>700);
+  const [wide,setWide]=useState(()=>typeof window==="undefined"?false:window.innerWidth>700);
   const [darkMode,setDarkMode]=useState(()=>{try{const s=localStorage.getItem("ciq_theme");return s?s==="dark":true;}catch{return true;}});
   const C=darkMode?DARK:LIGHT;
   const K=_K(C);
@@ -621,7 +615,7 @@ function ContractorIQInner(){
   const [searchQ,setSearchQ]=useState("");
   const [searchResult,setSearchResult]=useState("");
   const [searchLoading,setSearchLoading]=useState(false);
-  useState(()=>{try{const key="ciq_visits",visits=JSON.parse(localStorage.getItem(key)||"[]");visits.push({t:Date.now(),ua:navigator.userAgent.slice(0,60),ref:document.referrer.slice(0,80)||"direct"});if(visits.length>100)visits.splice(0,visits.length-100);localStorage.setItem(key,JSON.stringify(visits));}catch(e){}});
+  useEffect(()=>{try{const key="ciq_visits",visits=JSON.parse(localStorage.getItem(key)||"[]");visits.push({t:Date.now(),ua:navigator.userAgent.slice(0,60),ref:document.referrer.slice(0,80)||"direct"});if(visits.length>100)visits.splice(0,visits.length-100);localStorage.setItem(key,JSON.stringify(visits));}catch(e){}},[]);
   const [offer,setOffer]=useState({miles:"",rate:"",fsc:"",type:"L"});
   const [combineEmpty,setCombineEmpty]=useState(false);// lets you score a Loaded leg + its paired Empty leg as one Round Trip
   const [emptyLeg,setEmptyLeg]=useState({miles:"",rate:"",fsc:""});
@@ -835,7 +829,7 @@ function ContractorIQInner(){
   useEffect(()=>{try{localStorage.setItem("ciq_ai_uses",String(aiUses));}catch(e){};},[aiUses]);
   useEffect(()=>{try{localStorage.setItem("ciq_dis_ads",JSON.stringify(dismissedAds));}catch(e){};},[dismissedAds]);
   useEffect(()=>{try{localStorage.setItem("ciq_ticker",JSON.stringify(tickerSyms));}catch(e){};},[tickerSyms]);
-  useEffect(()=>{try{localStorage.setItem("ciq_smart",String(isSmart));}catch(e){};},[isSmart]);
+  useEffect(()=>{try{localStorage.setItem("ciq_smart",String(realIsSmart));}catch(e){};},[realIsSmart]);// cache the REAL tier — the dev preview toggle must never leak into storage
 
   // Fetch live diesel + weather for Tier 2 Smart users
   useEffect(()=>{
