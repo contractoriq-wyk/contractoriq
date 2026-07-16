@@ -73,8 +73,8 @@ const LOGO_ICON="/images/logo-icon.png";
 // Version scheme: MAJOR.MONTH.DAY — bump on EVERY file delivery so you can
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
-const APP_VERSION="3.7.14";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 14 · build I";
+const APP_VERSION="3.7.16";// bumped builds same-day get a new time stamp below
+const APP_VERSION_DATE="Jul 16 · build J";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -205,22 +205,7 @@ function FuelSurchargeCalculator(props){
           </div>
         </div>
       </div>
-      <div style={{marginBottom:10}}>
-        <div style={styles.label}>BASELINE DIESEL PRICE ($/gal)</div>
-        <div style={{display:"flex",gap:4,alignItems:"center"}}>
-          <button type="button" onClick={function(){setBaselinePrice(stepValue(baselinePrice,-0.05,2,0));}} style={styles.stepBtn}>−</button>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={baselinePrice}
-            onChange={function(e){setBaselinePrice(e.target.value);}}
-            placeholder="2.50"
-            style={{...styles.input,textAlign:"center"}}
-          />
-          <button type="button" onClick={function(){setBaselinePrice(stepValue(baselinePrice,0.05,2,0));}} style={styles.stepBtn}>+</button>
-        </div>
-        <div style={{fontSize:8,color:"#8fa3c0",marginTop:4,lineHeight:1.5}}>💡 Every carrier sets their own baseline in their FSC contract. Check your carrier's FSC schedule (often emailed or posted by your terminal) and enter their exact baseline here for the most accurate comparison. Defaults to $2.50 if you don't know it.</div>
-      </div>
+      
       <div style={{marginBottom:10,padding:"10px 12px",borderRadius:9,background:"rgba(167,139,250,0.06)",border:"1px solid rgba(167,139,250,0.25)"}}>
         <div style={{...styles.label,color:"#a78bfa"}}>🔎 CHECK A VENDOR'S FSC — What % Did They Actually Pay?</div>
         <div style={{display:"flex",gap:4,alignItems:"center",marginTop:4}}>
@@ -252,7 +237,7 @@ function FuelSurchargeCalculator(props){
         <div style={styles.fscLine}>Recommended FSC: {validInput?fscPct.toFixed(1):"0.0"}% <span style={styles.fscDollarStyle}>(${validInput?fscDollar.toFixed(2):"0.00"})</span></div>
         {validInput&&<div style={styles.totalLine}>Quote total: ${rateNum.toFixed(2)} + ${fscDollar.toFixed(2)} FSC = <span style={{fontWeight:800,color:"#e5ecf5"}}>${(rateNum+fscDollar).toFixed(2)}</span></div>}
       </div>
-      <div style={styles.footnote}>💡 This is an independent estimate based on live diesel price and your real MPG — a useful benchmark, but your carrier's own FSC table may use a different formula and won't always match exactly.</div>
+      <div style={styles.footnote}>💡 Uses live diesel, your real MPG, and YOUR baseline from Menu → ⚙️ My Numbers — an independent benchmark; your carrier's own FSC table may use a different formula and won't always match exactly.</div>
       {validInput&&(
         <div style={{marginTop:12,paddingTop:12,borderTop:"1px dashed "+ (styles.shareBorder||"#333")}}>
           {!showShareFeature&&(
@@ -334,7 +319,7 @@ function computeFSC(rate,miles,dieselPrice,mpg){
 // Pro Smart feature — lets a driver hand real numbers to a broker or lawyer
 // during a rate negotiation, or keep records for their own accounting.
 function buildFSCReportCSV(allMoves,scoreMoveFn,liveDieselPrice,baselineMPG,fscBaseline){
-  const headers=["Week","Vendor","Type","Route","Miles","Rate","FSC Paid","True FSC ($)","True FSC (%)","FSC Gap ($)","Total","RPM","Grade"];
+  const headers=["Week","Date","Customer","Vendor","Type","Route","Miles","Rate","FSC Paid","True FSC ($)","True FSC (%)","FSC Gap ($)","Total","RPM","Grade"];
   const rows=[headers.join(",")];
   allMoves.forEach(function(m){
     const s=scoreMoveFn(m);
@@ -350,6 +335,8 @@ function buildFSCReportCSV(allMoves,scoreMoveFn,liveDieselPrice,baselineMPG,fscB
     const route=(m.from||"")+" to "+(m.to||"");
     const row=[
       "W"+m.wk,
+      m.dt||"",
+      '"'+String(m.customer||"").replace(/"/g,"")+'"',
       m.vendor||"",
       m.isRoundTrip?"RT":m.type,
       '"'+route+'"',
@@ -489,6 +476,7 @@ function pairRoundTrips(moves){
         fc:totalFsc,fsc:totalFsc,
         extraPay:0,isRoundTrip:true,
         dt:loadedLeg.dt||emptyLeg.dt||"",// keep the ship date — without this, round trips vanished from date-based analytics and Hot Days undercounted badly
+        cust:loadedLeg.cust||emptyLeg.cust||"",
         emptyPay:emptyLeg.rt||emptyLeg.rate||0,
         loadedPay:loadedLeg.rt||loadedLeg.rate||0,
         emptyMi:emptyLeg.mi||emptyLeg.miles||0,
@@ -668,6 +656,7 @@ function ContractorIQInner(){
   const [routesRange,setRoutesRange]=useState("all");// Best Routes card filter
   const [showSettings,setShowSettings]=useState(false);
   const [showDigestModal,setShowDigestModal]=useState(false);
+  const [showMyNumbers,setShowMyNumbers]=useState(false);// user-owned operating numbers — no app-imposed baselines
   const [showRoadmap,setShowRoadmap]=useState(false);
   const [showReferrals,setShowReferrals]=useState(false);
   const [showDevSignIn,setShowDevSignIn]=useState(false);// dev-mode only — lets you check your REAL account from the testing site
@@ -1111,7 +1100,7 @@ function ContractorIQInner(){
   const safeW=visibleW.length>0?visibleW:(allW.length>0?allW:DEMO_W);
   const vendorKeys=Object.keys(VENDORS);
   const vendorStats=vendorKeys.map(vk=>{const vw=allW.filter(w=>detectVendor(w)===vk);if(!vw.length)return null;const vGross=vw.reduce((s,w)=>s+w.gross,0),vNet=vw.reduce((s,w)=>s+w.net,0),vDed=vw.reduce((s,w)=>s+w.totalDeductions,0);return{...VENDORS[vk],key:vk,weeks:vw.length,gross:vGross,net:vNet,ded:vDed,margin:vGross>0?(vNet/vGross*100).toFixed(1):"0.0"};}).filter(Boolean);
-  const allMoves=allW.flatMap(w=>pairRoundTrips(mergeExtraPay(w.moves||[])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0,emptyMi:m.emptyMi||0,loadedMi:m.loadedMi||0,dt:m.dt||"",wk:w.week})));
+  const allMoves=allW.flatMap(w=>pairRoundTrips(mergeExtraPay(w.moves||[])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0,emptyMi:m.emptyMi||0,loadedMi:m.loadedMi||0,dt:m.dt||"",customer:m.cust||m.customer||"",wk:w.week})));
   const tGross=allW.reduce((s,w)=>s+w.gross,0),tNet=allW.reduce((s,w)=>s+w.net,0),tDed=allW.reduce((s,w)=>s+w.totalDeductions,0);
   const tMi=allMoves.reduce((s,m)=>s+m.miles,0);
   const avgRPM=tMi>0?(allMoves.reduce((s,m)=>s+m.rate+m.fsc,0)/tMi).toFixed(2):"0.00";
@@ -1156,7 +1145,7 @@ function ContractorIQInner(){
       try{
         // Reuse scanPDF logic inline
         const isImage=file.type.startsWith("image/");
-        const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount, ord=the order number WITHOUT the /001 suffix, leg=the leg number from the Leg# column, dt=the Ship Dtd date for this row exactly as shown (e.g. "06/23/26").\n\nH2. Extract every move individually with its own ord, leg, and dt fields. Do NOT combine or group any moves yourself — the app groups round trips automatically using the from/to/date data you provide. Just extract each row accurately.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0,"ord":"","leg":1,"dt":"MM/DD/YY"}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
+        const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount, ord=the order number WITHOUT the /001 suffix, leg=the leg number from the Leg# column, dt=the Ship Dtd date for this row exactly as shown (e.g. "06/23/26"). Also extract cust=the Customer/Shipper/Consignee name shown for this row, or empty string if the statement has no customer column.\n\nH2. Extract every move individually with its own ord, leg, and dt fields. Do NOT combine or group any moves yourself — the app groups round trips automatically using the from/to/date data you provide. Just extract each row accurately.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0,"ord":"","leg":1,"dt":"MM/DD/YY","cust":""}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
         let pdfText="";
         if(!isImage&&window.pdfjsLib){
           try{
@@ -1249,7 +1238,7 @@ ${pdfText.slice(0,24000)}`}]};
     setScanning(true);setScanResult(null);setScanMsg("");
     try{
       const isImage=fileType==="image"||file.type.startsWith("image/");
-      const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount, ord=the order number WITHOUT the /001 suffix, leg=the leg number from the Leg# column, dt=the Ship Dtd date for this row exactly as shown (e.g. "06/23/26").\n\nH2. Extract every move individually with its own ord, leg, and dt fields. Do NOT combine or group any moves yourself — the app groups round trips automatically using the from/to/date data you provide. Just extract each row accurately.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0,"ord":"","leg":1,"dt":"MM/DD/YY"}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
+      const EXTRACT_PROMPT=`You are a precise data extractor for commercial trucking settlement statements. Return ONLY valid JSON — no markdown, no preamble, no commentary.\n\n═══ DEDUCTION EXTRACTION RULES (most critical) ═══\n\nA. Read EVERY deduction line one at a time. Each line that starts with a date or label is its OWN separate entry. NEVER merge two lines into one.\n\nB. FUEL ADVANCES are identified by having an invoice number AND Notes with: Location Name, Gallons, Price Per Gallon, Cost. Extract each fuel advance as:\n   {"l":"FUEL ADVANCE","a":<cost as positive number>,"inv":"<invoice#>","gal":<gallons>,"ppg":<price per gallon>}\n   There can be 1, 2, 3 or more fuel advances per week — extract ALL of them individually.\n\nC. ALL OTHER deductions are fixed recurring items (insurance, fees, escrow, parking, etc). Extract each as:\n   {"l":"<exact label from document>","a":<amount as positive number>}\n   Read the EXACT dollar amount from the document. Do not estimate. Do not combine.\n\nD. VERIFY: After extracting all deductions, sum them up. The total should match the "Deductions" line in the Settlement Summary section. If it does not match within $1.00, re-read the deductions section and find what you missed.\n\nE. REIMBURSEMENTS (Fuel Rebate, Interest, Insurance Rebate) are NOT deductions. They are additions. Extract them separately as the "rebate" total.\n\nF. For escrow balances: read the ACTUAL BALANCE column from the Deductions Statement table at the bottom, NOT the weekly deduction amount.\n\n═══ MOVES EXTRACTION RULES ═══\n\nG. "moves": include ONE entry for EVERY order row in the settlement detail table. Every row starting with an order number (IBP..., OWO..., etc) is a separate move — including ALL legs (leg 1, leg 2, leg 3 are each their own entry). Do not skip, merge, or stop early. Statements can have 20-40+ rows.\n\nH. For move fields: t=L or E (loaded/empty from TP column), fr=From city, to=To city, mi=Miles, rt=Rate, fc=FSC amount, ord=the order number WITHOUT the /001 suffix, leg=the leg number from the Leg# column, dt=the Ship Dtd date for this row exactly as shown (e.g. "06/23/26"). Also extract cust=the Customer/Shipper/Consignee name shown for this row, or empty string if the statement has no customer column.\n\nH2. Extract every move individually with its own ord, leg, and dt fields. Do NOT combine or group any moves yourself — the app groups round trips automatically using the from/to/date data you provide. Just extract each row accurately.\n\n═══ GENERAL RULES ═══\n\nI. All numbers must be plain — no $ signs, no commas, no negative signs (deductions stored as positive).\nJ. If a field is not in the document use 0 for numbers or "" for text. NEVER invent or estimate.\nK. Week number: extract just the number before the dash (e.g. "25-2026" → "25").\n\n═══ CROSS-CHECK BEFORE RETURNING ═══\nL. Confirm: sum of all deds[].a ≈ totalDeductions from Settlement Summary\nM. Confirm: gross - totalDeductions + rebate ≈ net\nN. Confirm: moves count matches order rows in document\n\nFORMAT TEMPLATE:\n{"week":"00","from":"MM/DD/YYYY","to":"MM/DD/YYYY","gross":0,"net":0,"totalDeductions":0,"rebate":0,"gross_ytd":0,"escrow_regular_balance":0,"escrow_290_balance":0,"gallons":0,"price_per_gallon":0,"moves":[{"t":"L","fr":"ORIGIN","to":"DEST","mi":0,"rt":0,"fc":0,"ord":"","leg":1,"dt":"MM/DD/YY","cust":""}],"deds":[{"l":"FUEL ADVANCE","a":0,"inv":"","gal":0,"ppg":0},{"l":"ELD USAGE FEE","a":0},{"l":"INSURANCE LIABILLITY LIMITER","a":0}]}`;
 
       // For text-based PDFs, extract the actual text first (far more accurate than vision on dense tables)
       let pdfText="";
@@ -2441,6 +2430,7 @@ ${pdfText.slice(0,24000)}`}]};
                   <button onClick={()=>{setDarkMode(p=>!p);try{localStorage.setItem("ciq_theme",darkMode?"light":"dark");}catch(e){}}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>{darkMode?"☀️":"🌙"}</span><span>{darkMode?"Light Mode":"Dark Mode"}</span></button>
                   <button onClick={()=>{setShowSettings(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⚙️</span><span>Display Settings</span></button>
                   <button onClick={()=>{setShowDigestModal(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",justifyContent:"space-between",fontWeight:600}}><span style={{display:"flex",alignItems:"center",gap:8}}><span>💬</span><span>Weekly Digest (WhatsApp/SMS)</span></span><span style={{fontSize:8,fontWeight:800,color:"#fbbf24",background:"#fbbf2418",border:"1px solid #fbbf2444",borderRadius:20,padding:"1px 7px"}}>NEW</span></button>
+                  <button onClick={()=>{setShowMyNumbers(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⚙️</span><span>My Numbers — How YOU Operate</span></button>
 
                   {/* Divider */}
                   <div style={{height:1,background:C.border,margin:"8px 6px"}}/>
@@ -2581,6 +2571,26 @@ ${pdfText.slice(0,24000)}`}]};
             ):(
               <div style={{textAlign:"center",padding:"12px 4px",color:C.sub,fontSize:11}}>Sign in to get your personal referral link.</div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* MY NUMBERS — the user's OWN operating figures drive every tool; the app imposes no baseline */}
+      {showMyNumbers&&(
+        <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div><div style={{fontSize:12,fontWeight:700,color:C.text}}>⚙️ My Numbers</div><div style={{fontSize:10,color:C.sub,marginTop:2}}>Every calculation runs on YOUR operation — set it once here</div></div>
+            <button onClick={()=>setShowMyNumbers(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
+          </div>
+          <div style={{background:C.card,borderRadius:11,padding:"14px",border:`1px solid ${C.border}`,maxWidth:440}}>
+            <div style={{fontSize:9,color:C.sub,marginBottom:4}}>MY FSC BASELINE ($/gal)</div>
+            <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:6}}>
+              <button type="button" onClick={function(){setFscBaselinePrice(Math.max(0,+(fscBaselinePrice-0.05).toFixed(2)));}} style={{width:34,height:38,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:16,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>−</button>
+              <input type="text" inputMode="decimal" value={String(fscBaselinePrice)} onChange={function(e){const v=parseFloat(e.target.value);setFscBaselinePrice(isNaN(v)?0:v);}} style={{flex:1,padding:"9px 10px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:13,fontFamily:"inherit",textAlign:"center"}}/>
+              <button type="button" onClick={function(){setFscBaselinePrice(+(fscBaselinePrice+0.05).toFixed(2));}} style={{width:34,height:38,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:16,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>+</button>
+            </div>
+            <div style={{fontSize:9,color:C.sub,lineHeight:1.6,marginBottom:12}}>This is YOUR number, not ours — it's the fuel price your rates were built around. Find it on your carrier's FSC schedule (usually emailed by your terminal) and set it once. The FSC Calculator and every True FSC figure across the app will use it.</div>
+            <div style={{padding:"9px 11px",borderRadius:8,background:C.accent+"10",border:"1px solid "+C.accent+"30",fontSize:9,color:C.sub,lineHeight:1.6}}>⛽ <b style={{color:C.accent}}>Your MPG</b> is already yours automatically — it syncs from your real fuel log fill-ups, so efficiency numbers reflect how YOUR truck actually runs, not an industry average.</div>
           </div>
         </div>
       )}
@@ -3525,7 +3535,7 @@ ${pdfText.slice(0,24000)}`}]};
                 <tbody>{mwMoves.map((m,i)=>{const s=scoreMove(m);return(
                   <tr key={i} style={{borderBottom:`1px solid ${C.border}`,background:i%2?"#ffffff06":"transparent"}}>
                     <td style={{padding:"9px"}}><span style={{padding:"3px 8px",borderRadius:5,fontSize:10,fontWeight:700,background:m.type==="L"?`${C.green}25`:`${C.gold}25`,color:m.type==="L"?C.green:C.gold}}>{m.type==="L"?"LOAD":"EMPTY"}</span></td>
-                    <td style={{padding:"9px",color:C.text,whiteSpace:"nowrap",fontSize:11}}>{m.from}→{m.to}</td>
+                    <td style={{padding:"9px",color:C.text,whiteSpace:"nowrap",fontSize:11}}>{m.from}→{m.to}{m.customer?<div style={{fontSize:9,color:C.a3,fontWeight:700}}>{m.customer}</div>:null}{m.dt?<div style={{fontSize:8,color:C.sub}}>{m.dt}</div>:null}</td>
                     <td style={{padding:"9px",color:C.text}}>{m.miles}</td>
                     <td style={{padding:"9px",color:C.text}}>${m.rate}</td>
                     <td style={{padding:"9px",color:m.fsc>0?C.accent:C.sub}}>{m.fsc>0?`$${m.fsc}`:"—"}</td>
@@ -4534,9 +4544,13 @@ ${pdfText.slice(0,24000)}`}]};
               return isNaN(d.getTime())?null:d;
             }
             // Filter moves to the selected range using each move's own date
-            const now=new Date();
-            const cutoff=hotDaysRange==="7d"?new Date(now.getTime()-7*864e5):hotDaysRange==="4w"?new Date(now.getTime()-28*864e5):hotDaysRange==="40d"?new Date(now.getTime()-40*864e5):hotDaysRange==="100d"?new Date(now.getTime()-100*864e5):null;
-            const dated=allMoves.map(function(m){return {m:m,d:parseDt(m.dt)};}).filter(function(x){return x.d&&(!cutoff||x.d>=cutoff);});
+            // Ranges anchor to your NEWEST scanned move — not today's calendar
+            // date — because settlements always arrive about a week behind.
+            // "7 days" therefore means "the latest 7 days of data you have."
+            const allDated=allMoves.map(function(m){return {m:m,d:parseDt(m.dt)};}).filter(function(x){return x.d;});
+            const anchor=allDated.length?new Date(Math.max.apply(null,allDated.map(function(x){return x.d.getTime();}))):new Date();
+            const cutoff=hotDaysRange==="7d"?new Date(anchor.getTime()-7*864e5):hotDaysRange==="4w"?new Date(anchor.getTime()-28*864e5):hotDaysRange==="40d"?new Date(anchor.getTime()-40*864e5):hotDaysRange==="100d"?new Date(anchor.getTime()-100*864e5):null;
+            const dated=allDated.filter(function(x){return !cutoff||x.d>=cutoff;});
             if(dated.length<5){
               return(
                 <div style={K({marginBottom:16,textAlign:"center",padding:"18px"})}>
@@ -4582,16 +4596,20 @@ ${pdfText.slice(0,24000)}`}]};
                 ):(
                   <div>
                     <div style={{fontSize:10,color:C.sub,marginBottom:10}}>Average GROSS revenue (rate + FSC, before deductions) per <i>active</i> day · {dated.length} dated moves</div>
-                    {rows.map(function(r){
-                      const isBest=r.day===best.day,isWorst=r.day===worst.day&&rows.length>2;
-                      return(
-                        <div key={r.day} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
-                          <span style={{fontSize:10,fontWeight:700,color:isBest?C.green:isWorst?C.red:C.text,width:30,flexShrink:0}}>{r.name}</span>
-                          <div style={{flex:1}}><Bar pct={maxPerDay>0?(r.perDay/maxPerDay*100):0} color={isBest?C.green:isWorst?C.red:C.accent} h={10}/></div>
-                          <span style={{fontSize:10,fontWeight:800,color:isBest?C.green:isWorst?C.red:C.text,width:62,textAlign:"right",flexShrink:0}}>${r.perDay.toFixed(0)}{isBest?" 🔥":isWorst?" 🧊":""}</span>
-                        </div>
-                      );
-                    })}
+                    <div style={{display:"flex",alignItems:"flex-end",gap:6,height:150,padding:"0 2px"}}>
+                      {rows.map(function(r){
+                        const isBest=r.day===best.day,isWorst=r.day===worst.day&&rows.length>2;
+                        const col=isBest?C.green:isWorst?C.red:C.accent;
+                        const hPct=maxPerDay>0?(r.perDay/maxPerDay):0;
+                        return(
+                          <div key={r.day} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",height:"100%"}}>
+                            <div style={{fontSize:9,fontWeight:800,color:col,marginBottom:3,whiteSpace:"nowrap"}}>${r.perDay.toFixed(0)}</div>
+                            <div style={{width:"100%",maxWidth:34,height:Math.max(5,hPct*100)+"px",background:"linear-gradient(180deg,"+col+","+col+"88)",borderRadius:"5px 5px 2px 2px",boxShadow:"0 0 10px "+col+"33"}}/>
+                            <div style={{fontSize:9,fontWeight:700,color:isBest?C.green:isWorst?C.red:C.sub,marginTop:4}}>{r.name}{isBest?" 🔥":isWorst?" 🧊":""}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
                     <div style={{marginTop:10,padding:"9px 11px",borderRadius:8,background:C.green+"12",border:"1px solid "+C.green+"33",fontSize:10,color:C.green,lineHeight:1.5}}>💡 <b>{DAY_NAMES[best.day]}s</b> are your hottest day — averaging <b>${best.perDay.toFixed(0)}/day</b>, {bestLift}% above your typical day. {rows.length>2?`${DAY_NAMES[worst.day]}s run slowest ($${worst.perDay.toFixed(0)}) — a safer day to rest or handle maintenance.`:""}</div>
                   </div>
                 )}
@@ -4610,8 +4628,9 @@ ${pdfText.slice(0,24000)}`}]};
               const d=new Date(yr,parseInt(p[0],10)-1,parseInt(p[1],10));
               return isNaN(d.getTime())?null:d;
             }
-            const now=new Date();
-            const cutoff=routesRange==="7d"?new Date(now.getTime()-7*864e5):routesRange==="4w"?new Date(now.getTime()-28*864e5):routesRange==="40d"?new Date(now.getTime()-40*864e5):routesRange==="100d"?new Date(now.getTime()-100*864e5):null;
+            const allDated2=allMoves.map(function(m){return parseDt2(m.dt);}).filter(function(d){return d;});
+            const anchor2=allDated2.length?new Date(Math.max.apply(null,allDated2.map(function(d){return d.getTime();}))):new Date();
+            const cutoff=routesRange==="7d"?new Date(anchor2.getTime()-7*864e5):routesRange==="4w"?new Date(anchor2.getTime()-28*864e5):routesRange==="40d"?new Date(anchor2.getTime()-40*864e5):routesRange==="100d"?new Date(anchor2.getTime()-100*864e5):null;
             const eligible=allMoves.filter(function(m){
               if(!(m.miles>0&&(m.rate+m.fsc)>0))return false;
               if(!cutoff)return true;
