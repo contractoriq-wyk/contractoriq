@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.14";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 14 · build H";
+const APP_VERSION_DATE="Jul 14 · build I";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -333,7 +333,7 @@ function computeFSC(rate,miles,dieselPrice,mpg){
 // Builds a CSV export of Return on Spend + True FSC data for every move.
 // Pro Smart feature — lets a driver hand real numbers to a broker or lawyer
 // during a rate negotiation, or keep records for their own accounting.
-function buildFSCReportCSV(allMoves,scoreMoveFn,liveDieselPrice,baselineMPG){
+function buildFSCReportCSV(allMoves,scoreMoveFn,liveDieselPrice,baselineMPG,fscBaseline){
   const headers=["Week","Vendor","Type","Route","Miles","Rate","FSC Paid","True FSC ($)","True FSC (%)","FSC Gap ($)","Total","RPM","Grade"];
   const rows=[headers.join(",")];
   allMoves.forEach(function(m){
@@ -341,7 +341,7 @@ function buildFSCReportCSV(allMoves,scoreMoveFn,liveDieselPrice,baselineMPG){
     let trueFscDollar=0,trueFscPct=0,fscGap=0;
     if(m.miles>0&&m.rate>0){
       const rpmCheck=m.rate/m.miles;
-      const baselinePriceCheck=2.50;
+      const baselinePriceCheck=(typeof fscBaseline==="number"&&fscBaseline>=0)?fscBaseline:2.50;// uses the user's adjustable baseline, same as the in-app True FSC column
       const extraCostCheck=Math.max(0,(liveDieselPrice-baselinePriceCheck)/baselineMPG);
       trueFscPct=(extraCostCheck/rpmCheck)*100;
       trueFscDollar=extraCostCheck*m.miles;
@@ -3854,7 +3854,7 @@ ${pdfText.slice(0,24000)}`}]};
                 <button onClick={function(){
                   const dieselForExport=(liveData&&liveData.diesel)||fuelPrice||4.50;
                   const mpgForExport=fuelMPG||5.2;
-                  const csv=buildFSCReportCSV(allMoves,scoreMove,dieselForExport,mpgForExport);
+                  const csv=buildFSCReportCSV(allMoves,scoreMove,dieselForExport,mpgForExport,fscBaselinePrice);
                   const blob=new Blob([csv],{type:"text/csv"});
                   const url=URL.createObjectURL(blob);
                   const a=document.createElement("a");
