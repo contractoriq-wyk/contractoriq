@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.16";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 16 · build M";
+const APP_VERSION_DATE="Jul 16 · build N";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -650,7 +650,6 @@ function ContractorIQInner(){
   const [routesRange,setRoutesRange]=useState("all");// Best Routes card filter
   const [showSettings,setShowSettings]=useState(false);
   const [showDigestModal,setShowDigestModal]=useState(false);
-  const [showMyNumbers,setShowMyNumbers]=useState(false);// user-owned operating numbers — no app-imposed baselines
   const [showRoadmap,setShowRoadmap]=useState(false);
   const [showReferrals,setShowReferrals]=useState(false);
   const [showDevSignIn,setShowDevSignIn]=useState(false);// dev-mode only — lets you check your REAL account from the testing site
@@ -2424,7 +2423,7 @@ ${pdfText.slice(0,24000)}`}]};
                   <button onClick={()=>{setDarkMode(p=>!p);try{localStorage.setItem("ciq_theme",darkMode?"light":"dark");}catch(e){}}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>{darkMode?"☀️":"🌙"}</span><span>{darkMode?"Light Mode":"Dark Mode"}</span></button>
                   <button onClick={()=>{setShowSettings(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⚙️</span><span>Display Settings</span></button>
                   <button onClick={()=>{setShowDigestModal(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",justifyContent:"space-between",fontWeight:600}}><span style={{display:"flex",alignItems:"center",gap:8}}><span>💬</span><span>Weekly Digest (WhatsApp/SMS)</span></span><span style={{fontSize:8,fontWeight:800,color:"#fbbf24",background:"#fbbf2418",border:"1px solid #fbbf2444",borderRadius:20,padding:"1px 7px"}}>NEW</span></button>
-                  <button onClick={()=>{setShowMyNumbers(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🧮</span><span>My Numbers — How YOU Operate</span></button>
+
 
                   {/* Divider */}
                   <div style={{height:1,background:C.border,margin:"8px 6px"}}/>
@@ -2517,6 +2516,36 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{background:C.card,borderRadius:11,padding:"12px",border:`1px solid ${C.border}`}}>
               <div style={{fontSize:10,fontWeight:700,color:C.sub,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:9}}>Active Filters</div>
               <div style={{fontSize:11,color:visibleW.length===allW.length?C.sub:C.gold,marginBottom:6}}>{visibleW.length===allW.length?"✓ All weeks visible":"⚠️ "+visibleW.length+" of "+allW.length+" weeks shown"}</div>
+              <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid "+C.border}}>
+                <div style={{fontSize:11,fontWeight:800,color:C.text,marginBottom:2}}>🧮 My Numbers</div>
+                <div style={{fontSize:9,color:C.sub,marginBottom:10,lineHeight:1.5}}>Every calculation runs on YOUR operation, not app defaults.</div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                  <div style={{flex:1,paddingRight:8}}>
+                    <div style={{fontSize:10,color:C.text,fontWeight:700}}>Auto-adjust from my data</div>
+                    <div style={{fontSize:8,color:C.sub,marginTop:1,lineHeight:1.4}}>{mpgAutoSync?"ON — MPG syncs from your fuel log, diesel from live prices":"OFF — you control the numbers below manually"}</div>
+                  </div>
+                  <button onClick={()=>setMpgAutoSync(p=>!p)} style={{width:40,height:20,borderRadius:10,background:mpgAutoSync?C.accent:C.border,border:"none",cursor:"pointer",position:"relative",flexShrink:0}}><div style={{width:14,height:14,borderRadius:"50%",background:"white",position:"absolute",top:3,left:mpgAutoSync?23:3,transition:"left 0.15s"}}/></button>
+                </div>
+                <div style={{fontSize:9,color:C.sub,marginBottom:3}}>MY TRUCK MPG {mpgAutoSync&&<span style={{color:C.accent}}>· auto from fuel log</span>}</div>
+                <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:10,opacity:mpgAutoSync?0.5:1}}>
+                  <button type="button" disabled={mpgAutoSync} onClick={function(){setFuelMPG(function(p){return Math.max(3.5,Math.round((p-0.1)*10)/10);});}} style={{width:30,height:32,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:14,fontWeight:800,cursor:mpgAutoSync?"not-allowed":"pointer",fontFamily:"inherit"}}>−</button>
+                  <div style={{flex:1,textAlign:"center",fontSize:13,fontWeight:800,color:C.text}}>{Number(fuelMPG).toFixed(1)} mpg</div>
+                  <button type="button" disabled={mpgAutoSync} onClick={function(){setFuelMPG(function(p){return Math.min(9.0,Math.round((p+0.1)*10)/10);});}} style={{width:30,height:32,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:14,fontWeight:800,cursor:mpgAutoSync?"not-allowed":"pointer",fontFamily:"inherit"}}>+</button>
+                </div>
+                <div style={{fontSize:9,color:C.sub,marginBottom:3}}>MY DIESEL PRICE ($/gal) {mpgAutoSync&&<span style={{color:C.accent}}>· live price used when available</span>}</div>
+                <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:10,opacity:mpgAutoSync?0.5:1}}>
+                  <button type="button" disabled={mpgAutoSync} onClick={function(){setFuelPrice(function(p){return Math.max(1,+( (Number(p)||4.5)-0.05).toFixed(2));});}} style={{width:30,height:32,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:14,fontWeight:800,cursor:mpgAutoSync?"not-allowed":"pointer",fontFamily:"inherit"}}>−</button>
+                  <div style={{flex:1,textAlign:"center",fontSize:13,fontWeight:800,color:C.text}}>${Number(fuelPrice||4.5).toFixed(2)}</div>
+                  <button type="button" disabled={mpgAutoSync} onClick={function(){setFuelPrice(function(p){return +((Number(p)||4.5)+0.05).toFixed(2);});}} style={{width:30,height:32,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:14,fontWeight:800,cursor:mpgAutoSync?"not-allowed":"pointer",fontFamily:"inherit"}}>+</button>
+                </div>
+                <div style={{fontSize:9,color:C.sub,marginBottom:3}}>MY FSC BASELINE ($/gal) · always yours to set</div>
+                <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:6}}>
+                  <button type="button" onClick={function(){setFscBaselinePrice(Math.max(0,+(fscBaselinePrice-0.05).toFixed(2)));}} style={{width:30,height:32,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>−</button>
+                  <div style={{flex:1,textAlign:"center",fontSize:13,fontWeight:800,color:C.text}}>${Number(fscBaselinePrice).toFixed(2)}</div>
+                  <button type="button" onClick={function(){setFscBaselinePrice(+(fscBaselinePrice+0.05).toFixed(2));}} style={{width:30,height:32,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>+</button>
+                </div>
+                <div style={{fontSize:8,color:C.sub,lineHeight:1.5}}>Baseline = the fuel price your rates assume; find it on your carrier's FSC schedule. Auto mode is right for most drivers — manual is for those who know exactly how they run.</div>
+              </div>
               <button onClick={()=>{setHiddenVendors([]);setActiveOnlyVendor(null);setHideOwnerName(false);setHideUnitNum(false);}} style={{width:"100%",marginTop:10,padding:"6px",borderRadius:6,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Reset All</button>
             </div>
           </div>
@@ -2565,26 +2594,6 @@ ${pdfText.slice(0,24000)}`}]};
             ):(
               <div style={{textAlign:"center",padding:"12px 4px",color:C.sub,fontSize:11}}>Sign in to get your personal referral link.</div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* MY NUMBERS — the user's OWN operating figures drive every tool; the app imposes no baseline */}
-      {showMyNumbers&&(
-        <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-            <div><div style={{fontSize:12,fontWeight:700,color:C.text}}>🧮 My Numbers</div><div style={{fontSize:10,color:C.sub,marginTop:2}}>Every calculation runs on YOUR operation — set it once here</div></div>
-            <button onClick={()=>setShowMyNumbers(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
-          </div>
-          <div style={{background:C.card,borderRadius:11,padding:"14px",border:`1px solid ${C.border}`,maxWidth:440}}>
-            <div style={{fontSize:9,color:C.sub,marginBottom:4}}>MY FSC BASELINE ($/gal)</div>
-            <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:6}}>
-              <button type="button" onClick={function(){setFscBaselinePrice(Math.max(0,+(fscBaselinePrice-0.05).toFixed(2)));}} style={{width:34,height:38,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:16,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>−</button>
-              <input type="text" inputMode="decimal" value={String(fscBaselinePrice)} onChange={function(e){const v=parseFloat(e.target.value);setFscBaselinePrice(isNaN(v)?0:v);}} style={{flex:1,padding:"9px 10px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:13,fontFamily:"inherit",textAlign:"center"}}/>
-              <button type="button" onClick={function(){setFscBaselinePrice(+(fscBaselinePrice+0.05).toFixed(2));}} style={{width:34,height:38,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:16,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>+</button>
-            </div>
-            <div style={{fontSize:9,color:C.sub,lineHeight:1.6,marginBottom:12}}>This is YOUR number, not ours — it's the fuel price your rates were built around. Find it on your carrier's FSC schedule (usually emailed by your terminal) and set it once. The FSC Calculator and every True FSC figure across the app will use it.</div>
-            <div style={{padding:"9px 11px",borderRadius:8,background:C.accent+"10",border:"1px solid "+C.accent+"30",fontSize:9,color:C.sub,lineHeight:1.6}}>⛽ <b style={{color:C.accent}}>Your MPG</b> is already yours automatically — it syncs from your real fuel log fill-ups, so efficiency numbers reflect how YOUR truck actually runs, not an industry average.</div>
           </div>
         </div>
       )}
@@ -2665,6 +2674,7 @@ ${pdfText.slice(0,24000)}`}]};
               {icon:"📊",title:"CSV Export — Return on Spend + True FSC",tier:"Pro Smart",status:"Live Now",desc:"Download your full move history with fair-market FSC comparisons — hand it to a broker, lawyer, or your own records.",live:true},
               {icon:"💬",title:"Weekly Digest (WhatsApp/SMS)",tier:"Pro Smart",status:"In Development",desc:"Your weekly net, RPM, and True FSC gap sent straight to your phone automatically — no need to open the app to stay informed."},
               {icon:"🚀",title:"Referral Rewards",tier:"All Tiers",status:"In Development",desc:"Invite another driver, you both get a free month — your unique link and referral tracking are live now in Menu → Invite a Driver. Automatic reward crediting is coming next."},
+              {icon:"⛽",title:"IFTA Reporting",tier:"Pro Smart",status:"Planned",desc:"Quarterly fuel-tax totals built from your real fill-ups and miles — state-by-state, accountant-ready. Preview visible now in The Office tab."},
               {icon:"🏢",title:"The Office — Receipts & True Net",tier:"Pro Smart",status:"In Testing",desc:"A dedicated back-office tab: scan receipts, track real out-of-pocket expenses, and see your True Net — what you actually keep after every real business cost. Already visible in the app now with a preview lock."},
               {icon:"🏢",title:"Enterprise Fleet (11+ trucks)",tier:"Fleet",status:"Available on Request",desc:"Custom pricing and dedicated support for larger fleet operations. Message us directly to discuss your setup."},
             ].map(function(item,i){
@@ -4525,6 +4535,22 @@ ${pdfText.slice(0,24000)}`}]};
 
 
 
+          {/* TRUE NET SUMMARY */}
+          <div style={{display:"grid",gridTemplateColumns:wide?"1fr 1fr 1fr":"1fr 1fr",gap:12,marginBottom:16,marginTop:14}}>
+            <div style={K({textAlign:"center"})}>
+              <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>YTD Net (Settlements)</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.accent}}>${ytdNetFromWeeks.toLocaleString("en-US",{maximumFractionDigits:0})}</div>
+            </div>
+            <div style={K({textAlign:"center"})}>
+              <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>Tracked Expenses</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.red}}>−${totalExpenses.toLocaleString("en-US",{maximumFractionDigits:0})}</div>
+            </div>
+            <div style={K({textAlign:"center",gridColumn:wide?"auto":"span 2"})}>
+              <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>💰 True Net</div>
+              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:trueNet>=0?C.green:C.red}}>${trueNet.toLocaleString("en-US",{maximumFractionDigits:0})}</div>
+            </div>
+          </div>
+
           {/* 🔥 HOT DAYS — which weekdays actually make you money */}
           {(function(){
             const DAY_NAMES=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -4697,20 +4723,13 @@ ${pdfText.slice(0,24000)}`}]};
           })()}
 
 
-          {/* TRUE NET SUMMARY */}
-          <div style={{display:"grid",gridTemplateColumns:wide?"1fr 1fr 1fr":"1fr 1fr",gap:12,marginBottom:16,marginTop:14}}>
-            <div style={K({textAlign:"center"})}>
-              <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>YTD Net (Settlements)</div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.accent}}>${ytdNetFromWeeks.toLocaleString("en-US",{maximumFractionDigits:0})}</div>
-            </div>
-            <div style={K({textAlign:"center"})}>
-              <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>Tracked Expenses</div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.red}}>−${totalExpenses.toLocaleString("en-US",{maximumFractionDigits:0})}</div>
-            </div>
-            <div style={K({textAlign:"center",gridColumn:wide?"auto":"span 2"})}>
-              <div style={{fontSize:9,color:C.sub,textTransform:"uppercase",marginBottom:4}}>💰 True Net</div>
-              <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:trueNet>=0?C.green:C.red}}>${trueNet.toLocaleString("en-US",{maximumFractionDigits:0})}</div>
-            </div>
+
+          {/* 🗺️ IFTA REPORTING — next release teaser */}
+          <div style={K({marginBottom:16,textAlign:"center",padding:"18px 16px"})}>
+            <div style={{fontSize:26,marginBottom:8}}>⛽🗺️</div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.text,marginBottom:6}}>🔒 IFTA Reporting</div>
+            <div style={{fontSize:10,color:C.sub,lineHeight:1.7,maxWidth:400,margin:"0 auto 10px"}}>Quarterly fuel-tax reporting built from your real fill-ups and miles — state-by-state totals ready to hand to your accountant instead of a shoebox of receipts.</div>
+            <div style={{display:"inline-block",padding:"5px 14px",borderRadius:20,background:"#fbbf2418",border:"1px solid #fbbf2444",fontSize:9,fontWeight:800,color:"#fbbf24"}}>🧪 Coming in the Next Release</div>
           </div>
 
           {/* RECEIPT SCAN / ADD EXPENSE */}
