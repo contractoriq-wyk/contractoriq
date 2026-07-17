@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.16";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 16 · build K";
+const APP_VERSION_DATE="Jul 16 · build L";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -2009,7 +2009,7 @@ ${pdfText.slice(0,24000)}`}]};
                   Stop Guessing.<br/>Start Knowing.
                 </h1>
                 <p style={{fontSize:12,color:"#6a8099",lineHeight:1.78,margin:0}}>
-                  Upload your settlement and see exactly where every dollar goes — gross, net, deductions, margin — in 30 seconds. Not hours.
+                  Upload your settlement. Know what you really made, where money leaked, and which moves were actually profitable — in 30 seconds. Not hours.
                 </p>
               </div>
 
