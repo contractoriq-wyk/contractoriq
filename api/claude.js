@@ -1,11 +1,14 @@
 /**
- * DrayageIQ — Dual-Provider AI Proxy
+ * DrayageIQ — Dual-Provider AI Proxy (hardened)
  * OpenAI (primary) + Google Gemini (fallback).
  * The frontend still sends Anthropic-shaped requests and reads Anthropic-shaped
  * responses — this proxy translates in/out, so NO app code changes are needed.
  *
  * File location in your GitHub repo: /api/claude.js
  * Required Vercel env vars:  OPENAI_KEY   and   GEMINI_KEY
+ *
+ * Hardening (Jul 16): payload size cap, stricter limits for costly doc/image
+ * requests, narrowed preview-origin passthrough, lower token ceiling.
  */
 
 const ALLOWED_ORIGINS = [
@@ -15,18 +18,21 @@ const ALLOWED_ORIGINS = [
   "https://unyamwezinibakery.com",
 ];
 
-const MAX_TOKENS_CAP = 8000;
-const OPENAI_MODEL = "gpt-4o-mini";          // cheap, for chat/text
-const OPENAI_MODEL_DOC = "gpt-4o";           // stronger reader for PDFs/images (accuracy matters)
-const GEMINI_MODEL = "gemini-2.0-flash";     // fallback, handles PDFs well
+const MAX_TOKENS_CAP = 4000;            // was 8000 — no legit request needs more; halves the abuse ceiling
+const MAX_INLINE_BYTES = 5 * 1024 * 1024; // 5MB total base64 payload (app compresses images to ~300KB)
+const OPENAI_MODEL = "gpt-4o-mini";      // cheap, for chat/text
+const OPENAI_MODEL_DOC = "gpt-4o";       // stronger reader for PDFs/images (accuracy matters)
+const GEMINI_MODEL = "gemini-2.0-flash"; // fallback, handles PDFs well
 
-// ---- best-effort per-IP rate limit (guards against the "looks like abuse" pattern) ----
+// ---- best-effort per-IP rate limits (per warm instance; the cheap first line of defense) ----
 const RL = globalThis.__ciq_rl || (globalThis.__ciq_rl = new Map());
-function rateLimited(ip) {
-  const now = Date.now(), WINDOW = 60000, MAX = 20; // 20 requests / minute / IP
-  const arr = (RL.get(ip) || []).filter((t) => now - t < WINDOW);
+function rateLimited(ip, isDoc) {
+  const now = Date.now(), WINDOW = 60000;
+  const MAX = isDoc ? 8 : 20; // doc/image calls cost ~10x a chat call — tighter lane for them
+  const key = ip + (isDoc ? ":doc" : ":txt");
+  const arr = (RL.get(key) || []).filter((t) => now - t < WINDOW);
   arr.push(now);
-  RL.set(ip, arr);
+  RL.set(key, arr);
   return arr.length > MAX;
 }
 
@@ -75,6 +81,20 @@ function hasPDF(body) {
     (m) => Array.isArray(m.content) && m.content.some((b) => b && b.type === "document")
   );
 }
+function inlineBytes(body) {
+  // Total size of all base64 media in the request — blocks oversized payloads
+  // before any provider is called (and before we pay for them).
+  let n = 0;
+  for (const m of body.messages) {
+    if (!Array.isArray(m.content)) continue;
+    for (const b of m.content) {
+      if (b && (b.type === "image" || b.type === "document") && b.source && b.source.data) {
+        n += b.source.data.length;
+      }
+    }
+  }
+  return n;
+}
 function anthropicShaped(text) {
   return { content: [{ type: "text", text: text || "" }] };
 }
@@ -97,7 +117,6 @@ async function callGemini(body, cap) {
     contents: toGeminiContents(body),
     generationConfig: { maxOutputTokens: cap },
   };
-  if (body.system) payload.systemInstruction = { parts: [{ text: body.system }] };
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_KEY}`;
   const r = await fetch(url, {
     method: "POST",
@@ -113,8 +132,10 @@ async function callGemini(body, cap) {
 
 export default async function handler(req, res) {
   const origin = req.headers.origin || "";
+  // Preview passthrough narrowed: only OUR project's Vercel previews, not any .vercel.app site
   const isPreview =
-    origin.includes(".vercel.app") || origin.includes("localhost") || origin.includes("127.0.0.1");
+    (origin.includes("contractoriq") && origin.includes(".vercel.app")) ||
+    origin.includes("localhost") || origin.includes("127.0.0.1");
   const isAllowed = ALLOWED_ORIGINS.includes(origin) || isPreview;
 
   res.setHeader("Access-Control-Allow-Origin", isAllowed ? origin : "null");
@@ -126,19 +147,23 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   if (!isAllowed) return res.status(403).json({ error: "Forbidden" });
 
-  const ip = (req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
-  if (rateLimited(ip)) return res.status(429).json({ error: "Too many requests — slow down a moment." });
-
   const body = req.body;
-  if (!body.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
+  if (!body || !body.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
     return res.status(400).json({ error: "Invalid request: messages required" });
   }
-  const cap = Math.min(body.max_tokens || 1500, MAX_TOKENS_CAP);
+
   const isDoc = hasPDF(body) || body.messages.some(m=>Array.isArray(m.content)&&m.content.some(b=>b&&b.type==="image"));
 
-  // For documents/images, use the stronger reader (gpt-4o) first for accuracy; Gemini as fallback.
-  const order = ["openai", "gemini"];
+  const ip = (req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
+  if (rateLimited(ip, isDoc)) return res.status(429).json({ error: "Too many requests — slow down a moment." });
+
+  if (inlineBytes(body) > MAX_INLINE_BYTES) {
+    return res.status(413).json({ error: "File too large — try a smaller file or fewer pages." });
+  }
+
+  const cap = Math.min(body.max_tokens || 1500, MAX_TOKENS_CAP);
   const openaiModel = isDoc ? OPENAI_MODEL_DOC : OPENAI_MODEL;
+  const order = ["openai", "gemini"];
 
   const errors = [];
   for (const provider of order) {
@@ -146,7 +171,7 @@ export default async function handler(req, res) {
       if (!process.env.OPENAI_KEY && provider === "openai") { errors.push("OPENAI_KEY not set"); continue; }
       if (!process.env.GEMINI_KEY && provider === "gemini") { errors.push("GEMINI_KEY not set"); continue; }
       const text = provider === "openai" ? await callOpenAI(body, cap, openaiModel) : await callGemini(body, cap);
-      console.log(`[proxy] served by ${provider}${isDoc ? " (doc)" : ""}`);
+      console.log(`[proxy] served by ${provider}${isDoc ? " (doc)" : ""} ip=${ip}`);
       return res.status(200).json(anthropicShaped(text));
     } catch (err) {
       console.error(`[proxy] ${provider} failed:`, err.message);
