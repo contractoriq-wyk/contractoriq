@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.16";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 16 · build L";
+const APP_VERSION_DATE="Jul 16 · build M";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -237,7 +237,7 @@ function FuelSurchargeCalculator(props){
         <div style={styles.fscLine}>Recommended FSC: {validInput?fscPct.toFixed(1):"0.0"}% <span style={styles.fscDollarStyle}>(${validInput?fscDollar.toFixed(2):"0.00"})</span></div>
         {validInput&&<div style={styles.totalLine}>Quote total: ${rateNum.toFixed(2)} + ${fscDollar.toFixed(2)} FSC = <span style={{fontWeight:800,color:"#e5ecf5"}}>${(rateNum+fscDollar).toFixed(2)}</span></div>}
       </div>
-      <div style={styles.footnote}>💡 Uses live diesel, your real MPG, and YOUR baseline from Menu → ⚙️ My Numbers — an independent benchmark; your carrier's own FSC table may use a different formula and won't always match exactly.</div>
+      <div style={styles.footnote}>💡 Uses live diesel, your real MPG, and YOUR baseline from Menu → 🧮 My Numbers — an independent benchmark; your carrier's own FSC table may use a different formula and won't always match exactly.</div>
       {validInput&&(
         <div style={{marginTop:12,paddingTop:12,borderTop:"1px dashed "+ (styles.shareBorder||"#333")}}>
           {!showShareFeature&&(
@@ -2424,7 +2424,7 @@ ${pdfText.slice(0,24000)}`}]};
                   <button onClick={()=>{setDarkMode(p=>!p);try{localStorage.setItem("ciq_theme",darkMode?"light":"dark");}catch(e){}}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>{darkMode?"☀️":"🌙"}</span><span>{darkMode?"Light Mode":"Dark Mode"}</span></button>
                   <button onClick={()=>{setShowSettings(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⚙️</span><span>Display Settings</span></button>
                   <button onClick={()=>{setShowDigestModal(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",justifyContent:"space-between",fontWeight:600}}><span style={{display:"flex",alignItems:"center",gap:8}}><span>💬</span><span>Weekly Digest (WhatsApp/SMS)</span></span><span style={{fontSize:8,fontWeight:800,color:"#fbbf24",background:"#fbbf2418",border:"1px solid #fbbf2444",borderRadius:20,padding:"1px 7px"}}>NEW</span></button>
-                  <button onClick={()=>{setShowMyNumbers(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>⚙️</span><span>My Numbers — How YOU Operate</span></button>
+                  <button onClick={()=>{setShowMyNumbers(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 12px",borderRadius:8,background:C.raised,border:`1px solid ${C.border}`,color:C.text,fontSize:12,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:4,display:"flex",alignItems:"center",gap:8,fontWeight:600}}><span>🧮</span><span>My Numbers — How YOU Operate</span></button>
 
                   {/* Divider */}
                   <div style={{height:1,background:C.border,margin:"8px 6px"}}/>
@@ -2573,7 +2573,7 @@ ${pdfText.slice(0,24000)}`}]};
       {showMyNumbers&&(
         <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:"14px 16px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-            <div><div style={{fontSize:12,fontWeight:700,color:C.text}}>⚙️ My Numbers</div><div style={{fontSize:10,color:C.sub,marginTop:2}}>Every calculation runs on YOUR operation — set it once here</div></div>
+            <div><div style={{fontSize:12,fontWeight:700,color:C.text}}>🧮 My Numbers</div><div style={{fontSize:10,color:C.sub,marginTop:2}}>Every calculation runs on YOUR operation — set it once here</div></div>
             <button onClick={()=>setShowMyNumbers(false)} style={{background:"none",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>×</button>
           </div>
           <div style={{background:C.card,borderRadius:11,padding:"14px",border:`1px solid ${C.border}`,maxWidth:440}}>
