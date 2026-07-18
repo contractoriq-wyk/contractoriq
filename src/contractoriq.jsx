@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.17";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 17 · build O";
+const APP_VERSION_DATE="Jul 17 · build P";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -1100,10 +1100,15 @@ function ContractorIQInner(){
   const tMi=allMoves.reduce((s,m)=>s+m.miles,0);
   const avgRPM=tMi>0?(allMoves.reduce((s,m)=>s+m.rate+m.fsc,0)/tMi).toFixed(2):"0.00";
   const ldPct=allMoves.length>0?Math.round(allMoves.filter(m=>m.type==="L").length/allMoves.length*100):0;
-  const margin=(tNet/tGross*100).toFixed(1);
-  const latest=allW[allW.length-1];
-  const avgM=allW.reduce((s,w)=>s+w.net/w.gross*100,0)/allW.length;
-  const wg=w=>{const m=w.net/w.gross*100;return m>=avgM*1.2?{l:"HIGH",c:C.green,i:"🔥"}:m>=avgM*0.8?{l:"NORMAL",c:C.accent,i:"✅"}:{l:"LOW",c:C.red,i:"⚠️"};};
+  const margin=tGross>0?(tNet/tGross*100).toFixed(1):"0.0";
+  // ═══ EMPTY-STATE GUARD (white-page fix) ═══
+  // With demo OFF and zero weeks (fresh browser on navy, new device before
+  // cloud sync, or all weeks deleted) allW is empty — every read below that
+  // assumed "at least one week" crashed the whole app. EMPTY_W is a safe stand-in.
+  const EMPTY_W={week:"",label:"No data yet",from:"",to:"",gross:0,net:0,totalDeductions:0,rebate:0,deds:[],moves:[]};
+  const latest=allW[allW.length-1]||EMPTY_W;
+  const avgM=allW.length>0?allW.reduce((s,w)=>s+(w.gross>0?w.net/w.gross*100:0),0)/allW.length:0;
+  const wg=w=>{const m=(w&&w.gross>0)?w.net/w.gross*100:0;return m>=avgM*1.2?{l:"HIGH",c:C.green,i:"🔥"}:m>=avgM*0.8?{l:"NORMAL",c:C.accent,i:"✅"}:{l:"LOW",c:C.red,i:"⚠️"};};
   // Use actual balance from most recent week that has it, else sum weekly deductions
   const latestEscRegBal=allW.slice().reverse().find(w=>w.escrow_regular_balance>0)?.escrow_regular_balance||0;
   const latestEsc290Bal=allW.slice().reverse().find(w=>w.escrow_290_balance>0)?.escrow_290_balance||0;
@@ -1112,16 +1117,16 @@ function ContractorIQInner(){
   const tEscReg=latestEscRegBal||calcEscReg;
   const tEsc290=latestEsc290Bal||calcEsc290;
   const tRebates=allW.reduce((s,w)=>s+(w.rebate||0),0);
-  const dw=allW[sD]||allW[allW.length-1];const dg=wg(dw);
+  const dw=allW[sD]||allW[allW.length-1]||EMPTY_W;const dg=wg(dw);
   const dwDeds=dw.deds||[];
   const dwGroups=grpDeds(dwDeds,dw.gross);
   const dwGroupTotal=dwGroups.reduce((s,g)=>s+g.amt,0);
-  const mwBase=allW[sM]||allW[allW.length-1];
+  const mwBase=allW[sM]||allW[allW.length-1]||EMPTY_W;
   const mwMoves=pairRoundTrips(mergeExtraPay([...(mwBase.moves||[]),...(sM===allW.length-1?extra:[])])).map(m=>({type:m.t||m.type,from:m.fr||m.from,to:m.to,miles:m.mi||m.miles||0,rate:m.rt||m.rate||0,fsc:m.fc||m.fsc||0,extraPay:m.extraPay||0,isRoundTrip:m.isRoundTrip||false,emptyPay:m.emptyPay||0,loadedPay:m.loadedPay||0}));
   const mwMi=mwMoves.reduce((s,m)=>s+m.miles,0);
   const mwRPM=mwMi>0?(mwMoves.reduce((s,m)=>s+m.rate+m.fsc,0)/mwMi).toFixed(2):"0.00";
   const mwLd=mwMoves.length>0?Math.round(mwMoves.filter(m=>m.type==="L").length/mwMoves.length*100):0;
-  const hw=allW[sH]||allW[allW.length-1];
+  const hw=allW[sH]||allW[allW.length-1]||EMPTY_W;
   const latFuel=Math.max(0,(latest.deds||[]).filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0)-(latest.rebate||0));// net of rebate
   const SYS=`Expert drayage business advisor for YOUR COMPANY, CDL owner-operator, Baltimore MD. Real settlement data: ${allW.map(function(w){return "W"+w.week+": Gross $"+w.gross+", Net $"+w.net+", Margin "+(w.net/w.gross*100).toFixed(1)+"%, "+(w.moves||[]).length+" moves";}).join(" | ")}. YTD: Gross $${tGross.toFixed(0)}, Net $${tNet.toFixed(0)}, Margin ${margin}%, Avg RPM $${avgRPM}, Loaded ${ldPct}%. Be specific, practical, use real numbers. Under 300 words.`;
 
