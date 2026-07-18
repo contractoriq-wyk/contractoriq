@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.17";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 17 · build Q";
+const APP_VERSION_DATE="Jul 17 · build R";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -692,7 +692,13 @@ function ContractorIQInner(){
   const [hideEmail,setHideEmail]=useState(false);// "Presenter Mode" — for live demos/screen shares
   const [activeOnlyVendor,setActiveOnlyVendor]=useState(null);
   const [helpCard,setHelpCard]=useState(null);
-  const [collapsedCards,setCollapsedCards]=useState(new Set());
+  // ═══ COLLAPSED-BY-DEFAULT ═══
+  // Every collapsible section starts CLOSED so tabs read like a clean menu of
+  // tools instead of a congested wall of data. The user's open/close choices
+  // persist across sessions — expand it once, it stays expanded for you.
+  const ALL_CARDS=["ded","grades","movePerf","actionPlan","uploads","fullHist","savedWeeks","quickQ","funded"];
+  const [collapsedCards,setCollapsedCards]=useState(()=>{try{const s=localStorage.getItem("ciq_collapsed");if(s!==null)return new Set(JSON.parse(s));}catch(e){}return new Set(ALL_CARDS);});
+  useEffect(()=>{try{localStorage.setItem("ciq_collapsed",JSON.stringify([...collapsedCards]));}catch(e){}},[collapsedCards]);
   const [showOnboarding,setShowOnboarding]=useState(false);
   const [onboardStep,setOnboardStep]=useState(0);
   const [onboardPath,setOnboardPath]=useState(null);// null = path picker showing; "standard"|"smart"|"fleet" once chosen
