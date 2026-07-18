@@ -73,8 +73,8 @@ const LOGO_ICON="/images/logo-icon.png";
 // Version scheme: MAJOR.MONTH.DAY — bump on EVERY file delivery so you can
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
-const APP_VERSION="3.7.16";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 16 · build N";
+const APP_VERSION="3.7.17";// bumped builds same-day get a new time stamp below
+const APP_VERSION_DATE="Jul 17 · build O";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -2548,6 +2548,25 @@ ${pdfText.slice(0,24000)}`}]};
                   <button type="button" onClick={function(){setFscBaselinePrice(+(fscBaselinePrice+0.05).toFixed(2));}} style={{width:30,height:32,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>+</button>
                 </div>
                 <div style={{fontSize:8,color:C.sub,lineHeight:1.5}}>Baseline = the fuel price your rates assume; find it on your carrier's FSC schedule. Auto mode is right for most drivers — manual is for those who know exactly how they run.</div>
+                {/* RETURN ON SPEND — YTD ratio readout, per user request to have it in My Numbers */}
+                <div style={{marginTop:12,paddingTop:11,borderTop:"1px solid "+C.border}}>
+                  <div style={{fontSize:9,color:C.sub,marginBottom:5}}>💰 MY RETURN ON SPEND (YTD) {helpBtn("returnOnSpend")}</div>
+                  {(isSmart||featureTrialActive.returnOnSpend)?(()=>{
+                    const rosRatio=tDed>0?tGross/tDed:0;
+                    const rosC=rosRatio>=3?C.green:rosRatio>=1.5?C.gold:C.red;
+                    return (
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 12px",borderRadius:8,background:`${rosC}12`,border:`1px solid ${rosC}33`}}>
+                        <div style={{fontSize:9,color:C.sub,lineHeight:1.4}}>Every $1 spent<br/>generates:</div>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:rosC}}>1:{rosRatio.toFixed(1)}</div>
+                          <div style={{fontSize:8,fontWeight:800,color:rosC}}>{rosRatio>=3?"IDEAL — $3+ per dollar":rosRatio>=1.5?"SAFE — profitable":"TIGHT — costs too high"}</div>
+                        </div>
+                      </div>
+                    );
+                  })():(
+                    <div onClick={function(){if(canUseFeatureFree("returnOnSpend")){useFeatureToken("returnOnSpend");setFeatureTrialActive(function(p){return {...p,returnOnSpend:true};});}else{openUpgrade("ros");}}} style={{padding:"9px 12px",borderRadius:8,background:C.bg,border:"1px solid "+C.border,fontSize:10,color:C.sub,textAlign:"center",cursor:"pointer"}}>{canUseFeatureFree("returnOnSpend")?"🎁 Use My Free Trial — see your ratio":"🔒 Pro Smart — tap to unlock"}</div>
+                  )}
+                </div>
               </div>
               <button onClick={()=>{setHiddenVendors([]);setActiveOnlyVendor(null);setHideOwnerName(false);setHideUnitNum(false);}} style={{width:"100%",marginTop:10,padding:"6px",borderRadius:6,background:"transparent",border:`1px solid ${C.border}`,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Reset All</button>
             </div>
