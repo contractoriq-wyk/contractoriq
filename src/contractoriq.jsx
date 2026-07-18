@@ -714,6 +714,8 @@ function ContractorIQInner(){
   const [expenses,setExpenses]=useState(()=>{try{const s=localStorage.getItem("ciq_expenses");return s?JSON.parse(s):[];}catch{return[];}});
   const [showExpenseForm,setShowExpenseForm]=useState(false);
   const [expForm,setExpForm]=useState({date:"",category:"Parts",desc:"",amount:"",note:"",weekRef:""});
+  const [expPhoto,setExpPhoto]=useState(null);// compressed base64 of the scanned receipt, held until Save
+  const [editingExpId,setEditingExpId]=useState(null);// non-null = editing an existing expense instead of adding
   const [expScan,setExpScan]=useState(false);
   const [expScanMsg,setExpScanMsg]=useState("");
   const [docs,setDocs]=useState(()=>{try{const s=localStorage.getItem("ciq_docs");return s?JSON.parse(s):[];}catch{return[];}});
@@ -1469,6 +1471,7 @@ ${pdfText.slice(0,24000)}`}]};
         ?await compressImage(file)// camera photos get downscaled so they fit the upload limit
         :await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
       const block=isImg?{type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}}:{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}};
+      if(isImg)setExpPhoto(b64);// keep the compressed photo — uploaded to cloud storage on Save as audit proof
       const resp=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:400,messages:[{role:"user",content:[block,{type:"text",text:'Read this receipt. Return ONLY valid JSON: {"date":"MM/DD/YYYY","vendor":"store name","amount":0.00,"category":"Parts|Labor|Tires|Maintenance|Fuel|Permits|Other","desc":"what was purchased"}'}]}]})});
       const d=await resp.json();const raw=d.content?.map(b=>b.text||"").join("")||"{}";
       const parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());
@@ -2983,6 +2986,19 @@ ${pdfText.slice(0,24000)}`}]};
                       <div style={{fontSize:12,fontWeight:800,color:dw.net/dw.gross>0.65?C.green:dw.net/dw.gross>0.55?C.gold:C.red}}>Net ${(dw.net||0).toFixed(2)} · {dw.gross>0?((dw.net||0)/(dw.gross)*100).toFixed(1):0}%</div>
                     </div>
 
+                    {/* WEEKLY RETURN ON SPEND — promised in University tour "right below your Deduction Breakdown total" */}
+                    {(isSmart||featureTrialActive.returnOnSpend)&&(()=>{
+                      const spendNetOfRebate=Math.max(0.01,dedSum-(dw.rebate||0));
+                      const wr=dw.gross>0?dw.gross/spendNetOfRebate:0;
+                      const wrc=wr>=3?C.green:wr>=1.5?C.gold:C.red;
+                      return (
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 11px",borderRadius:8,background:`${wrc}12`,border:`1px solid ${wrc}33`,marginBottom:10}}>
+                          <div style={{fontSize:10,color:C.sub}}>💰 This Week's Return on Spend {helpBtn("returnOnSpend")}</div>
+                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:wrc}}>1:{wr.toFixed(1)} <span style={{fontSize:8,fontWeight:700,color:wrc}}>{wr>=3?"IDEAL":wr>=1.5?"SAFE":"TIGHT"}</span></div>
+                        </div>
+                      );
+                    })()}
+                    {helpModal("returnOnSpend")}
                     {/* Mismatch warning */}
                     {mismatch&&(
                       <div style={{padding:"9px 11px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,marginBottom:10}}>
@@ -4745,7 +4761,7 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14}}>
               <div>
                 <div style={{fontSize:8,color:C.sub,marginBottom:3}}>DATE</div>
-                <input type="text" value={expForm.date} onChange={function(e){setExpForm(function(p){return {...p,date:e.target.value};});}} placeholder="MM/DD/YYYY" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                <input type="date" value={(function(){const m=(expForm.date||"").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?m[3]+"-"+m[1].padStart(2,"0")+"-"+m[2].padStart(2,"0"):"";})()} onChange={function(e){const v=e.target.value;if(!v){setExpForm(function(p){return {...p,date:""};});return;}const parts=v.split("-");setExpForm(function(p){return {...p,date:parts[1]+"/"+parts[2]+"/"+parts[0]};});}} style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box",colorScheme:"dark"}}/>
               </div>
               <div>
                 <div style={{fontSize:8,color:C.sub,marginBottom:3}}>CATEGORY</div>
@@ -4762,14 +4778,35 @@ ${pdfText.slice(0,24000)}`}]};
               <div style={{fontSize:8,color:C.sub,marginBottom:3}}>AMOUNT ($)</div>
               <input type="text" inputMode="decimal" value={expForm.amount} onChange={function(e){setExpForm(function(p){return {...p,amount:e.target.value};});}} placeholder="e.g. 89.99" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/>
             </div>
-            <button onClick={function(){
+            {expPhoto&&<div style={{marginTop:10,display:"flex",alignItems:"center",gap:8,padding:"7px 10px",borderRadius:8,background:C.accent+"10",border:"1px solid "+C.accent+"33"}}><span style={{fontSize:14}}>📎</span><span style={{fontSize:10,color:C.accent,flex:1}}>Receipt photo attached — will be saved to your cloud as audit proof{!user?" (sign in required)":""}</span><button onClick={function(){setExpPhoto(null);}} style={{background:"none",border:"none",color:C.sub,fontSize:13,cursor:"pointer",padding:"0 2px"}}>×</button></div>}
+            <button onClick={async function(){
               const amt=parseFloat(expForm.amount);
               if(!expForm.date||!amt||amt<=0){setExpScanMsg("Please fill in date and a valid amount");return;}
-              setExpenses(function(p){return [...p,{...expForm,amount:amt,id:Date.now()}];});
+              const recId=editingExpId||Date.now();
+              let photoPath=null;
+              // Upload attached receipt photo to cloud storage as audit proof (logged-in users)
+              if(expPhoto&&user){
+                try{
+                  const sb=getSB();
+                  if(sb){
+                    const bytes=Uint8Array.from(atob(expPhoto),function(ch){return ch.charCodeAt(0);});
+                    photoPath=user.id+"/"+recId+".jpg";
+                    const up=await sb.storage.from("receipts").upload(photoPath,bytes,{contentType:"image/jpeg",upsert:true});
+                    if(up.error){photoPath=null;setExpScanMsg("Saved — photo backup failed ("+(up.error.message||"storage error")+")");}
+                  }
+                }catch(err){photoPath=null;}
+              }
+              if(editingExpId){
+                setExpenses(function(p){return p.map(function(x){return x.id===editingExpId?{...x,...expForm,amount:amt,id:editingExpId,photo:photoPath||x.photo||null}:x;});});
+                setExpScanMsg("Expense updated");
+              }else{
+                setExpenses(function(p){return [...p,{...expForm,amount:amt,id:recId,photo:photoPath}];});
+                setExpScanMsg(expPhoto&&!user?"Saved — sign in to back up receipt photos":photoPath?"Saved with receipt photo ✓":"Expense saved");
+              }
               setExpForm({date:"",category:"Parts",desc:"",amount:"",note:"",weekRef:""});
-              setExpScanMsg("✅ Expense saved");
-              setTimeout(function(){setExpScanMsg("");},3000);
-            }} style={{width:"100%",padding:"11px",borderRadius:9,background:C.green,color:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",marginTop:12}}>💾 Save Expense</button>
+              setExpPhoto(null);setEditingExpId(null);
+            }} style={{width:"100%",padding:"11px",borderRadius:9,background:editingExpId?C.gold:C.green,color:"#000",fontWeight:800,fontSize:12,border:"none",cursor:"pointer",fontFamily:"inherit",marginTop:12}}>{editingExpId?"✏️ Update Expense":"💾 Save Expense"}</button>
+            {editingExpId&&<button onClick={function(){setEditingExpId(null);setExpForm({date:"",category:"Parts",desc:"",amount:"",note:"",weekRef:""});setExpPhoto(null);setExpScanMsg("");}} style={{width:"100%",padding:"8px",borderRadius:8,background:"transparent",border:"1px solid "+C.border,color:C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit",marginTop:8}}>Cancel Edit</button>}
           </div>
 
           {/* EXPENSE HISTORY */}
@@ -4790,6 +4827,8 @@ ${pdfText.slice(0,24000)}`}]};
                     </div>
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
                       <span style={{fontSize:13,fontWeight:800,color:C.red}}>${parseFloat(e.amount).toFixed(2)}</span>
+                      {e.photo&&!demoMode&&<button title="View receipt photo" onClick={async function(){try{const sb=getSB();if(!sb||!user){setExpScanMsg("Sign in to view receipt photos");return;}const r=await sb.storage.from("receipts").createSignedUrl(e.photo,300);if(r.data&&r.data.signedUrl){window.open(r.data.signedUrl,"_blank");}else{setExpScanMsg("Could not load photo");}}catch(err){setExpScanMsg("Could not load photo");}}} style={{background:"none",border:"none",fontSize:13,cursor:"pointer",padding:"0 2px"}}>📷</button>}
+                      {!demoMode&&<button title="Edit" onClick={function(){setEditingExpId(e.id);setExpForm({date:e.date||"",category:e.category||"Parts",desc:e.desc||"",amount:String(e.amount||""),note:e.note||"",weekRef:e.weekRef||""});setExpPhoto(null);setExpScanMsg("Editing — make changes above and tap Update");window.scrollTo({top:0,behavior:"smooth"});}} style={{background:"none",border:"none",color:C.gold,fontSize:12,cursor:"pointer",padding:"0 2px"}}>✏️</button>}
                       {!demoMode&&<button onClick={function(){setExpenses(function(p){return p.filter(function(x){return x.id!==e.id;});});}} style={{background:"none",border:"none",color:C.sub,fontSize:14,cursor:"pointer",padding:"0 4px"}}>×</button>}
                     </div>
                   </div>
