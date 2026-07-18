@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.17";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 17 · build P";
+const APP_VERSION_DATE="Jul 17 · build Q";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -641,6 +641,12 @@ function ContractorIQInner(){
   const [fuelPrice,setFuelPrice]=useState(6.22);
   const [mpgAutoSync,setMpgAutoSync]=useState(()=>{try{return localStorage.getItem("ciq_mpg_auto")!=="false";}catch{return true;}});
   useEffect(()=>{try{localStorage.setItem("ciq_mpg_auto",String(mpgAutoSync));}catch(e){}},[mpgAutoSync]);
+  // Return on Spend target: AUTO uses industry benchmarks (1:3 ideal, 1:1.5 safe);
+  // MANUAL lets the driver set their own target ratio and judge results against it.
+  const [rosAuto,setRosAuto]=useState(()=>{try{return localStorage.getItem("ciq_ros_auto")!=="false";}catch{return true;}});
+  useEffect(()=>{try{localStorage.setItem("ciq_ros_auto",String(rosAuto));}catch(e){}},[rosAuto]);
+  const [rosTarget,setRosTarget]=useState(()=>{try{const s=localStorage.getItem("ciq_ros_target");const n=s?parseFloat(s):2.0;return isFinite(n)&&n>0?n:2.0;}catch{return 2.0;}});
+  useEffect(()=>{try{localStorage.setItem("ciq_ros_target",String(rosTarget));}catch(e){}},[rosTarget]);
   const [priceAutoSync,setPriceAutoSync]=useState(()=>{try{return localStorage.getItem("ciq_price_auto")!=="false";}catch{return true;}});
   const [fscLinehaul,setFscLinehaul]=useState({rate:"",miles:""});
   useEffect(()=>{try{localStorage.setItem("ciq_price_auto",String(priceAutoSync));}catch(e){}},[priceAutoSync]);
@@ -2558,13 +2564,35 @@ ${pdfText.slice(0,24000)}`}]};
                   <div style={{fontSize:9,color:C.sub,marginBottom:5}}>💰 MY RETURN ON SPEND (YTD) {helpBtn("returnOnSpend")}</div>
                   {(isSmart||featureTrialActive.returnOnSpend)?(()=>{
                     const rosRatio=tDed>0?tGross/tDed:0;
-                    const rosC=rosRatio>=3?C.green:rosRatio>=1.5?C.gold:C.red;
+                    // AUTO: industry benchmarks. MANUAL: driver's own target ratio.
+                    const hitTarget=rosAuto?rosRatio>=3:rosRatio>=rosTarget;
+                    const nearTarget=rosAuto?rosRatio>=1.5:rosRatio>=rosTarget*0.85;
+                    const rosC=hitTarget?C.green:nearTarget?C.gold:C.red;
                     return (
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 12px",borderRadius:8,background:`${rosC}12`,border:`1px solid ${rosC}33`}}>
-                        <div style={{fontSize:9,color:C.sub,lineHeight:1.4}}>Every $1 spent<br/>generates:</div>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:rosC}}>1:{rosRatio.toFixed(1)}</div>
-                          <div style={{fontSize:8,fontWeight:800,color:rosC}}>{rosRatio>=3?"IDEAL — $3+ per dollar":rosRatio>=1.5?"SAFE — profitable":"TIGHT — costs too high"}</div>
+                      <div>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                          <div style={{flex:1,paddingRight:8}}>
+                            <div style={{fontSize:10,color:C.text,fontWeight:700}}>Auto benchmark</div>
+                            <div style={{fontSize:8,color:C.sub,marginTop:1,lineHeight:1.4}}>{rosAuto?"ON — judged vs industry standard (1:3 ideal, 1:1.5 safe)":"OFF — judged vs YOUR target below"}</div>
+                          </div>
+                          <button onClick={()=>setRosAuto(p=>!p)} style={{width:40,height:20,borderRadius:10,background:rosAuto?C.accent:C.border,border:"none",cursor:"pointer",position:"relative",flexShrink:0}}><div style={{width:14,height:14,borderRadius:"50%",background:"white",position:"absolute",top:3,left:rosAuto?23:3,transition:"left 0.15s"}}/></button>
+                        </div>
+                        {!rosAuto&&(
+                          <div style={{marginBottom:8}}>
+                            <div style={{fontSize:9,color:C.sub,marginBottom:3}}>MY TARGET RATIO · what 1:X you want to hit</div>
+                            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                              <button type="button" onClick={function(){setRosTarget(function(p){return Math.max(0.5,+(p-0.5).toFixed(1));});}} style={{width:30,height:32,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>−</button>
+                              <div style={{flex:1,textAlign:"center",fontSize:13,fontWeight:800,color:C.text}}>1:{Number(rosTarget).toFixed(1)}</div>
+                              <button type="button" onClick={function(){setRosTarget(function(p){return Math.min(10,+(p+0.5).toFixed(1));});}} style={{width:30,height:32,borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>+</button>
+                            </div>
+                          </div>
+                        )}
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 12px",borderRadius:8,background:`${rosC}12`,border:`1px solid ${rosC}33`}}>
+                          <div style={{fontSize:9,color:C.sub,lineHeight:1.4}}>Every $1 spent<br/>generates:</div>
+                          <div style={{textAlign:"right"}}>
+                            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:rosC}}>1:{rosRatio.toFixed(1)}</div>
+                            <div style={{fontSize:8,fontWeight:800,color:rosC}}>{rosAuto?(hitTarget?"IDEAL — $3+ per dollar":nearTarget?"SAFE — profitable":"TIGHT — costs too high"):(hitTarget?"✅ HIT — beating your 1:"+rosTarget.toFixed(1)+" target":nearTarget?"CLOSE — near your 1:"+rosTarget.toFixed(1)+" target":"BELOW your 1:"+rosTarget.toFixed(1)+" target")}</div>
+                          </div>
                         </div>
                       </div>
                     );
