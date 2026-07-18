@@ -73,8 +73,8 @@ const LOGO_ICON="/images/logo-icon.png";
 // Version scheme: MAJOR.MONTH.DAY — bump on EVERY file delivery so you can
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
-const APP_VERSION="3.7.17";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 17 · build R";
+const APP_VERSION="3.7.18";// bumped builds same-day get a new time stamp below
+const APP_VERSION_DATE="Jul 18 · build S";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -4625,6 +4625,8 @@ ${pdfText.slice(0,24000)}`}]};
             </div>
           </div>
 
+          {/* MONEY TRANSPARENCY — exactly which settlements and expenses these totals cover */}
+          {allW.length>0&&<div style={{fontSize:9,color:C.accent,fontWeight:700,textAlign:"center",marginBottom:14,marginTop:-6}}>📅 Based on settlements {(allW[0]||EMPTY_W).from} – {latest.to} · {allW.length} weeks{!demoMode&&expenses.length>0?" · "+expenses.length+" tracked expense"+(expenses.length>1?"s":""):""}</div>}
           {/* 🔥 HOT DAYS — which weekdays actually make you money */}
           {(function(){
             const DAY_NAMES=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -4682,6 +4684,12 @@ ${pdfText.slice(0,24000)}`}]};
                   </div>
                 </div>
                 {helpModal("hotDays")}
+                {/* RANGE TRANSPARENCY — show the exact dates this filter covers so the driver can verify and agree */}
+                {(function(){
+                  const fmtD=function(d){return d?d.toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";};
+                  const spanStart=cutoff||(dated.length?new Date(Math.min.apply(null,dated.map(function(x){return x.d.getTime();}))):null);
+                  return <div style={{fontSize:9,color:C.accent,marginBottom:9,fontWeight:700}}>📅 Showing {fmtD(spanStart)} – {fmtD(anchor)} · {dated.length} moves{hotDaysRange!=="all"?" · anchored to your latest settlement":""}</div>;
+                })()}
                 {!isSmart?(
                   <div style={{textAlign:"center",padding:"14px 8px"}}>
                     <div style={{fontSize:11,color:C.sub,lineHeight:1.6,marginBottom:10}}>🔒 See exactly which weekdays pay you the most — push hard on hot days, rest easy on slow ones. Based on your real move dates.</div>
@@ -4782,6 +4790,12 @@ ${pdfText.slice(0,24000)}`}]};
                   </div>
                 </div>
                 {helpModal("bestRoutes")}
+                {/* RANGE TRANSPARENCY — exact dates covered by the selected filter */}
+                {(function(){
+                  const fmtD=function(d){return d?d.toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";};
+                  const spanStart=cutoff||(allDated2.length?new Date(Math.min.apply(null,allDated2.map(function(d){return d.getTime();}))):null);
+                  return <div style={{fontSize:9,color:C.accent,marginBottom:9,fontWeight:700}}>📅 Showing {fmtD(spanStart)} – {fmtD(anchor2)} · {eligible.length} moves{routesRange!=="all"?" · anchored to your latest settlement":""}</div>;
+                })()}
                 <div style={{fontSize:10,color:C.sub,marginBottom:10}}>Gross pay per mile (rate + FSC) by lane · both directions pooled · lanes run 2+ times</div>
                 <div style={{fontSize:9,fontWeight:800,color:C.green,letterSpacing:"0.06em",marginBottom:7}}>🔥 TAKE THESE EVERY TIME</div>
                 {top.map(function(r){return laneRow(r,true);})}
