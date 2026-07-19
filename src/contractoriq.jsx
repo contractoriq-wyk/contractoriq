@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.18";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 18 · build U";
+const APP_VERSION_DATE="Jul 18 · build V";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -384,10 +384,10 @@ function fbCopy(t){const e=document.createElement("textarea");e.value=t;e.style.
 const W=[];// Hardcoded baseline removed — all real data now comes from Supabase (addedW)
 
 const DEMO_FILLUPS=[
-  {date:"2026-06-18",odometer:412480,gallons:98.4,cost:344.40},
-  {date:"2026-06-24",odometer:413145,gallons:102.1,cost:357.35},
-  {date:"2026-07-01",odometer:413822,gallons:99.7,cost:346.96},
-  {date:"2026-07-08",odometer:414510,gallons:104.3,cost:362.96}
+  {date:"2026-06-18",odometer:412480,gallons:98.4,cost:344.40,milesSinceLast:655,mpg:"6.7"},
+  {date:"2026-06-24",odometer:413145,gallons:102.1,cost:357.35,milesSinceLast:665,mpg:"6.5"},
+  {date:"2026-07-01",odometer:413822,gallons:99.7,cost:346.96,milesSinceLast:677,mpg:"6.8"},
+  {date:"2026-07-08",odometer:414510,gallons:104.3,cost:362.96,milesSinceLast:688,mpg:"6.6"}
 ];
 const DEMO_W=[
   {vendor:"JDT",week:"01",label:"Week 01",from:"01/06/2025",to:"01/10/2025",gross:4200.00,net:2310.00,totalDeductions:1890.00,rebate:45.00,gallons:280.00,deds:[{l:"Operations Fee",a:840.00},{l:"Fuel Advance",a:750.00},{l:"Insurance",a:200.00},{l:"Escrow",a:100.00}],moves:[{mi:62,rt:210,fc:45,t:"L"},{mi:58,rt:195,fc:42,t:"L"},{mi:71,rt:230,fc:48,t:"L"},{mi:45,rt:150,fc:38,t:"E"},{mi:68,rt:220,fc:46,t:"L"}]},
@@ -4463,7 +4463,33 @@ ${pdfText.slice(0,24000)}`}]};
               </div>
             </div>
             <div style={{padding:"12px",display:isCollapsed("funded")?"none":"flex",flexDirection:"column",gap:10}}>
-              {[
+              {(demoMode?[
+                // ═══ DEMO = FICTIONAL EXAMPLE LENDERS ═══
+                // The real lender matches are paid Pro Smart information.
+                // Demo shows clearly made-up institutions so visitors see the
+                // SHAPE of the feature without getting the paid content free.
+                {
+                  icon:"🏦",name:"John Doe Bank (Example)",type:"Sample — Equipment Lending",
+                  range:"$25,000 – $150,000",rate:"Example rate shown here",
+                  why:"This is a sample card. In My Data Mode, real institutions are matched to YOUR verified income history.",
+                  qualify:true,
+                  url:"",tag:"SAMPLE",tagColor:"#a78bfa",
+                },
+                {
+                  icon:"🏛️",name:"JN Institute Lending (Example)",type:"Sample — Small Business Loans",
+                  range:"$10,000 – $500,000",rate:"Example rate shown here",
+                  why:"Sample card — real programs, real rates, and real qualification checks appear with your own uploaded settlements.",
+                  qualify:true,
+                  url:"",tag:"SAMPLE",tagColor:"#a78bfa",
+                },
+                {
+                  icon:"🚛",name:"Jane Doe Freight Capital (Example)",type:"Sample — Factoring",
+                  range:"$5,000 – $75,000",rate:"Example rate shown here",
+                  why:"Sample card — Pro Smart matches factoring and working-capital options to your actual weekly volume.",
+                  qualify:true,
+                  url:"",tag:"SAMPLE",tagColor:"#a78bfa",
+                },
+              ]:[
                 {
                   icon:"🦅",name:"OOIDA Business Services",type:"Owner-Operator Focused",
                   range:"$1,000 – $250,000",rate:"Competitive rates for 1099 drivers",
@@ -4506,7 +4532,7 @@ ${pdfText.slice(0,24000)}`}]};
                   qualify:monthlyNet>2000,
                   url:"https://www.atbs.com",tag:"Own Your Truck",tagColor:"#fbbf24",
                 },
-              ].map(function(f,i){return(
+              ]).map(function(f,i){return(
                 <div key={i} style={{borderRadius:12,border:`1px solid ${f.qualify?"#fbbf2433":"#2c3a52"}`,overflow:"hidden",opacity:f.qualify?1:0.6}}>
                   <div style={{padding:"11px 13px",background:f.qualify?"linear-gradient(135deg,#fbbf2410,#f59e0b06)":"#141928",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <div style={{display:"flex",alignItems:"center",gap:9}}>
@@ -4527,10 +4553,10 @@ ${pdfText.slice(0,24000)}`}]};
                       <div style={{textAlign:"right"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase"}}>Terms</div><div style={{fontSize:11,fontWeight:700,color:"#fbbf24",marginTop:2}}>{f.rate}</div></div>
                     </div>
                     <div style={{fontSize:11,color:C.sub,lineHeight:1.65,marginBottom:9}}>{f.why}</div>
-                    <a href={f.url} target="_blank" rel="noopener noreferrer"
+                    {f.url?(<a href={f.url} target="_blank" rel="noopener noreferrer"
                       style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"9px",borderRadius:9,background:f.qualify?`linear-gradient(135deg,#fbbf24,#f59e0b)`:"#1e2a3a",color:f.qualify?"#000":C.sub,fontSize:11,fontWeight:800,textDecoration:"none",border:f.qualify?"none":"1px solid #2c3a52"}}>
                       {f.qualify?"🔗 Learn More & Apply":"🔒 Grow your data first"}
-                    </a>
+                    </a>):(<div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"9px",borderRadius:9,background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:11,fontWeight:700}}>🧪 Example only — real lenders appear in My Data Mode</div>)}
                   </div>
                 </div>
               );})}
