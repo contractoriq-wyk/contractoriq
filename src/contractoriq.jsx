@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.18";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 18 · build S";
+const APP_VERSION_DATE="Jul 18 · build T";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -1656,13 +1656,11 @@ ${pdfText.slice(0,24000)}`}]};
   if(!authChecked&&!isOwnerMode){
     return(<div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.sub,display:"flex",alignItems:"center",justifyContent:"center"}}>Loading…</div>);
   }
-  if(!user&&!showWelcome&&!isOwnerMode){
-    return(
-      <div style={{background:"#080c16",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <div style={{color:"#00ffcc",fontFamily:"'IBM Plex Mono',monospace",fontSize:12}}>Loading...</div>
-      </div>
-    );
-  }
+  // NOTE: an anonymous visitor (no user) who has dismissed the Welcome screen
+  // is a LEGITIMATE state — "No account needed" is the front-door promise.
+  // They proceed into the app (demo mode or their own local-only data).
+  // A previous "Loading..." gate here dead-ended every anonymous visitor —
+  // the demo button and the upload button both froze forever. Never re-add it.
 
   return(
     <div style={{fontFamily:"'IBM Plex Mono',monospace",background:C.bg,minHeight:"100vh",color:C.text}}>
@@ -2230,7 +2228,7 @@ ${pdfText.slice(0,24000)}`}]};
       {/* DATA MODE TOGGLE */}
       <div style={{background:demoMode?"linear-gradient(135deg,"+C.a3+"22,"+C.accent+"12)":C.bg,borderBottom:"1px solid "+(demoMode?C.a3+"44":C.border),padding:"9px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
         <div><div style={{fontSize:11,color:demoMode?C.a3:C.accent,fontWeight:700}}>{demoMode?"👀 Demo Mode — Sample data":"✅ My Data Mode — Your real numbers"}</div><div style={{fontSize:9,color:C.sub,marginTop:1}}>{demoMode?"Tap to switch to your real settlement data":"Tap to explore with demo sample data"}</div></div>
-        <button onClick={()=>{const next=!demoMode;setDemoMode(next);try{localStorage.setItem("ciq_demo",String(next));}catch(e){}if(!next)setTab("growth");}} style={{padding:"6px 12px",borderRadius:7,background:demoMode?"linear-gradient(135deg,"+C.accent+","+C.a3+")":"linear-gradient(135deg,"+C.a3+"44,"+C.accent+"44)",border:"1px solid "+(demoMode?"transparent":C.a3+"66"),color:demoMode?"#000":C.a3,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:800,flexShrink:0}}>{demoMode?"📤 Use My Data":"👀 View Demo"}</button>
+        <button onClick={()=>{const next=!demoMode;if(!next&&!user&&!isOwnerMode&&(baseW.length+addedW.length)===0){setDemoMode(false);try{localStorage.setItem("ciq_demo","false");localStorage.setItem("ciq_welcome_done","false");}catch(e){}setShowWelcome(true);return;}setDemoMode(next);try{localStorage.setItem("ciq_demo",String(next));}catch(e){}if(!next)setTab("growth");}} style={{padding:"6px 12px",borderRadius:7,background:demoMode?"linear-gradient(135deg,"+C.accent+","+C.a3+")":"linear-gradient(135deg,"+C.a3+"44,"+C.accent+"44)",border:"1px solid "+(demoMode?"transparent":C.a3+"66"),color:demoMode?"#000":C.a3,fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:800,flexShrink:0}}>{demoMode?"📤 Use My Data":"👀 View Demo"}</button>
       </div>
 
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
