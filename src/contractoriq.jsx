@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.18";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 18 · build T";
+const APP_VERSION_DATE="Jul 18 · build U";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -383,6 +383,12 @@ function fbCopy(t){const e=document.createElement("textarea");e.value=t;e.style.
 
 const W=[];// Hardcoded baseline removed — all real data now comes from Supabase (addedW)
 
+const DEMO_FILLUPS=[
+  {date:"2026-06-18",odometer:412480,gallons:98.4,cost:344.40},
+  {date:"2026-06-24",odometer:413145,gallons:102.1,cost:357.35},
+  {date:"2026-07-01",odometer:413822,gallons:99.7,cost:346.96},
+  {date:"2026-07-08",odometer:414510,gallons:104.3,cost:362.96}
+];
 const DEMO_W=[
   {vendor:"JDT",week:"01",label:"Week 01",from:"01/06/2025",to:"01/10/2025",gross:4200.00,net:2310.00,totalDeductions:1890.00,rebate:45.00,gallons:280.00,deds:[{l:"Operations Fee",a:840.00},{l:"Fuel Advance",a:750.00},{l:"Insurance",a:200.00},{l:"Escrow",a:100.00}],moves:[{mi:62,rt:210,fc:45,t:"L"},{mi:58,rt:195,fc:42,t:"L"},{mi:71,rt:230,fc:48,t:"L"},{mi:45,rt:150,fc:38,t:"E"},{mi:68,rt:220,fc:46,t:"L"}]},
   {vendor:"JDT",week:"02",label:"Week 02",from:"01/13/2025",to:"01/17/2025",gross:4850.00,net:2667.50,totalDeductions:2182.50,rebate:52.00,gallons:310.00,deds:[{l:"Operations Fee",a:970.00},{l:"Fuel Advance",a:890.00},{l:"Insurance",a:200.00},{l:"Escrow",a:122.50}],moves:[{mi:65,rt:225,fc:47,t:"L"},{mi:72,rt:240,fc:50,t:"L"},{mi:55,rt:185,fc:40,t:"L"},{mi:68,rt:220,fc:46,t:"L"},{mi:48,rt:160,fc:39,t:"E"}]},
@@ -1432,7 +1438,21 @@ ${pdfText.slice(0,24000)}`}]};
   }
 
   async function runAITool(mode){
-    setAiMode(mode);setAiOut("");setAiLoad(true);
+    setAiMode(mode);setAiOut("");
+    // ═══ DEMO MODE = SEALED EXAMPLES ═══
+    // In demo, the AI tools show a labeled SAMPLE of what the real output looks
+    // like — no real API call, no real data, no real lender advice. The sample
+    // teaches the shape of the feature; My Data Mode delivers the real thing.
+    if(demoMode){
+      const SAMPLE_HEADER="🧪 SAMPLE OUTPUT — this is an example of what this tool produces.\nSwitch to My Data Mode and upload your settlements to get YOUR real version.\n\n";
+      const samples={
+        report:SAMPLE_HEADER+"WEEKLY SETTLEMENT REPORT — Week 19 (sample)\n\n1) WEEK SUMMARY\nGross $5,240 · Net $3,412 · Margin 65.1%. A solid week — margin above your 60% average, driven by strong port moves Tuesday and Thursday.\n\n2) TOP PROFIT LEAK\nFuel advance ran $612 against $540 of actual pump receipts — a $72 gap worth checking against your fuel log.\n\n3) ACTION ITEM\nCall the fuel desk about the advance reconciliation before Friday's settlement closes.\n\n4) OUTLOOK\nDiesel is trending flat; expect similar margins next week if move count holds.",
+        bizplan:SAMPLE_HEADER+"BUSINESS PLAN (sample excerpt)\n\nEXECUTIVE SUMMARY\nSample Trucking LLC is a single-truck drayage operation grossing ~$94,600 YTD across 19 weeks with a 62% net margin, seeking $85,000 to add a second truck.\n\nFINANCIAL PERFORMANCE\nAvg weekly net: $2,950 · Consistent margins · Documented via settlement records.\n\nLOAN REQUEST\n$85,000 over 60 months for a used day cab + insurance reserve.\n\nGROWTH STRATEGY\nSecond truck adds ~$4,800/wk gross at current port volume with a hired driver.\n\n(Your real plan is built from YOUR actual settlement numbers.)",
+        funding:SAMPLE_HEADER+"FUNDING OPTIONS (sample)\n\n1) EQUIPMENT LENDERS — trucking-focused lenders typically finance used trucks at competitive rates for operators with 2+ years of settlement history.\n2) SBA PROGRAMS — SBA 7(a) loans work for working capital + equipment; microloans suit smaller amounts.\n3) CDFI LENDERS — community lenders often beat bank rates for owner-operators.\n4) DOCUMENTS YOU'D NEED — 6–12 months of settlements (DrayageIQ exports these), bank statements, MC authority.\n5) REALISTIC RANGE — based on this sample's numbers: $60k–$100k.\n\n⚠️ Sample only — real lender names, programs, and amounts are generated from YOUR actual revenue when you're in My Data Mode."
+      };
+      setAiOut(samples[mode]||SAMPLE_HEADER);setAiLoad(false);return;
+    }
+    setAiLoad(true);
     const w=allW[sR]||allW[allW.length-1]||safeW[safeW.length-1];
     const fuelGross=w.deds.filter(d=>d.l.toLowerCase().includes("fuel")).reduce((s,d)=>s+d.a,0);
     const fuel=Math.max(0,fuelGross-(w.rebate||0));// net of rebate for accurate reporting
@@ -3322,11 +3342,14 @@ ${pdfText.slice(0,24000)}`}]};
 
                     {/* Manual Fuel Log — real pump-to-pump fill-up tracking */}
                     <div>
-                      <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>⛽ Manual Fuel Log — Real MPG Tracker</div>
+                      <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>⛽ Manual Fuel Log — Real MPG Tracker{demoMode&&<span style={{marginLeft:6,padding:"1px 6px",borderRadius:8,background:C.a3+"22",border:"1px solid "+C.a3+"55",color:C.a3,fontSize:8}}>SAMPLE DATA</span>}</div>
                       <div style={{fontSize:9,color:C.sub,lineHeight:1.5,marginBottom:10}}>Log your odometer every time you fuel up. DrayageIQ calculates miles driven and real MPG automatically between fill-ups — no manual math needed.</div>
 
                       {(()=>{
-                        const sorted=[...fuelFillups].sort((a,b)=>new Date(a.date)-new Date(b.date));
+                        // Demo mode shows SAMPLE fill-ups only — a sealed example of what the
+                        // real tracker looks like. Real fill-ups never leak into the demo.
+                        const sourceFillups=demoMode?DEMO_FILLUPS:fuelFillups;
+                        const sorted=[...sourceFillups].sort((a,b)=>new Date(a.date)-new Date(b.date));
                         const lastFillup=sorted[sorted.length-1]||null;
 
                         const addFillup=()=>{
@@ -3367,7 +3390,7 @@ ${pdfText.slice(0,24000)}`}]};
                                 </div>
                               </div>
                               {lastFillup&&<div style={{fontSize:9,color:C.sub,marginBottom:8}}>Last fill-up: {lastFillup.odometer.toLocaleString()} mi on {lastFillup.date}</div>}
-                              <button onClick={addFillup} style={{width:"100%",padding:"9px",borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>+ Log Fill-Up</button>
+                              <button onClick={demoMode?function(){}:addFillup} disabled={demoMode} style={{width:"100%",padding:"9px",borderRadius:8,background:demoMode?C.raised:`linear-gradient(135deg,${C.accent},${C.a3})`,border:demoMode?"1px solid "+C.border:"none",color:demoMode?C.sub:"#000",fontSize:11,fontWeight:800,cursor:demoMode?"not-allowed":"pointer",fontFamily:"inherit"}}>{demoMode?"Sample only — switch to My Data Mode to log real fill-ups":"+ Log Fill-Up"}</button>
                             </div>
 
                             {/* Most recent calculated MPG */}
@@ -3395,7 +3418,7 @@ ${pdfText.slice(0,24000)}`}]};
                                         <span style={{color:C.sub}}>{f.date} · {f.odometer.toLocaleString()} mi · {f.gallons} gal</span>
                                         <div style={{display:"flex",alignItems:"center",gap:8}}>
                                           <span style={{color:f.mpg?C.accent:C.sub,fontWeight:700}}>{f.mpg?`${f.mpg} MPG`:"—"}</span>
-                                          <button onClick={()=>{if(origIdx>=0)setFuelFillups(p=>p.filter((_,idx)=>idx!==origIdx));}} style={{background:"none",border:"none",color:C.red,fontSize:12,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✕</button>
+                                          {!demoMode&&<button onClick={()=>{if(origIdx>=0)setFuelFillups(p=>p.filter((_,idx)=>idx!==origIdx));}} style={{background:"none",border:"none",color:C.red,fontSize:12,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✕</button>}
                                         </div>
                                       </div>
                                     );
