@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.24";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 24 · build W";
+const APP_VERSION_DATE="Jul 24 · build X";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -3384,8 +3384,8 @@ ${pdfText.slice(0,24000)}`}]};
                         return(
                           <div>
                             {/* Add new fill-up form */}
-                            <div style={{background:C.bg,borderRadius:9,border:`1px solid ${C.border}`,padding:12,marginBottom:12}}>
-                              <div style={{fontSize:9,fontWeight:700,color:C.accent,marginBottom:8,textTransform:"uppercase"}}>{lastFillup?"Log Next Fill-Up":"Log Your First Fill-Up"}</div>
+                            <div id="fuel-log-form" style={{background:C.bg,borderRadius:9,border:editFillIdx!==null?"1px solid "+C.gold:`1px solid ${C.border}`,padding:12,marginBottom:12}}>
+                              <div style={{fontSize:9,fontWeight:700,color:editFillIdx!==null?C.gold:C.accent,marginBottom:8,textTransform:"uppercase"}}>{editFillIdx!==null?"✏️ Editing Fill-Up — change values, then tap Update":lastFillup?"Log Next Fill-Up":"Log Your First Fill-Up"}</div>
                               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
                                 <div>
                                   <div style={{fontSize:8,color:C.sub,marginBottom:3}}>DATE</div>
@@ -3434,7 +3434,7 @@ ${pdfText.slice(0,24000)}`}]};
                                         <span style={{color:C.sub}}>{f.date} · {f.odometer.toLocaleString()} mi · {f.gallons} gal</span>
                                         <div style={{display:"flex",alignItems:"center",gap:8}}>
                                           <span style={{color:f.mpg?C.accent:C.sub,fontWeight:700}}>{f.mpg?`${f.mpg} MPG`:"—"}</span>
-                                          {!demoMode&&<button title="Edit" onClick={()=>{if(origIdx>=0){setEditFillIdx(origIdx);setNewFillup({date:f.date||"",odometer:String(f.odometer||""),gallons:String(f.gallons||""),cost:String(f.cost||"")});}}} style={{background:"none",border:"none",color:C.gold,fontSize:11,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✏️</button>}
+                                          {!demoMode&&<button title="Edit" onClick={()=>{if(origIdx>=0){setEditFillIdx(origIdx);setNewFillup({date:f.date||"",odometer:String(f.odometer||""),gallons:String(f.gallons||""),cost:String(f.cost||"")});setTimeout(function(){var el=document.getElementById("fuel-log-form");if(el&&el.scrollIntoView)el.scrollIntoView({behavior:"smooth",block:"center"});},60);}}} style={{background:"none",border:"none",color:C.gold,fontSize:11,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✏️</button>}
                                           {!demoMode&&<button onClick={()=>{if(origIdx>=0)setFuelFillups(p=>recomputeChain(p.filter((_,idx)=>idx!==origIdx)));}} style={{background:"none",border:"none",color:C.red,fontSize:12,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✕</button>}
                                         </div>
                                       </div>
