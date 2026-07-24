@@ -73,8 +73,8 @@ const LOGO_ICON="/images/logo-icon.png";
 // Version scheme: MAJOR.MONTH.DAY — bump on EVERY file delivery so you can
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
-const APP_VERSION="3.7.18";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 18 · build V";
+const APP_VERSION="3.7.24";// bumped builds same-day get a new time stamp below
+const APP_VERSION_DATE="Jul 24 · build W";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -715,6 +715,7 @@ function ContractorIQInner(){
   const [fuelFillups,setFuelFillups]=useState(()=>{try{const s=localStorage.getItem("ciq_fuel_fillups");return s?JSON.parse(s):[];}catch{return [];}});
   useEffect(()=>{try{localStorage.setItem("ciq_fuel_fillups",JSON.stringify(fuelFillups));}catch(e){};},[fuelFillups]);
   const [newFillup,setNewFillup]=useState({date:"",odometer:"",gallons:"",cost:""});
+  const [editFillIdx,setEditFillIdx]=useState(null);// non-null = editing that index in fuelFillups
   const [showProfile,setShowProfile]=useState(false);
   const [profile,setProfile]=useState(()=>{try{const s=localStorage.getItem("ciq_profile");return s?JSON.parse(s):{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}catch{return{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}});
   // Weekly WhatsApp/SMS digest preferences — Pro Smart feature, upcoming V4 release.
@@ -3352,17 +3353,31 @@ ${pdfText.slice(0,24000)}`}]};
                         const sorted=[...sourceFillups].sort((a,b)=>new Date(a.date)-new Date(b.date));
                         const lastFillup=sorted[sorted.length-1]||null;
 
+                        // Recompute the ENTIRE mpg chain from scratch (sorted by date).
+                        // Keeps every entry's miles/MPG truthful after any add, EDIT, or
+                        // delete — fixes stale MPG that used to survive middle deletions.
+                        const recomputeChain=(list)=>{
+                          const s=[...list].sort((a,b)=>new Date(a.date)-new Date(b.date));
+                          return s.map((f,i)=>{
+                            if(i===0)return {...f,milesSinceLast:null,mpg:null};
+                            const miles=parseFloat(f.odometer)-parseFloat(s[i-1].odometer);
+                            const mpg=(miles>0&&parseFloat(f.gallons)>0)?(miles/parseFloat(f.gallons)).toFixed(2):null;
+                            return {...f,milesSinceLast:miles>0?miles:null,mpg:mpg};
+                          });
+                        };
                         const addFillup=()=>{
                           if(!newFillup.date||!newFillup.odometer||!newFillup.gallons||!newFillup.cost)return;
                           const odo=parseFloat(newFillup.odometer);
                           const gal=parseFloat(newFillup.gallons);
                           const cost=parseFloat(newFillup.cost);
-                          let miles=null,mpg=null;
-                          if(lastFillup){
-                            miles=odo-parseFloat(lastFillup.odometer);
-                            if(miles>0&&gal>0)mpg=(miles/gal).toFixed(2);
+                          if(!isFinite(odo)||!isFinite(gal)||!isFinite(cost)||odo<=0||gal<=0||cost<0)return;
+                          const entry={date:newFillup.date,odometer:odo,gallons:gal,cost:cost};
+                          if(editFillIdx!==null){
+                            setFuelFillups(p=>recomputeChain(p.map((x,idx)=>idx===editFillIdx?entry:x)));
+                            setEditFillIdx(null);
+                          }else{
+                            setFuelFillups(p=>recomputeChain([...p,entry]));
                           }
-                          setFuelFillups(p=>[...p,{date:newFillup.date,odometer:odo,gallons:gal,cost:cost,milesSinceLast:miles,mpg:mpg}]);
                           setNewFillup({date:"",odometer:"",gallons:"",cost:""});
                         };
 
@@ -3390,7 +3405,8 @@ ${pdfText.slice(0,24000)}`}]};
                                 </div>
                               </div>
                               {lastFillup&&<div style={{fontSize:9,color:C.sub,marginBottom:8}}>Last fill-up: {lastFillup.odometer.toLocaleString()} mi on {lastFillup.date}</div>}
-                              <button onClick={demoMode?function(){}:addFillup} disabled={demoMode} style={{width:"100%",padding:"9px",borderRadius:8,background:demoMode?C.raised:`linear-gradient(135deg,${C.accent},${C.a3})`,border:demoMode?"1px solid "+C.border:"none",color:demoMode?C.sub:"#000",fontSize:11,fontWeight:800,cursor:demoMode?"not-allowed":"pointer",fontFamily:"inherit"}}>{demoMode?"Sample only — switch to My Data Mode to log real fill-ups":"+ Log Fill-Up"}</button>
+                              <button onClick={demoMode?function(){}:addFillup} disabled={demoMode} style={{width:"100%",padding:"9px",borderRadius:8,background:demoMode?C.raised:`linear-gradient(135deg,${C.accent},${C.a3})`,border:demoMode?"1px solid "+C.border:"none",color:demoMode?C.sub:"#000",fontSize:11,fontWeight:800,cursor:demoMode?"not-allowed":"pointer",fontFamily:"inherit"}}>{demoMode?"Sample only — switch to My Data Mode to log real fill-ups":editFillIdx!==null?"✏️ Update Fill-Up":"+ Log Fill-Up"}</button>
+                              {editFillIdx!==null&&!demoMode&&<button onClick={()=>{setEditFillIdx(null);setNewFillup({date:"",odometer:"",gallons:"",cost:""});}} style={{width:"100%",padding:"7px",marginTop:6,borderRadius:8,background:"transparent",border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Cancel Edit</button>}
                             </div>
 
                             {/* Most recent calculated MPG */}
@@ -3418,7 +3434,8 @@ ${pdfText.slice(0,24000)}`}]};
                                         <span style={{color:C.sub}}>{f.date} · {f.odometer.toLocaleString()} mi · {f.gallons} gal</span>
                                         <div style={{display:"flex",alignItems:"center",gap:8}}>
                                           <span style={{color:f.mpg?C.accent:C.sub,fontWeight:700}}>{f.mpg?`${f.mpg} MPG`:"—"}</span>
-                                          {!demoMode&&<button onClick={()=>{if(origIdx>=0)setFuelFillups(p=>p.filter((_,idx)=>idx!==origIdx));}} style={{background:"none",border:"none",color:C.red,fontSize:12,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✕</button>}
+                                          {!demoMode&&<button title="Edit" onClick={()=>{if(origIdx>=0){setEditFillIdx(origIdx);setNewFillup({date:f.date||"",odometer:String(f.odometer||""),gallons:String(f.gallons||""),cost:String(f.cost||"")});}}} style={{background:"none",border:"none",color:C.gold,fontSize:11,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✏️</button>}
+                                          {!demoMode&&<button onClick={()=>{if(origIdx>=0)setFuelFillups(p=>recomputeChain(p.filter((_,idx)=>idx!==origIdx)));}} style={{background:"none",border:"none",color:C.red,fontSize:12,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✕</button>}
                                         </div>
                                       </div>
                                     );
