@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.26";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 26 · build Y";
+const APP_VERSION_DATE="Jul 26 · build Z";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -1598,6 +1598,7 @@ ${pdfText.slice(0,24000)}`}]};
     offerScorer:{t:"Offer Evaluator",b:"Enter offer details to get an instant read before accepting a load. The score is based mainly on your real rate-per-mile (RPM) — a well-paid empty leg scores just as well as a loaded move at the same RPM, since empty miles mean less wear, less fuel burn, and less cargo risk."},
     fullHistory:{t:"Complete Route Log",b:"Every route from every week in one place, sorted from most recent."},
     expenses:{t:"Extra Expenses",b:"Track out-of-pocket costs not on your settlement — parts, repairs, tires, labor."},
+    ifta:{t:"⛽🗺️ IFTA Quarterly Worksheet",b:"IFTA is the quarterly fuel tax interstate drivers file through their base state. Only drivers who cross state lines need it — run one state only and you likely file nothing here. Three habits keep this worksheet accurate: (1) Tag every fill-up with the STATE where you pumped — that's set right in the Fuel Log on the Dash. (2) Once a week, log your miles per state below (week ending · state · miles). (3) Each quarter, enter the current tax rates from iftach.org — rates change every quarter, which is why you enter them instead of trusting stale numbers. The worksheet then shows each state's miles, gallons bought, taxable gallons, and whether you owe or have a credit. Take it to your accountant or use it to fill your base state's IFTA return — this is your organized record, not the filing itself."},
     kpis:{t:"Business Snapshot",b:"Your running totals across every week shown."},
     aiChat:{t:"AI Business Advisor",b:"Your private advisor that knows your actual numbers."},
     addSettlement:{t:"Add Settlement Week",b:"Upload your weekly settlement so the app can track your earnings over time."},
@@ -1761,6 +1762,7 @@ ${pdfText.slice(0,24000)}`}]};
               {icon:"🚀",step:"Invite a Driver",path:"all",title:"Get a Free Month — Share DrayageIQ",body:"In Menu → Invite a Driver, you'll find your own personal referral link. Share it with another driver — when they sign up, they get a free month of Pro Smart. Once they subscribe to any paid plan, YOU get a free month of your current plan too.",tip:"🔒 Automatic reward crediting is still in development — your link works and referrals are tracked now, but the free month is applied manually for the moment. Full automation is coming soon.",action:"Next →"},
 
               {icon:"🏢",step:"The Office",path:"smart",title:"Your Back-Office — Receipts & True Net",body:"The Office tab (bottom nav) is a dedicated workspace for the paperwork side of your business. Scan a receipt photo and AI reads the date, vendor, amount, and category automatically. Every expense you track gets subtracted from your settlement net pay to show your True Net — what you actually keep after real out-of-pocket costs like repairs, parts, and permits.",tip:"🔒 This is a Pro Smart feature currently in testing ahead of our next version release. Standard tier sees a preview with an upgrade option.",action:"Next →"},
+              {icon:"⛽",step:"IFTA Worksheet",path:"smart",title:"Quarterly Fuel Tax — Organized, Not Scary",body:"In The Office, the IFTA Quarterly Worksheet turns two simple habits into an accountant-ready quarterly record. Habit one: every fill-up in your Fuel Log gets a STATE tag (one dropdown, remembers your usual state). Habit two: once a week, log your miles per state — week ending, state, miles, done in ten seconds. Pick a quarter and the worksheet shows each state's miles, gallons purchased, taxable gallons, and whether you owe or hold a credit. You enter each quarter's official rates from iftach.org yourself — rates change every quarter, and your verified numbers beat anyone's stale table.",tip:"💡 Only interstate drivers file IFTA. If you never leave your home state, you can skip this card entirely — and that's the tool being honest with you.",action:"Next →"},
 
               {icon:"🎁",step:"Try Any Pro Smart Feature Free",path:"all",title:"One Free Trial Every 31 Days — Per Feature",body:"Every Pro Smart feature is fully visible on Standard, never hidden. Tap any locked feature and you'll see '🎁 Use My Free Trial' — one free use, no card required, no commitment. Each feature has its own independent 31-day cycle, so trying the Fuel Surcharge Calculator today doesn't use up your trial for Return on Spend.",tip:"💡 This isn't a countdown trial that expires — it renews every 31 days, forever, feature by feature. Use it whenever it's useful to you.",action:"Next →"},
 
@@ -4931,7 +4933,8 @@ ${pdfText.slice(0,24000)}`}]};
             const totalTax=allRated?rows.reduce((s2,r)=>s2+r.tax,0):null;
             return (
               <div style={K({marginBottom:16})}>
-                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:4}}>⛽🗺️ IFTA Quarterly Worksheet{demoMode&&<span style={{marginLeft:6,padding:"1px 6px",borderRadius:8,background:C.a3+"22",border:"1px solid "+C.a3+"55",color:C.a3,fontSize:8}}>SAMPLE DATA</span>}</div>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:4}}>⛽🗺️ IFTA Quarterly Worksheet{helpBtn("ifta")}{demoMode&&<span style={{marginLeft:6,padding:"1px 6px",borderRadius:8,background:C.a3+"22",border:"1px solid "+C.a3+"55",color:C.a3,fontSize:8}}>SAMPLE DATA</span>}</div>
+                {helpModal("ifta")}
                 {!isSmart&&!demoMode?(
                   <div style={{textAlign:"center",padding:"14px 10px"}}>
                     <div style={{fontSize:10,color:C.sub,lineHeight:1.7,marginBottom:10}}>State-by-state miles + fuel + quarterly tax worksheet — accountant-ready. A Pro Smart feature.</div>
