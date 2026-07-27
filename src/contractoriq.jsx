@@ -73,8 +73,8 @@ const LOGO_ICON="/images/logo-icon.png";
 // Version scheme: MAJOR.MONTH.DAY — bump on EVERY file delivery so you can
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
-const APP_VERSION="3.7.24";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 24 · build X";
+const APP_VERSION="3.7.26";// bumped builds same-day get a new time stamp below
+const APP_VERSION_DATE="Jul 26 · build Y";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -383,11 +383,12 @@ function fbCopy(t){const e=document.createElement("textarea");e.value=t;e.style.
 
 const W=[];// Hardcoded baseline removed — all real data now comes from Supabase (addedW)
 
+const IFTA_STATES=["AL","AR","AZ","CA","CO","CT","DE","FL","GA","IA","ID","IL","IN","KS","KY","LA","MA","MD","ME","MI","MN","MO","MS","MT","NC","ND","NE","NH","NJ","NM","NV","NY","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VA","VT","WA","WI","WV","WY","DC"];
 const DEMO_FILLUPS=[
-  {date:"2026-06-18",odometer:412480,gallons:98.4,cost:344.40,milesSinceLast:655,mpg:"6.7"},
-  {date:"2026-06-24",odometer:413145,gallons:102.1,cost:357.35,milesSinceLast:665,mpg:"6.5"},
-  {date:"2026-07-01",odometer:413822,gallons:99.7,cost:346.96,milesSinceLast:677,mpg:"6.8"},
-  {date:"2026-07-08",odometer:414510,gallons:104.3,cost:362.96,milesSinceLast:688,mpg:"6.6"}
+  {date:"2026-06-18",odometer:412480,gallons:98.4,cost:344.40,milesSinceLast:655,mpg:"6.7",state:"MD"},
+  {date:"2026-06-24",odometer:413145,gallons:102.1,cost:357.35,milesSinceLast:665,mpg:"6.5",state:"VA"},
+  {date:"2026-07-01",odometer:413822,gallons:99.7,cost:346.96,milesSinceLast:677,mpg:"6.8",state:"MD"},
+  {date:"2026-07-08",odometer:414510,gallons:104.3,cost:362.96,milesSinceLast:688,mpg:"6.6",state:"PA"}
 ];
 const DEMO_W=[
   {vendor:"JDT",week:"01",label:"Week 01",from:"01/06/2025",to:"01/10/2025",gross:4200.00,net:2310.00,totalDeductions:1890.00,rebate:45.00,gallons:280.00,deds:[{l:"Operations Fee",a:840.00},{l:"Fuel Advance",a:750.00},{l:"Insurance",a:200.00},{l:"Escrow",a:100.00}],moves:[{mi:62,rt:210,fc:45,t:"L"},{mi:58,rt:195,fc:42,t:"L"},{mi:71,rt:230,fc:48,t:"L"},{mi:45,rt:150,fc:38,t:"E"},{mi:68,rt:220,fc:46,t:"L"}]},
@@ -714,7 +715,18 @@ function ContractorIQInner(){
   // calculating miles driven since the last fill-up odometer reading.
   const [fuelFillups,setFuelFillups]=useState(()=>{try{const s=localStorage.getItem("ciq_fuel_fillups");return s?JSON.parse(s):[];}catch{return [];}});
   useEffect(()=>{try{localStorage.setItem("ciq_fuel_fillups",JSON.stringify(fuelFillups));}catch(e){};},[fuelFillups]);
-  const [newFillup,setNewFillup]=useState({date:"",odometer:"",gallons:"",cost:""});
+  // ═══ IFTA v1 — state-miles log + per-quarter tax rates ═══
+  // iftaMiles: [{id, weekEnding:"YYYY-MM-DD", state:"MD", miles:412}]
+  // iftaRates: {"2026-Q3":{"MD":0.0000,...}} — rates change EVERY quarter, so they
+  // are user-entered/verified (iftach.org), never silently hardcoded by us.
+  const [iftaMiles,setIftaMiles]=useState(()=>{try{const s=localStorage.getItem("ciq_ifta_miles");return s?JSON.parse(s):[];}catch{return [];}});
+  useEffect(()=>{try{localStorage.setItem("ciq_ifta_miles",JSON.stringify(iftaMiles));}catch(e){};},[iftaMiles]);
+  const [iftaRates,setIftaRates]=useState(()=>{try{const s=localStorage.getItem("ciq_ifta_rates");return s?JSON.parse(s):{};}catch{return {};}});
+  useEffect(()=>{try{localStorage.setItem("ciq_ifta_rates",JSON.stringify(iftaRates));}catch(e){};},[iftaRates]);
+  const [lastFillState,setLastFillState]=useState(()=>{try{return localStorage.getItem("ciq_last_fill_state")||"MD";}catch{return "MD";}});
+  const [iftaSelQ,setIftaSelQ]=useState(null);
+  const [iftaForm,setIftaForm]=useState({weekEnding:"",state:"MD",miles:""});
+  const [newFillup,setNewFillup]=useState({date:"",odometer:"",gallons:"",cost:"",state:""});
   const [editFillIdx,setEditFillIdx]=useState(null);// non-null = editing that index in fuelFillups
   const [showProfile,setShowProfile]=useState(false);
   const [profile,setProfile]=useState(()=>{try{const s=localStorage.getItem("ciq_profile");return s?JSON.parse(s):{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}catch{return{name:"",company:"",unit:"",type:"owner-operator",goal:"",targetWeeklyNet:"",targetMPG:"5.2",notes:"",setupDone:false};}});
@@ -973,6 +985,8 @@ function ContractorIQInner(){
           if(d.docs)setDocs(d.docs);
           if(d.reviews)setReviews(d.reviews);
           if(d.fuelFillups)setFuelFillups(d.fuelFillups);// was localStorage-only — meant fill-ups logged on one device never showed on another
+          if(d.iftaMiles)setIftaMiles(d.iftaMiles);
+          if(d.iftaRates)setIftaRates(d.iftaRates);
           if(d.featureTokens)setFeatureTokens(d.featureTokens);// Pro Smart free-trial tokens, synced so switching devices can't reset the 31-day cycle
           if(d.digestOptIn!==undefined)setDigestOptIn(d.digestOptIn);
           if(d.digestPhone)setDigestPhone(d.digestPhone);
@@ -1032,7 +1046,7 @@ function ContractorIQInner(){
     if(!user||!cloudLoaded) return;
     const c=getSB();
     if(!c){setSyncStatus("error");setSyncError("Cloud connection unavailable");return;}
-    const blob={addedW,profile,expenses,docs,reviews,fuelFillups,featureTokens,digestOptIn,digestPhone,referralCode,referredSignups};
+    const blob={addedW,profile,expenses,docs,reviews,fuelFillups,iftaMiles,iftaRates,featureTokens,digestOptIn,digestPhone,referralCode,referredSignups};
     setSyncStatus("saving");
     const t=setTimeout(()=>{
       c.from("user_data").upsert({user_id:user.id,data:blob,updated_at:new Date().toISOString()})
@@ -1052,7 +1066,7 @@ function ContractorIQInner(){
         });
     },1500);
     return ()=>clearTimeout(t);
-  },[addedW,profile,expenses,docs,reviews,fuelFillups,featureTokens,digestOptIn,digestPhone,referralCode,referredSignups,user,cloudLoaded]);
+  },[addedW,profile,expenses,docs,reviews,fuelFillups,iftaMiles,iftaRates,featureTokens,digestOptIn,digestPhone,referralCode,referredSignups,user,cloudLoaded]);
 
   const baseW=[];// W is empty now — all real data comes from Supabase via addedW, same on every device
   const allW=demoMode?[...DEMO_W]:[...baseW,...addedW];
@@ -2754,7 +2768,7 @@ ${pdfText.slice(0,24000)}`}]};
               {icon:"📊",title:"CSV Export — Return on Spend + True FSC",tier:"Pro Smart",status:"Live Now",desc:"Download your full move history with fair-market FSC comparisons — hand it to a broker, lawyer, or your own records.",live:true},
               {icon:"💬",title:"Weekly Digest (WhatsApp/SMS)",tier:"Pro Smart",status:"In Development",desc:"Your weekly net, RPM, and True FSC gap sent straight to your phone automatically — no need to open the app to stay informed."},
               {icon:"🚀",title:"Referral Rewards",tier:"All Tiers",status:"In Development",desc:"Invite another driver, you both get a free month — your unique link and referral tracking are live now in Menu → Invite a Driver. Automatic reward crediting is coming next."},
-              {icon:"⛽",title:"IFTA Reporting",tier:"Pro Smart",status:"Planned",desc:"Quarterly fuel-tax totals built from your real fill-ups and miles — state-by-state, accountant-ready. Preview visible now in The Office tab."},
+              {icon:"⛽",title:"IFTA Reporting",tier:"Pro Smart",status:"Live",desc:"Quarterly worksheet in The Office: state-tagged fill-ups + weekly state miles → per-state taxable gallons, net, and estimated tax with your verified rates."},
               {icon:"🏢",title:"The Office — Receipts & True Net",tier:"Pro Smart",status:"In Testing",desc:"A dedicated back-office tab: scan receipts, track real out-of-pocket expenses, and see your True Net — what you actually keep after every real business cost. Already visible in the app now with a preview lock."},
               {icon:"🏢",title:"Enterprise Fleet (11+ trucks)",tier:"Fleet",status:"Available on Request",desc:"Custom pricing and dedicated support for larger fleet operations. Message us directly to discuss your setup."},
             ].map(function(item,i){
@@ -3371,14 +3385,14 @@ ${pdfText.slice(0,24000)}`}]};
                           const gal=parseFloat(newFillup.gallons);
                           const cost=parseFloat(newFillup.cost);
                           if(!isFinite(odo)||!isFinite(gal)||!isFinite(cost)||odo<=0||gal<=0||cost<0)return;
-                          const entry={date:newFillup.date,odometer:odo,gallons:gal,cost:cost};
+                          const entry={date:newFillup.date,odometer:odo,gallons:gal,cost:cost,state:newFillup.state||lastFillState};
                           if(editFillIdx!==null){
                             setFuelFillups(p=>recomputeChain(p.map((x,idx)=>idx===editFillIdx?entry:x)));
                             setEditFillIdx(null);
                           }else{
                             setFuelFillups(p=>recomputeChain([...p,entry]));
                           }
-                          setNewFillup({date:"",odometer:"",gallons:"",cost:""});
+                          setNewFillup({date:"",odometer:"",gallons:"",cost:"",state:lastFillState});
                         };
 
                         return(
@@ -3390,6 +3404,12 @@ ${pdfText.slice(0,24000)}`}]};
                                 <div>
                                   <div style={{fontSize:8,color:C.sub,marginBottom:3}}>DATE</div>
                                   <input type="date" value={newFillup.date} onChange={e=>setNewFillup(p=>({...p,date:e.target.value}))} style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.card,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                                </div>
+                                <div>
+                                  <div style={{fontSize:8,color:C.sub,marginBottom:3}}>STATE (for IFTA)</div>
+                                  <select value={newFillup.state||lastFillState} onChange={e=>{setNewFillup(p=>({...p,state:e.target.value}));setLastFillState(e.target.value);try{localStorage.setItem("ciq_last_fill_state",e.target.value);}catch(err){}}} style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}>
+                                    {IFTA_STATES.map(st=><option key={st} value={st}>{st}</option>)}
+                                  </select>
                                 </div>
                                 <div>
                                   <div style={{fontSize:8,color:C.sub,marginBottom:3}}>ODOMETER (mi)</div>
@@ -3406,7 +3426,7 @@ ${pdfText.slice(0,24000)}`}]};
                               </div>
                               {lastFillup&&<div style={{fontSize:9,color:C.sub,marginBottom:8}}>Last fill-up: {lastFillup.odometer.toLocaleString()} mi on {lastFillup.date}</div>}
                               <button onClick={demoMode?function(){}:addFillup} disabled={demoMode} style={{width:"100%",padding:"9px",borderRadius:8,background:demoMode?C.raised:`linear-gradient(135deg,${C.accent},${C.a3})`,border:demoMode?"1px solid "+C.border:"none",color:demoMode?C.sub:"#000",fontSize:11,fontWeight:800,cursor:demoMode?"not-allowed":"pointer",fontFamily:"inherit"}}>{demoMode?"Sample only — switch to My Data Mode to log real fill-ups":editFillIdx!==null?"✏️ Update Fill-Up":"+ Log Fill-Up"}</button>
-                              {editFillIdx!==null&&!demoMode&&<button onClick={()=>{setEditFillIdx(null);setNewFillup({date:"",odometer:"",gallons:"",cost:""});}} style={{width:"100%",padding:"7px",marginTop:6,borderRadius:8,background:"transparent",border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Cancel Edit</button>}
+                              {editFillIdx!==null&&!demoMode&&<button onClick={()=>{setEditFillIdx(null);setNewFillup({date:"",odometer:"",gallons:"",cost:"",state:lastFillState});}} style={{width:"100%",padding:"7px",marginTop:6,borderRadius:8,background:"transparent",border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Cancel Edit</button>}
                             </div>
 
                             {/* Most recent calculated MPG */}
@@ -3434,7 +3454,8 @@ ${pdfText.slice(0,24000)}`}]};
                                         <span style={{color:C.sub}}>{f.date} · {f.odometer.toLocaleString()} mi · {f.gallons} gal</span>
                                         <div style={{display:"flex",alignItems:"center",gap:8}}>
                                           <span style={{color:f.mpg?C.accent:C.sub,fontWeight:700}}>{f.mpg?`${f.mpg} MPG`:"—"}</span>
-                                          {!demoMode&&<button title="Edit" onClick={()=>{if(origIdx>=0){setEditFillIdx(origIdx);setNewFillup({date:f.date||"",odometer:String(f.odometer||""),gallons:String(f.gallons||""),cost:String(f.cost||"")});setTimeout(function(){var el=document.getElementById("fuel-log-form");if(el&&el.scrollIntoView)el.scrollIntoView({behavior:"smooth",block:"center"});},60);}}} style={{background:"none",border:"none",color:C.gold,fontSize:11,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✏️</button>}
+                                          {f.state&&<span style={{marginLeft:6,padding:"1px 5px",borderRadius:6,background:C.a3+"18",border:"1px solid "+C.a3+"44",color:C.a3,fontSize:8,fontWeight:800}}>{f.state}</span>}
+                                          {!demoMode&&<button title="Edit" onClick={()=>{if(origIdx>=0){setEditFillIdx(origIdx);setNewFillup({date:f.date||"",odometer:String(f.odometer||""),gallons:String(f.gallons||""),cost:String(f.cost||""),state:f.state||lastFillState});setTimeout(function(){var el=document.getElementById("fuel-log-form");if(el&&el.scrollIntoView)el.scrollIntoView({behavior:"smooth",block:"center"});},60);}}} style={{background:"none",border:"none",color:C.gold,fontSize:11,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✏️</button>}
                                           {!demoMode&&<button onClick={()=>{if(origIdx>=0)setFuelFillups(p=>recomputeChain(p.filter((_,idx)=>idx!==origIdx)));}} style={{background:"none",border:"none",color:C.red,fontSize:12,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✕</button>}
                                         </div>
                                       </div>
@@ -4876,15 +4897,108 @@ ${pdfText.slice(0,24000)}`}]};
 
 
 
-          {/* 🗺️ IFTA REPORTING — next release teaser */}
-          <div style={K({marginBottom:16,textAlign:"center",padding:"18px 16px"})}>
-            <div style={{fontSize:26,marginBottom:8}}>⛽🗺️</div>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,color:C.text,marginBottom:6}}>🔒 IFTA Reporting</div>
-            <div style={{fontSize:10,color:C.sub,lineHeight:1.7,maxWidth:400,margin:"0 auto 10px"}}>Quarterly fuel-tax reporting built from your real fill-ups and miles — state-by-state totals ready to hand to your accountant instead of a shoebox of receipts.</div>
-            <div style={{display:"inline-block",padding:"5px 14px",borderRadius:20,background:"#fbbf2418",border:"1px solid #fbbf2444",fontSize:9,fontWeight:800,color:"#fbbf24"}}>🧪 Coming in the Next Release</div>
-          </div>
+          {/* ⛽🗺️ IFTA v1 — state-tagged fuel + state-miles log + quarterly worksheet */}
+          {(function(){
+            const q=(d)=>{const dt=new Date(d);return dt.getFullYear()+"-Q"+(Math.floor(dt.getMonth()/3)+1);};
+            const now=new Date();
+            const curQ=now.getFullYear()+"-Q"+(Math.floor(now.getMonth()/3)+1);
+            const selQ=iftaSelQ||curQ;
+            const qBounds=(qs)=>{const [y,qq]=qs.split("-Q");const m0=(parseInt(qq)-1)*3;return {a:new Date(parseInt(y),m0,1),b:new Date(parseInt(y),m0+3,0,23,59,59)};};
+            const {a:qStart,b:qEnd}=qBounds(selQ);
+            const inQ=(ds)=>{const d=new Date(ds);return d>=qStart&&d<=qEnd;};
+            const srcMiles=demoMode?[
+              {id:1,weekEnding:"2026-07-04",state:"MD",miles:1240},{id:2,weekEnding:"2026-07-04",state:"VA",miles:380},
+              {id:3,weekEnding:"2026-07-11",state:"MD",miles:1180},{id:4,weekEnding:"2026-07-11",state:"PA",miles:210}
+            ]:iftaMiles;
+            const srcFills=demoMode?DEMO_FILLUPS:fuelFillups;
+            const qMiles=srcMiles.filter(m=>inQ(m.weekEnding));
+            const qFills=srcFills.filter(f=>inQ(f.date));
+            const totalMiles=qMiles.reduce((s2,m)=>s2+(parseFloat(m.miles)||0),0);
+            const totalGal=qFills.reduce((s2,f)=>s2+(parseFloat(f.gallons)||0),0);
+            const fleetMPG=totalGal>0?totalMiles/totalGal:0;
+            const states=[...new Set([...qMiles.map(m=>m.state),...qFills.filter(f=>f.state).map(f=>f.state)])].sort();
+            const ratesQ=(demoMode?{MD:0.30,VA:0.30,PA:0.30}:(iftaRates[selQ]||{}));
+            const rows=states.map(st=>{
+              const mi=qMiles.filter(m=>m.state===st).reduce((s2,m)=>s2+(parseFloat(m.miles)||0),0);
+              const gal=qFills.filter(f=>f.state===st).reduce((s2,f)=>s2+(parseFloat(f.gallons)||0),0);
+              const taxable=fleetMPG>0?mi/fleetMPG:0;
+              const net=taxable-gal;
+              const rate=parseFloat(ratesQ[st]);
+              const tax=isFinite(rate)?net*rate:null;
+              return {st,mi,gal,taxable,net,rate,tax};
+            });
+            const allRated=rows.length>0&&rows.every(r=>isFinite(r.rate));
+            const totalTax=allRated?rows.reduce((s2,r)=>s2+r.tax,0):null;
+            return (
+              <div style={K({marginBottom:16})}>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:4}}>⛽🗺️ IFTA Quarterly Worksheet{demoMode&&<span style={{marginLeft:6,padding:"1px 6px",borderRadius:8,background:C.a3+"22",border:"1px solid "+C.a3+"55",color:C.a3,fontSize:8}}>SAMPLE DATA</span>}</div>
+                {!isSmart&&!demoMode?(
+                  <div style={{textAlign:"center",padding:"14px 10px"}}>
+                    <div style={{fontSize:10,color:C.sub,lineHeight:1.7,marginBottom:10}}>State-by-state miles + fuel + quarterly tax worksheet — accountant-ready. A Pro Smart feature.</div>
+                    <button onClick={function(){openUpgrade("ifta");}} style={{padding:"10px 22px",borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Upgrade to Pro Smart →</button>
+                  </div>
+                ):(
+                <div>
+                <div style={{fontSize:9,color:C.sub,lineHeight:1.6,marginBottom:10}}>Built from your state-tagged fill-ups (⛽ fuel log) and the state miles you log below. Only drivers who cross state lines need IFTA — if you run one state only, you likely file nothing here.</div>
 
-          {/* RECEIPT SCAN / ADD EXPENSE */}
+                {/* Quarter picker */}
+                <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
+                  {[0,1,2,3].map(k=>{const d=new Date(now.getFullYear(),now.getMonth()-k*3,1);const qs=d.getFullYear()+"-Q"+(Math.floor(d.getMonth()/3)+1);return (
+                    <button key={qs} onClick={function(){setIftaSelQ(qs);}} style={{padding:"6px 12px",borderRadius:7,background:selQ===qs?C.accent:C.raised,border:"1px solid "+(selQ===qs?"transparent":C.border),color:selQ===qs?"#000":C.sub,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{qs}</button>
+                  );})}
+                </div>
+
+                {/* State-miles quick log */}
+                {!demoMode&&(
+                <div style={{background:C.bg,borderRadius:9,border:"1px solid "+C.border,padding:12,marginBottom:12}}>
+                  <div style={{fontSize:9,fontWeight:700,color:C.accent,marginBottom:8,textTransform:"uppercase"}}>Log State Miles (weekly)</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}>
+                    <div><div style={{fontSize:8,color:C.sub,marginBottom:3}}>WEEK ENDING</div><input type="date" value={iftaForm.weekEnding} onChange={e=>setIftaForm(p=>({...p,weekEnding:e.target.value}))} style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box",colorScheme:"dark"}}/></div>
+                    <div><div style={{fontSize:8,color:C.sub,marginBottom:3}}>STATE</div><select value={iftaForm.state} onChange={e=>setIftaForm(p=>({...p,state:e.target.value}))} style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}>{IFTA_STATES.map(st=><option key={st} value={st}>{st}</option>)}</select></div>
+                    <div><div style={{fontSize:8,color:C.sub,marginBottom:3}}>MILES</div><input type="number" value={iftaForm.miles} onChange={e=>setIftaForm(p=>({...p,miles:e.target.value}))} placeholder="e.g. 412" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/></div>
+                  </div>
+                  <button onClick={function(){const mi=parseFloat(iftaForm.miles);if(!iftaForm.weekEnding||!isFinite(mi)||mi<=0)return;setIftaMiles(p=>[...p,{id:Date.now(),weekEnding:iftaForm.weekEnding,state:iftaForm.state,miles:mi}]);setIftaForm(p=>({...p,miles:""}));}} style={{width:"100%",padding:"9px",borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.a3})`,border:"none",color:"#000",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>+ Add State Miles</button>
+                  {qMiles.length>0&&<div style={{marginTop:10}}>{[...qMiles].reverse().slice(0,8).map(m=>(
+                    <div key={m.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 8px",borderRadius:7,background:C.raised,marginBottom:4}}>
+                      <span style={{fontSize:10,color:C.sub}}>{m.weekEnding} · <b style={{color:C.text}}>{m.state}</b></span>
+                      <span style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:11,fontWeight:800,color:C.accent}}>{m.miles.toLocaleString()} mi</span><button onClick={function(){setIftaMiles(p=>p.filter(x=>x.id!==m.id));}} style={{background:"none",border:"none",color:C.sub,fontSize:12,cursor:"pointer",padding:"0 2px"}}>×</button></span>
+                    </div>))}</div>}
+                </div>)}
+
+                {/* Worksheet */}
+                {rows.length===0?(
+                  <div style={{padding:"12px",borderRadius:9,background:C.bg,border:"1px solid "+C.border,fontSize:10,color:C.sub,textAlign:"center"}}>No {selQ} data yet — log state miles above and tag your fill-ups with a state in the ⛽ Fuel Log (Dash tab).</div>
+                ):(
+                <div>
+                  <div style={{display:"flex",justifyContent:"space-between",padding:"8px 10px",borderRadius:8,background:C.accent+"10",border:"1px solid "+C.accent+"33",marginBottom:8}}>
+                    <span style={{fontSize:9,color:C.sub}}>Fleet MPG this quarter</span>
+                    <span style={{fontSize:11,fontWeight:800,color:C.accent}}>{fleetMPG>0?fleetMPG.toFixed(2):"—"} <span style={{fontSize:8,color:C.sub}}>({totalMiles.toLocaleString()} mi ÷ {totalGal.toFixed(0)} gal)</span></span>
+                  </div>
+                  {rows.map(r=>(
+                    <div key={r.st} style={{padding:"8px 10px",borderRadius:8,background:C.bg,border:"1px solid "+C.border,marginBottom:6}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                        <span style={{fontSize:11,fontWeight:800,color:C.text}}>{r.st}</span>
+                        <span style={{fontSize:9,color:r.net>0?C.red:C.green,fontWeight:800}}>{r.net>0?"owe":"credit"} {Math.abs(r.net).toFixed(1)} gal{r.tax!==null?` · $${Math.abs(r.tax).toFixed(2)}`:""}</span>
+                      </div>
+                      <div style={{fontSize:9,color:C.sub}}>miles {r.mi.toLocaleString()} · bought {r.gal.toFixed(1)} gal · taxable {r.taxable.toFixed(1)} gal</div>
+                      {!demoMode&&<div style={{display:"flex",alignItems:"center",gap:6,marginTop:5}}>
+                        <span style={{fontSize:8,color:C.sub}}>RATE $/gal</span>
+                        <input type="number" step="0.001" value={ratesQ[r.st]??""} onChange={e=>{const v=e.target.value;setIftaRates(p=>({...p,[selQ]:{...(p[selQ]||{}),[r.st]:v===""?undefined:parseFloat(v)}}));}} placeholder="from iftach.org" style={{width:110,padding:"5px 8px",borderRadius:6,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:10,fontFamily:"inherit"}}/>
+                      </div>}
+                    </div>
+                  ))}
+                  <div style={{display:"flex",justifyContent:"space-between",padding:"9px 11px",borderRadius:8,background:allRated?(totalTax>0?C.red:C.green)+"14":C.raised,border:"1px solid "+(allRated?(totalTax>0?C.red:C.green)+"44":C.border),marginTop:4}}>
+                    <span style={{fontSize:10,fontWeight:800,color:C.text}}>{selQ} estimated total</span>
+                    <span style={{fontSize:12,fontWeight:800,color:allRated?(totalTax>0?C.red:C.green):C.sub}}>{allRated?(totalTax>0?"owe $"+totalTax.toFixed(2):"credit $"+Math.abs(totalTax).toFixed(2)):"enter all rates"}</span>
+                  </div>
+                  <div style={{fontSize:8,color:C.sub,lineHeight:1.6,marginTop:8}}>⚠️ Worksheet, not a filing. Rates change every quarter — enter the current ones from iftach.org (your base jurisdiction's return is what you actually file). Review with your accountant.</div>
+                </div>)}
+                </div>)}
+              </div>
+            );
+          })()}
+
+{/* RECEIPT SCAN / ADD EXPENSE */}
           <div style={K({marginBottom:16})}>
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:12}}>📸 Scan a Receipt</div>
             <div style={{fontSize:9,color:C.sub,marginBottom:10,lineHeight:1.5}}>Snap or upload a photo of any receipt — parts, tires, maintenance, permits, or other business costs. AI reads it and fills in the details below for you to review.</div>
