@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.26";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 26 · build Z";
+const APP_VERSION_DATE="Jul 26 · build AA";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -1598,6 +1598,9 @@ ${pdfText.slice(0,24000)}`}]};
     offerScorer:{t:"Offer Evaluator",b:"Enter offer details to get an instant read before accepting a load. The score is based mainly on your real rate-per-mile (RPM) — a well-paid empty leg scores just as well as a loaded move at the same RPM, since empty miles mean less wear, less fuel burn, and less cargo risk."},
     fullHistory:{t:"Complete Route Log",b:"Every route from every week in one place, sorted from most recent."},
     expenses:{t:"Extra Expenses",b:"Track out-of-pocket costs not on your settlement — parts, repairs, tires, labor."},
+    office:{t:"The Office — True Net",b:"This is your back-office: settlements in, real costs out. True Net = your settlement net pay minus every expense you track here — the number you actually keep. The date line under the money cards tells you exactly which settlement weeks and expenses the totals cover, so you can always verify the math against your own records."},
+    receiptScan:{t:"Scan a Receipt",b:"Snap or upload a photo of any business receipt — parts, tires, permits, repairs. AI reads the date, vendor, amount, and category into the form; you review, fix anything, and tap Save. The date field is a tap-to-pick calendar. Signed-in drivers get the photo saved to their secure cloud automatically — your proof if an audit ever asks. PDFs work too."},
+    expenseHistory:{t:"Expense History",b:"Every expense you saved, newest first. Tap the camera icon to open the original receipt photo, the pencil to load an entry back into the form for fixing (button turns Update), or the x to remove it. The total of everything here is what gets subtracted from your settlement net to make your True Net."},
     ifta:{t:"⛽🗺️ IFTA Quarterly Worksheet",b:"IFTA is the quarterly fuel tax interstate drivers file through their base state. Only drivers who cross state lines need it — run one state only and you likely file nothing here. Three habits keep this worksheet accurate: (1) Tag every fill-up with the STATE where you pumped — that's set right in the Fuel Log on the Dash. (2) Once a week, log your miles per state below (week ending · state · miles). (3) Each quarter, enter the current tax rates from iftach.org — rates change every quarter, which is why you enter them instead of trusting stale numbers. The worksheet then shows each state's miles, gallons bought, taxable gallons, and whether you owe or have a credit. Take it to your accountant or use it to fill your base state's IFTA return — this is your organized record, not the filing itself."},
     kpis:{t:"Business Snapshot",b:"Your running totals across every week shown."},
     aiChat:{t:"AI Business Advisor",b:"Your private advisor that knows your actual numbers."},
@@ -4666,8 +4669,9 @@ ${pdfText.slice(0,24000)}`}]};
           return(
             <div style={{padding:"16px",maxWidth:1100,margin:"0 auto"}}>
               <div style={{textAlign:"center",marginBottom:6}}>
-                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:C.text}}>🏢 The Office</div>
+                <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:C.text}}>🏢 The Office{helpBtn("office")}</div>
                 <div style={{fontSize:11,color:C.sub,marginTop:2}}>Receipts, expenses, and your True Net — after real out-of-pocket costs</div>
+                {helpModal("office")}
               </div>
               <div style={K({textAlign:"center",padding:"40px 20px",marginTop:20})}>
                 <div style={{fontSize:40,marginBottom:14}}>🔒</div>
@@ -4686,8 +4690,9 @@ ${pdfText.slice(0,24000)}`}]};
         <div style={{padding:"16px",maxWidth:1100,margin:"0 auto"}}>
 
           <div style={{textAlign:"center",marginBottom:6}}>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:C.text}}>🏢 The Office</div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:20,fontWeight:800,color:C.text}}>🏢 The Office{helpBtn("office")}</div>
             <div style={{fontSize:11,color:C.sub,marginTop:2}}>Receipts, expenses, and your True Net — after real out-of-pocket costs</div>
+            {helpModal("office")}
           </div>
           {demoMode&&(
             <div style={{padding:"10px 12px",borderRadius:9,background:C.a3+"18",border:"1px solid "+C.a3+"44",fontSize:10,color:C.a3,textAlign:"center",marginTop:12,lineHeight:1.5}}>👀 Demo Mode — these are sample settlement numbers and sample expenses. Switch to <b>My Data Mode</b> (banner up top) to see your real True Net with your tracked expenses.</div>
@@ -5003,7 +5008,8 @@ ${pdfText.slice(0,24000)}`}]};
 
 {/* RECEIPT SCAN / ADD EXPENSE */}
           <div style={K({marginBottom:16})}>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:12}}>📸 Scan a Receipt</div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:12}}>📸 Scan a Receipt{helpBtn("receiptScan")}</div>
+            {helpModal("receiptScan")}
             <div style={{fontSize:9,color:C.sub,marginBottom:10,lineHeight:1.5}}>Snap or upload a photo of any receipt — parts, tires, maintenance, permits, or other business costs. AI reads it and fills in the details below for you to review.</div>
             <label style={{display:"block",width:"100%",padding:"13px",borderRadius:9,background:`linear-gradient(135deg,${C.accent},${C.a3})`,color:"#000",fontWeight:800,fontSize:13,textAlign:"center",cursor:"pointer",fontFamily:"inherit"}}>
               {expScan?"⏳ "+expScanMsg:"📸 Upload Receipt Photo"}
@@ -5064,7 +5070,8 @@ ${pdfText.slice(0,24000)}`}]};
 
           {/* EXPENSE HISTORY */}
           <div style={K()}>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:10}}>📋 Expense History ({officeExpenses.length}){demoMode&&<span style={{fontSize:8,fontWeight:800,color:C.a3,background:C.a3+"18",border:"1px solid "+C.a3+"44",borderRadius:20,padding:"2px 8px",marginLeft:8}}>👀 SAMPLE DATA</span>}</div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,marginBottom:10}}>📋 Expense History{helpBtn("expenseHistory")} ({officeExpenses.length}){demoMode&&<span style={{fontSize:8,fontWeight:800,color:C.a3,background:C.a3+"18",border:"1px solid "+C.a3+"44",borderRadius:20,padding:"2px 8px",marginLeft:8}}>👀 SAMPLE DATA</span>}</div>
+            {helpModal("expenseHistory")}
             {officeExpenses.length===0?(
               <div style={{textAlign:"center",padding:"20px",color:C.sub,fontSize:11}}>
                 <div style={{fontSize:26,marginBottom:6}}>🧾</div>
