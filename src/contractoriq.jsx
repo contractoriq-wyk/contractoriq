@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.27";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 27 · build AC";
+const APP_VERSION_DATE="Jul 27 · build AD";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -672,6 +672,9 @@ function ContractorIQInner(){
   const [showInsurance,setShowInsurance]=useState(false);
   const [showQR,setShowQR]=useState(false);
   const [showMarket,setShowMarket]=useState(false);
+  const [marketTab,setMarketTab]=useState("overview");
+  const [dcaAmt,setDcaAmt]=useState("50");
+  const [dcaYrs,setDcaYrs]=useState("5");
   const [showReviews,setShowReviews]=useState(false);
   const [showIconKey,setShowIconKey]=useState(false);
   const [showFleet,setShowFleet]=useState(false);
@@ -1916,8 +1919,52 @@ ${pdfText.slice(0,24000)}`}]};
             <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:17,fontWeight:800,color:C.text}}>📊 Market Overview</div>
             <button onClick={()=>setShowMarket(false)} style={{padding:"8px 14px",borderRadius:9,background:C.raised,border:`1px solid ${C.border}`,color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>✕ Close</button>
           </div>
-          <div style={{flex:1,overflow:"hidden"}}>
-            <iframe scrolling="no" allowTransparency="true" frameBorder="0" src="https://s.tradingview.com/embed-widget/market-overview/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%221D%22%2C%22showChart%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%7D" style={{width:"100%",height:"100%",display:"block"}} title="Market Overview"/>
+          <div style={{flex:1,overflowY:"auto",padding:"12px 12px 60px"}}>
+            {/* Tab row */}
+            <div style={{display:"flex",gap:6,marginBottom:12}}>
+              {[["overview","📊 Overview"],["movers","🔥 Movers & Losers"],["dca","📚 DCA Guide"]].map(([k,label])=>(
+                <button key={k} onClick={()=>setMarketTab(k)} style={{flex:1,padding:"9px 4px",borderRadius:9,background:marketTab===k?C.accent:C.raised,border:"1px solid "+(marketTab===k?"transparent":C.border),color:marketTab===k?"#000":C.sub,fontSize:10,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{label}</button>
+              ))}
+            </div>
+
+            {marketTab==="overview"&&(
+              <div style={{height:"70vh",borderRadius:12,overflow:"hidden",border:"1px solid "+C.border}}>
+                <iframe scrolling="no" allowTransparency="true" frameBorder="0" src="https://s.tradingview.com/embed-widget/market-overview/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%221D%22%2C%22showChart%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%7D" style={{width:"100%",height:"100%",display:"block"}} title="Market Overview"/>
+              </div>
+            )}
+
+            {marketTab==="movers"&&(
+              <div>
+                <div style={{fontSize:9,color:C.sub,marginBottom:8,lineHeight:1.5}}>Live US market hotlists — top gainers, top losers, and most active, all in %. Data by TradingView.</div>
+                <div style={{height:"70vh",borderRadius:12,overflow:"hidden",border:"1px solid "+C.border}}>
+                  <iframe scrolling="no" allowTransparency="true" frameBorder="0" src="https://s.tradingview.com/embed-widget/hotlists/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%221D%22%2C%22exchange%22%3A%22US%22%2C%22showChart%22%3Afalse%2C%22showSymbolLogo%22%3Atrue%2C%22isTransparent%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%7D" style={{width:"100%",height:"100%",display:"block"}} title="Top Movers and Losers"/>
+                </div>
+              </div>
+            )}
+
+            {marketTab==="dca"&&(
+              <div>
+                <div style={K({marginBottom:12})}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,marginBottom:8}}>📚 Dollar-Cost Averaging — What It Is</div>
+                  <div style={{fontSize:11,color:C.sub,lineHeight:1.8}}>DCA means investing a <b style={{color:C.text}}>fixed dollar amount on a fixed schedule</b> — say $50 every Friday — no matter what the market is doing. When prices are high your money buys fewer shares; when prices dip it buys more. Over time that averages your cost and removes the impossible job of guessing the right day to buy.</div>
+                </div>
+                <div style={K({marginBottom:12})}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,marginBottom:8}}>🔧 The Correct Setup, Step by Step</div>
+                  <div style={{fontSize:11,color:C.sub,lineHeight:1.9}}>1. Open an account at any major brokerage (most are $0-commission now).<br/>2. Pick what you'll buy. Most people who use DCA apply it to <b style={{color:C.text}}>broadly diversified, low-cost index funds</b> rather than single stocks — one company can go to zero; a whole-market fund can't without the whole market going there.<br/>3. Set an <b style={{color:C.text}}>automatic recurring buy</b>: same amount, same day, weekly or monthly. Automation is the whole trick — it removes emotion.<br/>4. Pick an amount you won't need for years. Money for repairs or slow weeks doesn't belong here.<br/>5. <b style={{color:C.text}}>Don't stop when the market drops.</b> The dips are when your fixed dollars buy the most shares — quitting in a dip defeats the entire strategy.<br/>6. Review once a year, not once a day.</div>
+                </div>
+                <div style={K({marginBottom:12})}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,marginBottom:8}}>🧮 Your Numbers</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                    <div><div style={{fontSize:8,color:C.sub,marginBottom:3}}>AMOUNT PER WEEK ($)</div><input type="number" value={dcaAmt} onChange={e=>setDcaAmt(e.target.value)} style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/></div>
+                    <div><div style={{fontSize:8,color:C.sub,marginBottom:3}}>FOR HOW MANY YEARS</div><input type="number" value={dcaYrs} onChange={e=>setDcaYrs(e.target.value)} style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.bg,border:"1px solid "+C.border,color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box"}}/></div>
+                  </div>
+                  {(()=>{const a=parseFloat(dcaAmt)||0;const y=parseFloat(dcaYrs)||0;const total=a*52*y;return a>0&&y>0?(
+                    <div style={{padding:"10px 12px",borderRadius:9,background:C.accent+"10",border:"1px solid "+C.accent+"33",fontSize:11,color:C.text,lineHeight:1.7}}>At <b>${a.toFixed(0)}/week</b> for <b>{y} year{y>1?"s":""}</b> you'd contribute <b style={{color:C.accent}}>${total.toLocaleString()}</b> of your own money — before any market gains or losses. What it grows (or shrinks) to depends on what you buy and what the market does; nobody can promise that number.</div>
+                  ):null;})()}
+                </div>
+                <div style={{fontSize:9,color:C.sub,lineHeight:1.7,padding:"10px 12px",borderRadius:9,background:C.raised,border:"1px solid "+C.border}}>⚖️ Education only — DrayageIQ does not recommend any stock, fund, or investment, and nothing here is financial advice. Markets can lose money. Talk to a licensed financial advisor about your own situation.</div>
+              </div>
+            )}
           </div>
         </div>
       )}
