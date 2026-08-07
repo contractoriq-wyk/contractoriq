@@ -73,8 +73,8 @@ const LOGO_ICON="/images/logo-icon.png";
 // Version scheme: MAJOR.MONTH.DAY — bump on EVERY file delivery so you can
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
-const APP_VERSION="3.7.26";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 26 · build AB";
+const APP_VERSION="3.7.27";// bumped builds same-day get a new time stamp below
+const APP_VERSION_DATE="Jul 27 · build AC";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -553,7 +553,7 @@ function TVTickerTape({symbols}){
 
 
 export default function ContractorIQv26(){
-  return (<AppErrorBoundary><ContractorIQInner/></AppErrorBoundary>);
+  return (<AppErrorBoundary><style>{"button{transition:transform .08s ease, filter .08s ease;} button:active{transform:scale(.965);filter:brightness(1.08);} select:active{transform:scale(.985);}"}</style><ContractorIQInner/></AppErrorBoundary>);
 }
 function ContractorIQInner(){
 
@@ -3363,7 +3363,8 @@ ${pdfText.slice(0,24000)}`}]};
                     {/* Manual Fuel Log — real pump-to-pump fill-up tracking */}
                     <div>
                       <div style={{fontSize:9,fontWeight:800,color:C.sub,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>⛽ Manual Fuel Log — Real MPG Tracker{demoMode&&<span style={{marginLeft:6,padding:"1px 6px",borderRadius:8,background:C.a3+"22",border:"1px solid "+C.a3+"55",color:C.a3,fontSize:8}}>SAMPLE DATA</span>}</div>
-                      <div style={{fontSize:9,color:C.sub,lineHeight:1.5,marginBottom:10}}>Log your odometer every time you fuel up. For true MPG, fill the tank to FULL each time — and tick Partial when you top off short, so gallons roll into the next full fill and the math stays honest.</div>
+                      <div style={{fontSize:9,color:C.sub,lineHeight:1.5,marginBottom:10}}>Log your odometer, gallons, and cost at every stop. Each leg shows its raw miles-per-gallons math; the big Real MPG is your overall number — total distance ÷ total gallons — which stays honest no matter how big or small each fill is.</div>
+                      {fuelPrice>0&&<div style={{fontSize:9,color:C.accent,fontWeight:700,marginBottom:10}}>⛽ National diesel today: ${fuelPrice.toFixed(2)}/gal — each fill below shows your price vs this (green = you beat it)</div>}
 
                       {(()=>{
                         // Demo mode shows SAMPLE fill-ups only — a sealed example of what the
@@ -3372,34 +3373,30 @@ ${pdfText.slice(0,24000)}`}]};
                         const sorted=[...sourceFillups].sort((a,b)=>new Date(a.date)-new Date(b.date));
                         const lastFillup=sorted[sorted.length-1]||null;
                         const lastMPGFill=[...sorted].reverse().find(function(f){return f.mpg;})||null;
+                        // OVERALL Real MPG: total span distance ÷ total gallons after the first
+                        // fill — immune to small/partial fill sizes, the headline truth.
+                        const overallMPG=(function(){
+                          if(sorted.length<2)return null;
+                          const spanMiles=parseFloat(sorted[sorted.length-1].odometer)-parseFloat(sorted[0].odometer);
+                          const spanGal=sorted.slice(1).reduce(function(a,f){return a+(parseFloat(f.gallons)||0);},0);
+                          return (spanMiles>0&&spanGal>0)?(spanMiles/spanGal):null;
+                        })();
 
                         // Recompute the ENTIRE mpg chain from scratch (sorted by date).
                         // Keeps every entry's miles/MPG truthful after any add, EDIT, or
                         // delete — fixes stale MPG that used to survive middle deletions.
-                        // ═══ FULL-TO-FULL MPG (fixes partial-fill inflation) ═══
-                        // MPG per leg is only true if the tank was FILLED TO FULL, because
-                        // gallons-at-this-stop must equal fuel burned since the last full.
-                        // Partial fills get no per-leg MPG; instead their gallons roll into
-                        // the next FULL fill, and MPG is computed across the whole span:
-                        // (miles since last full) ÷ (all gallons added across that span).
+                        // LEG MPG = raw miles-this-leg ÷ gallons-this-stop. Simple and transparent.
+                        // Small top-offs make individual legs read high — that is expected raw
+                        // math; the OVERALL Real MPG headline (total distance ÷ total gallons)
+                        // is the trustworthy figure and is immune to fill size.
                         const recomputeChain=(list)=>{
                           const s=[...list].sort((a,b)=>new Date(a.date)-new Date(b.date));
-                          let lastFullIdx=-1,galSinceFull=0;
                           return s.map((f,i)=>{
-                            const miles=i>0?parseFloat(f.odometer)-parseFloat(s[i-1].odometer):null;
+                            if(i===0)return {...f,milesSinceLast:null,mpg:null};
+                            const miles=parseFloat(f.odometer)-parseFloat(s[i-1].odometer);
                             const g=parseFloat(f.gallons)||0;
-                            let mpg=null;
-                            if(f.partial){
-                              galSinceFull+=g;
-                            }else{
-                              if(lastFullIdx>=0){
-                                const spanMiles=parseFloat(f.odometer)-parseFloat(s[lastFullIdx].odometer);
-                                const spanGal=galSinceFull+g;
-                                if(spanMiles>0&&spanGal>0)mpg=(spanMiles/spanGal).toFixed(2);
-                              }
-                              lastFullIdx=i;galSinceFull=0;
-                            }
-                            return {...f,milesSinceLast:(miles!==null&&miles>0)?miles:null,mpg:mpg};
+                            const mpg=(miles>0&&g>0)?(miles/g).toFixed(2):null;
+                            return {...f,milesSinceLast:miles>0?miles:null,mpg:mpg};
                           });
                         };
                         const addFillup=()=>{
@@ -3408,14 +3405,14 @@ ${pdfText.slice(0,24000)}`}]};
                           const gal=parseFloat(newFillup.gallons);
                           const cost=parseFloat(newFillup.cost);
                           if(!isFinite(odo)||!isFinite(gal)||!isFinite(cost)||odo<=0||gal<=0||cost<0)return;
-                          const entry={date:newFillup.date,odometer:odo,gallons:gal,cost:cost,state:newFillup.state||lastFillState,partial:!!newFillup.partial};
+                          const entry={date:newFillup.date,odometer:odo,gallons:gal,cost:cost,state:newFillup.state||lastFillState};
                           if(editFillIdx!==null){
                             setFuelFillups(p=>recomputeChain(p.map((x,idx)=>idx===editFillIdx?entry:x)));
                             setEditFillIdx(null);
                           }else{
                             setFuelFillups(p=>recomputeChain([...p,entry]));
                           }
-                          setNewFillup({date:"",odometer:"",gallons:"",cost:"",state:lastFillState,partial:false});
+                          setNewFillup({date:"",odometer:"",gallons:"",cost:"",state:lastFillState});
                         };
 
                         return(
@@ -3440,28 +3437,31 @@ ${pdfText.slice(0,24000)}`}]};
                                 </div>
                                 <div>
                                   <div style={{fontSize:8,color:C.sub,marginBottom:3}}>GALLONS PUMPED</div>
-                                  <input type="number" value={newFillup.gallons} onChange={e=>setNewFillup(p=>({...p,gallons:e.target.value}))} placeholder="e.g. 120" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.card,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                                  <input type="number" value={newFillup.gallons} onChange={e=>{const v=e.target.value;setNewFillup(p=>{const g=parseFloat(v);const c=parseFloat(p.cost);const pr=parseFloat(p.priceGal);let cost=p.cost,pg=p.priceGal;if(g>0&&isFinite(c)&&c>0){pg=(c/g).toFixed(3);}else if(g>0&&isFinite(pr)&&pr>0){cost=(g*pr).toFixed(2);}return {...p,gallons:v,cost:cost,priceGal:pg};});}} placeholder="e.g. 120" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.card,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
                                 </div>
                                 <div>
                                   <div style={{fontSize:8,color:C.sub,marginBottom:3}}>TOTAL COST ($)</div>
-                                  <input type="number" value={newFillup.cost} onChange={e=>setNewFillup(p=>({...p,cost:e.target.value}))} placeholder="e.g. 590" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.card,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                                <div>
+                                  <div style={{fontSize:8,color:C.sub,marginBottom:3}}>PRICE $/GAL (optional)</div>
+                                  <input type="number" step="0.001" value={newFillup.priceGal||""} onChange={e=>{const v=e.target.value;setNewFillup(p=>{const g=parseFloat(p.gallons);const pr=parseFloat(v);return {...p,priceGal:v,cost:(g>0&&isFinite(pr))?(g*pr).toFixed(2):p.cost};});}} placeholder={fuelPrice>0?"natl $"+fuelPrice.toFixed(2):"e.g. 3.49"} style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                                </div>
+                                  <input type="number" value={newFillup.cost} onChange={e=>{const v=e.target.value;setNewFillup(p=>{const g=parseFloat(p.gallons);const c=parseFloat(v);return {...p,cost:v,priceGal:(g>0&&isFinite(c))?(c/g).toFixed(3):p.priceGal};});}} placeholder="e.g. 590" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.card,border:`1px solid ${C.border}`,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box"}}/>
                                 </div>
                               </div>
                               {lastFillup&&<div style={{fontSize:9,color:C.sub,marginBottom:8}}>Last fill-up: {lastFillup.odometer.toLocaleString()} mi on {lastFillup.date}</div>}
-                              {!demoMode&&<label style={{display:"flex",alignItems:"center",gap:7,margin:"2px 0 8px",cursor:"pointer"}}><input type="checkbox" checked={!!newFillup.partial} onChange={e=>setNewFillup(p=>({...p,partial:e.target.checked}))} style={{width:15,height:15,accentColor:"#fbbf24"}}/><span style={{fontSize:10,color:newFillup.partial?C.gold:C.sub}}>Partial fill — didn't fill the tank to full</span></label>}
                               <button onClick={demoMode?function(){}:addFillup} disabled={demoMode} style={{width:"100%",padding:"9px",borderRadius:8,background:demoMode?C.raised:`linear-gradient(135deg,${C.accent},${C.a3})`,border:demoMode?"1px solid "+C.border:"none",color:demoMode?C.sub:"#000",fontSize:11,fontWeight:800,cursor:demoMode?"not-allowed":"pointer",fontFamily:"inherit"}}>{demoMode?"Sample only — switch to My Data Mode to log real fill-ups":editFillIdx!==null?"✏️ Update Fill-Up":"+ Log Fill-Up"}</button>
-                              {editFillIdx!==null&&!demoMode&&<button onClick={()=>{setEditFillIdx(null);setNewFillup({date:"",odometer:"",gallons:"",cost:"",state:lastFillState,partial:false});}} style={{width:"100%",padding:"7px",marginTop:6,borderRadius:8,background:"transparent",border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Cancel Edit</button>}
+                              {editFillIdx!==null&&!demoMode&&<button onClick={()=>{setEditFillIdx(null);setNewFillup({date:"",odometer:"",gallons:"",cost:"",state:lastFillState});}} style={{width:"100%",padding:"7px",marginTop:6,borderRadius:8,background:"transparent",border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Cancel Edit</button>}
                             </div>
 
                             {/* Most recent calculated MPG */}
-                            {lastMPGFill&&(
+                            {(overallMPG||lastMPGFill)&&(
                               <div style={{padding:"10px 12px",borderRadius:9,background:`${C.green}0d`,border:`1px solid ${C.green}33`,marginBottom:10}}>
                                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                                   <div>
                                     <div style={{fontSize:10,color:C.text,fontWeight:700}}>Real MPG (Last Fill-Up)</div>
-                                    <div style={{fontSize:9,color:C.sub,marginTop:1}}>{lastMPGFill.milesSinceLast?lastMPGFill.milesSinceLast.toFixed(0)+" mi on this leg":"full-to-full span"}</div>
+                                    <div style={{fontSize:9,color:C.sub,marginTop:1}}>{overallMPG?"overall — total miles ÷ total gallons across "+sorted.length+" fills":(lastMPGFill&&lastMPGFill.milesSinceLast?lastMPGFill.milesSinceLast.toFixed(0)+" mi on this leg":"")}</div>
                                   </div>
-                                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.green}}>{lastMPGFill.mpg}</div>
+                                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:18,fontWeight:800,color:C.green}}>{overallMPG?overallMPG.toFixed(2):lastMPGFill.mpg}</div>
                                 </div>
                               </div>
                             )}
@@ -3477,9 +3477,10 @@ ${pdfText.slice(0,24000)}`}]};
                                       <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 9px",background:C.bg,borderRadius:6,marginBottom:4,fontSize:9}}>
                                         <span style={{color:C.sub}}>{f.date} · {f.odometer.toLocaleString()} mi · {f.gallons} gal</span>
                                         <div style={{display:"flex",alignItems:"center",gap:8}}>
-                                          <span style={{color:f.partial?C.gold:(f.mpg&&(parseFloat(f.mpg)>15||parseFloat(f.mpg)<2.5)?C.gold:(f.mpg?C.accent:C.sub)),fontWeight:700}}>{f.partial?"PARTIAL":(f.mpg?`${f.mpg} MPG${(parseFloat(f.mpg)>15||parseFloat(f.mpg)<2.5)?" ⚠":""}`:"—")}</span>
+                                          <span style={{color:(f.mpg&&(parseFloat(f.mpg)>15||parseFloat(f.mpg)<2.5))?C.gold:(f.mpg?C.accent:C.sub),fontWeight:700}}>{f.mpg?`${f.mpg} MPG${(parseFloat(f.mpg)>15||parseFloat(f.mpg)<2.5)?" ⚠":""}`:"—"}</span>
+                                          {(f.cost>0&&f.gallons>0)&&(()=>{const ppg=f.cost/f.gallons;const vs=fuelPrice>0?ppg-fuelPrice:0;return <span style={{marginLeft:6,padding:"1px 5px",borderRadius:6,background:(vs<=0?C.green:C.red)+"14",border:"1px solid "+(vs<=0?C.green:C.red)+"44",color:vs<=0?C.green:C.red,fontSize:8,fontWeight:800}}>${ppg.toFixed(2)}/gal</span>;})()}
                                           {f.state&&<span style={{marginLeft:6,padding:"1px 5px",borderRadius:6,background:C.a3+"18",border:"1px solid "+C.a3+"44",color:C.a3,fontSize:8,fontWeight:800}}>{f.state}</span>}
-                                          {!demoMode&&<button title="Edit" onClick={()=>{if(origIdx>=0){setEditFillIdx(origIdx);setNewFillup({date:f.date||"",odometer:String(f.odometer||""),gallons:String(f.gallons||""),cost:String(f.cost||""),state:f.state||lastFillState,partial:!!f.partial});setTimeout(function(){var el=document.getElementById("fuel-log-form");if(el&&el.scrollIntoView)el.scrollIntoView({behavior:"smooth",block:"center"});},60);}}} style={{background:"none",border:"none",color:C.gold,fontSize:11,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✏️</button>}
+                                          {!demoMode&&<button title="Edit" onClick={()=>{if(origIdx>=0){setEditFillIdx(origIdx);setNewFillup({date:f.date||"",odometer:String(f.odometer||""),gallons:String(f.gallons||""),cost:String(f.cost||""),state:f.state||lastFillState});setTimeout(function(){var el=document.getElementById("fuel-log-form");if(el&&el.scrollIntoView)el.scrollIntoView({behavior:"smooth",block:"center"});},60);}}} style={{background:"none",border:"none",color:C.gold,fontSize:11,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✏️</button>}
                                           {!demoMode&&<button onClick={()=>{if(origIdx>=0)setFuelFillups(p=>recomputeChain(p.filter((_,idx)=>idx!==origIdx)));}} style={{background:"none",border:"none",color:C.red,fontSize:12,cursor:"pointer",padding:"0 2px",lineHeight:1,fontFamily:"inherit"}}>✕</button>}
                                         </div>
                                       </div>
