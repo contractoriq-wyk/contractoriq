@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.8.7";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Aug 07 · build AF";
+const APP_VERSION_DATE="Aug 07 · build AH";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -729,6 +729,8 @@ function ContractorIQInner(){
   const [lastFillState,setLastFillState]=useState(()=>{try{return localStorage.getItem("ciq_last_fill_state")||"MD";}catch{return "MD";}});
   const [iftaSelQ,setIftaSelQ]=useState(null);
   const [iftaForm,setIftaForm]=useState({weekEnding:"",state:"MD",miles:""});
+  const [reconOpen,setReconOpen]=useState(false);
+  const [reconLabel,setReconLabel]=useState("");
   const [newFillup,setNewFillup]=useState({date:"",odometer:"",gallons:"",cost:"",state:""});
   const [editFillIdx,setEditFillIdx]=useState(null);// non-null = editing that index in fuelFillups
   const [showProfile,setShowProfile]=useState(false);
@@ -2770,7 +2772,7 @@ ${pdfText.slice(0,24000)}`}]};
                     <div style={{fontSize:9,color:C.sub,marginBottom:4}}>PHONE NUMBER (WhatsApp or SMS)</div>
                     <input type="tel" value={digestPhone} onChange={function(e){setDigestPhone(e.target.value.replace(/[^0-9+()\-\s]/g,"").slice(0,20));}} placeholder="+1 (443) 555-0100" style={{width:"100%",padding:"9px 10px",borderRadius:7,background:C.bg,border:"1px solid "+(digestPhone&&!(digestPhone.replace(/\D/g,"").length>=10&&digestPhone.replace(/\D/g,"").length<=15)?C.red:C.border),color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box",marginBottom:4}}/>
                     {digestPhone&&!(digestPhone.replace(/\D/g,"").length>=10&&digestPhone.replace(/\D/g,"").length<=15)&&<div style={{fontSize:9,color:C.red,marginBottom:8}}>Enter a full phone number with area code (10–15 digits)</div>}
-                    <div style={{fontSize:9,color:"#fbbf24",fontWeight:700}}>✅ Live — digests go out Friday evenings by text. Standard message rates may apply; reply STOP anytime to cancel.</div>
+                    <div style={{fontSize:9,color:"#fbbf24",fontWeight:700}}>✅ Live — your digest arrives Friday evenings by email (free). Text delivery comes online once carrier registration completes; your number above is saved for it. Toggle off anytime.</div>
                   </div>
                 )}
               </div>
@@ -3153,6 +3155,20 @@ ${pdfText.slice(0,24000)}`}]};
                       <div style={{padding:"9px 11px",borderRadius:8,background:`${C.red}15`,border:`1px solid ${C.red}44`,marginBottom:10}}>
                         <div style={{fontSize:10,color:C.red,marginBottom:8}}>⚠️ Totals don't match — document shows ${docTotal.toFixed(2)} but we extracted ${dedSum.toFixed(2)}. This week's data may be incomplete.</div>
                         <button onClick={()=>{setTab("loads");setScanMode("scan");setTimeout(()=>fileRef.current?.click(),150);}} style={{width:"100%",padding:"8px",borderRadius:7,background:`${C.red}20`,border:`1px solid ${C.red}55`,color:C.red,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🔄 Re-scan This Week</button>
+                        {(docTotal-dedSum)>0.005&&(
+                          <div style={{marginTop:8}}>
+                            {!reconOpen?(
+                              <button onClick={()=>{setReconOpen(true);setReconLabel("");}} style={{width:"100%",padding:"8px",borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.sub,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>➕ Or reconcile manually — add the missing ${(docTotal-dedSum).toFixed(2)} line item</button>
+                            ):(
+                              <div style={{padding:"10px",borderRadius:8,background:C.bg,border:"1px solid "+C.border}}>
+                                <div style={{fontSize:9,color:C.sub,marginBottom:6,lineHeight:1.5}}>Look at the paper settlement's deductions section, find the ${(docTotal-dedSum).toFixed(2)} line the scanner missed, and type its label exactly as printed:</div>
+                                <input value={reconLabel} onChange={e=>setReconLabel(e.target.value)} placeholder="e.g. Scale Ticket, Chassis Wash, Admin Fee" style={{width:"100%",padding:"8px 9px",borderRadius:7,background:C.raised,border:"1px solid "+C.border,color:C.text,fontSize:11,fontFamily:"inherit",boxSizing:"border-box",marginBottom:8}}/>
+                                <button onClick={()=>{const lbl=reconLabel.trim();if(!lbl)return;const gap=+((docTotal-dedSum).toFixed(2));setAddedW(p=>p.map(w=>(w.week===dw.week&&w.from===dw.from)?{...w,deds:[...(w.deds||[]),{l:lbl+" (added manually)",a:gap}]}:w));setReconOpen(false);setReconLabel("");}} disabled={!reconLabel.trim()} style={{width:"100%",padding:"9px",borderRadius:8,background:reconLabel.trim()?C.green:C.raised,border:"none",color:reconLabel.trim()?"#000":C.sub,fontSize:11,fontWeight:800,cursor:reconLabel.trim()?"pointer":"not-allowed",fontFamily:"inherit",marginBottom:6}}>✓ Add ${(docTotal-dedSum).toFixed(2)} — clears the mismatch</button>
+                                <button onClick={()=>{setReconOpen(false);setReconLabel("");}} style={{width:"100%",padding:"7px",borderRadius:7,background:"transparent",border:"1px solid "+C.border,color:C.sub,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 
