@@ -73,8 +73,8 @@ const LOGO_ICON="/images/logo-icon.png";
 // Version scheme: MAJOR.MONTH.DAY — bump on EVERY file delivery so you can
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
-const APP_VERSION="3.7.27";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 27 · build AE";
+const APP_VERSION="3.8.7";// bumped builds same-day get a new time stamp below
+const APP_VERSION_DATE="Aug 07 · build AF";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -2770,7 +2770,7 @@ ${pdfText.slice(0,24000)}`}]};
                     <div style={{fontSize:9,color:C.sub,marginBottom:4}}>PHONE NUMBER (WhatsApp or SMS)</div>
                     <input type="tel" value={digestPhone} onChange={function(e){setDigestPhone(e.target.value.replace(/[^0-9+()\-\s]/g,"").slice(0,20));}} placeholder="+1 (443) 555-0100" style={{width:"100%",padding:"9px 10px",borderRadius:7,background:C.bg,border:"1px solid "+(digestPhone&&!(digestPhone.replace(/\D/g,"").length>=10&&digestPhone.replace(/\D/g,"").length<=15)?C.red:C.border),color:C.text,fontSize:12,fontFamily:"inherit",boxSizing:"border-box",marginBottom:4}}/>
                     {digestPhone&&!(digestPhone.replace(/\D/g,"").length>=10&&digestPhone.replace(/\D/g,"").length<=15)&&<div style={{fontSize:9,color:C.red,marginBottom:8}}>Enter a full phone number with area code (10–15 digits)</div>}
-                    <div style={{fontSize:9,color:"#fbbf24",fontWeight:700}}>🧪 Coming in V4 — your preference is saved and ready the moment this launches.</div>
+                    <div style={{fontSize:9,color:"#fbbf24",fontWeight:700}}>✅ Live — digests go out Friday evenings by text. Standard message rates may apply; reply STOP anytime to cancel.</div>
                   </div>
                 )}
               </div>
