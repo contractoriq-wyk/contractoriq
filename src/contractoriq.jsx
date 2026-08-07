@@ -74,7 +74,7 @@ const LOGO_ICON="/images/logo-icon.png";
 // verify at a glance that the deployed site is running the file you just
 // uploaded (check the version chip in the Menu or the legal footer).
 const APP_VERSION="3.7.27";// bumped builds same-day get a new time stamp below
-const APP_VERSION_DATE="Jul 27 · build AD";
+const APP_VERSION_DATE="Jul 27 · build AE";
 
 const PRICING={
   // Tier 1 — Standard ($14.99/mo)
@@ -1951,6 +1951,12 @@ ${pdfText.slice(0,24000)}`}]};
                 <div style={K({marginBottom:12})}>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,marginBottom:8}}>🔧 The Correct Setup, Step by Step</div>
                   <div style={{fontSize:11,color:C.sub,lineHeight:1.9}}>1. Open an account at any major brokerage (most are $0-commission now).<br/>2. Pick what you'll buy. Most people who use DCA apply it to <b style={{color:C.text}}>broadly diversified, low-cost index funds</b> rather than single stocks — one company can go to zero; a whole-market fund can't without the whole market going there.<br/>3. Set an <b style={{color:C.text}}>automatic recurring buy</b>: same amount, same day, weekly or monthly. Automation is the whole trick — it removes emotion.<br/>4. Pick an amount you won't need for years. Money for repairs or slow weeks doesn't belong here.<br/>5. <b style={{color:C.text}}>Don't stop when the market drops.</b> The dips are when your fixed dollars buy the most shares — quitting in a dip defeats the entire strategy.<br/>6. Review once a year, not once a day.</div>
+                </div>
+                <div style={K({marginBottom:12})}>
+                  <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,marginBottom:8}}>🎯 What People Commonly Use DCA For</div>
+                  <div style={{fontSize:11,color:C.sub,lineHeight:1.8,marginBottom:10}}>In personal-finance education, DCA is almost always paired with <b style={{color:C.text}}>fund categories</b>, not individual companies: broad <b style={{color:C.text}}>S&P 500 index funds</b>, <b style={{color:C.text}}>total US market funds</b>, or <b style={{color:C.text}}>total world market funds</b>. The reason is simple — DCA means buying through every dip, and that only makes sense for something built to recover. One company can go to zero and stay there; a fund holding hundreds of companies can't without the whole economy going with it.</div>
+                  <div style={{fontSize:10,fontWeight:800,color:C.accent,marginBottom:6,textTransform:"uppercase"}}>The 5-point fit checklist</div>
+                  <div style={{fontSize:11,color:C.sub,lineHeight:1.9}}>Whatever you consider, hold it against these five:<br/>1. <b style={{color:C.text}}>Broadly diversified</b> — hundreds of holdings, not one bet.<br/>2. <b style={{color:C.text}}>Very low fees</b> — expense ratio under about 0.1%/yr.<br/>3. <b style={{color:C.text}}>Highly liquid</b> — easy to buy or sell any market day.<br/>4. <b style={{color:C.text}}>Decades of track record</b> — has already lived through crashes and recovered.<br/>5. <b style={{color:C.text}}>You'd keep buying it through a 30% drop</b> — if a crash would make you quit, it fails the test for you.<br/><br/>Most single stocks fail #1 on arrival. Which specific fund and broker you choose is your call — that's the research step, or a conversation with a licensed advisor.</div>
                 </div>
                 <div style={K({marginBottom:12})}>
                   <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:800,marginBottom:8}}>🧮 Your Numbers</div>
